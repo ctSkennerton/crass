@@ -1,0 +1,7 @@
+on most UNIX systems type:
+    
+    ./configure
+    make
+    sudo make install
+
+If that fails you may meed to run autogen.sh to rebuild the GNU build system for crass

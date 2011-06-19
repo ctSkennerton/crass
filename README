@@ -1,0 +1,99 @@
+==============================================================================
+==============================================================================
+
+crass -- CRisprASSembler -- revison 0 version 0 subversion 1 (0.0.1)
+
+==============================================================================
+
+
+COPYRIGHT
+
+*  Copyright 2011 Connor Skennerton & Michael Imelfort. All rights reserved. 
+*
+*  This program is free software: you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation, either version 3 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+CONTRIBUTED CODE
+
+crass would not have been possible without the code found freely available
+at the following locations:
+
+Boyer-Moore Search Algorithm:
+http://dev-faqs.blogspot.com/2010/05/boyer-moore-algorithm.html
+
+Wu-Manber Search Algorithm:
+http://www.oneunified.net/blog/2008/03/23/
+
+Bitap Search Algorithm:
+http://rational.co.za/libbitap/
+
+Levensthein String Comparison Algorithm:
+http://www.merriampark.com/ldcpp.htm
+
+fqgrep source sode:
+https://github.com/indraniel/fqgrep
+
+INSTALLATION
+
+Download the source files from git.
+
+cd BASEDIR/MCD/MCD/
+
+then on most Unix systems:
+
+./configure
+make
+make install
+
+
+SYNOPSIS
+
+crass - a tool for finding CRISPRs in metagenomic datasets
+
+crass [-dhmosDSV] sequence_files
+
+
+DESCRIPTION
+crass is a tool for finding and assembling reads from genomic and metagenomic 
+datasets that contain Clustered Regularly Interspersed Short Palindromic 
+Repeats (CRISPR).  crass searches through the dataset and identifies reads 
+which contain repeated K-mers that are of a specific length
+and are separated by a spacer sequence.  These possible direct repeats
+are then curated internally to remove bad matches and then reads containing 
+direct repeats are then outputed for further analysis.
+
+The crass assembler uses the direct informtion to determine the linkages
+between the spacer units and outputs a .contigs file which contains all
+of the possible variations of the CRISPR based on the forking of the
+spacer linkages.
+
+
+OPTIONS
+
+-d INT   The minimim length of the direct repeat to search for [Default: 23]
+
+-D INT   The Maximum length of the direct repeat to search for [Default: 47]
+
+-h       Output basic usage informtion to screen
+
+-m INT   The maximum number of mismatches to allow in the initial search
+for direct repeats [Default: 0]
+
+-o DIRECTORY  The name of the directory to output files [default: .]
+
+-s INT   The minimim length of the spacer to search for [Default: 26]
+
+-S INT   The maximim length of the spacer to search for [Default: 50]
+
+-V       Print version and copy right information

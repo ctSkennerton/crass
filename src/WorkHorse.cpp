@@ -113,8 +113,9 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         strncpy(input_fastq, seq_iter->c_str(), DEF_MCD_FASTQ_FILENAME_MAX_LENGTH);
         
         // vector of strings for out direct repeats 
-        vector<string> patterns;
+        std::vector<std::string> patterns;
         
+        // return value of the search functions
         float aveReadLength;
         
         // direct repeat sequence and unique ID
