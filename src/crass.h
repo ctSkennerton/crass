@@ -1,5 +1,5 @@
 /*
- *  mcd.h is part of the MCD project
+ *  crass.h is part of the CRisprASSembler project
  *  
  *  Created by Connor Skennerton.
  *  Copyright 2011 Connor Skennerton & Michael Imelfort. All rights reserved. 

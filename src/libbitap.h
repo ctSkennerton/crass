@@ -1,8 +1,8 @@
 /*
- *  bitap.h is part of the MCD project
+ *  libbitap.h is part of the CRisprASSembler project
  *  
- *  Created by Connor Skennerton.
- *  Copyright 2011 Connor Skennerton & Michael Imelfort. All rights reserved. 
+ *  Created by Nic Roets http://rational.co.za/libbitap/
+ *  Copyright 2005 Nic Roets. All rights reserved. 
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

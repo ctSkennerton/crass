@@ -1,5 +1,5 @@
 /*
- *  crass.cpp is part of the MCD project
+ *  crass.cpp is part of the CRisprASSembler project
  *  
  *  Created by Connor Skennerton.
  *  Copyright 2011 Connor Skennerton & Michael Imelfort. All rights reserved. 

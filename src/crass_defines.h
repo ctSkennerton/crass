@@ -11,12 +11,12 @@
 #include <string>
 
 // used in all parts of the program
-#define LONG_NAME "MetagenomicCRISPRDetector"
+#define LONG_NAME "CRisprASSembler"
 #define MCD_VERSION "0.0.1"
 #define MCD_MAJOR_VERSION 0
 #define MCD_MINOR_VERSION 1
 #define MCD_REVISION 0
-#define PRG_NAME "mcd"
+#define PRG_NAME "crass"
 
 #define DEF_MCD_LOOKUP_EXT ".txt"
 #define DEF_MCD_SPACER_LOOKUP "_spacers"
