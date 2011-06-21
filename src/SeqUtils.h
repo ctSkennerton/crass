@@ -32,9 +32,13 @@
  *                               A
  */
 
+#ifndef __SEQ_UTILS_H
+#define __SEQ_UTILS_H
 #include <string>
-using namespace std;
 
-string reverseComplement(string str);
+std::string reverseComplement(std::string str);
 
-string laurenize(string seq);
+std::string laurenize(std::string seq);
+
+
+#endif

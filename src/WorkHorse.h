@@ -53,8 +53,7 @@
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
 typedef std::map<std::string, NodeManager *>::iterator DR_ListIterator;
-typedef std::vector<ReadHolder *> ReadList;
-typedef std::vector<ReadHolder *>::iterator ReadListIterator;
+
 
 class WorkHorse {
     public:
@@ -73,12 +72,13 @@ class WorkHorse {
         
     private:
         
-        void clearReadLists(void);
+        void clearReadList(ReadList * tmp_list);
+        void clearReadMap(ReadMap * tmp_map);
         void printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup);
         
         // members
         DR_List mDRs;                       // list of nodemanagers, cannonical DRs
-        ReadList mReads;                    // reads containing possible DRs
+        ReadMap mReads;                    // reads containing possible DRs
         
         const options * mOpts;                    // search options
         std::string mOutFileDir;            // where to spew text to

@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
     {
         out_fp = opts.output_fastq;
     }
-    string logFileName = out_fp+ "mcd.log";
+    string logFileName = out_fp+ "crass.log";
 
     intialiseGlobalLogger(logFileName, opts.logger_level);
 

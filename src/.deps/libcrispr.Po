@@ -103,7 +103,8 @@ libcrispr.o: libcrispr.cpp \
  /usr/include/libkern/i386/_OSByteOrder.h /usr/include/alloca.h \
  /usr/include/machine/types.h /usr/include/i386/types.h libcrispr.h \
  crass_defines.h CrisprNode.h NodeManager.h SpacerInstance.h WuManber.h \
- libbitap.h bm.h kseq.h /usr/include/string.h LoggerSimp.h
+ libbitap.h bm.h kseq.h /usr/include/string.h ReadHolder.h SeqUtils.h \
+ LoggerSimp.h
 
 /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/iostream:
 
@@ -378,5 +379,9 @@ bm.h:
 kseq.h:
 
 /usr/include/string.h:
+
+ReadHolder.h:
+
+SeqUtils.h:
 
 LoggerSimp.h:

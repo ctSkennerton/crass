@@ -56,6 +56,7 @@
 #include "libbitap.h"
 #include "bm.h"
 #include "kseq.h"
+#include "SeqUtils.h"
 
 //**************************************
 // DirectRepeat
@@ -125,7 +126,7 @@ KSEQ_INIT(gzFile, gzread);
 //**************************************
 
 // boyer moore functions
-float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup)
+float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap * mReads)
 {
     gzFile fp = getFileHandle(input_fastq);
     kseq_t *seq;
@@ -147,6 +148,7 @@ float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupT
         total_base += seq_length;
         
         std::string read = seq->seq.s;
+        std::string read_header = seq->name.s;
         // boyer-moore search
         for (int start = 0; start < search_end; start++)
         {
@@ -206,26 +208,12 @@ float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupT
                         continue;
                     } 
                     else 
-                    {
-                        logInfo(seq->name.s, 2);
-                        logInfo("\tdirect repeat found:", 2);
-                        logInfo("\t"<<dr_match.DR_StartPos<<"\t"<<dr_match.DR_Sequence<<"\t"<<dr_match.DR_EndPos, 2);
-                        if (!(keyExists(patterns_hash, dr_match.DR_Sequence))) 
-                        {
-                            addToLookup(dr_match.DR_Sequence, patterns_hash);
-                        }
-                        if (dr_match.DR_MatchStartPos >= opts.kmer_size) 
-                        {
-                            cutLeftKmer(read, dr_match.DR_MatchStartPos, dr_match.DR_MatchEndPos, kmerLookup, opts);
-                        }
-                        if (dr_match.DR_MatchEndPos <= (seq_length - opts.kmer_size))
-                        {
-                            cutRightKmer(read, dr_match.DR_MatchStartPos, dr_match.DR_MatchEndPos, kmerLookup, opts);
-                        }
-                        if (!(keyExists(spacerLookup, dr_match.DR_Spacer))) 
-                        {
-                            addToLookup(dr_match.DR_Spacer, spacerLookup);
-                        }
+                    {                        
+                        // create the read holder
+                        ReadHolder * tmp_holder = new ReadHolder();
+                        
+                        addReadHolder(mReads, tmp_holder, &dr_match, read_header, read);
+
                         start = dr_match.DR_StartPos - 1;
                         dr_match.reset();
                         continue;
@@ -314,7 +302,7 @@ bool update_word_bitap(ReadMatch &match_info, int &search_begin, int &start, con
     return true;
 }
 
-float bitap_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup) 
+float bitap_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap *mReads) 
 {
     
     gzFile fp = getFileHandle(input_fastq);
@@ -389,24 +377,11 @@ float bitap_search_fastq_file(const char *input_fastq, const options &opts, look
                     } 
                     else 
                     {
-                        logInfo("\tdirect repeat found:", 2);
-                        logInfo("\t"<<dr_match.DR_StartPos<<"\t"<<dr_match.DR_Sequence<<"\t"<<dr_match.DR_EndPos, 2);
-                        if (!(keyExists(patterns_hash, dr_match.DR_Sequence))) 
-                        {
-                            addToLookup(dr_match.DR_Sequence, patterns_hash);
-                        }
-                        if (dr_match.DR_MatchStartPos >= opts.kmer_size) 
-                        {
-                            cutLeftKmer(read, dr_match.DR_MatchStartPos, dr_match.DR_MatchEndPos, kmerLookup, opts);
-                        }
-                        if (dr_match.DR_MatchEndPos <= (seq_length - opts.kmer_size))
-                        {
-                            cutRightKmer(read, dr_match.DR_MatchStartPos, dr_match.DR_MatchEndPos, kmerLookup, opts);
-                        }
-                        if (!(keyExists(spacerLookup, dr_match.DR_Spacer))) 
-                        {
-                            addToLookup(dr_match.DR_Spacer, spacerLookup);
-                        }
+                        // create the read holder
+                        ReadHolder * tmp_holder = new ReadHolder;
+                        
+                        addReadHolder(mReads, tmp_holder, &dr_match, seq->name.s, read);
+
                         dr_match.reset();
                     }
                 }
@@ -422,24 +397,10 @@ float bitap_search_fastq_file(const char *input_fastq, const options &opts, look
         } 
         else 
         {
-            logInfo("\tdirect repeat found:", 2);
-            logInfo("\t"<<dr_match.DR_StartPos<<"\t"<<dr_match.DR_Sequence<<"\t"<<dr_match.DR_EndPos, 2);
-            if (!(keyExists(patterns_hash, dr_match.DR_Sequence))) 
-            {
-                addToLookup(dr_match.DR_Sequence, patterns_hash);
-            }
-            if (dr_match.DR_MatchStartPos >= opts.kmer_size) 
-            {
-                cutLeftKmer(read, dr_match.DR_MatchStartPos, dr_match.DR_MatchEndPos, kmerLookup, opts);
-            }
-            if (dr_match.DR_MatchEndPos <= (seq_length - opts.kmer_size))
-            {
-                cutRightKmer(read, dr_match.DR_MatchStartPos, dr_match.DR_MatchEndPos, kmerLookup, opts);
-            }
-            if (!(keyExists(spacerLookup, dr_match.DR_Spacer))) 
-            {
-                addToLookup(dr_match.DR_Spacer, spacerLookup);
-            }
+            // create the read holder
+            ReadHolder * tmp_holder = new ReadHolder;
+            
+            addReadHolder(mReads, tmp_holder, &dr_match, seq->name.s, read);
         }
         ++match_counter;
     }
@@ -451,7 +412,7 @@ float bitap_search_fastq_file(const char *input_fastq, const options &opts, look
     return total_base / match_counter;
 }
 
-void read_for_multimatch(const char *input_fastq, const options &opts, std::vector<std::string> &patterns, lookupTable &directRepeatLookup )
+void read_for_multimatch(const char *input_fastq, const options &opts, std::vector<std::string> &patterns, lookupTable &directRepeatLookup, ReadMap *mReads )
 {
     gzFile fp = getFileHandle(input_fastq);
     kseq_t *seq;
@@ -481,18 +442,10 @@ void read_for_multimatch(const char *input_fastq, const options &opts, std::vect
             dr_match.DR_MatchEndPos = endPos + dr_match.DR_MatchSequence.length();
             
             
-            logInfo(seq->name.s, 2);
-            logInfo("\tmatch sequence: "<<dr_match.DR_MatchSequence<<" match start pos: "<<dr_match.DR_MatchStartPos<<" match end pos: "<<dr_match.DR_MatchEndPos, 2);
+            // create the read holder
+            ReadHolder * tmp_holder = new ReadHolder;
             
-            if (dr_match.DR_MatchStartPos >= opts.kmer_size) 
-            {
-                cutLeftKmer(read, dr_match.DR_MatchStartPos, dr_match.DR_MatchEndPos, directRepeatLookup, opts);
-            }
-            
-            if (dr_match.DR_MatchEndPos <= (read.length() - opts.kmer_size))
-            {
-                 cutRightKmer(read, dr_match.DR_MatchStartPos, dr_match.DR_MatchEndPos, directRepeatLookup, opts);
-            }
+            addReadHolder(mReads, tmp_holder, &dr_match, seq->name.s, read);
         }
     }
     logInfo("finnished multi pattern matcher", 1);
@@ -577,6 +530,92 @@ bool check_dr_and_spacer_length(const options &opts, DirectRepeat &dr_match)
 }
 
 //**************************************
+// transform read to DRlowlexi
+//**************************************
+
+void DRLowLexi(std::string matchedRead, DirectRepeat * dr_match, ReadHolder * tmp_holder)
+{
+    logInfo("Read Found:"<<endl<<matchedRead, 5)
+    
+    std::string rev_comp = reverseComplement(dr_match->DR_Sequence);
+    
+    if (lexicographical_compare(dr_match->DR_Sequence.begin(), dr_match->DR_Sequence.end(), rev_comp.begin(), rev_comp.end()))
+    {
+        
+        // the direct repeat is in it lowest lexicographical form
+        tmp_holder->RH_WasLowLexi = true;
+        tmp_holder->RH_Seq = matchedRead;
+        logInfo("DR in low lexi"<<endl<<tmp_holder->RH_Seq, 8);
+    }
+    else
+    {
+        tmp_holder->RH_Seq = reverseComplement(matchedRead);
+        tmp_holder->RH_WasLowLexi = false;
+        logInfo("DR not in low lexi"<<endl<<tmp_holder->RH_Seq, 8);
+
+    }
+
+}
+
+
+void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, DirectRepeat * dr_match, std::string read_header, std::string read)
+{
+    logInfo(read_header, 2);
+    logInfo("\tdirect repeat found:", 2);
+    logInfo("\t"<<dr_match->DR_StartPos<<"\t"<<dr_match->DR_Sequence<<"\t"<<dr_match->DR_EndPos, 2);
+    
+    //add the header for the matched read
+    tmp_holder->RH_Header = read_header;
+    // test drlowlexi
+    DRLowLexi(read, dr_match, tmp_holder);
+    
+    // populate the start stop list
+    (tmp_holder->RH_StartStops).push_back( dr_match->DR_MatchStartPos);
+    (tmp_holder->RH_StartStops).push_back( dr_match->DR_MatchEndPos);
+    (tmp_holder->RH_StartStops).push_back(dr_match->DR_StartPos);
+    (tmp_holder->RH_StartStops).push_back(dr_match->DR_EndPos);
+    
+    if (keyExists(mReads, dr_match->DR_Sequence))
+    {
+        // add the sequence to the map
+        (*mReads)[dr_match->DR_Sequence]->push_back(tmp_holder);
+    }
+    else
+    {
+        (*mReads)[dr_match->DR_Sequence] = new ReadList();
+        (*mReads)[dr_match->DR_Sequence]->push_back(tmp_holder);
+    }
+}
+//**************************************
+// Trimming
+//**************************************
+
+// input a map of direct repeat sequence to vector of read holder objects
+void drTrim()
+{
+    // load in all of the read holder objects
+    
+    
+    // sort the read holders based on length of direct repeat
+    
+    
+    // compare the sequence of the shorter direct repeat to the longer direct repeat
+    
+    
+    // if it is a substring then check if the spacer contains the rest of the direct repeat
+    
+    
+    // if yes then update the positions of the direct repeat and spacer
+    
+    
+    // create a crispr node object and add into a node manager
+    
+    
+}
+
+
+
+//**************************************
 // lookup table shite
 //**************************************
 
@@ -623,6 +662,11 @@ gzFile getFileHandle(const char * inputFile)
 bool inline keyExists(lookupTable &patterns_hash, std::string &direct_repeat)
 {
     return patterns_hash.find(direct_repeat) != patterns_hash.end();
+}
+
+bool inline keyExists(ReadMap * mReads, std::string &direct_repeat)
+{
+    return mReads->find(direct_repeat) != mReads->end();
 }
 
 // turn our map into a vector using just the keys

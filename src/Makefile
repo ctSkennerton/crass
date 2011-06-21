@@ -71,7 +71,7 @@ AUTOMAKE = ${SHELL} /Users/uqcskenn/Documents/Projects/crass/missing --run autom
 AWK = awk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = --pedantic -Wall -std=c99 -O2
+CFLAGS = --pedantic -Wall -std=c99 -O2 -ggdb
 CPP = gcc -E
 CPPFLAGS = 
 CXX = g++

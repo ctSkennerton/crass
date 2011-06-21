@@ -70,16 +70,16 @@ WorkHorse::~WorkHorse()
     mDRs.clear();
     
     // clear the reads!
-    clearReadLists();
+    clearReadMap( &mReads);
 }
 
-void WorkHorse::clearReadLists(void)
+void WorkHorse::clearReadList(ReadList * tmp_list)
 {
     //-----
     // clear all the reads from the readlist
     //
-    ReadListIterator read_iter = mReads.begin();
-    while(read_iter != mReads.end())
+    ReadListIterator read_iter = tmp_list->begin();
+    while(read_iter != tmp_list->end())
     {
         if(*read_iter != NULL)
         {
@@ -88,7 +88,26 @@ void WorkHorse::clearReadLists(void)
         }
         read_iter++;
     }
-    mReads.clear();
+    tmp_list->clear();
+}
+
+void WorkHorse::clearReadMap(ReadMap * tmp_map)
+{
+    //-----
+    // clear all the reads from the readlist
+    //
+    ReadMapIterator read_iter = tmp_map->begin();
+    while(read_iter != tmp_map->end())
+    {
+        clearReadList(read_iter->second);
+        if (read_iter->second != NULL)
+        {
+            delete read_iter->second;
+            read_iter->second = NULL;
+        }
+        read_iter++;
+    }
+    tmp_map->clear();
 }
 
 // do all the work!
@@ -129,9 +148,9 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         
         // Use a different search routine, depending on if we allow mismatches or not.
         if(mOpts->max_mismatches == 0)
-        {   aveReadLength = bm_search_fastq_file(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup); }
+        {   aveReadLength = bm_search_fastq_file(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup, &mReads); }
         else
-        {   aveReadLength = bitap_search_fastq_file(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup); }
+        {   aveReadLength = bitap_search_fastq_file(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup, &mReads); }
 
         logInfo("Average read length: "<<aveReadLength, 2);
         
@@ -141,7 +160,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
             logInfo("Beginning multipattern matcher", 1);
             map_to_vector(patternsLookup, patterns);
             
-            read_for_multimatch(input_fastq, *mOpts, patterns, kmerLookup);
+            read_for_multimatch(input_fastq, *mOpts, patterns, kmerLookup, &mReads);
         }
     
 /*

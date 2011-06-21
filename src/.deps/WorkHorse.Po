@@ -104,7 +104,7 @@ WorkHorse.o: WorkHorse.cpp \
  /usr/include/libkern/_OSByteOrder.h \
  /usr/include/libkern/i386/_OSByteOrder.h /usr/include/alloca.h \
  /usr/include/machine/types.h /usr/include/i386/types.h ReadHolder.h \
- LoggerSimp.h
+ SeqUtils.h LoggerSimp.h
 
 /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/iostream:
 
@@ -379,5 +379,7 @@ kseq.h:
 /usr/include/i386/types.h:
 
 ReadHolder.h:
+
+SeqUtils.h:
 
 LoggerSimp.h:

@@ -37,12 +37,10 @@
 #include <algorithm>
 #include <iostream>
 
-using namespace std;
-string reverseComplement(string str)
+std::string reverseComplement(std::string str)
 {
-    string revcomp_string = "";
-    string::reverse_iterator rit;
-    cout<<str<<endl;
+    std::string revcomp_string = "";
+    std::string::reverse_iterator rit;
     for ( rit = str.rbegin() ; rit < str.rend(); rit++ )
     {
 		switch ((*rit)) 
@@ -114,16 +112,16 @@ string reverseComplement(string str)
                 break;
 		}
 	}
-    cout<<revcomp_string<<endl;
     return revcomp_string;
 }
 
-string laurenize (string seq1)
+std::string laurenize (std::string seq1)
 {
-    string seq2 = reverseComplement(seq1);
+    std::string seq2 = reverseComplement(seq1);
     if (lexicographical_compare(seq1.begin(), seq1.end(), seq2.begin(), seq2.end()))
     {
         return seq1;
     }
     return seq2;
 }
+

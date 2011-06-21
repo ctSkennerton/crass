@@ -36,7 +36,7 @@
 //
 
 #ifndef libcrispr_h
-    #define libcrispr_h
+#define libcrispr_h
 
 // system includes
 #include <iostream>
@@ -53,8 +53,18 @@
 #include "libbitap.h"
 #include "bm.h"
 #include "kseq.h"
+#include "ReadHolder.h"
+#include "SeqUtils.h"
+
 
 typedef std::map<std::string, CrisprNode *> lookupTable;
+
+typedef std::vector<ReadHolder *> ReadList;
+typedef std::vector<ReadHolder *>::iterator ReadListIterator;
+
+// direct repeat as a string and a list of the read objects that contain that direct repeat
+typedef std::map<std::string, ReadList *> ReadMap;
+typedef std::map<std::string, ReadList *>::iterator ReadMapIterator;
 
 // The following two classes are simple data storages objects
 // they are stupidly public for that reason
@@ -107,9 +117,8 @@ class ReadMatch {
 //**************************************
 
 // boyer moore functions
-//bool update_word_bm(int start_pos, int &search_begin, int &start, const options &opts, DirectRepeat &dr);
 
-float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup);
+float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap * mReads);
 
 bool inline check_mismatch( int &temp_mismatch, const options &opts);
 
@@ -120,24 +129,41 @@ bool direct_repeat_extend ( DirectRepeat &dr_match, ReadMatch &match_info, int &
 
 bool update_word_bitap(ReadMatch &match_info, int &search_begin, int &start, const options &opts, DirectRepeat &dr, std::string &subject_word, int &temp_mismatch);
 
-float bitap_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup);
+float bitap_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap *mReads);
 
 // multimap functions (wuMander)
-void read_for_multimatch(const char *input_fastq, const options &opts, std::vector<std::string> &patterns, lookupTable &directRepeatLookup );
+void read_for_multimatch(const char *input_fastq, const options &opts, std::vector<std::string> &patterns, lookupTable &directRepeatLookup, ReadMap *mReads );
 
 //**************************************
 // kmer operators
 //**************************************
 
-void cutLeftKmer( string &read, int &start, int &end, lookupTable &inputLookup, const options &opts);
+void cutLeftKmer( std::string &read, int &start, int &end, lookupTable &inputLookup, const options &opts);
 
-void cutRightKmer( string &read, int &start, int &end, lookupTable &inputLookup, const options &opts);
+void cutRightKmer( std::string &read, int &start, int &end, lookupTable &inputLookup, const options &opts);
 
-void cutSpacerKmers( string &read, lookupTable &inputLookup, const options &opts);
+void cutSpacerKmers( std::string &read, lookupTable &inputLookup, const options &opts);
 
 bool cut_direct_repeat_sequence(DirectRepeat &dr_match, const options &opts, string &read);
 
 bool check_dr_and_spacer_length(const options &opts, DirectRepeat &dr_match);
+
+
+//**************************************
+// Read Holder
+//**************************************
+
+void DRLowLexi(std::string matchedRead, DirectRepeat * dr_match,  ReadHolder * tmp_holder);
+
+void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, DirectRepeat * dr_match, std::string read_header, std::string read);
+
+//**************************************
+// Trimming
+//**************************************
+
+void drTrim();
+
+
 
 //**************************************
 // lookup table shite
@@ -156,6 +182,8 @@ gzFile getFileHandle(const char * inputFile);
 //**************************************
 
 bool inline keyExists(lookupTable &patterns_hash, std::string &direct_repeat);
+
+bool inline keyExists(ReadMap * mReads, std::string &direct_repeat);
 
 void map_to_vector(lookupTable &patterns_hash, std::vector<std::string> &patterns);
 
