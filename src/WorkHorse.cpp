@@ -131,9 +131,6 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         char input_fastq[DEF_MCD_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
         strncpy(input_fastq, seq_iter->c_str(), DEF_MCD_FASTQ_FILENAME_MAX_LENGTH);
         
-        // vector of strings for out direct repeats 
-        std::vector<std::string> patterns;
-        
         // return value of the search functions
         float aveReadLength;
         
@@ -158,23 +155,21 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         if (aveReadLength < DEF_MCD_READ_LENGTH_CUTOFF)
         {
             logInfo("Beginning multipattern matcher", 1);
-            map_to_vector(patternsLookup, patterns);
             
-            read_for_multimatch(input_fastq, *mOpts, patterns, kmerLookup, &mReads);
+            read_for_multimatch(input_fastq, *mOpts, &mReads);
         }
-    
-/*
-********************************
-add reads like this:
-
-ReadHolder tmp_holder = new ReadHolder();
-mReads->push_back(tmp_holder);
-
-delete function is already present in the destructor!
-
-********************************
-*/
-    
+        
+        
+        ReadMapIterator red_map_iter = mReads.begin();
+        
+        while (red_map_iter != mReads.end()) {
+            std::cout<<red_map_iter->first<<" => "<<red_map_iter->second->size()<<endl;
+            ++red_map_iter;
+        }
+        //trim and concatenate the direct repeats
+        drTrim(&mReads);
+        
+        
         // Checking step add here
         std::string dr_seq = "bleg";
         NodeManager * tmp_manager = new NodeManager(dr_seq);

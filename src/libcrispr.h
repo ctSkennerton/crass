@@ -132,7 +132,7 @@ bool update_word_bitap(ReadMatch &match_info, int &search_begin, int &start, con
 float bitap_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap *mReads);
 
 // multimap functions (wuMander)
-void read_for_multimatch(const char *input_fastq, const options &opts, std::vector<std::string> &patterns, lookupTable &directRepeatLookup, ReadMap *mReads );
+void read_for_multimatch(const char *input_fastq, const options &opts, ReadMap *mReads );
 
 //**************************************
 // kmer operators
@@ -153,7 +153,7 @@ bool check_dr_and_spacer_length(const options &opts, DirectRepeat &dr_match);
 // Read Holder
 //**************************************
 
-void DRLowLexi(std::string matchedRead, DirectRepeat * dr_match,  ReadHolder * tmp_holder);
+std::string DRLowLexi(std::string matchedRead, DirectRepeat * dr_match,  ReadHolder * tmp_holder);
 
 void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, DirectRepeat * dr_match, std::string read_header, std::string read);
 
@@ -161,7 +161,7 @@ void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, DirectRepeat * dr_
 // Trimming
 //**************************************
 
-void drTrim();
+void drTrim(ReadMap * mReads);
 
 
 
@@ -186,5 +186,7 @@ bool inline keyExists(lookupTable &patterns_hash, std::string &direct_repeat);
 bool inline keyExists(ReadMap * mReads, std::string &direct_repeat);
 
 void map_to_vector(lookupTable &patterns_hash, std::vector<std::string> &patterns);
+
+void map_to_vector(ReadMap * mReads, std::vector<std::string> &patterns);
 
 #endif //libcrispr_h

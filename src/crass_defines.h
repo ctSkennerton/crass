@@ -57,9 +57,9 @@ typedef struct {
 } options;
 
 // File IO
-#define MCD_DEF_KMER_LOOKUP_EXT         "mcd_kmers.txt"
-#define MCD_DEF_PATTERN_LOOKUP_EXT      "mcd_direct_repeats.txt"
-#define MCD_DEF_SPACER_LOOKUP_EXT       "mcd_spacers.txt"
+#define MCD_DEF_KMER_LOOKUP_EXT         "crass_kmers.txt"
+#define MCD_DEF_PATTERN_LOOKUP_EXT      "crass_direct_repeats.txt"
+#define MCD_DEF_SPACER_LOOKUP_EXT       "crass_spacers.txt"
 
 
 #endif
