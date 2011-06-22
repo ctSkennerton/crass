@@ -126,7 +126,7 @@ KSEQ_INIT(gzFile, gzread);
 //**************************************
 
 // boyer moore functions
-float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap * mReads)
+float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap * mReads)
 {
     gzFile fp = getFileHandle(input_fastq);
     kseq_t *seq;
@@ -185,11 +185,11 @@ float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupT
                 ++MatchEndPos;
                 if (EndPos <= seq_length) 
                 {
-                    //read through the subsuquent bases untill they don't match
-                    logInfo("read: "<<seq->name.s<<" len: "<<read.length(), 10);
+                    // read through the subsuquent bases untill they don't match
+                    logInfo("Read: "<<seq->name.s<<" Len: "<<read.length(), 10);
                     while (read.at(MatchEndPos) == read.at(EndPos)) 
                     {
-                        logInfo("match end pos: "<<MatchEndPos<<" end pos: "<<EndPos, 10);
+                        logInfo("Match end pos: "<<MatchEndPos<<" end pos: "<<EndPos, 10);
                         logInfo(read.at(MatchEndPos) << " : " << MatchEndPos << " == " << read.at(EndPos) << " : " << EndPos, 10);
 
                         
@@ -199,9 +199,9 @@ float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupT
                         ++MatchEndPos;
                         if (EndPos > seq_length) break;
                     }
-                    if (!(cut_direct_repeat_sequence(dr_match, opts, read)))
+                    if (!(cutDirectRepeatSequence(dr_match, opts, read)))
                     {
-                        // inctrement the for loop so that it begins at the start of the 
+                        // increment the for loop so that it begins at the start of the 
                         // matched kmer/direct repeat
                         // minus 1 cause it will be incremented again at the top of the for loop
                         start = dr_match.DR_StartPos - 1;
@@ -231,7 +231,7 @@ float bm_search_fastq_file(const char *input_fastq, const options &opts, lookupT
     return total_base / match_counter;
 }
 
-bool inline check_mismatch( int &temp_mismatch, const options &opts)
+bool inline checkMismatch( int &temp_mismatch, const options &opts)
 {
     if (temp_mismatch > opts.max_mismatches)
     {
@@ -243,7 +243,7 @@ bool inline check_mismatch( int &temp_mismatch, const options &opts)
 // bitap functions
 // only applicable for short reads
 // longer reads have enough information in them already
-bool direct_repeat_init( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts )
+bool directRepeatInit( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts )
 {
     
     dr_match.DR_NumMismatches = match_info.RM_NumMismatches;
@@ -255,11 +255,11 @@ bool direct_repeat_init( DirectRepeat &dr_match, ReadMatch &match_info, int &tem
     return true;  
 }
 
-bool direct_repeat_extend ( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts)
+bool directRepeatExtend ( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts)
 {
     temp_mismatch += match_info.RM_NumMismatches;
     
-    if (check_mismatch(temp_mismatch, opts))
+    if (checkMismatch(temp_mismatch, opts))
     {
         dr_match.DR_NumMismatches = temp_mismatch;
         dr_match.DR_EndPos = match_info.RM_EndPos;
@@ -274,7 +274,7 @@ bool direct_repeat_extend ( DirectRepeat &dr_match, ReadMatch &match_info, int &
     return true;
 }
 
-bool update_word_bitap(ReadMatch &match_info, int &search_begin, int &start, const options &opts, DirectRepeat &dr, std::string &subject_word, int &temp_mismatch)
+bool updateWordBitap(ReadMatch &match_info, int &search_begin, int &start, const options &opts, DirectRepeat &dr, std::string &subject_word, int &temp_mismatch)
 {
     match_info.RM_MatchStartPos = start;
     match_info.RM_MatchEndPos = start + opts.lowDRsize;
@@ -284,13 +284,13 @@ bool update_word_bitap(ReadMatch &match_info, int &search_begin, int &start, con
     
     temp_mismatch = match_info.RM_NumMismatches;
     
-    if (!(check_mismatch(temp_mismatch, opts)))
+    if (!(checkMismatch(temp_mismatch, opts)))
     {
         return false;
     }
     else if (dr.DR_StartPos == 0 && dr.DR_EndPos == 0)
     {
-        direct_repeat_init(dr, match_info, temp_mismatch, opts);
+        directRepeatInit(dr, match_info, temp_mismatch, opts);
     }
     else
     {
@@ -298,12 +298,12 @@ bool update_word_bitap(ReadMatch &match_info, int &search_begin, int &start, con
         {
             return false;
         }
-        direct_repeat_extend(dr, match_info, temp_mismatch, opts);
+        directRepeatExtend(dr, match_info, temp_mismatch, opts);
     }
     return true;
 }
 
-float bitap_search_fastq_file(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap *mReads) 
+float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap *mReads) 
 {
     
     gzFile fp = getFileHandle(input_fastq);
@@ -368,9 +368,9 @@ float bitap_search_fastq_file(const char *input_fastq, const options &opts, look
             
             if (!(NULL == (match_info.RM_SubstrEnd = FindWithBitap (&b, subject_word.c_str(), subject_word.length(), opts.max_mismatches, &match_info.RM_NumMismatches, &match_info.RM_SubstrStart)))) 
             {
-                if (!(update_word_bitap(match_info, search_begin, start, opts, dr_match, subject_word, temp_mismatch)))
+                if (!(updateWordBitap(match_info, search_begin, start, opts, dr_match, subject_word, temp_mismatch)))
                 {
-                    if (!(cut_direct_repeat_sequence(dr_match, opts, read)))
+                    if (!(cutDirectRepeatSequence(dr_match, opts, read)))
                     {
                         dr_match.reset();
                         //++match_counter;
@@ -391,7 +391,7 @@ float bitap_search_fastq_file(const char *input_fastq, const options &opts, look
         }
         
         // skip to the next read if the direct repeat or spacer are not the right size
-        if (!(cut_direct_repeat_sequence(dr_match, opts, read)))
+        if (!(cutDirectRepeatSequence(dr_match, opts, read)))
         {
             //++match_counter;
             continue;
@@ -413,11 +413,11 @@ float bitap_search_fastq_file(const char *input_fastq, const options &opts, look
     return total_base / match_counter;
 }
 
-void read_for_multimatch(const char *input_fastq, const options &opts, ReadMap *mReads )
+void scanForMultiMatches(const char *input_fastq, const options &opts, ReadMap *mReads )
 {
     std::vector<std::string> patterns;
     
-    map_to_vector(mReads, patterns);
+    map2Vector(mReads, patterns);
     
     if (patterns.size() == 0)
     {
@@ -503,9 +503,9 @@ void cutSpacerKmers( std::string &spacerSeq, lookupTable &spacerLookup, const op
     }
 }
 
-bool cut_direct_repeat_sequence(DirectRepeat &dr_match, const options &opts, string &read)
+bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string &read)
 {
-    if (!(check_dr_and_spacer_length(opts, dr_match)))
+    if (!(checkDRAndSpacerLength(opts, dr_match)))
     {
         return false;
     }
@@ -520,7 +520,7 @@ bool cut_direct_repeat_sequence(DirectRepeat &dr_match, const options &opts, str
     return true;
 }
 
-bool check_dr_and_spacer_length(const options &opts, DirectRepeat &dr_match)
+bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
 {
     dr_match.DR_Length = dr_match.DR_EndPos - dr_match.DR_StartPos;
     int spacer_length = dr_match.DR_StartPos - dr_match.DR_MatchEndPos;
@@ -545,38 +545,37 @@ bool check_dr_and_spacer_length(const options &opts, DirectRepeat &dr_match)
 
 std::string DRLowLexi(std::string matchedRead, DirectRepeat * dr_match, ReadHolder * tmp_holder)
 {
-    logInfo("Read Found:"<<endl<<matchedRead, 5)
-    
+    //-----
+    // Orientate a READ based on low lexi of the interalised DR
+    //
     std::string rev_comp = reverseComplement(dr_match->DR_Sequence);
     
     if (dr_match->DR_Sequence < rev_comp/*lexicographical_compare(dr_match->DR_Sequence.begin(), dr_match->DR_Sequence.end(), rev_comp.begin(), rev_comp.end())*/)
     {
-        
         // the direct repeat is in it lowest lexicographical form
         tmp_holder->RH_WasLowLexi = true;
         tmp_holder->RH_Seq = matchedRead;
-        logInfo("DR in low lexi"<<endl<<tmp_holder->RH_Seq, 8);
+        logInfo("DR in low lexi"<<endl<<tmp_holder->RH_Seq, 9);
         return dr_match->DR_Sequence;
     }
     else
     {
         tmp_holder->RH_Seq = reverseComplement(matchedRead);
         tmp_holder->RH_WasLowLexi = false;
-        logInfo("DR not in low lexi"<<endl<<tmp_holder->RH_Seq, 8);
+        logInfo("DR not in low lexi"<<endl<<tmp_holder->RH_Seq, 9);
         return rev_comp;
     }
 
 }
 
-
 void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, DirectRepeat * dr_match, std::string read_header, std::string read)
 {
-    logInfo(read_header, 2);
-    logInfo("\tdirect repeat found:", 2);
-    logInfo("\t"<<dr_match->DR_StartPos<<"\t"<<dr_match->DR_Sequence<<"\t"<<dr_match->DR_EndPos, 2);
+    logInfo("Add (header): \t" << read_header, 9);
+    logInfo("Direct repeat:\t"<<dr_match->DR_StartPos<<"\t"<<dr_match->DR_Sequence<<"\t"<<dr_match->DR_EndPos, 9);
     
     //add the header for the matched read
     tmp_holder->RH_Header = read_header;
+    
     // test drlowlexi
     std::string dr_lowlexi = DRLowLexi(read, dr_match, tmp_holder);
     
@@ -597,34 +596,6 @@ void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, DirectRepeat * dr_
         (*mReads)[dr_lowlexi]->push_back(tmp_holder);
     }
 }
-//**************************************
-// Trimming
-//**************************************
-
-// input a map of direct repeat sequence to vector of read holder objects
-void drTrim(ReadMap * mReads)
-{
-    // load in all of the read holder objects
-    
-    
-    // sort the read holders based on length of direct repeat
-    
-    
-    // compare the sequence of the shorter direct repeat to the longer direct repeat
-    
-    
-    // if it is a substring then check if the spacer contains the rest of the direct repeat
-    
-    
-    // if yes then update the positions of the direct repeat and spacer
-    
-    
-    // create a crispr node object and add into a node manager
-    
-    
-}
-
-
 
 //**************************************
 // lookup table shite
@@ -681,7 +652,7 @@ bool inline keyExists(ReadMap * mReads, std::string &direct_repeat)
 }
 
 // turn our map into a vector using just the keys
-void map_to_vector(lookupTable &patterns_hash, std::vector<std::string> &patterns)
+void map2Vector(lookupTable &patterns_hash, std::vector<std::string> &patterns)
 {
     
     lookupTable::iterator iter = patterns_hash.begin();
@@ -692,7 +663,7 @@ void map_to_vector(lookupTable &patterns_hash, std::vector<std::string> &pattern
     }
 }
 
-void map_to_vector(ReadMap * mReads, std::vector<std::string> &patterns)
+void map2Vector(ReadMap * mReads, std::vector<std::string> &patterns)
 {
 
     ReadMap::reverse_iterator red_map_iter = mReads->rbegin();

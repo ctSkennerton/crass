@@ -76,12 +76,14 @@ class WorkHorse {
         void clearReadMap(ReadMap * tmp_map);
         void printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup);
         
+        int mungeDRs(void);                         // cluster potential DRs and make node managers
+        bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<std::string, int> * DR2GIDMap, std::map<int, bool> * groups);  // cut kmers and hash
         // members
-        DR_List mDRs;                       // list of nodemanagers, cannonical DRs
-        ReadMap mReads;                    // reads containing possible DRs
+        DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
+        ReadMap mReads;                             // reads containing possible DRs
         
-        const options * mOpts;                    // search options
-        std::string mOutFileDir;            // where to spew text to
+        const options * mOpts;                      // search options
+        std::string mOutFileDir;                    // where to spew text to
 };
 
 #endif //WorkHorse_h

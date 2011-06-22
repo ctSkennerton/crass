@@ -49,6 +49,7 @@
 #include "crass_defines.h"
 #include "NodeManager.h"
 #include "ReadHolder.h"
+#include "SeqUtils.h"
 
 WorkHorse::~WorkHorse()
 {
@@ -145,9 +146,9 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         
         // Use a different search routine, depending on if we allow mismatches or not.
         if(mOpts->max_mismatches == 0)
-        {   aveReadLength = bm_search_fastq_file(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup, &mReads); }
+        {   aveReadLength = bmSearchFastqFile(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup, &mReads); }
         else
-        {   aveReadLength = bitap_search_fastq_file(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup, &mReads); }
+        {   aveReadLength = bitapSearchFastqFile(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup, &mReads); }
 
         logInfo("Average read length: "<<aveReadLength, 2);
         
@@ -155,26 +156,13 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         if (aveReadLength < DEF_MCD_READ_LENGTH_CUTOFF)
         {
             logInfo("Beginning multipattern matcher", 1);
-            
-            read_for_multimatch(input_fastq, *mOpts, &mReads);
+            scanForMultiMatches(input_fastq, *mOpts, &mReads);
         }
         
-        
-        ReadMapIterator red_map_iter = mReads.begin();
-        
-        while (red_map_iter != mReads.end()) {
-            std::cout<<red_map_iter->first<<" => "<<red_map_iter->second->size()<<endl;
-            ++red_map_iter;
-        }
-        //trim and concatenate the direct repeats
-        drTrim(&mReads);
-        
-        
-        // Checking step add here
-        std::string dr_seq = "bleg";
-        NodeManager * tmp_manager = new NodeManager(dr_seq);
-        mDRs[dr_seq] = tmp_manager;
-
+        // There will be an abundance of forms for each direct repeat.
+        // We needs to do somes clustering! Then trim and concatenate the direct repeats
+        mungeDRs();
+                
         printFileLookups(*seq_iter, kmerLookup, patternsLookup, spacerLookup);
         
         logInfo("Finished file: " << *seq_iter, 1);
@@ -183,6 +171,240 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     
     logInfo("all done!", 1);
     return 0;
+}
+
+int WorkHorse::mungeDRs(void)
+{
+    //-----
+    // Cluster potential DRs and work out their true sequences
+    // make the node managers while we're at it!
+    //
+    logInfo("Reducing list of potential DRs", 1);
+    
+    
+    int next_free_GID = 1;
+    std::map<std::string, int> k2GID_map;
+    std::map<int, bool> groups;
+    std::map<std::string, int> DR2GID_map;
+    // go through all of the read holder objects
+    ReadMapIterator read_map_iter = mReads.begin();
+    while (read_map_iter != mReads.end()) {
+        //std::cout << read_map_iter->first << " => " << read_map_iter->second->size() << endl;
+        clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &DR2GID_map, &groups);
+        ++read_map_iter;
+    }
+    
+    std::map<std::string, int>::iterator DR2GID_iter = DR2GID_map.begin();
+    while(DR2GID_iter != DR2GID_map.end())
+    {
+        std::cout << DR2GID_iter->first << " : " << DR2GID_iter->second << std::endl;
+        DR2GID_iter++;
+    }
+
+/*    std::string dr_seq = "bleg";
+    NodeManager * tmp_manager = new NodeManager(dr_seq);
+    mDRs[dr_seq] = tmp_manager;*/
+    
+    
+    
+    // sort the read holders based on length of direct repeat
+    
+    
+    // compare the sequence of the shorter direct repeat to the longer direct repeat
+    
+    
+    // if it is a substring then check if the spacer contains the rest of the direct repeat
+    
+    
+    // if yes then update the positions of the direct repeat and spacer
+    
+    
+    // create a crispr node object and add into a node manager
+    
+    logInfo("Done!", 1);
+}
+
+bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<std::string, int> * DR2GIDMap, std::map<int, bool> * groups)
+{
+    //-----
+    // hash a DR!
+    //
+    int hash_size = 6;      // cutting 6 mers
+    int str_len = DR.length();
+    int off = str_len - hash_size;
+    int num_mers = off + 1;
+    
+    //***************************************
+    //***************************************
+    //***************************************
+    //***************************************
+    // LOOK AT ME!
+    // 
+    // Here we declare the minimum criteria for membership when clustering
+    // this is not cool!
+    int min_clust_membership_count = 14;
+    // 
+    //***************************************
+    //***************************************
+    //***************************************
+    //***************************************
+    
+    // STOLED FROM SaSSY!!!!
+    // First we cut kmers from the sequence then we use these to
+    // determine overlaps, finally we make edges
+    //
+    // When we cut kmers from a read it is like this...
+    //
+    // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    // ------------------------------
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    //
+    // so we break the job into three parts
+    //
+    // XXXX|XXXXXXXXXXXXXXXXXXXXXX|XXXX
+    // ----|----------------------|----
+    // XXXX|XXXXXXXXXXXXXXXXXXXXXX|
+    //  XXX|XXXXXXXXXXXXXXXXXXXXXX|X
+    //   XX|XXXXXXXXXXXXXXXXXXXXXX|XX
+    //    X|XXXXXXXXXXXXXXXXXXXXXX|XXX
+    //     |XXXXXXXXXXXXXXXXXXXXXX|XXXX
+    //
+    // the first and last part may be a little slow but the middle part can fly through...
+    //
+
+    // make a 2d array for the kmers!
+    char ** kmers = new char*[num_mers];
+    for(int i = 0; i < num_mers; i++)
+    {
+        kmers[i] = new char [hash_size+1];
+    }
+    
+    int * kmer_offsets = new int[num_mers];              // use these offsets when we cut kmers, they are a component of the algorithm
+    for(int i = 0; i < num_mers; i++)
+    {
+        kmer_offsets[i] = i * -1; // Starts at [0, -1, -2, -3, -4, ...]
+    }
+
+    int pos_counter = 0;
+
+    // a slow-ish first part
+    while(pos_counter < hash_size)
+    {
+        for(int j = 0; j < num_mers; j++)
+        {
+            if(pos_counter >= j)
+            {
+                kmers[j][kmer_offsets[j]] = DR[pos_counter];
+            }
+            kmer_offsets[j]++;
+        }
+        pos_counter++;
+    }
+    
+    // this is the fast part of the loop
+    while(pos_counter < off)
+    {
+        for(int j = 0; j < num_mers; j++)
+        {
+            if(kmer_offsets[j] >= 0 && kmer_offsets[j] < hash_size)
+            {
+                kmers[j][kmer_offsets[j]] = DR[pos_counter];
+            }
+            kmer_offsets[j]++;
+        }
+        pos_counter++;
+    }
+    
+    // an even slower ending
+    while(pos_counter < str_len)
+    {
+        for(int j = 0; j < num_mers; j++)
+        {
+            if(kmer_offsets[j] < hash_size)
+            {
+                kmers[j][kmer_offsets[j]] = DR[pos_counter];
+            }
+            kmer_offsets[j]++;
+        }
+        pos_counter++;
+    }
+    
+    //
+    // Now the fun stuff begins:
+    //
+    std::vector<std::string> homeless_kmers;
+    std::map<int, int> group_count;
+    int group = 0;
+    for(int i = 0; i < num_mers; ++i)
+    {
+        // make it a string!
+        kmers[i][hash_size+1]='\0';
+        std::string tmp_str(kmers[i]);
+        tmp_str = laurenize(tmp_str);
+        
+        // see if we've seen this kmer before
+        std::map<std::string, int>::iterator k2g_iter = k2GIDMap->find(tmp_str);
+        if(k2g_iter == k2GIDMap->end())
+        {
+            // first time we seen this one
+            homeless_kmers.push_back(tmp_str);
+        }
+        else
+        {
+            // only do this if our guy doesn't belong to a group yet
+            if(0 == group)
+            {
+                // this kmer belongs to a group!
+                std::map<int, int>::iterator this_group_iter = group_count.find(k2g_iter->second);
+                if(this_group_iter == group_count.end())
+                {
+                    group_count[k2g_iter->second] = 1;
+                }
+                else
+                {
+                    group_count[k2g_iter->second]++;
+                    if(min_clust_membership_count <= group_count[k2g_iter->second])
+                    {
+                        // we have found a group for this mofo!
+                        group = k2g_iter->second;
+                    }
+                }
+            }
+        }
+    }
+    
+    // std::map<int, std::vector<ReadHolder> *> * groups
+    if(0 == group)
+    {
+        // we need to make a new group for all the homeless kmers
+        group = (*nextFreeGID)++;
+        
+        // we need to make a new entry in the group map
+        (*groups)[group] = true;
+    }
+    
+    // we need to record the group for this mofo!
+    (*DR2GIDMap)[DR] = group;
+    
+    // we need to assign all homeless kmers to the group!
+    std::vector<std::string>::iterator homeless_iter = homeless_kmers.begin();
+    while(homeless_iter != homeless_kmers.end())
+    {
+        (*k2GIDMap)[*homeless_iter] = group;
+        homeless_iter++;
+    }
+
+    // clean up
+    delete [] kmer_offsets;
+    for(int i = 0; i < num_mers; i++)
+    {
+        delete [] kmers[i];
+    }
+    delete [] kmers;
 }
 
 //**************************************
