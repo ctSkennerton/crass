@@ -32,6 +32,8 @@
 #define DEF_MCD_MAX_PATTERN_LENGTH 1024
 #define DEF_MCD_MAX_DELIM_LENGTH 10
 
+
+#define MAX_CLUSTER_SIZE_FOR_SW 15
 // user options structure
 typedef struct {
     int count;

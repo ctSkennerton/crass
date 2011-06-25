@@ -47,7 +47,8 @@ am_crass_OBJECTS = Bitap.$(OBJEXT) bm.$(OBJEXT) Levensthein.$(OBJEXT) \
 	crass.$(OBJEXT) WuManber.$(OBJEXT) LoggerSimp.$(OBJEXT) \
 	SeqUtils.$(OBJEXT) CrisprNode.$(OBJEXT) NodeManager.$(OBJEXT) \
 	libcrispr.$(OBJEXT) WorkHorse.$(OBJEXT) \
-	SpacerInstance.$(OBJEXT) ReadHolder.$(OBJEXT)
+	SpacerInstance.$(OBJEXT) ReadHolder.$(OBJEXT) \
+	SmithWaterman.$(OBJEXT)
 crass_OBJECTS = $(am_crass_OBJECTS)
 crass_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)@am__isrc@
@@ -152,7 +153,7 @@ target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_LDFLAGS = -lz
-crass_SOURCES = Bitap.cpp bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp
+crass_SOURCES = Bitap.cpp bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp
 all: all-am
 
 .SUFFIXES:
@@ -226,6 +227,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NodeManager.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ReadHolder.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SeqUtils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SmithWaterman.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SpacerInstance.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/WorkHorse.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/WuManber.Po@am__quote@

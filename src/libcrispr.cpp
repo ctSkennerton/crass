@@ -199,22 +199,23 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
                         ++MatchEndPos;
                         if (EndPos > seq_length) break;
                     }
-                    if (!(cutDirectRepeatSequence(dr_match, opts, read)))
+                    
+                    if (cutDirectRepeatSequence(dr_match, opts, read))
                     {
-                        // increment the for loop so that it begins at the start of the 
-                        // matched kmer/direct repeat
-                        // minus 1 cause it will be incremented again at the top of the for loop
+                        // create the read holder
+                        ReadHolder * tmp_holder = new ReadHolder();
+                        
+                        addReadHolder(mReads, tmp_holder, &dr_match, read_header, read);
+                        
                         start = dr_match.DR_StartPos - 1;
                         dr_match.reset();
                         continue;
                     } 
                     else 
                     {                        
-                        // create the read holder
-                        ReadHolder * tmp_holder = new ReadHolder();
-                        
-                        addReadHolder(mReads, tmp_holder, &dr_match, read_header, read);
-
+                        // increment the for loop so that it begins at the start of the 
+                        // matched kmer/direct repeat
+                        // minus 1 cause it will be incremented again at the top of the for loop
                         start = dr_match.DR_StartPos - 1;
                         dr_match.reset();
                         continue;
@@ -370,20 +371,18 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
             {
                 if (!(updateWordBitap(match_info, search_begin, start, opts, dr_match, subject_word, temp_mismatch)))
                 {
-                    if (!(cutDirectRepeatSequence(dr_match, opts, read)))
+                    if (cutDirectRepeatSequence(dr_match, opts, read))
+                    {
+                        // create the read holder
+                        ReadHolder * tmp_holder = new ReadHolder;
+                        addReadHolder(mReads, tmp_holder, &dr_match, seq->name.s, read);
+                        dr_match.reset();
+                    } 
+                    else 
                     {
                         dr_match.reset();
                         //++match_counter;
                         continue;
-                    } 
-                    else 
-                    {
-                        // create the read holder
-                        ReadHolder * tmp_holder = new ReadHolder;
-                        
-                        addReadHolder(mReads, tmp_holder, &dr_match, seq->name.s, read);
-
-                        dr_match.reset();
                     }
                 }
             }
@@ -391,17 +390,18 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
         }
         
         // skip to the next read if the direct repeat or spacer are not the right size
-        if (!(cutDirectRepeatSequence(dr_match, opts, read)))
-        {
-            //++match_counter;
-            continue;
-        } 
-        else 
+        if (cutDirectRepeatSequence(dr_match, opts, read))
         {
             // create the read holder
             ReadHolder * tmp_holder = new ReadHolder;
-            
             addReadHolder(mReads, tmp_holder, &dr_match, seq->name.s, read);
+            dr_match.reset();
+        } 
+        else 
+        {
+            dr_match.reset();
+            //++match_counter;
+            continue;
         }
         ++match_counter;
     }
@@ -464,7 +464,7 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, ReadMap *
 //**************************************
 // kmer operators
 //**************************************
-
+/*
 void cutLeftKmer( string &read, int &start, int &end, lookupTable &inputLookup, const options &opts)
 {    
     string left_kmer = read.substr((start - opts.kmer_size), opts.kmer_size);
@@ -502,7 +502,7 @@ void cutSpacerKmers( std::string &spacerSeq, lookupTable &spacerLookup, const op
         addToLookup(left_kmer, spacerLookup);
     }
 }
-
+*/
 bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string &read)
 {
     if (!(checkDRAndSpacerLength(opts, dr_match)))
@@ -526,16 +526,11 @@ bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
     int spacer_length = dr_match.DR_StartPos - dr_match.DR_MatchEndPos;
     logInfo("DR len: "<<dr_match.DR_Length<<" SP length: "<<spacer_length, 10);
     // check if the direct repeat is in the right size range
-    if ( !(dr_match.DR_Length >= opts.lowDRsize && dr_match.DR_Length <= opts.highDRsize))
-    {
-        return false; 
-    }
+    if ( !(dr_match.DR_Length >= opts.lowDRsize && dr_match.DR_Length <= opts.highDRsize)) return false;
     
     // check if the spacer is in the right size range
-    else if (!(spacer_length > opts.lowSpacerSize && spacer_length < opts.highSpacerSize))
-    {
-        return false;
-    }
+    else if (!(spacer_length > opts.lowSpacerSize && spacer_length < opts.highSpacerSize)) return false;
+
     return true; 
 }
 
@@ -550,7 +545,7 @@ std::string DRLowLexi(std::string matchedRead, DirectRepeat * dr_match, ReadHold
     //
     std::string rev_comp = reverseComplement(dr_match->DR_Sequence);
     
-    if (dr_match->DR_Sequence < rev_comp/*lexicographical_compare(dr_match->DR_Sequence.begin(), dr_match->DR_Sequence.end(), rev_comp.begin(), rev_comp.end())*/)
+    if (dr_match->DR_Sequence < rev_comp)
     {
         // the direct repeat is in it lowest lexicographical form
         tmp_holder->RH_WasLowLexi = true;

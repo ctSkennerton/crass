@@ -50,6 +50,7 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 #include "SeqUtils.h"
+#include "SmithWaterman.h"
 
 WorkHorse::~WorkHorse()
 {
@@ -118,9 +119,13 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     // Taken from the old main function
     //
     if(mOpts->max_mismatches == 0)
-    {   logInfo("Finding CRISPRs using the boyer-moore search algorithm", 1); }
+    {   
+        logInfo("Finding CRISPRs using the boyer-moore search algorithm", 1); 
+    }
     else
-    {   logInfo("Finding CRISPRs using the bitap algorithm", 1); }
+    {   
+        logInfo("Finding CRISPRs using the bitap algorithm", 1); 
+    }
     
     std::vector<std::string>::iterator seq_iter = seqFiles.begin();
     while(seq_iter != seqFiles.end())
@@ -162,8 +167,9 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         // There will be an abundance of forms for each direct repeat.
         // We needs to do somes clustering! Then trim and concatenate the direct repeats
         mungeDRs();
-                
-        printFileLookups(*seq_iter, kmerLookup, patternsLookup, spacerLookup);
+        
+        // we don't use these tables any more so why print them
+        //printFileLookups(*seq_iter, kmerLookup, patternsLookup, spacerLookup);
         
         logInfo("Finished file: " << *seq_iter, 1);
         seq_iter++;
@@ -185,38 +191,34 @@ int WorkHorse::mungeDRs(void)
     int next_free_GID = 1;
     std::map<std::string, int> k2GID_map;
     std::map<int, bool> groups;
-    std::map<std::string, int> DR2GID_map;
+    DR_Cluster DR2GID_map;
     // go through all of the read holder objects
     ReadMapIterator read_map_iter = mReads.begin();
     while (read_map_iter != mReads.end()) {
-        //std::cout << read_map_iter->first << " => " << read_map_iter->second->size() << endl;
         clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &DR2GID_map, &groups);
         ++read_map_iter;
     }
+        
+    // now that we know what our groups are it's time to find the one true direct repeat
+    oneDRToRuleThemAll(&DR2GID_map);
     
-    std::map<std::string, int>::iterator DR2GID_iter = DR2GID_map.begin();
+    
+    
+    DR_ClusterIterator DR2GID_iter = DR2GID_map.begin();
     while(DR2GID_iter != DR2GID_map.end())
     {
-        std::cout << DR2GID_iter->first << " : " << DR2GID_iter->second << std::endl;
+        std::cout << DR2GID_iter->first << " : ";
+        std::vector<std::string>::iterator vec_it;
+        vec_it = DR2GID_iter->second->begin();
+        while (vec_it != DR2GID_iter->second->end()) 
+        {
+            std::cout<<*vec_it<<" ";
+            vec_it++;
+        }
+        std::cout<<std::endl;
         DR2GID_iter++;
     }
 
-/*    std::string dr_seq = "bleg";
-    NodeManager * tmp_manager = new NodeManager(dr_seq);
-    mDRs[dr_seq] = tmp_manager;*/
-    
-    
-    
-    // sort the read holders based on length of direct repeat
-    
-    
-    // compare the sequence of the shorter direct repeat to the longer direct repeat
-    
-    
-    // if it is a substring then check if the spacer contains the rest of the direct repeat
-    
-    
-    // if yes then update the positions of the direct repeat and spacer
     
     
     // create a crispr node object and add into a node manager
@@ -224,7 +226,46 @@ int WorkHorse::mungeDRs(void)
     logInfo("Done!", 1);
 }
 
-bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<std::string, int> * DR2GIDMap, std::map<int, bool> * groups)
+
+void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
+{
+    DR_ClusterIterator DR2GID_iter;
+    
+    DR2GID_iter = DR2GID_map->begin();
+    
+    while (DR2GID_iter != DR2GID_map->end()) 
+    {
+        std::cout<<DR2GID_iter->first<<":"<<std::endl;
+
+        int group_size = DR2GID_iter->second->size() - 1;
+        // if the group is small its totes okay to do all vs all
+        if (MAX_CLUSTER_SIZE_FOR_SW >= group_size)
+        {
+            for (int i = 0; i < group_size; i++) 
+            {
+                for (int j = i + 1; j <= group_size; j++) 
+                {
+                    smithWaterman(DR2GID_iter->second->at(i), DR2GID_iter->second->at(j));
+                }
+            }
+            // pass to smith waterman
+        }
+        // but we don't want to kill the machine so if it's a large group
+        // we select some of the longer sequences in the group and perform the
+        // comparison on just those sequences
+        else
+        {
+            // take a subset
+            
+            
+            // pass to smith waterman
+        }
+    
+        ++DR2GID_iter;
+    }
+}
+
+bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups)
 {
     //-----
     // hash a DR!
@@ -242,7 +283,7 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
     // 
     // Here we declare the minimum criteria for membership when clustering
     // this is not cool!
-    int min_clust_membership_count = 14;
+    int min_clust_membership_count = mOpts->kmer_size;
     // 
     //***************************************
     //***************************************
@@ -385,10 +426,11 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
         
         // we need to make a new entry in the group map
         (*groups)[group] = true;
+        (*DR2GIDMap)[group] = new std::vector<std::string>;
     }
     
     // we need to record the group for this mofo!
-    (*DR2GIDMap)[DR] = group;
+    (*DR2GIDMap)[group]->push_back(DR);
     
     // we need to assign all homeless kmers to the group!
     std::vector<std::string>::iterator homeless_iter = homeless_kmers.begin();
@@ -405,6 +447,8 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
         delete [] kmers[i];
     }
     delete [] kmers;
+    
+    
 }
 
 //**************************************
@@ -419,9 +463,9 @@ void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup ,
     logInfo("Printing lookup tables from file: " << fileName << "to " << mOutFileDir, 1);
     
     // Make file names
-    string kmer_lookup_name = mOutFileDir + MCD_DEF_KMER_LOOKUP_EXT;
-    string patterns_lookup_name = mOutFileDir + MCD_DEF_PATTERN_LOOKUP_EXT;
-    string spacer_lookup_name = mOutFileDir + MCD_DEF_SPACER_LOOKUP_EXT;
+    std::string kmer_lookup_name = mOutFileDir + MCD_DEF_KMER_LOOKUP_EXT;
+    std::string patterns_lookup_name = mOutFileDir + MCD_DEF_PATTERN_LOOKUP_EXT;
+    std::string spacer_lookup_name = mOutFileDir + MCD_DEF_SPACER_LOOKUP_EXT;
     
     // Write!
     writeLookupToFile(kmer_lookup_name, kmerLookup);  
@@ -431,7 +475,7 @@ void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup ,
 
 void WorkHorse::writeLookupToFile(string &outFileName, lookupTable &outLookup)
 {
-    ofstream outLookupFile;
+    std::ofstream outLookupFile;
     outLookupFile.open(outFileName.c_str());
     
     lookupTable::iterator ter = outLookup.begin();
