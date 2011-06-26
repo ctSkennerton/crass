@@ -315,77 +315,77 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
     return total_base / match_counter;
 }
 
-bool inline checkMismatch( int &temp_mismatch, const options &opts)
-{
-    if (temp_mismatch > opts.max_mismatches)
-    {
-        return false;
-    }
-    return true;
-}
+//bool inline checkMismatch( int &temp_mismatch, const options &opts)
+//{
+//    if (temp_mismatch > opts.max_mismatches)
+//    {
+//        return false;
+//    }
+//    return true;
+//}
 
 // bitap functions
 // only applicable for short reads
 // longer reads have enough information in them already
-bool directRepeatInit( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts )
-{
-    
-    dr_match.DR_NumMismatches = match_info.RM_NumMismatches;
-    dr_match.DR_StartPos = match_info.RM_StartPos;
-    dr_match.DR_EndPos = match_info.RM_EndPos;
-    dr_match.DR_MatchStartPos = match_info.RM_MatchStartPos;
-    dr_match.DR_MatchEndPos = match_info.RM_MatchEndPos;
-    
-    return true;  
-}
-
-bool directRepeatExtend ( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts)
-{
-    temp_mismatch += match_info.RM_NumMismatches;
-    
-    if (checkMismatch(temp_mismatch, opts))
-    {
-        dr_match.DR_NumMismatches = temp_mismatch;
-        dr_match.DR_EndPos = match_info.RM_EndPos;
-        dr_match.DR_MatchEndPos = match_info.RM_MatchEndPos;
-        
-    }
-    else
-    {
-        return false;
-    }
-    
-    return true;
-}
-
-bool updateWordBitap(ReadMatch &match_info, int &search_begin, int &start, const options &opts, DirectRepeat &dr, std::string &subject_word, int &temp_mismatch)
-{
-    match_info.RM_MatchStartPos = start;
-    match_info.RM_MatchEndPos = start + opts.lowDRsize;
-    match_info.RM_SubstrEnd = match_info.RM_SubstrStart + opts.lowDRsize/*strlen(opts.search_pattern)*/;
-    match_info.RM_StartPos = (int) (match_info.RM_SubstrStart - subject_word.c_str()) + search_begin/*seq->seq.s)*/;
-    match_info.RM_EndPos = (int) ( match_info.RM_StartPos + opts.lowDRsize/*strlen(opts.search_pattern)*/ );
-    
-    temp_mismatch = match_info.RM_NumMismatches;
-    
-    if (!(checkMismatch(temp_mismatch, opts)))
-    {
-        return false;
-    }
-    else if (dr.DR_StartPos == 0 && dr.DR_EndPos == 0)
-    {
-        directRepeatInit(dr, match_info, temp_mismatch, opts);
-    }
-    else
-    {
-        if (match_info.RM_EndPos != (dr.DR_EndPos + 1)) 
-        {
-            return false;
-        }
-        directRepeatExtend(dr, match_info, temp_mismatch, opts);
-    }
-    return true;
-}
+//bool directRepeatInit( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts )
+//{
+//    
+//    dr_match.DR_NumMismatches = match_info.RM_NumMismatches;
+//    dr_match.DR_StartPos = match_info.RM_StartPos;
+//    dr_match.DR_EndPos = match_info.RM_EndPos;
+//    dr_match.DR_MatchStartPos = match_info.RM_MatchStartPos;
+//    dr_match.DR_MatchEndPos = match_info.RM_MatchEndPos;
+//    
+//    return true;  
+//}
+//
+//bool directRepeatExtend ( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts)
+//{
+//    temp_mismatch += match_info.RM_NumMismatches;
+//    
+//    if (checkMismatch(temp_mismatch, opts))
+//    {
+//        dr_match.DR_NumMismatches = temp_mismatch;
+//        dr_match.DR_EndPos = match_info.RM_EndPos;
+//        dr_match.DR_MatchEndPos = match_info.RM_MatchEndPos;
+//        
+//    }
+//    else
+//    {
+//        return false;
+//    }
+//    
+//    return true;
+//}
+//
+//bool updateWordBitap(ReadMatch &match_info, int &search_begin, int &start, const options &opts, DirectRepeat &dr, std::string &subject_word, int &temp_mismatch)
+//{
+//    match_info.RM_MatchStartPos = start;
+//    match_info.RM_MatchEndPos = start + opts.lowDRsize;
+//    match_info.RM_SubstrEnd = match_info.RM_SubstrStart + opts.lowDRsize/*strlen(opts.search_pattern)*/;
+//    match_info.RM_StartPos = (int) (match_info.RM_SubstrStart - subject_word.c_str()) + search_begin/*seq->seq.s)*/;
+//    match_info.RM_EndPos = (int) ( match_info.RM_StartPos + opts.lowDRsize/*strlen(opts.search_pattern)*/ );
+//    
+//    temp_mismatch = match_info.RM_NumMismatches;
+//    
+//    if (!(checkMismatch(temp_mismatch, opts)))
+//    {
+//        return false;
+//    }
+//    else if (dr.DR_StartPos == 0 && dr.DR_EndPos == 0)
+//    {
+//        directRepeatInit(dr, match_info, temp_mismatch, opts);
+//    }
+//    else
+//    {
+//        if (match_info.RM_EndPos != (dr.DR_EndPos + 1)) 
+//        {
+//            return false;
+//        }
+//        directRepeatExtend(dr, match_info, temp_mismatch, opts);
+//    }
+//    return true;
+//}
 
 float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap *mReads) 
 {
@@ -395,7 +395,6 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
     int l, match_counter = 0;
     unsigned int total_base = 0;
     
-    bool match_found = false;
     // initialize seq
     seq = kseq_init(fp);
     
@@ -406,7 +405,8 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
     {
         int seq_length = (int) (strlen(seq->seq.s));
         int search_end = seq_length - opts.lowDRsize;
-        
+        bool match_found = false;
+
         total_base += seq_length;
         
         dr_match.reset();
@@ -455,8 +455,41 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
             
             if (NULL != (match_info.RM_SubstrEnd = FindWithBitap (&b, subject_word.c_str(), subject_word.length(), opts.max_mismatches, &match_info.RM_NumMismatches, &match_info.RM_SubstrStart))) 
             {
-                if (!(updateWordBitap(match_info, search_begin, start, opts, dr_match, subject_word, temp_mismatch)))
+                dr_match.DR_MatchStartPos = start;
+                dr_match.DR_StartPos = (int) (match_info.RM_SubstrStart - subject_word.c_str()) + search_begin/*seq->seq.s)*/;
+
+                
+                match_info.RM_MatchEndPos = start + opts.lowDRsize;
+                match_info.RM_SubstrEnd = match_info.RM_SubstrStart + opts.lowDRsize/*strlen(opts.search_pattern)*/;
+                match_info.RM_EndPos = (int) ( dr_match.DR_StartPos + opts.lowDRsize/*strlen(opts.search_pattern)*/ );
+                
+                            
+                ++match_info.RM_MatchEndPos;
+                ++match_info.RM_EndPos;
+                
+                while (match_info.RM_NumMismatches <= opts.max_mismatches && match_info.RM_EndPos < seq_length) 
                 {
+                    char dr_A = read.at(match_info.RM_MatchEndPos);
+                    char dr_B = read.at(match_info.RM_EndPos);
+                    
+                    logInfo("Match end pos: "<<match_info.RM_MatchEndPos<<" end pos: "<<match_info.RM_EndPos, 10);
+                    logInfo(read.at(match_info.RM_MatchEndPos) << " : " << match_info.RM_MatchEndPos << " == " << read.at(match_info.RM_EndPos) << " : " << match_info.RM_EndPos, 10);
+                    
+                    if (dr_A != dr_B)
+                    {
+                        match_info.RM_NumMismatches++;
+                    }
+                    
+                    ++match_info.RM_MatchEndPos;
+                    ++match_info.RM_EndPos;
+                }
+                
+                dr_match.DR_MatchEndPos = match_info.RM_MatchEndPos;
+                dr_match.DR_NumMismatches = match_info.RM_NumMismatches;
+                dr_match.DR_EndPos = match_info.RM_EndPos;
+                
+//                if (!(updateWordBitap(match_info, search_begin, start, opts, dr_match, subject_word, temp_mismatch)))
+//                {
                     if (cutDirectRepeatSequence(dr_match, opts, read))
                     {
  
@@ -472,34 +505,35 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
                     } 
                     else 
                     {
+                        start = dr_match.DR_StartPos - 1;
                         dr_match.reset();
                         //++match_counter;
                         continue;
                     }
-                }
+//                }
             }
             DeleteBitap (&b);
         }
         
-        // skip to the next read if the direct repeat or spacer are not the right size
-        if (cutDirectRepeatSequence(dr_match, opts, read))
-        {
-            tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchStartPos);
-            tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchEndPos);
-            tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
-            tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
-            match_found = true;
-            //start = dr_match.DR_StartPos - 1;
-            // create the read holder
-            //ReadHolder * tmp_holder = new ReadHolder;
-            dr_match.reset();
-        } 
-        else 
-        {
-            dr_match.reset();
-            //++match_counter;
-            continue;
-        }
+//        // skip to the next read if the direct repeat or spacer are not the right size
+//        if (cutDirectRepeatSequence(dr_match, opts, read))
+//        {
+//            tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchStartPos);
+//            tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchEndPos);
+//            tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
+//            tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
+//            match_found = true;
+//            //start = dr_match.DR_StartPos - 1;
+//            // create the read holder
+//            //ReadHolder * tmp_holder = new ReadHolder;
+//            dr_match.reset();
+//        } 
+//        else 
+//        {
+//            dr_match.reset();
+//            //++match_counter;
+//            continue;
+//        }
         
         if (match_found)
         {
@@ -512,6 +546,7 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
     kseq_destroy(seq); // destroy seq  
     gzclose(fp);       // close the file handler  
     
+    std::cout<<total_base<<" "<<match_counter<<endl;
     
     return total_base / match_counter;
 }
@@ -628,6 +663,8 @@ bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string
 bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
 {
     dr_match.DR_Length = dr_match.DR_EndPos - dr_match.DR_StartPos;
+    logInfo("dr end pos: "<<dr_match.DR_EndPos<<" dr start pos: "<<dr_match.DR_StartPos, 10);
+    
     int spacer_length = dr_match.DR_StartPos - dr_match.DR_MatchEndPos;
     logInfo("DR len: "<<dr_match.DR_Length<<" SP length: "<<spacer_length, 10);
     // check if the direct repeat is in the right size range
