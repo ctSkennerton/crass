@@ -395,6 +395,7 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
     int l, match_counter = 0;
     unsigned int total_base = 0;
     
+    bool match_found = false;
     // initialize seq
     seq = kseq_init(fp);
     
@@ -420,6 +421,8 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
         int temp_mismatch = 0;
         bitapType b;
         
+        ReadHolder * tmp_holder = new ReadHolder;
+
         for (int start = 0; start < search_end; start++)
         {
             ReadMatch match_info;
@@ -428,7 +431,7 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
             
             logInfo("search begin: "<<search_begin<<" search end: "<<search_end, 10);
             
-            if (search_begin == search_end )
+            if (search_begin >= search_end )
             {
                 break;
             }
@@ -456,10 +459,16 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
                 {
                     if (cutDirectRepeatSequence(dr_match, opts, read))
                     {
-                        // create the read holder
-                        ReadHolder * tmp_holder = new ReadHolder;
-                        addReadHolder(mReads, tmp_holder, seq->name.s, read);
+ 
+                        tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchStartPos);
+                        tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchEndPos);
+                        tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
+                        tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
+                        match_found = true;
+                        start = dr_match.DR_StartPos - 1;
                         dr_match.reset();
+                        continue;
+                        //dr_match.reset();
                     } 
                     else 
                     {
@@ -475,9 +484,14 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
         // skip to the next read if the direct repeat or spacer are not the right size
         if (cutDirectRepeatSequence(dr_match, opts, read))
         {
+            tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchStartPos);
+            tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchEndPos);
+            tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
+            tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
+            match_found = true;
+            //start = dr_match.DR_StartPos - 1;
             // create the read holder
-            ReadHolder * tmp_holder = new ReadHolder;
-            addReadHolder(mReads, tmp_holder, seq->name.s, read);
+            //ReadHolder * tmp_holder = new ReadHolder;
             dr_match.reset();
         } 
         else 
@@ -486,7 +500,13 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
             //++match_counter;
             continue;
         }
+        
+        if (match_found)
+        {
+            addReadHolder(mReads, tmp_holder, seq->name.s, read);
+        }
         ++match_counter;
+
     }
     
     kseq_destroy(seq); // destroy seq  
