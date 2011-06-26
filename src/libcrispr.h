@@ -84,6 +84,7 @@ class DirectRepeat {
         std::string DR_Sequence;
         std::string DR_MatchSequence;
         std::string DR_Spacer;
+        std::vector<int> DR_StartList;      // a vector containing the starting positions of all the DR
         int  DR_Length;
         int  DR_StartPos;                   // the start of the 'right' dr in the read
         int  DR_EndPos;                     // the end of the whole direct repeat
@@ -148,6 +149,7 @@ bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string
 
 bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match);
 
+int getActualRepeatLength(std::vector<int> &candidateCRISPR, std::string &read, int searchWindowLength, int minSpacerLength);
 
 //**************************************
 // Read Holder

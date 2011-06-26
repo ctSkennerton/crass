@@ -161,7 +161,7 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
             
             
             std::string query_word = read.substr(start, opts.lowDRsize);
-            std::string subject_word = read.substr(search_begin, (opts.highDRsize + opts.highSpacerSize));
+            std::string subject_word = read.substr(search_begin);
             
             logInfo("query: "<<query_word<<" subject: "<<subject_word, 10);
             
@@ -175,7 +175,11 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
                 int MatchEndPos = start + opts.lowDRsize;
                 
                 dr_match.DR_StartPos = MatchStartPos + search_begin;
+                //dr_match.DR_StartList.push_back(MatchStartPos + search_begin);
+                
                 dr_match.DR_MatchStartPos = start;
+                //dr_match.DR_StartList.push_back(start);
+                
                 dr_match.DR_MatchEndPos = MatchEndPos;
                 dr_match.DR_EndPos = EndPos;
                 
@@ -205,11 +209,57 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
                         // create the read holder
                         ReadHolder * tmp_holder = new ReadHolder();
                         
-                        addReadHolder(mReads, tmp_holder, &dr_match, read_header, read);
+                        // check if there is alot of read still to go ( long read )
+                        // if the end pos is less than or equal to the end of the read minus 2 * the 
+                        // minimun direct repeat size and the minimum spacer size
+                        if (dr_match.DR_EndPos <= (search_end - opts.lowDRsize - opts.lowSpacerSize))
+                        {
+                            
+                            // if yes then use the full sequence to find more instances of this string
+                            // cut a substring minusing the first and last two bases ( in case of a overextend )
+                            std::string new_search_string = dr_match.DR_Sequence.substr(2, dr_match.DR_Sequence.length() - 4);
+                            
+                            std::vector<int> start_list;
+
+                            // get all of the positions of this substring
+                            PatternMatcher::bmpMultiSearch(read.substr(dr_match.DR_EndPos), new_search_string, start_list);
+                            
+                            
+                            std::vector<int>::iterator vec_iter = start_list.begin();
+                            
+                            dr_match.DR_StartList.push_back(dr_match.DR_MatchStartPos + 2);
+                            dr_match.DR_StartList.push_back(dr_match.DR_StartPos + 2);
+                            
+                            while (vec_iter != start_list.end()) 
+                            {
+                                logInfo("ll: "<<*vec_iter, 10);
+                               *vec_iter = *vec_iter + dr_match.DR_EndPos;
+                                dr_match.DR_StartList.push_back(*vec_iter);
+                                ++vec_iter;
+                            }
+                            
+                            // update the start positions of the direct repeats 
+                            int real_length = getActualRepeatLength(dr_match.DR_StartList, read, new_search_string.length(), opts.lowSpacerSize);
+                            
+                            logInfo("DR length: "<<real_length, 10);
+                            vector<int>::iterator DR_start_iter= dr_match.DR_StartList.begin();
+                            while (DR_start_iter != dr_match.DR_StartList.end()) 
+                            {
+                                logInfo("gg : "<<*DR_start_iter<<"\t"<<read.substr((*DR_start_iter), real_length), 10);
+                                ++DR_start_iter;
+                            }
+                            break;
+                            
+                        }
+                        else
+                        {
+                            // if no then add the read holder to the map
+                            addReadHolder(mReads, tmp_holder, &dr_match, read_header, read);
                         
-                        start = dr_match.DR_StartPos - 1;
-                        dr_match.reset();
-                        continue;
+                            start = dr_match.DR_StartPos - 1;
+                            dr_match.reset();
+                            continue;
+                        }
                     } 
                     else 
                     {                        
@@ -532,6 +582,134 @@ bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
     else if (!(spacer_length > opts.lowSpacerSize && spacer_length < opts.highSpacerSize)) return false;
 
     return true; 
+}
+
+//**************************************
+// modify the positions of a crispr
+//**************************************
+
+// copied from CRT source code
+
+int getActualRepeatLength(std::vector<int> &candidateCRISPR, std::string &read, int searchWindowLength, int minSpacerLength)
+{
+    int numRepeats = candidateCRISPR.size();
+    int firstRepeatStartIndex = *candidateCRISPR.begin();
+    int lastRepeatStartIndex = candidateCRISPR.at(numRepeats - 1);
+    
+    int shortestRepeatSpacing = candidateCRISPR.at(1) - candidateCRISPR.at(0);
+    
+    for (int i = 0; i < candidateCRISPR.size() - 1; i++)
+    {
+        int currRepeatIndex = candidateCRISPR.at(i);
+        int nextRepeatIndex = candidateCRISPR.at(i + 1);
+        int currRepeatSpacing = nextRepeatIndex - currRepeatIndex;
+        if (currRepeatSpacing < shortestRepeatSpacing)
+        {
+            shortestRepeatSpacing = currRepeatSpacing;
+        }
+    }
+    logInfo("shortest repeat spacing: "<<shortestRepeatSpacing, 10);
+    int sequenceLength = read.length();
+    
+    //equal to length of search string
+    int rightExtensionLength = 0;
+    
+    int currRepeatStartIndex;
+    std::string currRepeat;
+    int charCountA, charCountC, charCountT, charCountG;
+    charCountA = charCountC = charCountT = charCountG = 0;
+    float threshold;
+    bool done = false;
+    
+    threshold = .75;
+    
+    logInfo("last comparable base: "<<lastRepeatStartIndex + rightExtensionLength + searchWindowLength, 10);
+    //(from the right side) extend the length of the repeat to the right as long as the last base of all repeats are at least threshold
+    while (!done && /*(rightExtensionLength <= maxRightExtensionLength) && */((lastRepeatStartIndex + rightExtensionLength + searchWindowLength) < sequenceLength))
+    {
+        for (int k = 0; k < candidateCRISPR.size(); k++ )
+        {
+            currRepeatStartIndex = candidateCRISPR.at(k);
+            
+            char lastChar = read.at(currRepeatStartIndex + rightExtensionLength + searchWindowLength);
+            logInfo("index: "<<k<<" last char: "<<lastChar<<" at position: "<<currRepeatStartIndex + rightExtensionLength + searchWindowLength, 10);
+//            currRepeat = read.substr(currRepeatStartIndex, currRepeatStartIndex + rightExtensionLength);
+//            char lastChar = currRepeat.at(currRepeat.length() - 1);
+            
+            if (lastChar == 'A')   charCountA++;
+            if (lastChar == 'C')   charCountC++;
+            if (lastChar == 'T')   charCountT++;
+            if (lastChar == 'G')   charCountG++;
+        }
+        
+        double percentA = (double)charCountA/candidateCRISPR.size();
+        double percentC = (double)charCountC/candidateCRISPR.size();
+        double percentT = (double)charCountT/candidateCRISPR.size();
+        double percentG = (double)charCountG/candidateCRISPR.size();
+        
+        if ( (percentA >= threshold) || (percentC >= threshold) || (percentT >= threshold) || (percentG >= threshold) )
+        {
+            rightExtensionLength++;
+            charCountA = charCountC = charCountT = charCountG = 0;
+        }
+        else
+        {
+            done = true;
+        }
+        logInfo("right extension: "<<rightExtensionLength, 10);
+    }
+    //rightExtensionLength--;
+    
+    logInfo("right extension length: "<<rightExtensionLength, 10);
+    
+    int leftExtensionLength = 0;
+    charCountA = charCountC = charCountT = charCountG = 0;
+    done = false;
+    
+    int maxLeftExtensionLength = shortestRepeatSpacing - minSpacerLength - rightExtensionLength;
+    
+    //(from the left side) extends the length of the repeat to the left as long as the first base of all repeats is at least threshold
+    while (!done && /*(leftExtensionLength <= maxLeftExtensionLength) && */(firstRepeatStartIndex - leftExtensionLength >= 0) )
+    {
+        for (int k = 0; k < candidateCRISPR.size(); k++ )
+        {
+            currRepeatStartIndex = candidateCRISPR.at(k);
+            char firstChar = read.at(currRepeatStartIndex - leftExtensionLength);
+            logInfo("index: "<<k<<" first char: "<<firstChar<<" at position: "<<currRepeatStartIndex - leftExtensionLength, 10);
+
+            if (firstChar == 'A')    charCountA++;
+            if (firstChar == 'C')    charCountC++;
+            if (firstChar == 'T')    charCountT++;
+            if (firstChar == 'G')    charCountG++;
+        }
+        
+        double percentA = (double)charCountA/candidateCRISPR.size();
+        double percentC = (double)charCountC/candidateCRISPR.size();
+        double percentT = (double)charCountT/candidateCRISPR.size();
+        double percentG = (double)charCountG/candidateCRISPR.size();
+        
+        if ( (percentA >= threshold) || (percentC >= threshold) || (percentT >= threshold) || (percentG >= threshold) )
+        {
+            leftExtensionLength++;
+            charCountA = charCountC = charCountT = charCountG = 0;
+        }
+        else
+        {
+            done = true;
+        }
+        logInfo("left extension: "<<leftExtensionLength, 10);
+    }
+    leftExtensionLength--;
+    
+    logInfo("left extension length: "<<leftExtensionLength, 10);
+    
+    for (int m = 0; m < candidateCRISPR.size(); m++)
+    {
+        candidateCRISPR.at(m) = candidateCRISPR.at(m) - leftExtensionLength;
+    }
+    
+    return rightExtensionLength + leftExtensionLength + searchWindowLength;
+    
 }
 
 //**************************************

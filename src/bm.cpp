@@ -60,7 +60,7 @@ int PatternMatcher::bmpSearch(const std::string &text, const std::string &patter
 
 // slight variation of the code above so that when a match is found it is pushed to 
 // a vector of starting positions
-void PatternMatcher::bmpMultiSearch(const std::string &text, const std::string &pattern, std::vector<size_t> &startOffsetVec )
+void PatternMatcher::bmpMultiSearch(const std::string &text, const std::string &pattern, std::vector<int> &startOffsetVec )
 {
     size_t textSize = text.size();
     size_t patternSize = pattern.size();
