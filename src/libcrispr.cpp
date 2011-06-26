@@ -227,32 +227,40 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
                             
                             std::vector<int>::iterator vec_iter = start_list.begin();
                             
-                            dr_match.DR_StartList.push_back(dr_match.DR_MatchStartPos + 2);
-                            dr_match.DR_StartList.push_back(dr_match.DR_StartPos + 2);
-                            
                             while (vec_iter != start_list.end()) 
                             {
-                                logInfo("ll: "<<*vec_iter, 10);
                                *vec_iter = *vec_iter + dr_match.DR_EndPos;
-                                dr_match.DR_StartList.push_back(*vec_iter);
                                 ++vec_iter;
                             }
+                            start_list.insert(vec_iter, (dr_match.DR_StartPos + 2));
+                            
+                            vec_iter = start_list.begin();
+                            
+                            start_list.insert(vec_iter, (dr_match.DR_MatchStartPos + 2));
                             
                             // update the start positions of the direct repeats 
-                            int real_length = getActualRepeatLength(dr_match.DR_StartList, read, new_search_string.length(), opts.lowSpacerSize);
+                            int real_length = getActualRepeatLength(start_list, read, new_search_string.length(), opts.lowSpacerSize);
                             
                             logInfo("DR length: "<<real_length, 10);
-                            vector<int>::iterator DR_start_iter= dr_match.DR_StartList.begin();
-                            while (DR_start_iter != dr_match.DR_StartList.end()) 
+                            
+                            vec_iter = start_list.begin();
+                            while (vec_iter != start_list.end()) 
                             {
-                                logInfo("gg : "<<*DR_start_iter<<"\t"<<read.substr((*DR_start_iter), real_length), 10);
-                                ++DR_start_iter;
+                                dr_match.DR_StartStopList.push_back(*vec_iter);
+                                dr_match.DR_StartStopList.push_back(real_length);
+                                ++vec_iter;
                             }
+                            addReadHolder(mReads, tmp_holder, &dr_match, read_header, read);
                             break;
                             
                         }
                         else
                         {
+                            
+                            dr_match.DR_StartStopList.push_back(dr_match.DR_MatchStartPos);
+                            dr_match.DR_StartStopList.push_back(dr_match.DR_MatchEndPos);
+                            dr_match.DR_StartStopList.push_back(dr_match.DR_StartPos);
+                            dr_match.DR_StartStopList.push_back(dr_match.DR_EndPos);
                             // if no then add the read holder to the map
                             addReadHolder(mReads, tmp_holder, &dr_match, read_header, read);
                         
@@ -753,10 +761,11 @@ void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, DirectRepeat * dr_
     std::string dr_lowlexi = DRLowLexi(read, dr_match, tmp_holder);
     
     // populate the start stop list
-    (tmp_holder->RH_StartStops).push_back( dr_match->DR_MatchStartPos);
-    (tmp_holder->RH_StartStops).push_back( dr_match->DR_MatchEndPos);
-    (tmp_holder->RH_StartStops).push_back(dr_match->DR_StartPos);
-    (tmp_holder->RH_StartStops).push_back(dr_match->DR_EndPos);
+//    (tmp_holder->RH_StartStops).push_back( dr_match->DR_MatchStartPos);
+//    (tmp_holder->RH_StartStops).push_back( dr_match->DR_MatchEndPos);
+//    (tmp_holder->RH_StartStops).push_back(dr_match->DR_StartPos);
+//    (tmp_holder->RH_StartStops).push_back(dr_match->DR_EndPos);
+    tmp_holder->RH_StartStops.insert(tmp_holder->RH_StartStops.end(), dr_match->DR_StartStopList.begin(), dr_match->DR_StartStopList.end());
     
     if (keyExists(mReads, dr_match->DR_Sequence))
     {
