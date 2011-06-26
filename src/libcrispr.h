@@ -149,7 +149,7 @@ bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string
 
 bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match);
 
-int getActualRepeatLength(std::vector<int> &candidateCRISPR, std::string &read, int searchWindowLength, int minSpacerLength);
+//int getActualRepeatLength(std::vector<int> &candidateCRISPR, std::string &read, int searchWindowLength, int minSpacerLength);
 
 //**************************************
 // Read Holder
@@ -157,7 +157,7 @@ int getActualRepeatLength(std::vector<int> &candidateCRISPR, std::string &read, 
 
 std::string DRLowLexi(std::string matchedRead, DirectRepeat * dr_match,  ReadHolder * tmp_holder);
 
-void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, DirectRepeat * dr_match, std::string read_header, std::string read);
+void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, std::string read_header, std::string read);
 
 //**************************************
 // lookup table shite

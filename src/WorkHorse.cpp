@@ -194,7 +194,8 @@ int WorkHorse::mungeDRs(void)
     DR_Cluster DR2GID_map;
     // go through all of the read holder objects
     ReadMapIterator read_map_iter = mReads.begin();
-    while (read_map_iter != mReads.end()) {
+    while (read_map_iter != mReads.end()) 
+    {
         clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &DR2GID_map, &groups);
         ++read_map_iter;
     }

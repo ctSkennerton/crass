@@ -32,11 +32,6 @@
  *                               A
  */
 
-
-
-
-
-
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -113,8 +108,10 @@ static int ParseRegex (bitapType *b, const char *regex, const char *end)
             b->l++; /* Create an unmatchable char to stop shift from LHS to RHS */
             continue;
         }
-        if (*regex == '+' || *regex == '*' || *regex == '?') {
-            if (b->l > 0) { /* If regex start with '+' or '*', just ignore it */
+        if (*regex == '+' || *regex == '*' || *regex == '?') 
+        {
+            if (b->l > 0) 
+            { /* If regex start with '+' or '*', just ignore it */
                 if (*regex != '?') NewJump (b, b->l - 1, lastL, anyJump);
                 /* 'do{}' in C like '+' requires only 1 jump */
                 if (*regex != '+') NewJump (b, lastL, b->l - 1, anyJump);
@@ -248,22 +245,26 @@ const char *FindWithBitap (bitapType *b, const char *in, int inl, int e, int *er
     }
     for (;; in++) 
     { /* Invarient : r[i].bit[j] implies r[i + words].bit[j] */
-        for (i = 1; i <= e; i++) { /* Now check insertion possibilities */
-            for (carry = 0, j = 0; j < words; j++) {
+        for (i = 1; i <= e; i++) 
+        { /* Now check insertion possibilities */
+            for (carry = 0, j = 0; j < words; j++) 
+            {
                 tmp = r[(i - 1) * words + j];
                 r[i * words + j] |= ((tmp<<1) | carry) & b->x[j];
                 carry = tmp < 0 ? 1 : 0;
             }
             FromToForward (b, r + words * i);
         }
-        while (beste && r[beste * words - 1] >> ((b->l - 1) % BITS)) {
+        while (beste && r[beste * words - 1] >> ((b->l - 1) % BITS)) 
+        {
             beste--;
             best = in;
         }
         
         // if the word size is one
         if (!inl--) break;
-        for (i = e; i >= 0; i--) {
+        for (i = e; i >= 0; i--) 
+        {
             /* The process is as follows, except that steps 3 and 4 are somewhat */
             /* combined */
             /* 1. Shift the last level ('e') */
@@ -274,7 +275,8 @@ const char *FindWithBitap (bitapType *b, const char *in, int inl, int e, int *er
             /* 4. Do step 1 for the second last level */
             /* 5. Do step 2 for the second last level */
             /* ... */
-            for (carry = 0, j = 0; j < words; j++) {
+            for (carry = 0, j = 0; j < words; j++) 
+            {
                 tmp = r[i * words + j];
                 
                 if (i < e) r[(i + 1) * words + j] |= tmp | (tmp << 1) | carry;
@@ -286,7 +288,8 @@ const char *FindWithBitap (bitapType *b, const char *in, int inl, int e, int *er
             }
             if (i < e) FromToForward (b, r + words * (i + 1));
         }
-        for (carry = 0, j = 0; j < words; j++) { /* exact match row */
+        for (carry = 0, j = 0; j < words; j++) 
+        { /* exact match row */
             /* tmp = r[j]; */
             r[j] &= b->s[*in + ALPHABET * j];
             /* carry = tmp < 0 ? 1 : 0; */
@@ -302,16 +305,21 @@ const char *FindWithBitap (bitapType *b, const char *in, int inl, int e, int *er
     
     if (ereturn) *ereturn = e;
     
-    if (bReturn && best) {
+    if (bReturn && best) 
+    {
         e = beste; /* These may not match if the pattern does not end with .**/
         memset (r, 0, sizeof (*r) * words * (e + 1));
-        for (i = 0; i <= e; i++) {
+        for (i = 0; i <= e; i++) 
+        {
             r[(i + 1) * words - 1] |= 1 << ((b->l-1) % BITS);
             FromToReverse (b, r + i * words);
         }
-        for (*bReturn = best; ; ) {
-            for (i = 1; i <= e; i++) { /* Check for insertion possibilities */
-                for (carry = 0, j = words - 1; j >= 0; j--) {
+        for (*bReturn = best; ; ) 
+        {
+            for (i = 1; i <= e; i++) 
+            { /* Check for insertion possibilities */
+                for (carry = 0, j = words - 1; j >= 0; j--) 
+                {
                     tmp = r[(i - 1) * words + j];
                     r[i * words + j] |= (((unsigned) tmp >> 1) | carry) & b->x[j];
                     carry = tmp << (BITS - 1);
@@ -320,17 +328,20 @@ const char *FindWithBitap (bitapType *b, const char *in, int inl, int e, int *er
             }
             if (r[e * words] & 1) break;
             (*bReturn)--;
-            for (i = e; i >= 0; i--) {
+            for (i = e; i >= 0; i--) 
+            {
                 /* Same as above, except the mask takes place before the shift, */
                 /* so split up steps 3 and 4 */
                 if (i < e) {
-                    for (carry = 0, j = words - 1; j >= 0; j--) {
+                    for (carry = 0, j = words - 1; j >= 0; j--) 
+                    {
                         tmp = r[i * words + j];
                         r[(i + 1) * words + j] |= tmp | ((unsigned) tmp >> 1) | carry;
                         carry = tmp << (BITS - 1);
                     }
                 }
-                for (carry = 0, j = words - 1; j >= 0; j--) {
+                for (carry = 0, j = words - 1; j >= 0; j--) 
+                {
                     tmp = r[i * words + j] & b->s[**bReturn + ALPHABET * j];
                     r[i * words + j] = ((unsigned) tmp >> 1) | carry;
                     carry = tmp << (BITS - 1);
@@ -341,10 +352,6 @@ const char *FindWithBitap (bitapType *b, const char *in, int inl, int e, int *er
         } /* While searching for the beginning */
     } /* If we must return the beginning of the match */
     free (r);
-    
-    //printf("%hhd\n", *bReturn);
-//    size_t end_pos = (int) start_pos;
-//    printf("%lu\n", end_pos);
     return best;
 }
 
