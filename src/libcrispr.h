@@ -57,7 +57,7 @@
 #include "SeqUtils.h"
 
 
-typedef std::map<std::string, CrisprNode *> lookupTable;
+typedef std::map<std::string, bool> lookupTable;
 
 typedef std::vector<ReadHolder *> ReadList;
 typedef std::vector<ReadHolder *>::iterator ReadListIterator;
@@ -119,7 +119,7 @@ class ReadMatch {
 
 // boyer moore functions
 
-float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap * mReads);
+float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads);
 
 //bool inline checkMismatch( int &temp_mismatch, const options &opts);
 
@@ -130,10 +130,10 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
 //
 //bool updateWordBitap(ReadMatch &match_info, int &search_begin, int &start, const options &opts, DirectRepeat &dr, std::string &subject_word, int &temp_mismatch);
 
-float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap *mReads);
+float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads);
 
 // multimap functions (wuMander)
-void scanForMultiMatches(const char *input_fastq, const options &opts, ReadMap *mReads );
+void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads );
 
 //**************************************
 // kmer operators

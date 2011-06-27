@@ -143,17 +143,15 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         // direct repeat sequence and unique ID
         lookupTable patternsLookup;
         
-        // the sequence of the kmers on either side of the direct repeat and a unique ID
-        lookupTable kmerLookup;
         
         // the sequence of whole spacers and their unique ID
-        lookupTable spacerLookup;
+        lookupTable readsFound;
         
         // Use a different search routine, depending on if we allow mismatches or not.
         if(mOpts->max_mismatches == 0)
-        {   aveReadLength = bmSearchFastqFile(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup, &mReads); }
+        {   aveReadLength = bmSearchFastqFile(input_fastq, *mOpts, patternsLookup, readsFound,  &mReads); }
         else
-        {   aveReadLength = bitapSearchFastqFile(input_fastq, *mOpts, patternsLookup, spacerLookup, kmerLookup, &mReads); }
+        {   aveReadLength = bitapSearchFastqFile(input_fastq, *mOpts, patternsLookup, readsFound, &mReads); }
 
         logInfo("Average read length: "<<aveReadLength, 2);
         
@@ -161,7 +159,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         if (aveReadLength < DEF_MCD_READ_LENGTH_CUTOFF)
         {
             logInfo("Beginning multipattern matcher", 1);
-            scanForMultiMatches(input_fastq, *mOpts, &mReads);
+            scanForMultiMatches(input_fastq, *mOpts, patternsLookup, readsFound, &mReads);
         }
         
         // There will be an abundance of forms for each direct repeat.

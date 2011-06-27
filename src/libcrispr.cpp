@@ -126,7 +126,7 @@ KSEQ_INIT(gzFile, gzread);
 //**************************************
 
 // boyer moore functions
-float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap * mReads)
+float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads)
 {
     gzFile fp = getFileHandle(input_fastq);
     kseq_t *seq;
@@ -209,6 +209,7 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
                     
                     if (cutDirectRepeatSequence(dr_match, opts, read))
                     {
+                        patterns_hash[dr_match.DR_MatchSequence] = true;
 
                         
                         tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchStartPos);
@@ -303,6 +304,7 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
         }
         if (match_found)
         {
+            readsFound[read_header] = true;
             addReadHolder(mReads, tmp_holder, read_header, read);
         }
 
@@ -387,7 +389,7 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
 //    return true;
 //}
 
-float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap *mReads) 
+float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads) 
 {
     
     gzFile fp = getFileHandle(input_fastq);
@@ -456,12 +458,12 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
             if (NULL != (match_info.RM_SubstrEnd = FindWithBitap (&b, subject_word.c_str(), subject_word.length(), opts.max_mismatches, &match_info.RM_NumMismatches, &match_info.RM_SubstrStart))) 
             {
                 dr_match.DR_MatchStartPos = start;
-                dr_match.DR_StartPos = (int) (match_info.RM_SubstrStart - subject_word.c_str()) + search_begin/*seq->seq.s)*/;
+                dr_match.DR_StartPos = (int) (match_info.RM_SubstrStart - subject_word.c_str()) + search_begin;
 
                 
                 match_info.RM_MatchEndPos = start + opts.lowDRsize;
-                match_info.RM_SubstrEnd = match_info.RM_SubstrStart + opts.lowDRsize/*strlen(opts.search_pattern)*/;
-                match_info.RM_EndPos = (int) ( dr_match.DR_StartPos + opts.lowDRsize/*strlen(opts.search_pattern)*/ );
+                match_info.RM_SubstrEnd = match_info.RM_SubstrStart + opts.lowDRsize;
+                match_info.RM_EndPos = (int) ( dr_match.DR_StartPos + opts.lowDRsize );
                 
                             
                 ++match_info.RM_MatchEndPos;
@@ -478,6 +480,7 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
                     if (dr_A != dr_B)
                     {
                         match_info.RM_NumMismatches++;
+                        if (match_info.RM_NumMismatches <= opts.max_mismatches) break;
                     }
                     
                     ++match_info.RM_MatchEndPos;
@@ -490,26 +493,28 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
                 
 //                if (!(updateWordBitap(match_info, search_begin, start, opts, dr_match, subject_word, temp_mismatch)))
 //                {
-                    if (cutDirectRepeatSequence(dr_match, opts, read))
-                    {
- 
-                        tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchStartPos);
-                        tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchEndPos);
-                        tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
-                        tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
-                        match_found = true;
-                        start = dr_match.DR_StartPos - 1;
-                        dr_match.reset();
-                        continue;
-                        //dr_match.reset();
-                    } 
-                    else 
-                    {
-                        start = dr_match.DR_StartPos - 1;
-                        dr_match.reset();
-                        //++match_counter;
-                        continue;
-                    }
+                if (cutDirectRepeatSequence(dr_match, opts, read))
+                {
+
+                    patterns_hash[dr_match.DR_MatchSequence] = true;
+                    
+                    tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchStartPos);
+                    tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchEndPos);
+                    tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
+                    tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
+                    match_found = true;
+                    start = dr_match.DR_StartPos - 1;
+                    dr_match.reset();
+                    continue;
+                    //dr_match.reset();
+                } 
+                else 
+                {
+                    start = dr_match.DR_StartPos - 1;
+                    dr_match.reset();
+                    //++match_counter;
+                    continue;
+                }
 //                }
             }
             DeleteBitap (&b);
@@ -537,6 +542,7 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
         
         if (match_found)
         {
+            readsFound[seq->name.s] = true;
             addReadHolder(mReads, tmp_holder, seq->name.s, read);
         }
         ++match_counter;
@@ -551,11 +557,11 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
     return total_base / match_counter;
 }
 
-void scanForMultiMatches(const char *input_fastq, const options &opts, ReadMap *mReads )
+void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hsah, lookupTable &readsFound, ReadMap * mReads )
 {
     std::vector<std::string> patterns;
     
-    map2Vector(mReads, patterns);
+    map2Vector(patterns_hsah, patterns);
     
     if (patterns.size() == 0)
     {
@@ -587,15 +593,19 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, ReadMap *
         dr_match.DR_StartPos = endPos;
         if (endPos != -1)
         {
-            dr_match.DR_EndPos = endPos + dr_match.DR_Sequence.length();
-            
-            // create the read holder
-            ReadHolder * tmp_holder = new ReadHolder;
-            
-            tmp_holder->RH_StartStops.push_back( dr_match.DR_StartPos);
-            tmp_holder->RH_StartStops.push_back( dr_match.DR_EndPos);
-            
-            addReadHolder(mReads, tmp_holder, seq->name.s, read);
+            std::string header = seq->name.s;
+            if (!(keyExists(readsFound, header)))
+            {
+                dr_match.DR_EndPos = endPos + dr_match.DR_Sequence.length();
+                
+                // create the read holder
+                ReadHolder * tmp_holder = new ReadHolder;
+                
+                tmp_holder->RH_StartStops.push_back( dr_match.DR_StartPos);
+                tmp_holder->RH_StartStops.push_back( dr_match.DR_EndPos);
+                
+                addReadHolder(mReads, tmp_holder, seq->name.s, read);
+            }
         }
     }
     logInfo("finnished multi pattern matcher", 1);
