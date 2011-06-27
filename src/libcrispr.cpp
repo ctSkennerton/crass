@@ -584,7 +584,7 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
         dr_match.reset();
         
         //initialize with an impossible number
-        size_t endPos = -1;
+        int endPos = -1;
         
         std::string read = seq->seq.s;
         

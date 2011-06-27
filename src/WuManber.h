@@ -22,7 +22,7 @@ public:
     virtual ~WuManber( void );
     void Initialize( WuVector &patterns, 
                     bool bCaseSensitive = false, bool bIncludeSpecialCharacters = false, bool bIncludeExtendedAscii = false );
-    string Search( size_t TextLength, const char *Text, WuVector &patterns, size_t &start_pos );
+    string Search( size_t TextLength, const char *Text, WuVector &patterns, int &start_pos );
 protected:
     size_t k;  // number of patterns;
     size_t m;  // largest common pattern length

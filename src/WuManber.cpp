@@ -127,7 +127,7 @@ void WuManber::Initialize( const WuVector &patterns,
     m_bInitialized = true;
 }
 
-string WuManber::Search( size_t TextLength, const char *Text, WuVector &patterns, size_t &start_pos ) 
+string WuManber::Search( size_t TextLength, const char *Text, WuVector &patterns, int &start_pos ) 
 {
     
     //assert( k == patterns.size() );
