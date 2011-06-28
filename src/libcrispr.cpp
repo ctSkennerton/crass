@@ -598,12 +598,41 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
             {
                 dr_match.DR_EndPos = endPos + dr_match.DR_Sequence.length();
                 
+                // TODO: change this to some smarter logic
+                // really silly way or breaking it up!!
+                int thirds = read.length()/3;
+                
+                
                 // create the read holder
                 ReadHolder * tmp_holder = new ReadHolder;
                 
-                tmp_holder->RH_StartStops.push_back( dr_match.DR_StartPos);
-                tmp_holder->RH_StartStops.push_back( dr_match.DR_EndPos);
-                
+                if (dr_match.DR_EndPos <= thirds)
+                {
+                    // first third
+                    
+                    // the match we already have would come first
+                    tmp_holder->RH_StartStops.push_back( dr_match.DR_StartPos);
+                    tmp_holder->RH_StartStops.push_back( dr_match.DR_EndPos);
+                    
+                    findLostSouls(dr_match, tmp_holder, read, -1 );
+                }
+                else if (dr_match.DR_EndPos >= thirds*2)
+                {
+                    // last third
+                    
+                    findLostSouls(dr_match, tmp_holder, read, 1 );
+                    
+                    // the match we already have would come last
+                    tmp_holder->RH_StartStops.push_back( dr_match.DR_StartPos);
+                    tmp_holder->RH_StartStops.push_back( dr_match.DR_EndPos);
+                }
+                else
+                {
+                    // middle third
+                    
+                    findLostSouls(dr_match, tmp_holder, read, 0 );
+                }
+
                 addReadHolder(mReads, tmp_holder, seq->name.s, read);
             }
         }
@@ -692,6 +721,161 @@ bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
     return true; 
 }
 
+
+bool findLostSouls(DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int whichThird)
+{
+    
+    bool found = false;
+    if (whichThird == -1)
+    {
+        // search in the end of the read
+        //std::cout<<"searching the end of the read for partials"<<std::endl;
+        // cut a tetramer
+        int tetra_start = seq.length() - 5;
+        std::string tetramer = seq.substr(tetra_start, 4);
+        // check for its presence in the DR
+        int index = dr_match.DR_Sequence.find(tetramer);
+        
+        // if yes then find its maximal position ( it should reach the end of the DR)
+        if (index != string::npos) 
+        {
+            int mismatch = 0;
+            // find max pos allowing for mismatches 
+            while (mismatch <= LOST_SOULS_MISMATCHES && index >= 0 ) 
+            {
+                //std::cout<<"dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start)<<std::endl;
+                if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
+                index--;
+                tetra_start--;
+            }
+            if (index < 0) 
+            {
+                //std::cout<<"reached the start of the DR!"<<std::endl;
+                // we have reached the start of the DR
+                found = true;
+                // tetra start will now equal the first base in the partial DR
+                //std::cout<<"spacer: "<<dr_match.DR_EndPos<<" : "<<tetra_start<<std::endl;
+                //std::cout<<seq.substr(dr_match.DR_EndPos, (tetra_start - dr_match.DR_EndPos + 1))<<std::endl;
+                tmp_holder->RH_StartStops.push_back(tetra_start);
+                tmp_holder->RH_StartStops.push_back(seq.length());
+                return found;
+            }
+        }
+        
+        
+    }
+    else if (whichThird == 1)
+    {
+        // search in the start of the read
+        //std::cout<<"searching the beginning of the read for partials"<<std::endl;
+        int tetra_start = 0;
+        std::string tetramer = seq.substr(tetra_start, 4);
+        // check for its presence in the DR
+        size_t index = dr_match.DR_Sequence.find(tetramer);
+        
+        // if yes then find its maximal position ( it should reach the end of the DR)
+        if (index != string::npos) 
+        {
+            // find max pos
+            int mismatch = 0;
+            // find max pos allowing for mismatches 
+            while (mismatch <= LOST_SOULS_MISMATCHES && index <= (dr_match.DR_Sequence.length() - 1) ) 
+            {
+                //std::cout<<"dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start)<<std::endl;
+
+                if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
+                index++;
+                tetra_start++;
+            }
+            if (index == (dr_match.DR_Sequence.length())) 
+            {
+                // we have reached the end of the DR
+                //std::cout<<"reached the end of the DR!"<<std::endl;
+                found = true;
+                // tetra start will now equal the final base in the partial DR
+                //std::cout<<"spacer: "<<tetra_start<<" : "<<dr_match.DR_StartPos - 1<<std::endl;
+                //std::cout<<seq.substr(tetra_start, (dr_match.DR_StartPos - tetra_start))<<std::endl;
+                
+                tmp_holder->RH_StartStops.push_back(0);
+                tmp_holder->RH_StartStops.push_back(tetra_start);
+
+                return found;
+            }
+
+        }
+
+    }
+    else
+    {
+        // do both
+        
+        // search in the start of the read
+        
+        int tetra_start = 0;
+        std::string tetramer = seq.substr(tetra_start, 4);
+        // check for its presence in the DR
+        int index = dr_match.DR_Sequence.find(tetramer);
+        
+        // if yes then find its maximal position ( it should reach the end of the DR)
+        if (index != string::npos) 
+        {
+            // find max pos
+            int mismatch = 0;
+            // find max pos allowing for mismatches 
+            while (mismatch <= LOST_SOULS_MISMATCHES && index <= (dr_match.DR_Sequence.length() - 1) ) 
+            {
+                //std::cout<<"dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start)<<std::endl;
+
+                if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
+                index++;
+                tetra_start++;
+            }
+            if (index == (dr_match.DR_Sequence.length())) 
+            {
+                // we have reached the end of the DR
+                //std::cout<<"reached the end of the DR!"<<std::endl;
+                found = true;
+                // tetra start will now equal the final base in the partial DR
+//                std::cout<<"spacer: "<<tetra_start<<" : "<<dr_match.DR_StartPos - 1<<std::endl;
+//                std::cout<<seq.substr(tetra_start, (dr_match.DR_StartPos - tetra_start))<<std::endl;
+                tmp_holder->RH_StartStops.push_back(0);
+                tmp_holder->RH_StartStops.push_back(tetra_start);
+                return found;
+            }
+            else
+            {
+                tetra_start = seq.length() - 5;
+                tetramer = seq.substr(tetra_start, 4);
+                // check for its presence in the DR
+                index = dr_match.DR_Sequence.find(tetramer);
+                
+                mismatch = 0;
+                // find max pos allowing for mismatches 
+                while (mismatch <= LOST_SOULS_MISMATCHES && index >= 0 ) 
+                {
+                    //std::cout<<"dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start)<<std::endl;
+
+                    if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
+                    index--;
+                    tetra_start--;
+                }
+                if (index < 0) 
+                {
+                    //std::cout<<"reached the start of the DR!"<<std::endl;
+                    // we have reached the start of the DR
+                    found = true;
+                    // tetra start will now equal the first base in the partial DR
+//                    std::cout<<"spacer: "<<dr_match.DR_EndPos<<" : "<<tetra_start<<std::endl;
+//                    std::cout<<seq.substr(dr_match.DR_EndPos, (tetra_start - dr_match.DR_EndPos + 1))<<std::endl;
+                    
+                    tmp_holder->RH_StartStops.push_back(tetra_start);
+                    tmp_holder->RH_StartStops.push_back(seq.length());
+                }
+            }
+        }
+    }
+    return found;
+}
 ////**************************************
 //// modify the positions of a crispr
 ////**************************************
