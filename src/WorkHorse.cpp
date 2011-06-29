@@ -417,7 +417,6 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
         }
     }
     
-    // std::map<int, std::vector<ReadHolder> *> * groups
     if(0 == group)
     {
         // we need to make a new group for all the homeless kmers

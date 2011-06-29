@@ -136,6 +136,10 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
 void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads );
 
 bool findLostSouls(DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int whichThird);
+
+bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq);
+
+bool partialEnding (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq);
 //**************************************
 // kmer operators
 //**************************************

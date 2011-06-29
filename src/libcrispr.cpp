@@ -613,14 +613,15 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
                     // the match we already have would come first
                     tmp_holder->RH_StartStops.push_back( dr_match.DR_StartPos);
                     tmp_holder->RH_StartStops.push_back( dr_match.DR_EndPos);
-                    
-                    findLostSouls(dr_match, tmp_holder, read, -1 );
+                    partialEnding(dr_match, tmp_holder, read);
+                    //findLostSouls(dr_match, tmp_holder, read, -1 );
                 }
                 else if (dr_match.DR_EndPos >= thirds*2)
                 {
                     // last third
                     
-                    findLostSouls(dr_match, tmp_holder, read, 1 );
+                    //findLostSouls(dr_match, tmp_holder, read, 1 );
+                    partialStarting(dr_match, tmp_holder, read);
                     
                     // the match we already have would come last
                     tmp_holder->RH_StartStops.push_back( dr_match.DR_StartPos);
@@ -629,10 +630,19 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
                 else
                 {
                     // middle third
-                    
-                    findLostSouls(dr_match, tmp_holder, read, 0 );
+                    if (partialStarting(dr_match, tmp_holder, read))
+                    {
+                        tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
+                        tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
+                    }
+                    else
+                    {
+                        tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
+                        tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
+                        
+                        partialEnding(dr_match, tmp_holder, read);
+                    }
                 }
-
                 addReadHolder(mReads, tmp_holder, seq->name.s, read);
             }
         }
@@ -721,161 +731,83 @@ bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
     return true; 
 }
 
-
-bool findLostSouls(DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int whichThird)
+bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq)
 {
+    // search in the start of the read
+    logInfo("searching the beginning of the read for partials", 5);
+    int tetra_start = 0;
+    std::string tetramer = seq.substr(tetra_start, 4);
+    // check for its presence in the DR
+    size_t index = dr_match.DR_Sequence.find(tetramer);
     
-    bool found = false;
-    if (whichThird == -1)
+    // if yes then find its maximal position ( it should reach the end of the DR)
+    if (index != string::npos) 
     {
-        // search in the end of the read
-        //std::cout<<"searching the end of the read for partials"<<std::endl;
-        // cut a tetramer
-        int tetra_start = seq.length() - 5;
-        std::string tetramer = seq.substr(tetra_start, 4);
-        // check for its presence in the DR
-        int index = dr_match.DR_Sequence.find(tetramer);
-        
-        // if yes then find its maximal position ( it should reach the end of the DR)
-        if (index != string::npos) 
+        // find max pos
+        int mismatch = 0;
+        // find max pos allowing for mismatches 
+        while (mismatch <= LOST_SOULS_MISMATCHES && index <= (dr_match.DR_Sequence.length() - 1) ) 
         {
-            int mismatch = 0;
-            // find max pos allowing for mismatches 
-            while (mismatch <= LOST_SOULS_MISMATCHES && index >= 0 ) 
-            {
-                //std::cout<<"dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start)<<std::endl;
-                if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
-                index--;
-                tetra_start--;
-            }
-            if (index < 0) 
-            {
-                //std::cout<<"reached the start of the DR!"<<std::endl;
-                // we have reached the start of the DR
-                found = true;
-                // tetra start will now equal the first base in the partial DR
-                //std::cout<<"spacer: "<<dr_match.DR_EndPos<<" : "<<tetra_start<<std::endl;
-                //std::cout<<seq.substr(dr_match.DR_EndPos, (tetra_start - dr_match.DR_EndPos + 1))<<std::endl;
-                tmp_holder->RH_StartStops.push_back(tetra_start);
-                tmp_holder->RH_StartStops.push_back(seq.length());
-                return found;
-            }
+            logInfo("dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start), 9);
+            
+            if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
+            index++;
+            tetra_start++;
         }
-        
-        
-    }
-    else if (whichThird == 1)
-    {
-        // search in the start of the read
-        //std::cout<<"searching the beginning of the read for partials"<<std::endl;
-        int tetra_start = 0;
-        std::string tetramer = seq.substr(tetra_start, 4);
-        // check for its presence in the DR
-        size_t index = dr_match.DR_Sequence.find(tetramer);
-        
-        // if yes then find its maximal position ( it should reach the end of the DR)
-        if (index != string::npos) 
+        if (index == (dr_match.DR_Sequence.length())) 
         {
-            // find max pos
-            int mismatch = 0;
-            // find max pos allowing for mismatches 
-            while (mismatch <= LOST_SOULS_MISMATCHES && index <= (dr_match.DR_Sequence.length() - 1) ) 
-            {
-                //std::cout<<"dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start)<<std::endl;
-
-                if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
-                index++;
-                tetra_start++;
-            }
-            if (index == (dr_match.DR_Sequence.length())) 
-            {
-                // we have reached the end of the DR
-                //std::cout<<"reached the end of the DR!"<<std::endl;
-                found = true;
-                // tetra start will now equal the final base in the partial DR
-                //std::cout<<"spacer: "<<tetra_start<<" : "<<dr_match.DR_StartPos - 1<<std::endl;
-                //std::cout<<seq.substr(tetra_start, (dr_match.DR_StartPos - tetra_start))<<std::endl;
-                
-                tmp_holder->RH_StartStops.push_back(0);
-                tmp_holder->RH_StartStops.push_back(tetra_start);
-
-                return found;
-            }
-
-        }
-
-    }
-    else
-    {
-        // do both
-        
-        // search in the start of the read
-        
-        int tetra_start = 0;
-        std::string tetramer = seq.substr(tetra_start, 4);
-        // check for its presence in the DR
-        int index = dr_match.DR_Sequence.find(tetramer);
-        
-        // if yes then find its maximal position ( it should reach the end of the DR)
-        if (index != string::npos) 
-        {
-            // find max pos
-            int mismatch = 0;
-            // find max pos allowing for mismatches 
-            while (mismatch <= LOST_SOULS_MISMATCHES && index <= (dr_match.DR_Sequence.length() - 1) ) 
-            {
-                //std::cout<<"dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start)<<std::endl;
-
-                if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
-                index++;
-                tetra_start++;
-            }
-            if (index == (dr_match.DR_Sequence.length())) 
-            {
-                // we have reached the end of the DR
-                //std::cout<<"reached the end of the DR!"<<std::endl;
-                found = true;
-                // tetra start will now equal the final base in the partial DR
-//                std::cout<<"spacer: "<<tetra_start<<" : "<<dr_match.DR_StartPos - 1<<std::endl;
-//                std::cout<<seq.substr(tetra_start, (dr_match.DR_StartPos - tetra_start))<<std::endl;
-                tmp_holder->RH_StartStops.push_back(0);
-                tmp_holder->RH_StartStops.push_back(tetra_start);
-                return found;
-            }
-            else
-            {
-                tetra_start = seq.length() - 5;
-                tetramer = seq.substr(tetra_start, 4);
-                // check for its presence in the DR
-                index = dr_match.DR_Sequence.find(tetramer);
-                
-                mismatch = 0;
-                // find max pos allowing for mismatches 
-                while (mismatch <= LOST_SOULS_MISMATCHES && index >= 0 ) 
-                {
-                    //std::cout<<"dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start)<<std::endl;
-
-                    if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
-                    index--;
-                    tetra_start--;
-                }
-                if (index < 0) 
-                {
-                    //std::cout<<"reached the start of the DR!"<<std::endl;
-                    // we have reached the start of the DR
-                    found = true;
-                    // tetra start will now equal the first base in the partial DR
-//                    std::cout<<"spacer: "<<dr_match.DR_EndPos<<" : "<<tetra_start<<std::endl;
-//                    std::cout<<seq.substr(dr_match.DR_EndPos, (tetra_start - dr_match.DR_EndPos + 1))<<std::endl;
-                    
-                    tmp_holder->RH_StartStops.push_back(tetra_start);
-                    tmp_holder->RH_StartStops.push_back(seq.length());
-                }
-            }
+            // we have reached the end of the DR
+            logInfo("reached the end of the DR!", 9);
+            // tetra start will now equal the final base in the partial DR
+            logInfo("spacer: "<<tetra_start<<" : "<<dr_match.DR_StartPos - 1, 9 );
+            logInfo(seq.substr(tetra_start, (dr_match.DR_StartPos - tetra_start)), 9);
+            
+            tmp_holder->RH_StartStops.push_back(0);
+            tmp_holder->RH_StartStops.push_back(tetra_start);
+            
+            return true;
         }
     }
-    return found;
+    return false;
 }
+
+bool partialEnding (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq)
+{
+    // search in the end of the read
+    logInfo("searching the end of the read for partials", 5);
+    // cut a tetramer
+    int tetra_start = seq.length() - 5;
+    std::string tetramer = seq.substr(tetra_start, 4);
+    // check for its presence in the DR
+    int index = dr_match.DR_Sequence.find(tetramer);
+    
+    // if yes then find its maximal position ( it should reach the end of the DR)
+    if (index != string::npos) 
+    {
+        int mismatch = 0;
+        // find max pos allowing for mismatches 
+        while (mismatch <= LOST_SOULS_MISMATCHES && index >= 0 ) 
+        {
+            logInfo("dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start), 10);
+            if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
+            index--;
+            tetra_start--;
+        }
+        if (index < 0) 
+        {
+            logInfo("reached the start of the DR!", 8);
+            // we have reached the start of the DR
+            // tetra start will now equal the first base in the partial DR
+            logInfo("spacer: "<<dr_match.DR_EndPos<<" : "<<tetra_start, 9 );
+            logInfo(seq.substr(dr_match.DR_EndPos, (tetra_start - dr_match.DR_EndPos + 1)), 9);
+            tmp_holder->RH_StartStops.push_back(tetra_start);
+            tmp_holder->RH_StartStops.push_back(seq.length());
+            return true;
+        }
+    }
+    return false;
+}
+
 ////**************************************
 //// modify the positions of a crispr
 ////**************************************
@@ -1016,8 +948,51 @@ std::string DRLowLexi(std::string matchedRead, ReadHolder * tmp_holder)
     //-----
     // Orientate a READ based on low lexi of the interalised DR
     //
-    std::string tmp_dr = matchedRead.substr(tmp_holder->RH_StartStops.at(0), (tmp_holder->RH_StartStops.at(1) - tmp_holder->RH_StartStops.at(0) + 1));
-    std::string rev_comp = reverseComplement(tmp_dr);
+    
+    std::string tmp_dr;
+    std::string rev_comp;
+    
+    // make sure that tere is 4 elements in the array, if not you can only cut one
+    if (tmp_holder->RH_StartStops.size() == 2)
+    {
+        tmp_dr = matchedRead.substr(tmp_holder->RH_StartStops.at(0), (tmp_holder->RH_StartStops.at(1) - tmp_holder->RH_StartStops.at(0) + 1));
+        rev_comp = reverseComplement(tmp_dr);
+    }
+    else
+    {
+        // choose the dr that is not a partial ( no start at 0 or end at length)
+        
+        // if they both are then just take whichever is longer
+        if (tmp_holder->RH_StartStops.front() == 0 && tmp_holder->RH_StartStops.back() == tmp_holder->RH_Seq.length())
+        {
+            int lenA = tmp_holder->RH_StartStops.at(1) - tmp_holder->RH_StartStops.at(0);
+            int lenB = tmp_holder->RH_StartStops.at(3) - tmp_holder->RH_StartStops.at(2);
+            
+            if (lenA > lenB)
+            {
+                tmp_dr = matchedRead.substr(tmp_holder->RH_StartStops.at(0), (tmp_holder->RH_StartStops.at(1) - tmp_holder->RH_StartStops.at(0) + 1));
+                rev_comp = reverseComplement(tmp_dr);
+            }
+            else
+            {
+                tmp_dr = matchedRead.substr(tmp_holder->RH_StartStops.at(2), (tmp_holder->RH_StartStops.at(3) - tmp_holder->RH_StartStops.at(2) + 1));
+                rev_comp = reverseComplement(tmp_dr);
+            }
+        }
+        // take the second
+        else if (tmp_holder->RH_StartStops.front() == 0)
+        {
+            tmp_dr = matchedRead.substr(tmp_holder->RH_StartStops.at(2), (tmp_holder->RH_StartStops.at(3) - tmp_holder->RH_StartStops.at(2) + 1));
+            rev_comp = reverseComplement(tmp_dr);
+        }
+        // take the first
+        else 
+        {
+            tmp_dr = matchedRead.substr(tmp_holder->RH_StartStops.at(0), (tmp_holder->RH_StartStops.at(1) - tmp_holder->RH_StartStops.at(0) + 1));
+            rev_comp = reverseComplement(tmp_dr);
+        }
+    }
+
     
     if (tmp_dr < rev_comp)
     {
@@ -1034,13 +1009,11 @@ std::string DRLowLexi(std::string matchedRead, ReadHolder * tmp_holder)
         logInfo("DR not in low lexi"<<endl<<tmp_holder->RH_Seq, 9);
         return rev_comp;
     }
-
 }
 
 void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, std::string read_header, std::string read)
 {
     logInfo("Add (header): \t" << read_header, 9);
-    //logInfo("Direct repeat:\t"<<dr_match->DR_StartPos<<"\t"<<dr_match->DR_Sequence<<"\t"<<dr_match->DR_EndPos, 9);
     
     //add the header for the matched read
     tmp_holder->RH_Header = read_header;
@@ -1049,7 +1022,6 @@ void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, std::string read_h
     // test drlowlexi
     std::string dr_lowlexi = DRLowLexi(read, tmp_holder);
     
-    //tmp_holder->RH_StartStops.insert(tmp_holder->RH_StartStops.end(), dr_match->DR_StartStopList.begin(), dr_match->DR_StartStopList.end());
     
     if (keyExists(mReads, dr_lowlexi))
     {

@@ -174,9 +174,6 @@ int smithWaterman(std::string seqA, std::string seqB )
 	for(int i = tick - 1; i >= 0; i--) cout<<consensus_a[i]; 
 	
     cout<<endl;
-	
-    for(int j = tick - 1; j >= 0; j--) cout<<consensus_b[j];
-	cout<<endl;
     
 	return 0;
 }
