@@ -58,7 +58,7 @@
 //**************************************
 
 void help_message() {
-    std::cout<<"Usage:  "<<PRG_NAME<<" [options]  <fastq_or_fasta_files>"<<std::endl<<std::endl;
+    std::cout<<"Usage:  "<<CRASS_DEF_PRG_NAME<<" [options]  <fastq_or_fasta_files>"<<std::endl<<std::endl;
     std::cout<< "\t-d <INT>         Minimim length of the direct repeat to search for [Default: 23]"<<std::endl;
     std::cout<< "\t-D <INT>         Maximim length of the direct repeat to search for [Default: 47]"<<std::endl;
     std::cout<< "\t-h               This help message"<<std::endl;
@@ -75,7 +75,7 @@ void help_message() {
 }
 
 void version_info() {
-    std::cout<<std::endl<<LONG_NAME<<" ("<<PRG_NAME<<")"<<std::endl<<"revison "<<MCD_REVISION<<" version "<<MCD_MAJOR_VERSION<<" subversion "<<MCD_MINOR_VERSION<<" ("<<MCD_VERSION<<")"<<std::endl<<std::endl;
+    std::cout<<std::endl<<CRASS_DEF_LONG_NAME<<" ("<<CRASS_DEF_PRG_NAME<<")"<<std::endl<<"revison "<<CRASS_DEF_REVISION<<" version "<<CRASS_DEF_MAJOR_VERSION<<" subversion "<<CRASS_DEF_MINOR_VERSION<<" ("<<CRASS_DEF_VERSION<<")"<<std::endl<<std::endl;
     std::cout<<"---------------------------------------------------------------"<<std::endl;
     std::cout<<"Copyright (C) 2011 Connor Skennerton & Michael Imelfort"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<std::endl;
@@ -160,7 +160,7 @@ int process_options(int argc, char *argv[], options *opts) {
     }
     if (optind == argc)
     {
-        std::cerr<<PRG_NAME<<" : [ERROR] No input files were provided. Try ./"<<PRG_NAME" -h for help."<<std::endl;
+        std::cerr<<CRASS_DEF_PRG_NAME<<" : [ERROR] No input files were provided. Try ./"<<CRASS_DEF_PRG_NAME" -h for help."<<std::endl;
         exit(1);
         //        printf("no files given\n");
         //        exit(1);
@@ -169,7 +169,7 @@ int process_options(int argc, char *argv[], options *opts) {
     /* setup delimiter for stats report (if given) */
     if ( opt_b_value != NULL ) 
     {
-        strncpy(opts->delim, opt_b_value, DEF_MCD_MAX_DELIM_LENGTH);
+        strncpy(opts->delim, opt_b_value, CRASS_DEF_MAX_DELIM_LENGTH);
     }
     return optind;
 }
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
 
     if (opt_idx >= argc) 
     {
-        std::cerr<<PRG_NAME<<" : [ERROR] specify FASTQ files to process!"<<std::endl;
+        std::cerr<<CRASS_DEF_PRG_NAME<<" : [ERROR] specify FASTQ files to process!"<<std::endl;
         exit(1);
     }
         

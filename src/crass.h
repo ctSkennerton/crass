@@ -32,8 +32,8 @@
  *                               A
  */
 
-#ifndef __MCD_H
-    #define __MCD_H
+#ifndef __CRASS_H
+    #define __CRASS_H
 
 // system includes
 #include <sstream>

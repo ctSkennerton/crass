@@ -141,8 +141,8 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         
         // Need to make the string into something more old-skool so that
         // the search functions don't cry!
-        char input_fastq[DEF_MCD_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
-        strncpy(input_fastq, seq_iter->c_str(), DEF_MCD_FASTQ_FILENAME_MAX_LENGTH);
+        char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
+        strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
         
         // return value of the search functions
         float aveReadLength;
@@ -163,10 +163,10 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         logInfo("Average read length: "<<aveReadLength, 2);
         
         // only nessessary in instances where there are short reads
-        if (aveReadLength < DEF_MCD_READ_LENGTH_CUTOFF)
+        if (aveReadLength < CRASS_DEF_READ_LENGTH_CUTOFF)
         {
             logInfo("Beginning multipattern matcher", 1);
-            scanForMultiMatches(input_fastq, *mOpts, patternsLookup, readsFound, &mReads);
+            //scanForMultiMatches(input_fastq, *mOpts, patternsLookup, readsFound, &mReads);
         }
         
         // There will be an abundance of forms for each direct repeat.
@@ -192,11 +192,11 @@ int WorkHorse::mungeDRs(void)
     //
     logInfo("Reducing list of potential DRs", 1);
     
-    
     int next_free_GID = 1;
     std::map<std::string, int> k2GID_map;
     std::map<int, bool> groups;
     DR_Cluster DR2GID_map;
+    
     // go through all of the read holder objects
     ReadMapIterator read_map_iter = mReads.begin();
     while (read_map_iter != mReads.end()) 
@@ -208,8 +208,6 @@ int WorkHorse::mungeDRs(void)
     // now that we know what our groups are it's time to find the one true direct repeat
     oneDRToRuleThemAll(&DR2GID_map);
     
-    
-    
     DR_ClusterIterator DR2GID_iter = DR2GID_map.begin();
     while(DR2GID_iter != DR2GID_map.end())
     {
@@ -218,7 +216,7 @@ int WorkHorse::mungeDRs(void)
         vec_it = DR2GID_iter->second->begin();
         while (vec_it != DR2GID_iter->second->end()) 
         {
-            std::cout<<*vec_it<<" ";
+            std::cout<<*vec_it<<" + ";
             vec_it++;
         }
         std::cout<<std::endl;
@@ -232,58 +230,77 @@ int WorkHorse::mungeDRs(void)
     logInfo("Done!", 1);
 }
 
-
-// take in a cluster of direct repeats and smithwaterman them to discover
-// the hidden powers within -- or just the correct direct repeat
 std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
 {
+    //-----
+    // take in a cluster of direct repeats and smithwaterman them to discover
+    // the hidden powers within -- or just the correct direct repeat
+    // if the group is small its totes okay to do all vs all
+    // but we don't want to kill the machine so if it's a large group
+    // we select some of the longer sequences in the group and perform the
+    // comparison on just those sequences
 
     int group_size = array->size() - 1;
-    
+    if (CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW < group_size)
+        group_size = CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW;
+        
     // a hash of the alignments from smith waterman and their frequencies
     std::map<std::string, int> alignmentHash;
-
     
     for (int i = 0; i < group_size; i++) 
     {
+        std::cout << std::endl;
         for (int j = i + 1; j <= group_size; j++) 
         {
             stringPair align_concensus = smithWaterman(array->at(i), array->at(j));
             
-            // if the alignment length is less than 85% of the string length
-            if (align_concensus.first.length() < array->at(j).length() * 0.85)
+            // if the alignment length is less than CRASS_DEF_MIN_SW_ALIGNMENT_RATIO% of the string length
+            if (align_concensus.first.length() < array->at(j).length() * CRASS_DEF_MIN_SW_ALIGNMENT_RATIO)
             {
                 stringPair rev_comp_align_concensus = smithWaterman(array->at(i), reverseComplement(array->at(j)));
                 
-                if (rev_comp_align_concensus.first.length() > array->at(j).length() * 0.85)
+                if (rev_comp_align_concensus.first.length() > array->at(j).length() * CRASS_DEF_MIN_SW_ALIGNMENT_RATIO)
                 {
-                    addOrIncrement(alignmentHash, rev_comp_align_concensus.first);
-                    addOrIncrement(alignmentHash, rev_comp_align_concensus.second);
+                    if(mReads.find(rev_comp_align_concensus.first) != mReads.end())
+                    {
+                        addOrIncrement(alignmentHash, rev_comp_align_concensus.first);
+                    }
+                    if(mReads.find(rev_comp_align_concensus.second) != mReads.end())
+                    {
+                        addOrIncrement(alignmentHash, rev_comp_align_concensus.second);
+                    }
                 }
             }
             else
             {
-                addOrIncrement(alignmentHash, align_concensus.first);
-                addOrIncrement(alignmentHash, align_concensus.second);
+                if(mReads.find(align_concensus.first) != mReads.end())
+                {
+                    addOrIncrement(alignmentHash, align_concensus.first);
+                }
+                if(mReads.find(align_concensus.second) != mReads.end())
+                {
+                    addOrIncrement(alignmentHash, align_concensus.second);
+                }
             }
         }
     }
     
-    std::map<std::string, int>::iterator cluster_iter = alignmentHash.begin();
-    //std::cout<<"values of the clustering:"<<std::endl;
-    std::string theOneTrueDR = "";
+    // The dr with the highest number of alignments *should* be the one we're looking for
     int max_val = 0;
+    std::string the_true_DR = "**unset**";
+    std::map<std::string, int>::iterator cluster_iter = alignmentHash.begin();
     while (cluster_iter != alignmentHash.end()) 
     {
-        if (cluster_iter->second > max_val) 
+        int score = (mReads.find(cluster_iter->first)->second)->size() * cluster_iter->second;
+        std::cout << cluster_iter->first << " : " << cluster_iter->second << " (occ) * " << (mReads.find(cluster_iter->first)->second)->size() << " (reads) = " << score << std::endl;
+        if (score > max_val) 
         {
-            max_val = cluster_iter->second;
-            theOneTrueDR = cluster_iter->first;
+            max_val = score;
+            the_true_DR = cluster_iter->first;
         }
-        //std::cout<<cluster_iter->first<<" : "<<cluster_iter->second<<std::endl;
         cluster_iter++;
     }
-    return theOneTrueDR;
+    return the_true_DR;
 }
 
 // wrapper for smith waterman to fix up the positions of the direct repeats
@@ -293,49 +310,27 @@ void inline WorkHorse::clenseClusters()
 
 void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
 {
-    DR_ClusterIterator DR2GID_iter;
+    //-----
+    // Each DR_Cluster contains multiple variants on the true DR
+    // But which one is real?
+    //
     
-    DR2GID_iter = DR2GID_map->begin();
+    DR_ClusterIterator DR2GID_iter = DR2GID_map->begin();
+    std::string the_true_DR = "unset";
     
     while (DR2GID_iter != DR2GID_map->end()) 
     {
-        std::cout<<DR2GID_iter->first<<":"<<std::endl;
-
-        int group_size = DR2GID_iter->second->size() - 1;
+        std::cout << DR2GID_iter->first << ":" << std::endl;
         
-        // if the group is small its totes okay to do all vs all
-        if (MAX_CLUSTER_SIZE_FOR_SW > group_size)
-        {
-            // vector is now sorted from the longest to the shortest
-            std::sort(DR2GID_iter->second->begin(), DR2GID_iter->second->end(), sortDirectRepeatByLength);
-            
-            std::string theTrueDR = threadToSmithWaterman(DR2GID_iter->second);
-            logInfo("clustering has revealed the one true direct repeat: "<<theTrueDR, 5);
-            
-            // now we need to put this back into smith waterman to fix up all of the indexes of the group
-            
-            
-        }
-        // but we don't want to kill the machine so if it's a large group
-        // we select some of the longer sequences in the group and perform the
-        // comparison on just those sequences
-        else
-        {
-            // take a subset
-            
-            std::sort(DR2GID_iter->second->begin(), DR2GID_iter->second->end(), sortDirectRepeatByLength);
-            
-            std::vector<std::string> dr_subset;
-            std::vector<std::string>::iterator subset_iter = dr_subset.begin();
-            
-            // randomly decide to take the top seven (that's a lucky number right)
-            dr_subset.insert(subset_iter, DR2GID_iter->second->begin(), DR2GID_iter->second->begin() + MAX_CLUSTER_SIZE_FOR_SW);
-            
-            std::string theTrueDR = threadToSmithWaterman(&dr_subset);
-            logInfo("clustering has revealed the one true direct repeat: "<<theTrueDR, 5);
+        // sort the vector from the longest to the shortest
+        std::sort(DR2GID_iter->second->begin(), DR2GID_iter->second->end(), sortDirectRepeatByLength);
+        
+        the_true_DR = threadToSmithWaterman(DR2GID_iter->second);
 
-        }
-    
+        logInfo("Clustering has revealed the one true direct repeat: "<< the_true_DR, 5);
+        std::cout << "Clustering has revealed the one true direct repeat: " << the_true_DR << std::endl;
+        // now we use this "true" DR to fix the start stop indexes
+        
         ++DR2GID_iter;
     }
 }
@@ -537,9 +532,9 @@ void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup ,
     logInfo("Printing lookup tables from file: " << fileName << "to " << mOutFileDir, 1);
     
     // Make file names
-    std::string kmer_lookup_name = mOutFileDir + MCD_DEF_KMER_LOOKUP_EXT;
-    std::string patterns_lookup_name = mOutFileDir + MCD_DEF_PATTERN_LOOKUP_EXT;
-    std::string spacer_lookup_name = mOutFileDir + MCD_DEF_SPACER_LOOKUP_EXT;
+    std::string kmer_lookup_name = mOutFileDir + CRASS_DEF_DEF_KMER_LOOKUP_EXT;
+    std::string patterns_lookup_name = mOutFileDir + CRASS_DEF_DEF_PATTERN_LOOKUP_EXT;
+    std::string spacer_lookup_name = mOutFileDir + CRASS_DEF_DEF_SPACER_LOOKUP_EXT;
     
     // Write!
     writeLookupToFile(kmer_lookup_name, kmerLookup);  

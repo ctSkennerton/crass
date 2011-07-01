@@ -95,7 +95,7 @@ class WorkHorse {
         
         // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
-        ReadMap mReads;                             // reads containing possible DRs
+        ReadMap mReads;                             // reads containing possible double DRs
         const options * mOpts;                      // search options
         std::string mOutFileDir;                    // where to spew text to
 };

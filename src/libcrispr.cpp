@@ -746,7 +746,7 @@ bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::strin
         // find max pos
         int mismatch = 0;
         // find max pos allowing for mismatches 
-        while (mismatch <= LOST_SOULS_MISMATCHES && index <= (dr_match.DR_Sequence.length() - 1) ) 
+        while (mismatch <= CRASS_DEF_MAX_LOST_SOULS_MISMATCHES && index <= (dr_match.DR_Sequence.length() - 1) ) 
         {
             logInfo("dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start), 9);
             
@@ -786,7 +786,7 @@ bool partialEnding (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string 
     {
         int mismatch = 0;
         // find max pos allowing for mismatches 
-        while (mismatch <= LOST_SOULS_MISMATCHES && index >= 0 ) 
+        while (mismatch <= CRASS_DEF_MAX_LOST_SOULS_MISMATCHES && index >= 0 ) 
         {
             logInfo("dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start), 10);
             if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
@@ -1027,11 +1027,13 @@ void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, std::string read_h
     {
         // add the sequence to the map
         (*mReads)[dr_lowlexi]->push_back(tmp_holder);
+        std::cout << " OLD!: " << dr_lowlexi << " : " << (*mReads)[dr_lowlexi]->size() << " : " << tmp_holder->RH_Seq << " : " <<  std::endl;
     }
     else
     {
         (*mReads)[dr_lowlexi] = new ReadList();
         (*mReads)[dr_lowlexi]->push_back(tmp_holder);
+        std::cout << " NEW!: " << dr_lowlexi << " : " << (*mReads)[dr_lowlexi]->size() << " : " << tmp_holder->RH_Seq << " : " <<  std::endl;
     }
 }
 
@@ -1063,13 +1065,13 @@ gzFile getFileHandle(const char * inputFile)
     
     if ( (fp == NULL) && (strcmp(inputFile, "-") != 0) ) {
         fprintf(stderr, "%s : [ERROR] Could not open FASTQ '%s' for reading.\n",
-                PRG_NAME, inputFile);
+                CRASS_DEF_PRG_NAME, inputFile);
                 exit(1);
     }
     
     if ( (fp == NULL) && (strcmp(inputFile, "-") == 0) ) {
         fprintf(stderr, "%s : [ERROR] Could not open stdin for reading.\n",
-                PRG_NAME);
+                CRASS_DEF_PRG_NAME);
                 exit(1);
     }
     return fp;
