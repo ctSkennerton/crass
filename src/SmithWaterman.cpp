@@ -1,11 +1,6 @@
 //
 //  SmithWaterman.cpp
 //  crass
-//
-//  Created by Connor Skennerton on 23/06/11.
-//  Copyright 2011 Australian Centre for Ecogenomics. All rights reserved.
-//
-
 #include "SmithWaterman.h"
 
 
@@ -28,6 +23,7 @@
 #include <string>
 #include <cmath>
 #include <sys/time.h>
+#include <map>
 using namespace std;
 
 int ind; 
@@ -65,11 +61,11 @@ double findMax(double array[], int length)
 	return max;
 }
 
-int smithWaterman(std::string seqA, std::string seqB )
+stringPair smithWaterman(std::string seqA, std::string seqB )
 {
 
 	// initialize some variables
-	int lengthSeqA = seqA.length();
+	int lengthSeqA = (int)seqA.length();
 	int lengthSeqB = seqB.length();
 	
 	// initialize matrix
@@ -88,6 +84,8 @@ int smithWaterman(std::string seqA, std::string seqB )
     
     
 	//start populating matrix
+	double matrix_max = 0;
+    int i_max = 0, j_max = 0;
 	for (int i=1;i<=lengthSeqA;i++)
 	{
 		for(int j=0;j<=lengthSeqB;j++)
@@ -97,6 +95,12 @@ int smithWaterman(std::string seqA, std::string seqB )
 			traceback[2] = matrix[i][j-1]+penalty;
 			traceback[3] = 0;
 			matrix[i][j] = findMax(traceback,4);
+			if(matrix[i][j]> matrix_max)
+			{
+				matrix_max = matrix[i][j];
+				i_max = i;
+				j_max = j;
+			}
 			switch(ind)
 			{
 				case 0:
@@ -119,50 +123,17 @@ int smithWaterman(std::string seqA, std::string seqB )
         }
 	}
     
-	// print the scoring matrix to console
-//	for(int i=1;i<lengthSeqA;i++)
-//	{
-//		for(int j=1;j<lengthSeqB;j++)
-//		{
-//			cout << matrix[i][j] << " ";
-//		}
-//		cout << endl;
-//	}
-    
-	// find the max score in the matrix
-	double matrix_max = 0;
-	int i_max=0, j_max=0;
-	for(int i=1;i<lengthSeqA;i++)
-	{
-		for(int j=1;j<lengthSeqB;j++)
-		{
-			if(matrix[i][j]>matrix_max)
-			{
-				matrix_max = matrix[i][j];
-				i_max=i;
-				j_max=j;
-			}
-		}
-	}
-    
-	//cout << "Max score in the matrix is " << matrix_max << endl;
-    
-	// traceback
 	
-	int current_i=i_max,current_j=j_max;
-	int next_i=I_i[current_i][current_j];
-	int next_j=I_j[current_i][current_j];
-	int tick=0;
-	char consensus_a[lengthSeqA+lengthSeqB+2],consensus_b[lengthSeqA+lengthSeqB+2];
+	int current_i = i_max,current_j = j_max;
+	
+    int next_i = I_i[current_i][current_j];
+	int next_j = I_j[current_i][current_j];
+	
+    int tick = 0;
     
-	while(((current_i!=next_i) || (current_j!=next_j)) && (next_j!=0) && (next_i!=0))
+	while((next_j!=0) && (next_i!=0) && ((current_i!=next_i) || (current_j!=next_j)))
 	{
-        
-		if(next_i==current_i)  consensus_a[tick] = '-';                  // deletion in A
-		else                   consensus_a[tick] = seqA[current_i-1];   // match/mismatch in A
-        
-		if(next_j==current_j)  consensus_b[tick] = '-';                  // deletion in B
-		else                   consensus_b[tick] = seqB[current_j-1];   // match/mismatch in B
+
         
 		current_i = next_i;
 		current_j = next_j;
@@ -170,10 +141,8 @@ int smithWaterman(std::string seqA, std::string seqB )
 		next_j = I_j[current_i][current_j];
 		tick++;
 	}
- 
-	for(int i = tick - 1; i >= 0; i--) cout<<consensus_a[i]; 
-	
-    cout<<endl;
     
-	return 0;
+    std::pair<std::string, std::string> ret_pair(seqA.substr(current_i, i_max - current_i), seqB.substr(current_j, j_max - current_j));
+    
+    return ret_pair;
 }

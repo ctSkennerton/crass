@@ -33,7 +33,9 @@
 #define DEF_MCD_MAX_DELIM_LENGTH 10
 
 
-#define MAX_CLUSTER_SIZE_FOR_SW 15
+#define MAX_CLUSTER_SIZE_FOR_SW 50
+
+
 
 #define LOST_SOULS_MISMATCHES 2
 // number used for code copied from CRT

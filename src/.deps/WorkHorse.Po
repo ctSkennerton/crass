@@ -92,8 +92,11 @@ WorkHorse.o: WorkHorse.cpp \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/x86_64-apple-darwin10.7.0/bits/basic_file.h \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/x86_64-apple-darwin10.7.0/bits/c++io.h \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/fstream.tcc \
- WorkHorse.h crass_defines.h libcrispr.h CrisprNode.h NodeManager.h \
- SpacerInstance.h WuManber.h libbitap.h bm.h kseq.h /usr/include/string.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/algorithm \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/utility \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_relops.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_algo.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/cstdlib \
  /usr/include/stdlib.h /usr/include/Availability.h \
  /usr/include/AvailabilityInternal.h /usr/include/sys/wait.h \
  /usr/include/sys/signal.h /usr/include/machine/signal.h \
@@ -103,8 +106,17 @@ WorkHorse.o: WorkHorse.cpp \
  /usr/include/i386/endian.h /usr/include/sys/_endian.h \
  /usr/include/libkern/_OSByteOrder.h \
  /usr/include/libkern/i386/_OSByteOrder.h /usr/include/alloca.h \
- /usr/include/machine/types.h /usr/include/i386/types.h ReadHolder.h \
- SeqUtils.h LoggerSimp.h SmithWaterman.h
+ /usr/include/machine/types.h /usr/include/i386/types.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/algorithmfwd.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_heap.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_tempbuf.h \
+ WorkHorse.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/deque \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_deque.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/deque.tcc \
+ crass_defines.h libcrispr.h CrisprNode.h NodeManager.h SpacerInstance.h \
+ WuManber.h libbitap.h bm.h kseq.h /usr/include/string.h ReadHolder.h \
+ SeqUtils.h LoggerSimp.h SmithWaterman.h StlExt.h
 
 /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/iostream:
 
@@ -318,27 +330,15 @@ WorkHorse.o: WorkHorse.cpp \
 
 /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/fstream.tcc:
 
-WorkHorse.h:
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/algorithm:
 
-crass_defines.h:
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/utility:
 
-libcrispr.h:
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_relops.h:
 
-CrisprNode.h:
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_algo.h:
 
-NodeManager.h:
-
-SpacerInstance.h:
-
-WuManber.h:
-
-libbitap.h:
-
-bm.h:
-
-kseq.h:
-
-/usr/include/string.h:
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/cstdlib:
 
 /usr/include/stdlib.h:
 
@@ -378,6 +378,40 @@ kseq.h:
 
 /usr/include/i386/types.h:
 
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/algorithmfwd.h:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_heap.h:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_tempbuf.h:
+
+WorkHorse.h:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/deque:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_deque.h:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/deque.tcc:
+
+crass_defines.h:
+
+libcrispr.h:
+
+CrisprNode.h:
+
+NodeManager.h:
+
+SpacerInstance.h:
+
+WuManber.h:
+
+libbitap.h:
+
+bm.h:
+
+kseq.h:
+
+/usr/include/string.h:
+
 ReadHolder.h:
 
 SeqUtils.h:
@@ -385,3 +419,5 @@ SeqUtils.h:
 LoggerSimp.h:
 
 SmithWaterman.h:
+
+StlExt.h:

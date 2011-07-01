@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <deque>
 
 // local includes
 #include "crass_defines.h"
@@ -50,12 +51,15 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 
+
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
 typedef std::map<std::string, NodeManager *>::iterator DR_ListIterator;
 
 typedef std::map<int, std::vector<std::string> *>::iterator DR_ClusterIterator;
 typedef std::map<int, std::vector<std::string> *> DR_Cluster;
+
+bool sortDirectRepeatByLength( const std::string &a, const std::string &b);
 
 
 class WorkHorse {
@@ -86,7 +90,9 @@ class WorkHorse {
         int mungeDRs(void);                         // cluster potential DRs and make node managers
         bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups);  // cut kmers and hash
         void oneDRToRuleThemAll(DR_Cluster * DR2GID_map);
-    
+        std::string threadToSmithWaterman(std::vector<std::string> *array);
+        void inline clenseClusters();
+        
         // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
         ReadMap mReads;                             // reads containing possible DRs

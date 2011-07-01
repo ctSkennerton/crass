@@ -110,6 +110,9 @@ crass.o: crass.cpp /usr/include/stdio.h /usr/include/_types.h \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_bvector.h \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/vector.tcc \
  crass_defines.h kseq.h /usr/include/string.h CrisprNode.h WorkHorse.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/deque \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_deque.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/deque.tcc \
  libcrispr.h /usr/include/zlib.h /usr/include/zconf.h NodeManager.h \
  SpacerInstance.h WuManber.h libbitap.h bm.h ReadHolder.h SeqUtils.h \
  LoggerSimp.h
@@ -393,6 +396,12 @@ kseq.h:
 CrisprNode.h:
 
 WorkHorse.h:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/deque:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_deque.h:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/deque.tcc:
 
 libcrispr.h:
 

@@ -55,6 +55,10 @@ SmithWaterman.o: SmithWaterman.cpp SmithWaterman.h \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/x86_64-apple-darwin10.7.0/bits/atomic_word.h \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/initializer_list \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/basic_string.tcc \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/map \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_tree.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_map.h \
+ /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_multimap.h \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/iostream \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/ostream \
  /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/ios \
@@ -234,6 +238,14 @@ SmithWaterman.h:
 /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/initializer_list:
 
 /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/basic_string.tcc:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/map:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_tree.h:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_map.h:
+
+/usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/bits/stl_multimap.h:
 
 /usr/local/lib/gcc/x86_64-apple-darwin10.7.0/4.5.3/../../../../include/c++/4.5.3/iostream:
 

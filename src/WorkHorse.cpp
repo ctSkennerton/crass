@@ -41,6 +41,7 @@
 #include <vector>
 #include <zlib.h>  
 #include <fstream>
+#include <algorithm>
 
 // local includes
 #include "WorkHorse.h"
@@ -51,6 +52,12 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "SmithWaterman.h"
+#include "StlExt.h"
+
+bool sortDirectRepeatByLength( const std::string &a, const std::string &b)
+{
+    return a.length() > b.length();
+}
 
 WorkHorse::~WorkHorse()
 {
@@ -226,6 +233,64 @@ int WorkHorse::mungeDRs(void)
 }
 
 
+// take in a cluster of direct repeats and smithwaterman them to discover
+// the hidden powers within -- or just the correct direct repeat
+std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
+{
+
+    int group_size = array->size() - 1;
+    
+    // a hash of the alignments from smith waterman and their frequencies
+    std::map<std::string, int> alignmentHash;
+
+    
+    for (int i = 0; i < group_size; i++) 
+    {
+        for (int j = i + 1; j <= group_size; j++) 
+        {
+            stringPair align_concensus = smithWaterman(array->at(i), array->at(j));
+            
+            // if the alignment length is less than 85% of the string length
+            if (align_concensus.first.length() < array->at(j).length() * 0.85)
+            {
+                stringPair rev_comp_align_concensus = smithWaterman(array->at(i), reverseComplement(array->at(j)));
+                
+                if (rev_comp_align_concensus.first.length() > array->at(j).length() * 0.85)
+                {
+                    addOrIncrement(alignmentHash, rev_comp_align_concensus.first);
+                    addOrIncrement(alignmentHash, rev_comp_align_concensus.second);
+                }
+            }
+            else
+            {
+                addOrIncrement(alignmentHash, align_concensus.first);
+                addOrIncrement(alignmentHash, align_concensus.second);
+            }
+        }
+    }
+    
+    std::map<std::string, int>::iterator cluster_iter = alignmentHash.begin();
+    //std::cout<<"values of the clustering:"<<std::endl;
+    std::string theOneTrueDR = "";
+    int max_val = 0;
+    while (cluster_iter != alignmentHash.end()) 
+    {
+        if (cluster_iter->second > max_val) 
+        {
+            max_val = cluster_iter->second;
+            theOneTrueDR = cluster_iter->first;
+        }
+        //std::cout<<cluster_iter->first<<" : "<<cluster_iter->second<<std::endl;
+        cluster_iter++;
+    }
+    return theOneTrueDR;
+}
+
+// wrapper for smith waterman to fix up the positions of the direct repeats
+void inline WorkHorse::clenseClusters()
+{
+}
+
 void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
 {
     DR_ClusterIterator DR2GID_iter;
@@ -237,17 +302,19 @@ void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
         std::cout<<DR2GID_iter->first<<":"<<std::endl;
 
         int group_size = DR2GID_iter->second->size() - 1;
+        
         // if the group is small its totes okay to do all vs all
-        if (MAX_CLUSTER_SIZE_FOR_SW >= group_size)
+        if (MAX_CLUSTER_SIZE_FOR_SW > group_size)
         {
-            for (int i = 0; i < group_size; i++) 
-            {
-                for (int j = i + 1; j <= group_size; j++) 
-                {
-                    smithWaterman(DR2GID_iter->second->at(i), DR2GID_iter->second->at(j));
-                }
-            }
-            // pass to smith waterman
+            // vector is now sorted from the longest to the shortest
+            std::sort(DR2GID_iter->second->begin(), DR2GID_iter->second->end(), sortDirectRepeatByLength);
+            
+            std::string theTrueDR = threadToSmithWaterman(DR2GID_iter->second);
+            logInfo("clustering has revealed the one true direct repeat: "<<theTrueDR, 5);
+            
+            // now we need to put this back into smith waterman to fix up all of the indexes of the group
+            
+            
         }
         // but we don't want to kill the machine so if it's a large group
         // we select some of the longer sequences in the group and perform the
@@ -256,8 +323,17 @@ void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
         {
             // take a subset
             
+            std::sort(DR2GID_iter->second->begin(), DR2GID_iter->second->end(), sortDirectRepeatByLength);
             
-            // pass to smith waterman
+            std::vector<std::string> dr_subset;
+            std::vector<std::string>::iterator subset_iter = dr_subset.begin();
+            
+            // randomly decide to take the top seven (that's a lucky number right)
+            dr_subset.insert(subset_iter, DR2GID_iter->second->begin(), DR2GID_iter->second->begin() + MAX_CLUSTER_SIZE_FOR_SW);
+            
+            std::string theTrueDR = threadToSmithWaterman(&dr_subset);
+            logInfo("clustering has revealed the one true direct repeat: "<<theTrueDR, 5);
+
         }
     
         ++DR2GID_iter;

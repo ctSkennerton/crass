@@ -9,9 +9,12 @@
 #ifndef __SMITH_WATERMAN_H
 #define __SMITH_WATERMAN_H
 #include <string>
+#include <map>
 
+
+typedef std::pair<std::string, std::string> stringPair;
 double similarityScore(char a, char b);
 double findMax(double array[], int length);
-int smithWaterman(std::string seqA, std::string seqB );
+stringPair smithWaterman(std::string seqA, std::string seqB);
 
 #endif
