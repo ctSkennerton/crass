@@ -26,6 +26,7 @@ using namespace std;
 class PatternMatcher{
 public:
     static int bmpSearch(const string& text, const string& pattern);
+    static void bmpMultiSearch(const std::string &text, const std::string &pattern, std::vector<int> &startOffsetVec);
     
 private:
     static vector<int> computeBmpLast(const string& pattern);

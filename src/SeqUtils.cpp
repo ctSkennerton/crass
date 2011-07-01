@@ -118,7 +118,7 @@ std::string reverseComplement(std::string str)
 std::string laurenize (std::string seq1)
 {
     std::string seq2 = reverseComplement(seq1);
-    if (lexicographical_compare(seq1.begin(), seq1.end(), seq2.begin(), seq2.end()))
+    if (seq1 < seq2)
     {
         return seq1;
     }

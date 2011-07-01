@@ -52,38 +52,36 @@
 #include "SeqUtils.h"
 #include "WorkHorse.h"
 
-using namespace std;
 
 //**************************************
 // user input + system
 //**************************************
 
 void help_message() {
-    fprintf(stdout, "Usage: %s %s %s\n", 
-                    PRG_NAME, "[options]", "<fastq_or_fasta_files>");
-    fprintf(stdout, "\t%-20s%-20s\n", "-d <INT>", "Minimim length of the direct repeat to search for [Default: 23]");
-    fprintf(stdout, "\t%-20s%-20s\n", "-D <INT>", "Maximim length of the direct repeat to search for [Default: 47]");
-    fprintf(stdout, "\t%-20s%-20s\n", "-h", "This help message");
-    fprintf(stdout, "\t%-20s%-20s\n", "-k <INT>", "Length of the kmer used for assembling and indexing the");
-    fprintf(stdout, "\t%-20s%-20s\n", "", "spacers and the direct repeats [Default: 12]");
-    fprintf(stdout, "\t%-20s%-20s\n", "-l <INT>", "output a log file and set a log level [1 - 10]");
-    fprintf(stdout, "\t%-20s%-20s\n", "-m <INT>", "Total number of mismatches to at most allow for");
-    fprintf(stdout, "\t%-20s%-20s\n", "", "in search pattern [Default: 0]");
-    fprintf(stdout, "\t%-20s%-20s\n", "-o <DIRECTORY>", "output directory [default: .]");
-    fprintf(stdout, "\t%-20s%-20s\n", "-s <INT>", "Minimim length of the spacer to search for [Default: 26]");
-    fprintf(stdout, "\t%-20s%-20s\n", "-S <INT>", "Maximim length of the spacer to search for [Default: 50]");
-    fprintf(stdout, "\t%-20s%-20s\n", "-V", "Program and version information");
+    std::cout<<"Usage:  "<<PRG_NAME<<" [options]  <fastq_or_fasta_files>"<<std::endl<<std::endl;
+    std::cout<< "\t-d <INT>         Minimim length of the direct repeat to search for [Default: 23]"<<std::endl;
+    std::cout<< "\t-D <INT>         Maximim length of the direct repeat to search for [Default: 47]"<<std::endl;
+    std::cout<< "\t-h               This help message"<<std::endl;
+    std::cout<< "\t-k <INT>         The number of the kmers that need to be"<<std::endl; 
+    std::cout<< "\t                 shared for clustering [Default: 8]"<<std::endl;
+    std::cout<< "\t-l <INT>         Output a log file and set a log level [1 - 10]"<<std::endl;
+    std::cout<< "\t-m <INT>         Total number of mismatches to at most allow for"<<std::endl;
+    std::cout<< "\t                 in search pattern [Default: 0]"<<std::endl;
+    std::cout<< "\t-o <DIRECTORY>   Output directory [default: .]"<<std::endl;
+    std::cout<< "\t-s <INT>         Minimim length of the spacer to search for [Default: 26]"<<std::endl;
+    std::cout<< "\t-S <INT>         Maximim length of the spacer to search for [Default: 50]"<<std::endl;
+    std::cout<< "\t-V               Program and version information"<<std::endl;
 
 }
 
 void version_info() {
-    cout<<endl<<LONG_NAME<<" ("<<PRG_NAME<<")"<<endl<<"revison "<<MCD_REVISION<<" version "<<MCD_MAJOR_VERSION<<" subversion "<<MCD_MINOR_VERSION<<" ("<<MCD_VERSION<<")"<<endl<<endl;
-    cout<<"---------------------------------------------------------------"<<endl;
-    cout<<"Copyright (C) 2011 Connor Skennerton & Michael Imelfort"<<endl;
-    cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<endl;
-    cout<<"This is free software, and you are welcome to redistribute it"<<endl;
-    cout<<"under certain conditions: See the source for more details"<<endl;
-    cout<<"---------------------------------------------------------------"<<endl;
+    std::cout<<std::endl<<LONG_NAME<<" ("<<PRG_NAME<<")"<<std::endl<<"revison "<<MCD_REVISION<<" version "<<MCD_MAJOR_VERSION<<" subversion "<<MCD_MINOR_VERSION<<" ("<<MCD_VERSION<<")"<<std::endl<<std::endl;
+    std::cout<<"---------------------------------------------------------------"<<std::endl;
+    std::cout<<"Copyright (C) 2011 Connor Skennerton & Michael Imelfort"<<std::endl;
+    std::cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<std::endl;
+    std::cout<<"This is free software, and you are welcome to redistribute it"<<std::endl;
+    std::cout<<"under certain conditions: See the source for more details"<<std::endl;
+    std::cout<<"---------------------------------------------------------------"<<std::endl;
 }
 
 int process_options(int argc, char *argv[], options *opts) {
@@ -162,7 +160,7 @@ int process_options(int argc, char *argv[], options *opts) {
     }
     if (optind == argc)
     {
-        fprintf(stderr, "%s : [ERROR] No input files were provided. Try ./%s -h for help.\n", PRG_NAME, PRG_NAME);
+        std::cerr<<PRG_NAME<<" : [ERROR] No input files were provided. Try ./"<<PRG_NAME" -h for help."<<std::endl;
         exit(1);
         //        printf("no files given\n");
         //        exit(1);
@@ -190,7 +188,7 @@ int main(int argc, char *argv[])
     options opts = {
         0,             // count flag
         false,         // exit after first find
-        1,             // logging off by default
+        1,             // logging minimum by default
         0,             // invert match flag
         0,             // show all records flag
         1,             // output fastq report
@@ -204,7 +202,7 @@ int main(int argc, char *argv[])
         "",            // output file name
         "\t",          // delimiter string for stats report
         NULL,          //  pattern file name
-        12             // the length of the kmer for ordering and assembling
+        8             // the number of the kmers that need to be shared for clustering
     };
     
     // initialize the log file
@@ -220,15 +218,14 @@ int main(int argc, char *argv[])
     {
         out_fp = opts.output_fastq;
     }
-    string logFileName = out_fp+ "crass.log";
+    std::string logFileName = out_fp+ "crass.log";
 
     intialiseGlobalLogger(logFileName, opts.logger_level);
 
 
     if (opt_idx >= argc) 
     {
-        fprintf(stderr, "%s : %s\n",
-                PRG_NAME, "[ERROR] specify FASTQ files to process!");
+        std::cerr<<PRG_NAME<<" : [ERROR] specify FASTQ files to process!"<<std::endl;
         exit(1);
     }
         

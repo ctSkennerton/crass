@@ -57,7 +57,7 @@
 #include "SeqUtils.h"
 
 
-typedef std::map<std::string, CrisprNode *> lookupTable;
+typedef std::map<std::string, bool> lookupTable;
 
 typedef std::vector<ReadHolder *> ReadList;
 typedef std::vector<ReadHolder *>::iterator ReadListIterator;
@@ -84,6 +84,7 @@ class DirectRepeat {
         std::string DR_Sequence;
         std::string DR_MatchSequence;
         std::string DR_Spacer;
+        std::vector<int> DR_StartStopList;      // a vector containing the starting positions of all the DR
         int  DR_Length;
         int  DR_StartPos;                   // the start of the 'right' dr in the read
         int  DR_EndPos;                     // the end of the whole direct repeat
@@ -118,22 +119,27 @@ class ReadMatch {
 
 // boyer moore functions
 
-float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap * mReads);
+float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads);
 
-bool inline checkMismatch( int &temp_mismatch, const options &opts);
+//bool inline checkMismatch( int &temp_mismatch, const options &opts);
 
 // bitap functions
-bool directRepeatInit( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts );
+//bool directRepeatInit( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts );
+//
+//bool directRepeatExtend ( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts);
+//
+//bool updateWordBitap(ReadMatch &match_info, int &search_begin, int &start, const options &opts, DirectRepeat &dr, std::string &subject_word, int &temp_mismatch);
 
-bool directRepeatExtend ( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts);
-
-bool updateWordBitap(ReadMatch &match_info, int &search_begin, int &start, const options &opts, DirectRepeat &dr, std::string &subject_word, int &temp_mismatch);
-
-float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &spacerLookup, lookupTable &kmerLookup, ReadMap *mReads);
+float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads);
 
 // multimap functions (wuMander)
-void scanForMultiMatches(const char *input_fastq, const options &opts, ReadMap *mReads );
+void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads );
 
+bool findLostSouls(DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int whichThird);
+
+bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq);
+
+bool partialEnding (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq);
 //**************************************
 // kmer operators
 //**************************************
@@ -148,6 +154,7 @@ bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string
 
 bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match);
 
+//int getActualRepeatLength(std::vector<int> &candidateCRISPR, std::string &read, int searchWindowLength, int minSpacerLength);
 
 //**************************************
 // Read Holder
@@ -155,7 +162,7 @@ bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match);
 
 std::string DRLowLexi(std::string matchedRead, DirectRepeat * dr_match,  ReadHolder * tmp_holder);
 
-void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, DirectRepeat * dr_match, std::string read_header, std::string read);
+void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, std::string read_header, std::string read);
 
 //**************************************
 // lookup table shite

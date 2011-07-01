@@ -32,6 +32,16 @@
 #define DEF_MCD_MAX_PATTERN_LENGTH 1024
 #define DEF_MCD_MAX_DELIM_LENGTH 10
 
+
+#define MAX_CLUSTER_SIZE_FOR_SW 50
+
+
+
+#define LOST_SOULS_MISMATCHES 2
+// number used for code copied from CRT
+// in their code was a user option between 6 and 9
+// was 8 by default -- saw no reason to change that
+#define DEF_SEARCH_WINDOW_LENGTH 8
 // user options structure
 typedef struct {
     int count;

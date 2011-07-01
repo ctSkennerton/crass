@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <deque>
 
 // local includes
 #include "crass_defines.h"
@@ -50,14 +51,24 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 
+
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
 typedef std::map<std::string, NodeManager *>::iterator DR_ListIterator;
 
+typedef std::map<int, std::vector<std::string> *>::iterator DR_ClusterIterator;
+typedef std::map<int, std::vector<std::string> *> DR_Cluster;
+
+bool sortDirectRepeatByLength( const std::string &a, const std::string &b);
+
 
 class WorkHorse {
     public:
-        WorkHorse (const options * opts, std::string outDir) { mOpts = opts; mOutFileDir = outDir; }
+        WorkHorse (const options * opts, std::string outDir) 
+        { 
+            mOpts = opts; 
+            mOutFileDir = outDir;
+        }
         ~WorkHorse();
         
         // do all the work!
@@ -77,11 +88,14 @@ class WorkHorse {
         void printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup);
         
         int mungeDRs(void);                         // cluster potential DRs and make node managers
-        bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<std::string, int> * DR2GIDMap, std::map<int, bool> * groups);  // cut kmers and hash
+        bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups);  // cut kmers and hash
+        void oneDRToRuleThemAll(DR_Cluster * DR2GID_map);
+        std::string threadToSmithWaterman(std::vector<std::string> *array);
+        void inline clenseClusters();
+        
         // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
         ReadMap mReads;                             // reads containing possible DRs
-        
         const options * mOpts;                      // search options
         std::string mOutFileDir;                    // where to spew text to
 };
