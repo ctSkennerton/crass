@@ -87,7 +87,8 @@ SmithWaterman.o: SmithWaterman.cpp /usr/include/c++/4.4/iostream \
  /usr/include/bits/mathinline.h /usr/include/c++/4.4/bits/cmath.tcc \
  /usr/include/sys/time.h /usr/include/c++/4.4/map \
  /usr/include/c++/4.4/bits/stl_tree.h /usr/include/c++/4.4/bits/stl_map.h \
- /usr/include/c++/4.4/bits/stl_multimap.h SmithWaterman.h SeqUtils.h
+ /usr/include/c++/4.4/bits/stl_multimap.h SmithWaterman.h SeqUtils.h \
+ LoggerSimp.h crass_defines.h
 
 /usr/include/c++/4.4/iostream:
 
@@ -366,3 +367,7 @@ SmithWaterman.o: SmithWaterman.cpp /usr/include/c++/4.4/iostream \
 SmithWaterman.h:
 
 SeqUtils.h:
+
+LoggerSimp.h:
+
+crass_defines.h:
