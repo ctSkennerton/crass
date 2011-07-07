@@ -166,7 +166,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         if (aveReadLength < CRASS_DEF_READ_LENGTH_CUTOFF)
         {
             logInfo("Beginning multipattern matcher", 1);
-            //scanForMultiMatches(input_fastq, *mOpts, patternsLookup, readsFound, &mReads);
+            scanForMultiMatches(input_fastq, *mOpts, patternsLookup, readsFound, &mReads);
         }
         
         // There will be an abundance of forms for each direct repeat.
@@ -196,6 +196,7 @@ int WorkHorse::mungeDRs(void)
     std::map<std::string, int> k2GID_map;
     std::map<int, bool> groups;
     DR_Cluster DR2GID_map;
+    logInfo("Reducing list of potential DRs1", 1);
     
     // go through all of the read holder objects
     ReadMapIterator read_map_iter = mReads.begin();
@@ -204,9 +205,11 @@ int WorkHorse::mungeDRs(void)
         clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &DR2GID_map, &groups);
         ++read_map_iter;
     }
-        
+    logInfo("Reducing list of potential DRs2", 1);
+    
     // now that we know what our groups are it's time to find the one true direct repeat
     oneDRToRuleThemAll(&DR2GID_map);
+    logInfo("Reducing list of potential DRs3", 1);
     
     DR_ClusterIterator DR2GID_iter = DR2GID_map.begin();
     while(DR2GID_iter != DR2GID_map.end())
@@ -219,11 +222,10 @@ int WorkHorse::mungeDRs(void)
             std::cout<<*vec_it<<" + ";
             vec_it++;
         }
-        std::cout<<std::endl;
+        std::cout << std::endl;
         DR2GID_iter++;
     }
-
-    
+    logInfo("Reducing list of potential DRs4", 1);
     
     // create a crispr node object and add into a node manager
     
@@ -239,19 +241,18 @@ std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
     // but we don't want to kill the machine so if it's a large group
     // we select some of the longer sequences in the group and perform the
     // comparison on just those sequences
-
     int group_size = array->size() - 1;
     if (CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW < group_size)
         group_size = CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW;
-        
+
     // a hash of the alignments from smith waterman and their frequencies
     std::map<std::string, int> alignmentHash;
     
     for (int i = 0; i < group_size; i++) 
     {
-        std::cout << std::endl;
         for (int j = i + 1; j <= group_size; j++) 
         {
+           
             stringPair align_concensus = smithWaterman(array->at(i), array->at(j));
             
             // if the alignment length is less than CRASS_DEF_MIN_SW_ALIGNMENT_RATIO% of the string length
@@ -261,6 +262,8 @@ std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
                 
                 if (rev_comp_align_concensus.first.length() > array->at(j).length() * CRASS_DEF_MIN_SW_ALIGNMENT_RATIO)
                 {
+                    std::cout << rev_comp_align_concensus.first << " : " << rev_comp_align_concensus.second << " : " << array->at(i) << " : " <<  reverseComplement(array->at(j)) <<std::endl;
+
                     if(mReads.find(rev_comp_align_concensus.first) != mReads.end())
                     {
                         addOrIncrement(alignmentHash, rev_comp_align_concensus.first);
@@ -273,6 +276,8 @@ std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
             }
             else
             {
+                std::cout << align_concensus.first << " : " << align_concensus.second << " : " << array->at(i) << " : " <<  array->at(j) <<std::endl;
+
                 if(mReads.find(align_concensus.first) != mReads.end())
                 {
                     addOrIncrement(alignmentHash, align_concensus.first);
@@ -291,8 +296,8 @@ std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
     std::map<std::string, int>::iterator cluster_iter = alignmentHash.begin();
     while (cluster_iter != alignmentHash.end()) 
     {
-        int score = (mReads.find(cluster_iter->first)->second)->size() * cluster_iter->second;
-        std::cout << cluster_iter->first << " : " << cluster_iter->second << " (occ) * " << (mReads.find(cluster_iter->first)->second)->size() << " (reads) = " << score << std::endl;
+        // use our kewl scoring code
+        int score = scorePotentialDR(cluster_iter->first, cluster_iter->second);
         if (score > max_val) 
         {
             max_val = score;
@@ -300,11 +305,38 @@ std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
         }
         cluster_iter++;
     }
+    
     return the_true_DR;
 }
 
+int WorkHorse::scorePotentialDR(std::string DR, int multiplier)
+{
+    //-----
+    // Calculate a "score" for each DR based on how
+    // many times we saw it during the smith-waterman stage of the clustering
+    // and also how many reads contained "doubled" versions of it
+    //
+    // get the Readlist for this fella
+    ReadList * scoring_list = mReads.find(DR)->second;
+    
+    ReadListIterator score_iter = scoring_list->begin();
+    ReadListIterator score_last = scoring_list->end();
+    int dubs_count = 0;
+    while(score_iter != score_last)
+    {
+        if(( ( (*score_iter)->RH_StartStops ).size() > 2 ) && !((((*score_iter)->RH_StartStops).front() == 0) || (((*score_iter)->RH_StartStops).back() == (*score_iter)->RH_Seq.length())))
+        {
+            dubs_count++;
+        }
+        score_iter++;
+    }
+    std::cout << DR << " : " << multiplier << " * " << dubs_count << " = " << (multiplier * dubs_count) << std::endl;
+    std::cout << "Scoring: " << dubs_count << " : " << scoring_list->size() << std::endl;
+    return multiplier * dubs_count;
+}
+
 // wrapper for smith waterman to fix up the positions of the direct repeats
-void inline WorkHorse::clenseClusters()
+void inline WorkHorse::clenseClusters(void)
 {
 }
 
@@ -314,7 +346,6 @@ void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
     // Each DR_Cluster contains multiple variants on the true DR
     // But which one is real?
     //
-    
     DR_ClusterIterator DR2GID_iter = DR2GID_map->begin();
     std::string the_true_DR = "unset";
     
@@ -326,7 +357,7 @@ void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
         std::sort(DR2GID_iter->second->begin(), DR2GID_iter->second->end(), sortDirectRepeatByLength);
         
         the_true_DR = threadToSmithWaterman(DR2GID_iter->second);
-
+        
         logInfo("Clustering has revealed the one true direct repeat: "<< the_true_DR, 5);
         std::cout << "Clustering has revealed the one true direct repeat: " << the_true_DR << std::endl;
         // now we use this "true" DR to fix the start stop indexes

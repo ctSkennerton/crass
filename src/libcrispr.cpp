@@ -647,7 +647,7 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
             }
         }
     }
-    logInfo("finnished multi pattern matcher", 1);
+    logInfo("finished multi pattern matcher", 1);
 }
 
 //**************************************
@@ -1027,13 +1027,13 @@ void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, std::string read_h
     {
         // add the sequence to the map
         (*mReads)[dr_lowlexi]->push_back(tmp_holder);
-        std::cout << " OLD!: " << dr_lowlexi << " : " << (*mReads)[dr_lowlexi]->size() << " : " << tmp_holder->RH_Seq << " : " <<  std::endl;
+        //std::cout << " OLD!: " << dr_lowlexi << " : " << (*mReads)[dr_lowlexi]->size() << " : " << tmp_holder->RH_Seq << " : " <<  std::endl;
     }
     else
     {
         (*mReads)[dr_lowlexi] = new ReadList();
         (*mReads)[dr_lowlexi]->push_back(tmp_holder);
-        std::cout << " NEW!: " << dr_lowlexi << " : " << (*mReads)[dr_lowlexi]->size() << " : " << tmp_holder->RH_Seq << " : " <<  std::endl;
+        //std::cout << " NEW!: " << dr_lowlexi << " : " << (*mReads)[dr_lowlexi]->size() << " : " << tmp_holder->RH_Seq << " : " <<  std::endl;
     }
 }
 

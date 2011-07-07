@@ -91,7 +91,8 @@ class WorkHorse {
         bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups);  // cut kmers and hash
         void oneDRToRuleThemAll(DR_Cluster * DR2GID_map);
         std::string threadToSmithWaterman(std::vector<std::string> *array);
-        void inline clenseClusters();
+        int scorePotentialDR(std::string DR, int multiplier);
+        void inline clenseClusters(void);
         
         // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat

@@ -57,7 +57,7 @@
 #include <string>
 #include <map>
 
-#define SW_MATCH                1
+#define SW_MATCH                5
 #define SW_MISMATCH             (-1)
 #define SW_GAP                  (-1)
 #define SW_SIM_SCORE(_a, _b)    ((_a == _b) ? SW_MATCH : SW_MISMATCH )

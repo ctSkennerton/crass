@@ -61,6 +61,7 @@
 // local includes
 #include "SmithWaterman.h"
 #include "SeqUtils.h"
+#include "LoggerSimp.h"
 
 double findMax(double a, double b, double c, double d, int * index)
 {
@@ -129,9 +130,9 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
     
     int I_i[aSearchLen+1][lengthSeqB+1];
     int I_j[aSearchLen+1][lengthSeqB+1];
-    
+      
     //start populating matrix
-    double matrix_max = 0;
+    double matrix_max = -1;
     int i_max = 0, j_max = 0;
     for (int i=1;i<=aSearchLen;i++)
     {
@@ -173,7 +174,6 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
             }
         }
     }
-    
     int current_i = i_max;
     int current_j = j_max;
     int next_i = I_i[current_i][current_j];
@@ -190,9 +190,13 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
     // record the start and end of seqA
     current_i--;
     current_j--;
+    if(0 > current_j) { current_j = 0; } 
+    if(0 > current_i) { current_i = 0; } 
+    
     *aStartAlign = current_i - 1;
     *aEndAlign = i_max;
-    
+//    logInfo( current_i << " : " << aStartSearch << " : " << i_max << " [[ " << (current_i+ aStartSearch) << " : " << (i_max - current_i + aStartSearch), 1);
+//    logInfo( current_j << " : " << j_max << " : " << current_j << " [[ " << (j_max - current_j), 1);
     // return the substrings
     return std::pair<std::string, std::string>(laurenize(seqA.substr(current_i+ aStartSearch, i_max - current_i + aStartSearch)), laurenize(seqB.substr(current_j, j_max - current_j)));
 }
