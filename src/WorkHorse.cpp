@@ -258,33 +258,38 @@ std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
             // if the alignment length is less than CRASS_DEF_MIN_SW_ALIGNMENT_RATIO% of the string length
             if (align_concensus.first.length() < array->at(j).length() * CRASS_DEF_MIN_SW_ALIGNMENT_RATIO)
             {
-                stringPair rev_comp_align_concensus = smithWaterman(array->at(i), reverseComplement(array->at(j)));
+            std::string rev_j = reverseComplement(array->at(j));
+                stringPair rev_comp_align_concensus = smithWaterman(array->at(i), rev_j);
                 
                 if (rev_comp_align_concensus.first.length() > array->at(j).length() * CRASS_DEF_MIN_SW_ALIGNMENT_RATIO)
                 {
-                    std::cout << rev_comp_align_concensus.first << " : " << rev_comp_align_concensus.second << " : " << array->at(i) << " : " <<  reverseComplement(array->at(j)) <<std::endl;
-
-                    if(mReads.find(rev_comp_align_concensus.first) != mReads.end())
+                    if(1)//(rev_comp_align_concensus.first != rev_j) && (rev_comp_align_concensus.second != rev_j))
                     {
-                        addOrIncrement(alignmentHash, rev_comp_align_concensus.first);
-                    }
-                    if(mReads.find(rev_comp_align_concensus.second) != mReads.end())
-                    {
-                        addOrIncrement(alignmentHash, rev_comp_align_concensus.second);
+                        std::cout << rev_comp_align_concensus.first << " : " << rev_comp_align_concensus.second << " : " << array->at(i) << " : " <<  reverseComplement(array->at(j)) <<std::endl;
+                        if(mReads.find(rev_comp_align_concensus.first) != mReads.end())
+                        {
+                            addOrIncrement(alignmentHash, rev_comp_align_concensus.first);
+                        }
+                        if(mReads.find(rev_comp_align_concensus.second) != mReads.end())
+                        {
+                            addOrIncrement(alignmentHash, rev_comp_align_concensus.second);
+                        }
                     }
                 }
             }
             else
             {
-                std::cout << align_concensus.first << " : " << align_concensus.second << " : " << array->at(i) << " : " <<  array->at(j) <<std::endl;
-
-                if(mReads.find(align_concensus.first) != mReads.end())
+                if(1)//(align_concensus.first != array->at(j)) && (align_concensus.second != array->at(j)))
                 {
-                    addOrIncrement(alignmentHash, align_concensus.first);
-                }
-                if(mReads.find(align_concensus.second) != mReads.end())
-                {
-                    addOrIncrement(alignmentHash, align_concensus.second);
+                    std::cout << align_concensus.first << " : " << align_concensus.second << " : " << array->at(i) << " : " <<  array->at(j) <<std::endl;
+                    if(mReads.find(align_concensus.first) != mReads.end())
+                    {
+                        addOrIncrement(alignmentHash, align_concensus.first);
+                    }
+                    if(mReads.find(align_concensus.second) != mReads.end())
+                    {
+                        addOrIncrement(alignmentHash, align_concensus.second);
+                    }
                 }
             }
         }
@@ -297,11 +302,14 @@ std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
     while (cluster_iter != alignmentHash.end()) 
     {
         // use our kewl scoring code
-        int score = scorePotentialDR(cluster_iter->first, cluster_iter->second);
-        if (score > max_val) 
+        if(2 < cluster_iter->second)
         {
-            max_val = score;
-            the_true_DR = cluster_iter->first;
+            int score = scorePotentialDR(cluster_iter->first, cluster_iter->second);
+            if (score > max_val) 
+            {
+                max_val = score;
+                the_true_DR = cluster_iter->first;
+            }
         }
         cluster_iter++;
     }
@@ -330,9 +338,9 @@ int WorkHorse::scorePotentialDR(std::string DR, int multiplier)
         }
         score_iter++;
     }
-    std::cout << DR << " : " << multiplier << " * " << dubs_count << " = " << (multiplier * dubs_count) << std::endl;
-    std::cout << "Scoring: " << dubs_count << " : " << scoring_list->size() << std::endl;
-    return multiplier * dubs_count;
+    int score = DR.length() / multiplier * dubs_count;
+    std::cout << DR << " : " << DR.length() << " / " << multiplier << " * " << dubs_count << " = " << score << std::endl;
+    return score;
 }
 
 // wrapper for smith waterman to fix up the positions of the direct repeats
