@@ -343,9 +343,58 @@ int WorkHorse::scorePotentialDR(std::string DR, int multiplier)
     return score;
 }
 
-// wrapper for smith waterman to fix up the positions of the direct repeats
-void inline WorkHorse::clenseClusters(void)
+
+// use the true DR to fix the start and stop of the reads
+void WorkHorse::clenseClusters(std::vector<std::string> * DR_array, std::string theTrueDR)
 {
+    // loop through all of the direct repeats in the cluster
+    std::vector<std::string>::iterator DR_array_iter = DR_array->begin();
+    
+    while (DR_array_iter != DR_array->end()) 
+    {
+        // loop through all of the reads in that cluster
+        ReadList * curr_list = mReads[*DR_array_iter];
+                
+        ReadListIterator curr_iter = curr_list->begin();
+
+        while (curr_iter != curr_list->end()) 
+        {
+            // loop through the start stop list
+            size_t array_length = (*curr_iter)->RH_StartStops.size() - 1;
+            
+            for (int dr_start_index_in_array = 0; dr_start_index_in_array < array_length; dr_start_index_in_array = dr_start_index_in_array + 2)
+            {
+                int aStartAlign, aEndAlign, aStartSearch, aEndSearch;
+                
+                // skip if front partial
+//                if ( (*curr_iter)->RH_StartStops.at(dr_start_index_in_array) != 0 && (*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1) != (*curr_iter)->RH_Seq.length()) 
+//                {
+                    // make sure that we don't go off the beginning
+                    int new_start = (*curr_iter)->RH_StartStops.at(dr_start_index_in_array) - CRASS_DEF_SW_SEARCH_EXT;
+                    aStartSearch = (new_start >= 0) ? new_start : 0; 
+                    
+                    int new_end = (*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1) + CRASS_DEF_SW_SEARCH_EXT;
+                    aEndSearch = (new_end <= (*curr_iter)->RH_Seq.length()) ? new_end : (*curr_iter)->RH_Seq.length();
+                    
+                    // search for the true direct repeat in the read within a window
+                    smithWaterman((*curr_iter)->RH_Seq, theTrueDR, &aStartAlign, &aEndAlign, aStartSearch, aEndSearch);
+                    
+                logInfo("old start index: "<<(*curr_iter)->RH_StartStops.at(dr_start_index_in_array)<<" old end index: "<<(*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1), 6);
+                
+                    (*curr_iter)->RH_StartStops.at(dr_start_index_in_array) = aStartAlign;
+                    (*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1) = aEndAlign;
+                
+                logInfo("new start index: "<<(*curr_iter)->RH_StartStops.at(dr_start_index_in_array)<<" new end index: "<<(*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1), 6);
+                logInfo("the DR of the new index: "<<(*curr_iter)->RH_Seq.substr((*curr_iter)->RH_StartStops.at(dr_start_index_in_array), (*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1) - (*curr_iter)->RH_StartStops.at(dr_start_index_in_array)), 6);
+                    // calculate the difference between the alignment start and end and the current numbers
+//                }
+
+                
+            }
+            curr_iter++;
+        }
+        DR_array_iter++;
+    }
 }
 
 void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
@@ -366,10 +415,12 @@ void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
         
         the_true_DR = threadToSmithWaterman(DR2GID_iter->second);
         
+        
         logInfo("Clustering has revealed the one true direct repeat: "<< the_true_DR, 5);
         std::cout << "Clustering has revealed the one true direct repeat: " << the_true_DR << std::endl;
-        // now we use this "true" DR to fix the start stop indexes
-        
+
+        clenseClusters(DR2GID_iter->second, the_true_DR);
+
         ++DR2GID_iter;
     }
 }

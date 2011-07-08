@@ -193,8 +193,8 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
     if(0 > current_j) { current_j = 0; } 
     if(0 > current_i) { current_i = 0; } 
     
-    *aStartAlign = current_i - 1;
-    *aEndAlign = i_max;
+    *aStartAlign = current_i+ aStartSearch;
+    *aEndAlign = (*aStartAlign) + i_max - current_i + aStartSearch;
 //    logInfo( current_i << " : " << aStartSearch << " : " << i_max << " [[ " << (current_i+ aStartSearch) << " : " << (i_max - current_i + aStartSearch), 1);
 //    logInfo( current_j << " : " << j_max << " : " << current_j << " [[ " << (j_max - current_j), 1);
     // return the substrings

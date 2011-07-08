@@ -92,7 +92,7 @@ class WorkHorse {
         void oneDRToRuleThemAll(DR_Cluster * DR2GID_map);
         std::string threadToSmithWaterman(std::vector<std::string> *array);
         int scorePotentialDR(std::string DR, int multiplier);
-        void inline clenseClusters(void);
+        void  clenseClusters(std::vector<std::string> * DR_list, std::string theTrueDR);
         
         // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat

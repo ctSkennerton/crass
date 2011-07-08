@@ -58,6 +58,7 @@
 #define CRASS_DEF_MAX_LOST_SOULS_MISMATCHES     2
 #define CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW       30                  // Maximum number of cluster reps we will all vs all sw for
 #define CRASS_DEF_MIN_SW_ALIGNMENT_RATIO        (0.85)              // SW alignments need to be this percentage of the original query to be considered real
+#define CRASS_DEF_SW_SEARCH_EXT                 8
 // --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------
