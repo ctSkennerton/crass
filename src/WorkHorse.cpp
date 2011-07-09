@@ -207,8 +207,10 @@ int WorkHorse::mungeDRs(void)
     }
     logInfo("Reducing list of potential DRs2", 1);
     
+    dumpReads(&DR2GID_map);
+    
     // now that we know what our groups are it's time to find the one true direct repeat
-    oneDRToRuleThemAll(&DR2GID_map);
+    //oneDRToRuleThemAll(&DR2GID_map);
     logInfo("Reducing list of potential DRs3", 1);
     
     DR_ClusterIterator DR2GID_iter = DR2GID_map.begin();
@@ -231,6 +233,7 @@ int WorkHorse::mungeDRs(void)
     
     logInfo("Done!", 1);
 }
+
 
 std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
 {
@@ -413,13 +416,13 @@ void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
         // sort the vector from the longest to the shortest
         std::sort(DR2GID_iter->second->begin(), DR2GID_iter->second->end(), sortDirectRepeatByLength);
         
-        the_true_DR = threadToSmithWaterman(DR2GID_iter->second);
+        //the_true_DR = threadToSmithWaterman(DR2GID_iter->second);
         
         
-        logInfo("Clustering has revealed the one true direct repeat: "<< the_true_DR, 5);
-        std::cout << "Clustering has revealed the one true direct repeat: " << the_true_DR << std::endl;
+        //logInfo("Clustering has revealed the one true direct repeat: "<< the_true_DR, 5);
+        //std::cout << "Clustering has revealed the one true direct repeat: " << the_true_DR << std::endl;
 
-        clenseClusters(DR2GID_iter->second, the_true_DR);
+        //clenseClusters(DR2GID_iter->second, the_true_DR);
 
         ++DR2GID_iter;
     }
@@ -631,6 +634,33 @@ void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup ,
     writeLookupToFile(patterns_lookup_name, patternsLookup);
     writeLookupToFile(spacer_lookup_name, spacerLookup);
 }
+
+
+void WorkHorse::dumpReads(DR_Cluster * DR2GID_map)
+{
+    
+    DR_ClusterIterator dr_clust_iter = DR2GID_map->begin();
+    while (dr_clust_iter != DR2GID_map->end()) 
+    {
+        std::ofstream reads_file;
+        reads_file.open((mOutFileDir + "Cluster_"+ to_string(dr_clust_iter->first) ).c_str());
+        std::vector<std::string>::iterator dr_iter = dr_clust_iter->second->begin();
+        while (dr_iter != dr_clust_iter->second->end()) 
+        {
+            ReadListIterator read_iter = mReads[*dr_iter]->begin();
+            while (read_iter != mReads[*dr_iter]->end()) 
+            {
+                reads_file<<">"<<(*read_iter)->RH_Header<<std::endl;
+                reads_file<<(*read_iter)->RH_Seq<<std::endl;
+                read_iter++;
+            }
+            dr_iter++;
+        }
+        reads_file.close();
+        dr_clust_iter++;
+    }
+}
+
 
 void WorkHorse::writeLookupToFile(string &outFileName, lookupTable &outLookup)
 {

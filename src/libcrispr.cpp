@@ -694,7 +694,9 @@ void cutSpacerKmers( std::string &spacerSeq, lookupTable &spacerLookup, const op
 */
 bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string &read)
 {
-    if (!(checkDRAndSpacerLength(opts, dr_match)))
+    dr_match.DR_Length = dr_match.DR_EndPos - dr_match.DR_StartPos;
+
+    if (!(checkDRAndSpacerLength(opts, dr_match)) || isLowComplexity(dr_match, read))
     {
         return false;
     }
@@ -711,7 +713,6 @@ bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string
 
 bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
 {
-    dr_match.DR_Length = dr_match.DR_EndPos - dr_match.DR_StartPos;
     logInfo("dr end pos: "<<dr_match.DR_EndPos<<" dr start pos: "<<dr_match.DR_StartPos, 10);
     
     int spacer_length = dr_match.DR_StartPos - dr_match.DR_MatchEndPos;
@@ -729,6 +730,53 @@ bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
     }
 
     return true; 
+}
+
+
+bool isLowComplexity(DirectRepeat &dr_match, std::string read)
+{
+    int cCount = 0;
+    int gCount = 0;
+    int aCount = 0;
+    int tCount = 0;
+    
+    float aPercent;
+    float cPercent;
+    float gPercetn;
+    float tPercent;
+
+    
+    int i = dr_match.DR_StartPos;
+    while (i <= dr_match.DR_EndPos) 
+    {
+        switch (read[i]) 
+        {
+            case 'c':
+            case 'C':
+                cCount++; break;
+            case 't': 
+            case 'T':
+                tCount++; break;
+            case 'a':
+            case 'A':
+                aCount++; break;
+            case 'g':
+            case 'G':
+                gCount++; break;
+            default: break;
+        }
+        i++;
+    }
+    aPercent = aCount/dr_match.DR_Length;
+    tPercent = tCount/dr_match.DR_Length;
+    gPercetn = gCount/dr_match.DR_Length;
+    cPercent = cCount/dr_match.DR_Length;
+    
+    if (aPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || tPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || gPercetn > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || cPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD)
+    {
+        return true;   
+    }
+    return false;
 }
 
 bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq)

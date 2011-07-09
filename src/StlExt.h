@@ -35,7 +35,8 @@
 //              A B R A C A D A B R A 
 //
 // --------------------------------------------------------------------
-
+#include <sstream>
+#include <map>
 
 template <class T1, class T2>
 void addOrIncrement(std::map<T1, T2> &inMap, T1 &searchThing)
@@ -49,4 +50,12 @@ void addOrIncrement(std::map<T1, T2> &inMap, T1 &searchThing)
     {
         inMap[searchThing] = 1;
     }
+}
+
+template <class T>
+inline std::string to_string (const T& t)
+{
+    std::stringstream ss;
+    ss << t;
+    return ss.str();
 }

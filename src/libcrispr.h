@@ -154,6 +154,8 @@ bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string
 
 bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match);
 
+bool isLowComplexity(DirectRepeat &dr_match, std::string read);
+
 //int getActualRepeatLength(std::vector<int> &candidateCRISPR, std::string &read, int searchWindowLength, int minSpacerLength);
 
 //**************************************

@@ -43,13 +43,13 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <deque>
 
 // local includes
 #include "crass_defines.h"
 #include "libcrispr.h"
 #include "NodeManager.h"
 #include "ReadHolder.h"
+
 
 
 // typedefs
@@ -86,7 +86,7 @@ class WorkHorse {
         void clearReadList(ReadList * tmp_list);
         void clearReadMap(ReadMap * tmp_map);
         void printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup);
-        
+        void dumpReads(DR_Cluster * DR2GID_map);
         int mungeDRs(void);                         // cluster potential DRs and make node managers
         bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups);  // cut kmers and hash
         void oneDRToRuleThemAll(DR_Cluster * DR2GID_map);
