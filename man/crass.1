@@ -14,8 +14,18 @@
 .Nd the CRISPR Assembler.
 .Sh SYNOPSIS             \" Section Header - required - don't modify            \" [file]
 .Nm 
-.Op Fl dhmosDSV
+.Op Fl dhklmorsDSV
+.Op Fl "-dumpReads" 
+.Ar "READTYPE"  
 .Ar sequence_files
+.Pp 
+where READTYPE is one of the following:
+
+.Op Fl "-illumina" 
+.Op Fl "-454" 
+.Op Fl "-sanger"
+.Op Fl "-genome" 
+
 .\".Op Ar                   \" [file ...]
 .\".Ar arg0                 \" Underlined argument - use .Ar anywhere to underline
 .\"arg2 ...                 \" Arguments
@@ -23,12 +33,12 @@
 .\"Use the .Nm macro to refer to your program throughout the man page like such:
 .Nm
 is a tool for finding and assembling reads from genomic and metagenomic datasets that contain 
-.Ar Clustered
-.Ar Regularly
-.Ar Interspersed
-.Ar Short
-.Ar Palindromic
-.Ar Repeats
+.Ar C Ns lustered
+.Ar R Ns egularly
+.Ar I Ns nterspersed
+.Ar S Ns hort
+.Ar P Ns alindromic
+.Ar R Ns epeats
 (CRISPR).  
 .Nm
 searches through the dataset and identifies reads which contain repeated K-mers that are of a specific length and are 
@@ -50,24 +60,43 @@ which contains all of the possible variations of the CRISPR based on the forking
 .\".El                      \" Ends the list
 .Pp
 .Sh OPTIONS
+
 .Bl -tag -width -indent  \" Differs from above in tag removed 
-.It Fl d Ar INT              \"-a flag as a list item
+.\".It Fl A Ar NUM "\fR, \-\^\-after-context" Ar NUM
+.It Fl "-454" Ar ""
+Specify that the input files have been sourced from 454 sequencing
+.It Fl d Ar INT Fl "\^\-minDR" Ar INT             \"-a flag as a list item
 The minimim length of the direct repeat to search for [Default: 23] 
-.It Fl D Ar INT              \"-a flag as a list item
+.It Fl D Ar INT Fl "\^\-maxDR" Ar INT             \"-a flag as a list item
 The Maximum length of the direct repeat to search for [Default: 47] 
-.It Fl h             \"-a flag as a list item
+.It Fl "\^\-dumpReads" Ar ""
+Prints all of the reads to file after the search is completed
+.It Fl "-genome" Ar ""
+Specify that the input files are a single genome or a collection of contigs
+.It Fl h Ar ""  Fl "\^\-help" Ar ""           \"-a flag as a list item
 Output basic usage informtion to screen
-.It Fl k Ar INT             \"-a flag as a list item
-The kmer size used for indexing the spacers and direct repeats in the assembly process [Default: 12]
-.It Fl m Ar INT             \"-a flag as a list item
+.It Fl "-illumina" Ar ""
+Specify that the input files have been sourced from illumina sequencing
+.It Fl k Ar INT Fl "\^\-kmerCount" Ar INT            \"-a flag as a list item
+The number of kmers at two direct repeats must share to be considered part of the same cluster [Default: 8]
+.It Fl l Ar INT Fl "\^\-logLevel" Ar INT
+The level of verbosity to ouput in the
+.Nm 
+log file 
+.It Fl m Ar INT Fl "\^\-maxMismatches" Ar INT            \"-a flag as a list item
 The maximum number of mismatches to allow in the initial search for direct repeats [Default: 0]
-.It Fl o Ar FILE             \"-a flag as a list item
+.It Fl o Ar LOCATION  Fl "\^\-outDir" Ar LOCATION          \"-a flag as a list item
 The name of the ouput directory for the output files [Default: .]
-.It Fl s Ar INT             \"-a flag as a list item
+.It Fl r Ar ""  Fl "\^\-reportStats" Ar ""          \"-a flag as a list item
+Output a statistics report on the CRISPR found by
+.Nm
+.It Fl s Ar INT Fl "\^\-minSpacer" Ar INT            \"-a flag as a list item
 The minimim length of the spacer to search for [Default: 26]
-.It Fl S Ar INT             \"-a flag as a list item
+.It Fl S Ar INT Fl "\^\-maxSpacer" Ar INT          \"-a flag as a list item
 The maximim length of the spacer to search for [Default: 50]
-.It Fl V             \"-a flag as a list item
+.It Fl "-sanger" Ar ""
+Specify that the input files have been sourced from sanger sequencing
+.It Fl V   Ar ""  Fl "\^\-version" Ar ""        \"-a flag as a list item
 Print version and copy right information
 .El                      \" Ends the list
 .Pp
@@ -79,16 +108,24 @@ Print version and copy right information
 .\" Description of ENV_VAR_2
 .\" .El                      
 .Sh FILES                \" File used or created by the topic of the man page
-.Bl -tag -width "/Users/joeuser/Library/really_long_file_name" -compact
-.It Pa ./mcd_kmers.txt
-A file containing a table of kmers used in the assembly stage assigned to unique identifiers
-.It Pa ./mcd_spacers.txt
-A file containing a table of spacers used in the assembly stage assigned to unique identifiers
-.It Pa ./mcd_direct_repeats.txt
-A file containing a table of direct repeats used in the assembly stage assigned to unique identifiers
-.It Pa ./mcd.log
-log file containing information about the last execution of 
+.Bl -tag -width -indent
+.\".It Pa ./mcd_kmers.txt
+.\"A file containing a table of kmers used in the assembly stage assigned to unique identifiers
+.\".It Pa ./mcd_spacers.txt
+.\"A file containing a table of spacers used in the assembly stage assigned to unique identifiers
+.\".It Pa ./mcd_direct_repeats.txt
+.\"A file containing a table of direct repeats used in the assembly stage assigned to unique identifiers
+.It Pa crass.log
+Log file containing information about the last execution of 
 .Nm
+.It Pa Cluster_[INT].fa
+Fasta file of all reads from a cluster created when the --dumpReads option is set.  
+.It Pa crass.contigs
+Fasta file containing the assembled CRISPR regions
+.It Pa crass.stats
+Delimited text file containing statistics on the CRISPR found by 
+.Nm "." 
+By default the delimiter is set to "\\t" however this can be changed with -b 
 .El                      \" Ends the list
 .\" .Sh DIAGNOSTICS       \" May not be needed
 .\" .Bl -diag

@@ -40,6 +40,7 @@
     #define __CRASSDEFINES_H
 
 #include <string>
+#include <getopt.h>
 // --------------------------------------------------------------------
  // PROGRAM NAME AND VERISON INFORMATION
 // --------------------------------------------------------------------
@@ -76,11 +77,11 @@ typedef struct {
     int count;
     bool detect;
     int logger_level;
-    int invert_match;
-    int show_all_records;
-    int report_fastq;
-    int report_fasta;
-    int report_stats;
+    bool illumina;
+    bool fourFiveFour;
+    bool sanger;
+    bool genome;
+    bool report_stats;
     int lowDRsize;
     int highDRsize;
     int lowSpacerSize;
@@ -91,5 +92,28 @@ typedef struct {
     char * pat_file;
     int kmer_size;
 } options;
+
+
+static struct option long_options [] = {
+
+    {"minDR", required_argument, NULL, 'd'},
+    {"maxDR", required_argument, NULL, 'D'},
+    {"minSpacer", required_argument, NULL, 's'},
+    {"maxSpacer", required_argument, NULL, 'S'},
+    {"logLevel", required_argument, NULL, 'l'},
+    {"maxMismatches", required_argument, NULL, 'm'},
+    {"version", no_argument, NULL, 'V'},
+    {"kmerCount", required_argument, NULL, 'k'},
+    {"outDir", required_argument, NULL, 'o'},
+    {"help", no_argument, NULL, 'h'},
+    {"reportStats", no_argument, NULL, 'r'},
+    {"dumpReads", no_argument, NULL, 0},
+    {"454", no_argument, NULL, 0},
+    {"illumina", no_argument, NULL, 0},
+    {"sanger", no_argument, NULL, 0},
+    {"genome", no_argument, NULL, 0}
+    
+
+};
 // --------------------------------------------------------------------
 #endif // __CRASSDEFINES_H

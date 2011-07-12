@@ -210,8 +210,8 @@ int WorkHorse::mungeDRs(void)
     logInfo("Reducing list of potential DRs2", 1);
     std::vector<std::string> mostOccuringKmers;
     
-    
-    //dumpReads(&DR2GID_map);
+    if (mOpts->detect)
+        dumpReads(&DR2GID_map);
     
     // go through all the counts for each group
     std::map<int, std::map<std::string, int> * >::iterator group_count_iter = group_kmer_counts_map.begin();

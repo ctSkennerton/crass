@@ -86,76 +86,35 @@ void version_info() {
 
 int process_options(int argc, char *argv[], options *opts) {
     int c;
-    //int index;
+    int index;
     //char *opt_o_value = NULL;
     char *opt_b_value = NULL;
     
-    while( (c = getopt(argc, argv, "hVfrl:evak:p:m:o:b:cd:D:s:S:")) != -1 ) {
+    while( (c = getopt_long(argc, argv, "hVrl:k:p:m:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
         switch(c) {
-            case 'h':
-                help_message();
-                exit(0);
+            case 'h': help_message(); exit(0); break;
+            case 'V': version_info(); exit(0); break;
+            case 'o': opts->output_fastq = optarg; break;
+            case 'p': opts->pat_file = optarg; break;
+            case 'b': opt_b_value = optarg; break;
+            case 'r': opts->report_stats = true; break;
+            case 'm': opts->max_mismatches = atoi(optarg); break;
+            case 'd': opts->lowDRsize = atoi(optarg); break;
+            case 'D': opts->highDRsize = atoi(optarg); break;
+            case 's': opts->lowSpacerSize = atoi(optarg); break;
+            case 'S': opts->highSpacerSize = atoi(optarg); break;
+            case 'c': opts->count = 1; break;
+            case 'k': opts->kmer_size = atoi(optarg); break;
+            case 'l': opts->logger_level = atoi(optarg); break;
+            case '?': version_info(); help_message(); exit(1); break;
+            case '0':
+                if( strcmp( "dumpReads", long_options[index].name ) == 0 ) opts->detect = true;
+                else if ( strcmp( "454", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
+                else if ( strcmp( "illumina", long_options[index].name ) == 0 ) opts->illumina = true;
+                else if ( strcmp( "sanger", long_options[index].name ) == 0 ) opts->sanger = true;
+                else if ( strcmp( "genome", long_options[index].name ) == 0 ) opts->genome = true;
                 break;
-            case 'V':
-                version_info();
-                exit(0);
-                break;
-            case 'v':
-                opts->invert_match = 1;
-                break;
-            case 'a':
-                opts->show_all_records = 1;
-                break;
-            case 'o':
-                opts->output_fastq = optarg;
-                break;
-            case 'p':
-                opts->pat_file = optarg;
-                break;
-            case 'b':
-                opt_b_value = optarg;
-                break;
-            case 'f':
-                opts->report_fasta = 1;
-                opts->report_fastq = 0;
-                opts->report_stats = 0;
-                break;
-            case 'r':
-                opts->report_fasta = 0;
-                opts->report_fastq = 0;
-                opts->report_stats = 1;
-                break;
-            case 'm':
-                opts->max_mismatches = atoi(optarg);
-                break;
-            case 'd':
-                opts->lowDRsize = atoi(optarg);
-                break;
-            case 'D':
-                opts->highDRsize = atoi(optarg);
-                break;
-            case 's':
-                opts->lowSpacerSize = atoi(optarg);
-                break;
-            case 'S':
-                opts->highSpacerSize = atoi(optarg);
-                break;
-            case 'c':
-                opts->count = 1;
-                break;
-            case 'e':
-                opts->detect = true;
-                break;
-            case 'k':
-                opts->kmer_size = atoi(optarg);
-                break;
-            case 'l':
-                opts->logger_level = atoi(optarg);
-                break;
-            case '?':
-                exit(1);
-            default:
-                abort();
+            default: abort(); break;
         }
     }
     if (optind == argc)
@@ -189,17 +148,17 @@ int main(int argc, char *argv[])
         0,             // count flag
         false,         // exit after first find
         1,             // logging minimum by default
-        0,             // invert match flag
-        0,             // show all records flag
-        1,             // output fastq report
-        0,             // output fasta report
-        0,             // output stats report
+        false,             // illumina reads
+        false,             // 454 reads
+        false,             // sanger reads
+        false,             // genome
+        false,             // output stats report
         23,            // minimum direct repeat size
         47,            // maximum direct repeat size
         26,            // minimum spacer size
         50,            // maximum spacer size
         0,             // maxiumum allowable errors in direct repeat
-        "",            // output file name
+        "",            // output file directory
         "\t",          // delimiter string for stats report
         NULL,          //  pattern file name
         8             // the number of the kmers that need to be shared for clustering
