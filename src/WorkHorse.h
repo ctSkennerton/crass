@@ -88,12 +88,12 @@ class WorkHorse {
         void printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup);
         void dumpReads(DR_Cluster * DR2GID_map);
         int mungeDRs(void);                         // cluster potential DRs and make node managers
-        bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups);  // cut kmers and hash
+        bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
         void oneDRToRuleThemAll(DR_Cluster * DR2GID_map);
         std::string threadToSmithWaterman(std::vector<std::string> *array);
         int scorePotentialDR(std::string DR, int multiplier);
-        void  clenseClusters(std::vector<std::string> * DR_list, std::string theTrueDR);
-        
+        void clenseClusters(std::vector<std::string> * DR_list, std::string theTrueDR);
+    std::vector<std::string> getFiveMostAbundantKmers(std::map<std::string, int> * kmer_CountMap);
         // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
         ReadMap mReads;                             // reads containing possible double DRs

@@ -198,244 +198,78 @@ int WorkHorse::mungeDRs(void)
     DR_Cluster DR2GID_map;
     logInfo("Reducing list of potential DRs1", 1);
     
+    std::map<int, std::map<std::string, int> * > group_kmer_counts_map;
+
     // go through all of the read holder objects
     ReadMapIterator read_map_iter = mReads.begin();
     while (read_map_iter != mReads.end()) 
     {
-        clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &DR2GID_map, &groups);
+        clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &DR2GID_map, &groups, &group_kmer_counts_map);
         ++read_map_iter;
     }
     logInfo("Reducing list of potential DRs2", 1);
+    std::vector<std::string> mostOccuringKmers;
     
-    dumpReads(&DR2GID_map);
     
-    // now that we know what our groups are it's time to find the one true direct repeat
-    //oneDRToRuleThemAll(&DR2GID_map);
-    logInfo("Reducing list of potential DRs3", 1);
+    //dumpReads(&DR2GID_map);
     
-    DR_ClusterIterator DR2GID_iter = DR2GID_map.begin();
-    while(DR2GID_iter != DR2GID_map.end())
+    // go through all the counts for each group
+    std::map<int, std::map<std::string, int> * >::iterator group_count_iter = group_kmer_counts_map.begin();
+    while(group_count_iter != group_kmer_counts_map.end())
     {
-        std::cout << DR2GID_iter->first << " : ";
-        std::vector<std::string>::iterator vec_it;
-        vec_it = DR2GID_iter->second->begin();
-        while (vec_it != DR2GID_iter->second->end()) 
-        {
-            std::cout<<*vec_it<<" + ";
-            vec_it++;
-        }
-        std::cout << std::endl;
-        DR2GID_iter++;
+        // you have a pointer to a map!
+        
+        // get the five top kmers
+        std::vector<std::string> five_of_the_best = getFiveMostAbundantKmers(group_count_iter->second);
+        
+        if(NULL != group_count_iter->second)
+            delete group_count_iter->second;
+        group_count_iter->second = NULL;
+        group_count_iter++;
     }
-    logInfo("Reducing list of potential DRs4", 1);
-    
-    // create a crispr node object and add into a node manager
-    
-    logInfo("Done!", 1);
 }
 
-
-std::string WorkHorse::threadToSmithWaterman(std::vector<std::string> *array)
+std::vector<std::string> WorkHorse::getFiveMostAbundantKmers(std::map<std::string, int> * kmer_CountMap)
 {
-    //-----
-    // take in a cluster of direct repeats and smithwaterman them to discover
-    // the hidden powers within -- or just the correct direct repeat
-    // if the group is small its totes okay to do all vs all
-    // but we don't want to kill the machine so if it's a large group
-    // we select some of the longer sequences in the group and perform the
-    // comparison on just those sequences
-    int group_size = array->size() - 1;
-    if (CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW < group_size)
-        group_size = CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW;
-
-    // a hash of the alignments from smith waterman and their frequencies
-    std::map<std::string, int> alignmentHash;
+    int max_count = 0;
+    int previous_max = 100000000;
     
-    for (int i = 0; i < group_size; i++) 
+    std::string top_kmer;    
+    std::vector<std::string> top_kmers;
+    
+    
+   int iterations = (kmer_CountMap->size() < 5 ) ? (int)kmer_CountMap->size() : 5;
+    
+    for (int i = 1; i <= iterations; i++) 
     {
-        for (int j = i + 1; j <= group_size; j++) 
+        std::map<std::string, int>::iterator map_iter = kmer_CountMap->begin();
+        
+        while (map_iter != kmer_CountMap->end()) 
         {
-           
-            stringPair align_concensus = smithWaterman(array->at(i), array->at(j));
+            if (map_iter->second > max_count && map_iter->second < previous_max)
+            {
+                previous_max = max_count = map_iter->second;
+                top_kmer = map_iter->first;
+            }
             
-            // if the alignment length is less than CRASS_DEF_MIN_SW_ALIGNMENT_RATIO% of the string length
-            if (align_concensus.first.length() < array->at(j).length() * CRASS_DEF_MIN_SW_ALIGNMENT_RATIO)
-            {
-            std::string rev_j = reverseComplement(array->at(j));
-                stringPair rev_comp_align_concensus = smithWaterman(array->at(i), rev_j);
-                
-                if (rev_comp_align_concensus.first.length() > array->at(j).length() * CRASS_DEF_MIN_SW_ALIGNMENT_RATIO)
-                {
-                    if(1)//(rev_comp_align_concensus.first != rev_j) && (rev_comp_align_concensus.second != rev_j))
-                    {
-                        std::cout << rev_comp_align_concensus.first << " : " << rev_comp_align_concensus.second << " : " << array->at(i) << " : " <<  reverseComplement(array->at(j)) <<std::endl;
-                        if(mReads.find(rev_comp_align_concensus.first) != mReads.end())
-                        {
-                            addOrIncrement(alignmentHash, rev_comp_align_concensus.first);
-                        }
-                        if(mReads.find(rev_comp_align_concensus.second) != mReads.end())
-                        {
-                            addOrIncrement(alignmentHash, rev_comp_align_concensus.second);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                if(1)//(align_concensus.first != array->at(j)) && (align_concensus.second != array->at(j)))
-                {
-                    std::cout << align_concensus.first << " : " << align_concensus.second << " : " << array->at(i) << " : " <<  array->at(j) <<std::endl;
-                    if(mReads.find(align_concensus.first) != mReads.end())
-                    {
-                        addOrIncrement(alignmentHash, align_concensus.first);
-                    }
-                    if(mReads.find(align_concensus.second) != mReads.end())
-                    {
-                        addOrIncrement(alignmentHash, align_concensus.second);
-                    }
-                }
-            }
+            ++map_iter;
         }
+
     }
+
+    top_kmers.push_back(top_kmer);
     
-    // The dr with the highest number of alignments *should* be the one we're looking for
-    int max_val = 0;
-    std::string the_true_DR = "**unset**";
-    std::map<std::string, int>::iterator cluster_iter = alignmentHash.begin();
-    while (cluster_iter != alignmentHash.end()) 
-    {
-        // use our kewl scoring code
-        if(2 < cluster_iter->second)
-        {
-            int score = scorePotentialDR(cluster_iter->first, cluster_iter->second);
-            if (score > max_val) 
-            {
-                max_val = score;
-                the_true_DR = cluster_iter->first;
-            }
-        }
-        cluster_iter++;
-    }
     
-    return the_true_DR;
+    return top_kmers;
 }
 
-int WorkHorse::scorePotentialDR(std::string DR, int multiplier)
-{
-    //-----
-    // Calculate a "score" for each DR based on how
-    // many times we saw it during the smith-waterman stage of the clustering
-    // and also how many reads contained "doubled" versions of it
-    //
-    // get the Readlist for this fella
-    ReadList * scoring_list = mReads.find(DR)->second;
-    
-    ReadListIterator score_iter = scoring_list->begin();
-    ReadListIterator score_last = scoring_list->end();
-    int dubs_count = 0;
-    while(score_iter != score_last)
-    {
-        if(( ( (*score_iter)->RH_StartStops ).size() > 2 ) && !((((*score_iter)->RH_StartStops).front() == 0) || (((*score_iter)->RH_StartStops).back() == (*score_iter)->RH_Seq.length())))
-        {
-            dubs_count++;
-        }
-        score_iter++;
-    }
-    int score = DR.length() / multiplier * dubs_count;
-    std::cout << DR << " : " << DR.length() << " / " << multiplier << " * " << dubs_count << " = " << score << std::endl;
-    return score;
-}
-
-
-// use the true DR to fix the start and stop of the reads
-void WorkHorse::clenseClusters(std::vector<std::string> * DR_array, std::string theTrueDR)
-{
-    // loop through all of the direct repeats in the cluster
-    std::vector<std::string>::iterator DR_array_iter = DR_array->begin();
-    
-    while (DR_array_iter != DR_array->end()) 
-    {
-        // loop through all of the reads in that cluster
-        ReadList * curr_list = mReads[*DR_array_iter];
-                
-        ReadListIterator curr_iter = curr_list->begin();
-
-        while (curr_iter != curr_list->end()) 
-        {
-            // loop through the start stop list
-            size_t array_length = (*curr_iter)->RH_StartStops.size() - 1;
-            
-            for (int dr_start_index_in_array = 0; dr_start_index_in_array < array_length; dr_start_index_in_array = dr_start_index_in_array + 2)
-            {
-                int aStartAlign, aEndAlign, aStartSearch, aEndSearch;
-                
-                // skip if front partial
-//                if ( (*curr_iter)->RH_StartStops.at(dr_start_index_in_array) != 0 && (*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1) != (*curr_iter)->RH_Seq.length()) 
-//                {
-                    // make sure that we don't go off the beginning
-                    int new_start = (*curr_iter)->RH_StartStops.at(dr_start_index_in_array) - CRASS_DEF_SW_SEARCH_EXT;
-                    aStartSearch = (new_start >= 0) ? new_start : 0; 
-                    
-                    int new_end = (*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1) + CRASS_DEF_SW_SEARCH_EXT;
-                    aEndSearch = (new_end <= (*curr_iter)->RH_Seq.length()) ? new_end : (*curr_iter)->RH_Seq.length();
-                    
-                    // search for the true direct repeat in the read within a window
-                    smithWaterman((*curr_iter)->RH_Seq, theTrueDR, &aStartAlign, &aEndAlign, aStartSearch, aEndSearch);
-                    
-                logInfo("old start index: "<<(*curr_iter)->RH_StartStops.at(dr_start_index_in_array)<<" old end index: "<<(*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1), 6);
-                
-                    (*curr_iter)->RH_StartStops.at(dr_start_index_in_array) = aStartAlign;
-                    (*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1) = aEndAlign;
-                
-                logInfo("new start index: "<<(*curr_iter)->RH_StartStops.at(dr_start_index_in_array)<<" new end index: "<<(*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1), 6);
-                logInfo("the DR of the new index: "<<(*curr_iter)->RH_Seq.substr((*curr_iter)->RH_StartStops.at(dr_start_index_in_array), (*curr_iter)->RH_StartStops.at(dr_start_index_in_array + 1) - (*curr_iter)->RH_StartStops.at(dr_start_index_in_array)), 6);
-                    // calculate the difference between the alignment start and end and the current numbers
-//                }
-
-                
-            }
-            curr_iter++;
-        }
-        DR_array_iter++;
-    }
-}
-
-void WorkHorse::oneDRToRuleThemAll(DR_Cluster * DR2GID_map)
-{
-    //-----
-    // Each DR_Cluster contains multiple variants on the true DR
-    // But which one is real?
-    //
-    DR_ClusterIterator DR2GID_iter = DR2GID_map->begin();
-    std::string the_true_DR = "unset";
-    
-    while (DR2GID_iter != DR2GID_map->end()) 
-    {
-        std::cout << DR2GID_iter->first << ":" << std::endl;
-        
-        // sort the vector from the longest to the shortest
-        std::sort(DR2GID_iter->second->begin(), DR2GID_iter->second->end(), sortDirectRepeatByLength);
-        
-        //the_true_DR = threadToSmithWaterman(DR2GID_iter->second);
-        
-        
-        //logInfo("Clustering has revealed the one true direct repeat: "<< the_true_DR, 5);
-        //std::cout << "Clustering has revealed the one true direct repeat: " << the_true_DR << std::endl;
-
-        //clenseClusters(DR2GID_iter->second, the_true_DR);
-
-        ++DR2GID_iter;
-    }
-}
-
-bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups)
+bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap)
 {
     //-----
     // hash a DR!
     //
-    int hash_size = 6;      // cutting 6 mers
     int str_len = DR.length();
-    int off = str_len - hash_size;
+    int off = str_len - CRASS_DEF_KMER_SIZE;
     int num_mers = off + 1;
     
     //***************************************
@@ -484,7 +318,7 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
     char ** kmers = new char*[num_mers];
     for(int i = 0; i < num_mers; i++)
     {
-        kmers[i] = new char [hash_size+1];
+        kmers[i] = new char [CRASS_DEF_KMER_SIZE+1];
     }
     
     int * kmer_offsets = new int[num_mers];              // use these offsets when we cut kmers, they are a component of the algorithm
@@ -496,7 +330,7 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
     int pos_counter = 0;
 
     // a slow-ish first part
-    while(pos_counter < hash_size)
+    while(pos_counter < CRASS_DEF_KMER_SIZE)
     {
         for(int j = 0; j < num_mers; j++)
         {
@@ -514,7 +348,7 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
     {
         for(int j = 0; j < num_mers; j++)
         {
-            if(kmer_offsets[j] >= 0 && kmer_offsets[j] < hash_size)
+            if(kmer_offsets[j] >= 0 && kmer_offsets[j] < CRASS_DEF_KMER_SIZE)
             {
                 kmers[j][kmer_offsets[j]] = DR[pos_counter];
             }
@@ -528,7 +362,7 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
     {
         for(int j = 0; j < num_mers; j++)
         {
-            if(kmer_offsets[j] < hash_size)
+            if(kmer_offsets[j] < CRASS_DEF_KMER_SIZE)
             {
                 kmers[j][kmer_offsets[j]] = DR[pos_counter];
             }
@@ -542,13 +376,21 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
     //
     std::vector<std::string> homeless_kmers;
     std::map<int, int> group_count;
+    std::map<std::string, int> local_kmer_CountMap;
+
     int group = 0;
     for(int i = 0; i < num_mers; ++i)
     {
         // make it a string!
-        kmers[i][hash_size+1]='\0';
+        kmers[i][CRASS_DEF_KMER_SIZE+1]='\0';
         std::string tmp_str(kmers[i]);
         tmp_str = laurenize(tmp_str);
+        
+        // see if this guy has been counted!
+        if(local_kmer_CountMap.find(tmp_str) == local_kmer_CountMap.end())
+            local_kmer_CountMap[tmp_str] = 1;
+        else
+            local_kmer_CountMap[tmp_str]++;
         
         // see if we've seen this kmer before
         std::map<std::string, int>::iterator k2g_iter = k2GIDMap->find(tmp_str);
@@ -589,6 +431,9 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
         // we need to make a new entry in the group map
         (*groups)[group] = true;
         (*DR2GIDMap)[group] = new std::vector<std::string>;
+        
+        // we need a new kmer counter for this group
+        (*groupKmerCountsMap)[group] = new std::map<std::string, int>;
     }
     
     // we need to record the group for this mofo!
@@ -600,6 +445,14 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
     {
         (*k2GIDMap)[*homeless_iter] = group;
         homeless_iter++;
+    }
+    
+    // we need to fix up the group counts
+    std::map<std::string, int>::iterator local_count_iter = local_kmer_CountMap.begin();
+    while(local_count_iter != local_kmer_CountMap.end())
+    {
+        (*(*groupKmerCountsMap)[group])[local_count_iter->first] += local_count_iter->second;
+        local_count_iter++;
     }
 
     // clean up

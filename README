@@ -1,7 +1,7 @@
 ==============================================================================
 ==============================================================================
 
-crass -- CRisprASSembler -- revison 0 version 0 subversion 1 (0.0.1)
+    crass -- CRisprASSembler -- revison 0 version 0 subversion 1 (0.0.1)
 
 ==============================================================================
 
@@ -48,7 +48,7 @@ INSTALLATION
 
 Download the source files from git.
 
-cd BASEDIR/MCD/MCD/
+cd crass
 
 then on most Unix systems:
 

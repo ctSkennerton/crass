@@ -117,25 +117,12 @@ class ReadMatch {
 // search functions
 //**************************************
 
-// boyer moore functions
 
 float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads);
 
-//bool inline checkMismatch( int &temp_mismatch, const options &opts);
-
-// bitap functions
-//bool directRepeatInit( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts );
-//
-//bool directRepeatExtend ( DirectRepeat &dr_match, ReadMatch &match_info, int &temp_mismatch, const options &opts);
-//
-//bool updateWordBitap(ReadMatch &match_info, int &search_begin, int &start, const options &opts, DirectRepeat &dr, std::string &subject_word, int &temp_mismatch);
-
 float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads);
 
-// multimap functions (wuMander)
 void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads );
-
-bool findLostSouls(DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int whichThird);
 
 bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq);
 

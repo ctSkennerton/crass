@@ -60,6 +60,7 @@
 #define CRASS_DEF_MIN_SW_ALIGNMENT_RATIO        (0.85)              // SW alignments need to be this percentage of the original query to be considered real
 #define CRASS_DEF_SW_SEARCH_EXT                 8
 #define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD     0.75
+#define CRASS_DEF_KMER_SIZE                     7
 // --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------
