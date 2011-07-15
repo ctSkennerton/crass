@@ -59,18 +59,21 @@
 
 void help_message() {
     std::cout<<"Usage:  "<<CRASS_DEF_PRG_NAME<<" [options]  <fastq_or_fasta_files>"<<std::endl<<std::endl;
-    std::cout<< "\t-d <INT>         Minimim length of the direct repeat to search for [Default: 23]"<<std::endl;
-    std::cout<< "\t-D <INT>         Maximim length of the direct repeat to search for [Default: 47]"<<std::endl;
-    std::cout<< "\t-h               This help message"<<std::endl;
-    std::cout<< "\t-k <INT>         The number of the kmers that need to be"<<std::endl; 
-    std::cout<< "\t                 shared for clustering [Default: 8]"<<std::endl;
-    std::cout<< "\t-l <INT>         Output a log file and set a log level [1 - 10]"<<std::endl;
-    std::cout<< "\t-m <INT>         Total number of mismatches to at most allow for"<<std::endl;
-    std::cout<< "\t                 in search pattern [Default: 0]"<<std::endl;
-    std::cout<< "\t-o <DIRECTORY>   Output directory [default: .]"<<std::endl;
-    std::cout<< "\t-s <INT>         Minimim length of the spacer to search for [Default: 26]"<<std::endl;
-    std::cout<< "\t-S <INT>         Maximim length of the spacer to search for [Default: 50]"<<std::endl;
-    std::cout<< "\t-V               Program and version information"<<std::endl;
+    std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
+    std::cout<< "                             to search for [Default: 23]"<<std::endl;
+    std::cout<< "\t-D --maxDR <INT>           Maximim length of the direct repeat"<<std::endl; 
+    std::cout<<"                              to search for [Default: 47]"<<std::endl;
+    std::cout<< "\t-h                         This help message"<<std::endl;
+    std::cout<< "\t-k --kmerCount <INT>       The number of the kmers that need to be"<<std::endl; 
+    std::cout<< "\t                           shared for clustering [Default: 8]"<<std::endl;
+    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 10]"<<std::endl;
+    std::cout<< "\t-m --maxMismatches <INT>   Total number of mismatches to at most allow for"<<std::endl;
+    std::cout<< "\t                           in search pattern [Default: 0]"<<std::endl;
+    std::cout<< "\t-o --outDir <DIRECTORY>    Output directory [default: .]"<<std::endl;
+    std::cout<< "\t-s --minSpacer <INT>       Minimim length of the spacer to search for [Default: 26]"<<std::endl;
+    std::cout<< "\t-S --maxSpacer <INT>       Maximim length of the spacer to search for [Default: 50]"<<std::endl;
+    std::cout<< "\t-V --version               Program and version information"<<std::endl;
+    std::cout<< "\t--dumpReads                Print reads containing CRISPR to file after the find stage"<<std::endl;
 
 }
 
