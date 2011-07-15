@@ -55,6 +55,12 @@ class ReadHolder
     public:
         ReadHolder() {}  
         ~ReadHolder() {}  
+
+        void reverseComplementSeq(void);     // reverse complement the sequence and fix the start stops
+        void reverseStartStops(void);            // fix start stops what got corrupted during revcomping
+
+        void printContents(void);
+        void logContents(int logLevel);
     
         // members
         std::string RH_Header;                // header for the sequence

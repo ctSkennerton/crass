@@ -62,6 +62,7 @@
 #define CRASS_DEF_SW_SEARCH_EXT                 8
 #define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD     0.75
 #define CRASS_DEF_KMER_SIZE                     7
+#define CRASS_DEF_NUM_KMERS_4_MODE              5
 // --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------

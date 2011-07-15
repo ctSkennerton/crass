@@ -144,26 +144,22 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
         strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
         
-        // return value of the search functions
-        float aveReadLength;
-        
         // direct repeat sequence and unique ID
         lookupTable patternsLookup;
-        
         
         // the sequence of whole spacers and their unique ID
         lookupTable readsFound;
         
         // Use a different search routine, depending on if we allow mismatches or not.
         if(mOpts->max_mismatches == 0)
-        {   aveReadLength = bmSearchFastqFile(input_fastq, *mOpts, patternsLookup, readsFound,  &mReads); }
+        {   mAveReadLength = bmSearchFastqFile(input_fastq, *mOpts, patternsLookup, readsFound,  &mReads); }
         else
-        {   aveReadLength = bitapSearchFastqFile(input_fastq, *mOpts, patternsLookup, readsFound, &mReads); }
+        {   mAveReadLength = bitapSearchFastqFile(input_fastq, *mOpts, patternsLookup, readsFound, &mReads); }
 
-        logInfo("Average read length: "<<aveReadLength, 2);
+        logInfo("Average read length: "<<mAveReadLength, 2);
         
         // only nessessary in instances where there are short reads
-        if (aveReadLength < CRASS_DEF_READ_LENGTH_CUTOFF)
+        if (mAveReadLength < CRASS_DEF_READ_LENGTH_CUTOFF)
         {
             logInfo("Beginning multipattern matcher", 1);
             scanForMultiMatches(input_fastq, *mOpts, patternsLookup, readsFound, &mReads);
@@ -196,7 +192,7 @@ int WorkHorse::mungeDRs(void)
     std::map<std::string, int> k2GID_map;
     std::map<int, bool> groups;
     DR_Cluster DR2GID_map;
-    logInfo("Reducing list of potential DRs1", 1);
+    logInfo("Reducing list of potential DRs stage1", 1);
     
     std::map<int, std::map<std::string, int> * > group_kmer_counts_map;
 
@@ -207,9 +203,11 @@ int WorkHorse::mungeDRs(void)
         clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &DR2GID_map, &groups, &group_kmer_counts_map);
         ++read_map_iter;
     }
-    logInfo("Reducing list of potential DRs2", 1);
+    
+    logInfo("Reducing list of potential DRs stage2", 1);
     std::vector<std::string> mostOccuringKmers;
     
+    // print the reads to a file if requested
     if (mOpts->detect)
         dumpReads(&DR2GID_map);
     
@@ -217,11 +215,277 @@ int WorkHorse::mungeDRs(void)
     std::map<int, std::map<std::string, int> * >::iterator group_count_iter = group_kmer_counts_map.begin();
     while(group_count_iter != group_kmer_counts_map.end())
     {
-        // you have a pointer to a map!
+        std::vector<std::string> * clustered_DRs = DR2GID_map[group_count_iter->first];
+        if(clustered_DRs != NULL)
+        {
+            // it's real!
+            
+            // get the five top kmers
+            std::vector<std::string> n_top_kmers = getNMostAbundantKmers(CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second);
+            
+            // go through the DRs in this cluster, we'd like to find one which has all 5 kmers in it...
+            // moreover, we need to get the one with all 5 and the most reads
+            std::cout << group_count_iter->first << std::endl;
+            std::vector<std::string>::iterator dr_iter = clustered_DRs->begin();
+            
+            // to store our DR which has all 5 kmers
+            std::string master_DR = "**unset**";
+            int master_read_count = 0;
+            
+            // these are needed fo rthe call to is kmer present but we don't actually need to values!
+            bool disp_rc;
+            int disp_pos;
+            while (dr_iter != clustered_DRs->end()) 
+            {
+                bool got_all_mode_mers = true;
+                std::vector<std::string>::iterator n_top_iter = n_top_kmers.begin();
+                while(n_top_iter != n_top_kmers.end())
+                {
+                    if(!isKmerPresent(&disp_rc, &disp_pos, &(*n_top_iter), &(*dr_iter)))
+                    {
+                        got_all_mode_mers = false;
+                        break;
+                    }
+                    n_top_iter++;
+                }
+                
+                // did this guy have all 5?
+                if(got_all_mode_mers)
+                {
+                    int tmp_count = mReads[*dr_iter]->size();
+                    if(tmp_count > master_read_count)
+                    {
+                        master_read_count = tmp_count;
+                        master_DR = *dr_iter;
+                    }
+                }
+                
+                // otherwise keep searching
+                dr_iter++;
+            }
+            std::cout << "-------------" << std::endl;
+            
+            if(master_DR == "**unset**")
+            {
+                // probably a dud. throw it out
+                delete clustered_DRs;
+                clustered_DRs = NULL;
+            }
+            else
+            {
+                std::cout << master_DR << std::endl;
+                std::vector<std::string>::iterator n_top_iter = n_top_kmers.begin();
+                while(n_top_iter != n_top_kmers.end())
+                {
+                    std::cout << *n_top_iter << " : " << (*(group_count_iter->second))[*n_top_iter] << std::endl;
+                    n_top_iter++;
+                }
+            
+                // now we have the 5 most abundant kmers and one DR which contains them all
+                // time to rock and rrrroll!
+                
+                // chars we luv!
+                char alphabet[4] = {'A', 'C', 'G', 'T'};
+                
+                // first we need a 4 * (3 * RL)
+                int ** coverage_array = new int*[4];
+                
+                // fill it up!
+                int array_len = 3 * (int)mAveReadLength;
+                for(int i = 0; i < 4; i++)
+                {
+                    int * tmp_array = new int[array_len];
+                    
+                    // intialise to zeros!
+                    for(int j = 0; j < array_len; j++)
+                    {
+                        tmp_array[j] = 0;
+                    }
+                    coverage_array[i] = tmp_array;
+                }
+                
+                // we need a consensus array
+                char * consensus_array = new char[array_len];
+                for(int j = 0; j < array_len; j++)
+                {
+                    consensus_array[j] = 'X';
+                }
+
+                // we need a diversity array
+                float * conservation_array = new float[array_len];
+                for(int j = 0; j < array_len; j++)
+                {
+                    conservation_array[j] = 0;
+                }
+                
+                // first we need to place the master DR about 1/3 of the way down
+                // and then we need to know the positions of the kmers in the DR and in the 
+                // coverage array
+                int kmer_positions_DR[CRASS_DEF_NUM_KMERS_4_MODE];
+                bool kmer_rcs_DR[CRASS_DEF_NUM_KMERS_4_MODE];
+                int kmer_positions_ARRAY[CRASS_DEF_NUM_KMERS_4_MODE];
+                for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+                {
+                    kmer_positions_DR[i] = -1;
+                    kmer_rcs_DR[i] = false;
+                    kmer_positions_ARRAY[i] = -1;
+                }
+                
+                // just the positions in the DR fangs...
+                kmer_positions_ARRAY[0] = (int)(array_len/3);
+                isKmerPresent(kmer_rcs_DR, kmer_positions_DR, &(n_top_kmers[0]), &master_DR);
+                
+                for(int i = 1; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+                {
+                    isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), &(n_top_kmers[i]), &master_DR);
+                    kmer_positions_ARRAY[i] = kmer_positions_DR[i] - kmer_positions_DR[0] + kmer_positions_ARRAY[0];
+                }
+                
+                for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+                {
+                    std::cout << i << " : "  <<  kmer_positions_DR[i] << " : " <<  kmer_rcs_DR[i] << " : " << kmer_positions_ARRAY[i] << std::endl;
+                }
+                
+                ReadListIterator read_iter = mReads[master_DR]->begin();
+                while (read_iter != mReads[master_DR]->end()) 
+                {
+                    // don't care about partials
+                    if(((*read_iter)->RH_StartStops[1] - (*read_iter)->RH_StartStops[0]) == (master_DR.length() - 1))
+                    {
+                        // the start of the read is 
+                        int this_read_start_pos = kmer_positions_ARRAY[0] - (*read_iter)->RH_StartStops[0] -kmer_positions_DR[0] ;
+                        for(int i = 0; i < ((*read_iter)->RH_Seq).length(); i++)
+                        {
+                            int index = -1;
+                            switch((*read_iter)->RH_Seq[i])
+                            {
+                                case 'A':
+                                    index = 0;
+                                    break;
+                                case 'C':
+                                    index = 1;
+                                    break;
+                                case 'G':
+                                    index = 2;
+                                    break;
+                                case 'T':
+                                    index = 3;
+                                    break;
+                            }
+                            if(index >= 0)
+                            {
+                                coverage_array[index][i+this_read_start_pos]++;
+                            }
+                        }
+                    }
+                    read_iter++;
+                }
+                
+                // now we need to go thru all the other DRs in this group...
+                dr_iter = clustered_DRs->begin();
+                while (dr_iter != clustered_DRs->end()) 
+                {
+                    // we've already done the master DR
+                    if(master_DR != *dr_iter)
+                    {
+                        // this is a DR we have yet to add to the coverage array
+                        // First we need to find the positions of the kmers in this DR
+                        std::cout << *dr_iter << std::endl;
+                        for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+                        {
+                            isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), &(n_top_kmers[i]), &(*dr_iter));
+                            std::cout << i << " : " << kmer_rcs_DR[i] << " : " <<  kmer_positions_DR[i] << std::endl;
+                        }
+                        ReadListIterator read_iter = mReads[*dr_iter]->begin();
+                        while (read_iter != mReads[*dr_iter]->end()) 
+                        {
+                            // don't care about partials
+                            if(((*read_iter)->RH_StartStops[1] - (*read_iter)->RH_StartStops[0]) == (master_DR.length() - 1))
+                            {
+/*                                int this_read_start_pos = kmer_positions_ARRAY[0] - (*read_iter)->RH_StartStops[0] -kmer_positions_DR[0] ;
+                                for(int i = 0; i < ((*read_iter)->RH_Seq).length(); i++)
+                                {
+                                    int index = -1;
+                                    switch((*read_iter)->RH_Seq[i])
+                                    {
+                                        case 'A':
+                                            index = 0;
+                                            break;
+                                        case 'C':
+                                            index = 1;
+                                            break;
+                                        case 'G':
+                                            index = 2;
+                                            break;
+                                        case 'T':
+                                            index = 3;
+                                            break;
+                                    }
+                                    if(index >= 0)
+                                    {
+                                        coverage_array[index][i+this_read_start_pos]++;
+                                    }
+                                }*/
+                            }
+                            read_iter++;
+                        }
+                    }
+                    dr_iter++;
+                }
+                
+                
+                // calculate consensus and diversity
+                // warning, A heavy!
+                for(int j = 0; j < array_len; j++)
+                {
+                    int max_count = 0;
+                    float total_count = 0;
+                    for(int i = 0; i < 4; i++)
+                    {
+                        total_count += (float)(coverage_array[i][j]);
+                        if(coverage_array[i][j] > max_count)
+                        {
+                            max_count = coverage_array[i][j];
+                            consensus_array[j] = alphabet[i];
+                        }
+                    }
+                    if(0 != total_count)
+                        conservation_array[j] = (float)(max_count)/total_count;
+                }
+                
+                // print the arrays to std::out
+                for(int i = 0; i < 4; i++)
+                {
+                    for(int j = 0; j < array_len; j++)
+                    {
+                        std::cout << coverage_array[i][j] << ",";
+                    }
+                    std::cout << std::endl;
+                }
+                
+                for(int j = 0; j < array_len; j++)
+                {
+                    std::cout << consensus_array[j];// << ",";
+                }
+                std::cout << std::endl;
+                
+                for(int j = 0; j < array_len; j++)
+                {
+                    std::cout << conservation_array[j] << ",";
+                }
+                std::cout << std::endl;
+                
+                // clean up the mess we made
+                delete[] consensus_array;
+                delete[] conservation_array;
+                for(int i = 0; i < 4; i++)
+                {
+                    delete[] coverage_array[i];
+                }
+            }
+        }
         
-        // get the five top kmers
-        std::vector<std::string> five_of_the_best = getFiveMostAbundantKmers(group_count_iter->second);
-        
+        // delete the kmer count lists cause we're finsihed with them now
         if(NULL != group_count_iter->second)
             delete group_count_iter->second;
         group_count_iter->second = NULL;
@@ -229,37 +493,65 @@ int WorkHorse::mungeDRs(void)
     }
 }
 
-std::vector<std::string> WorkHorse::getFiveMostAbundantKmers(std::map<std::string, int> * kmer_CountMap)
+
+
+bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std::string * kmer, const std::string * DR)
 {
-    int max_count = 0;
+    //-----
+    // Work out if a Kmer is present in a string and store positions etc...
+    //
+    size_t pos = DR->find(*kmer);
+    if(pos == string::npos)
+    {
+        // try the reverse complement
+        // rev compt the kmer, it's shorter!
+        std::string tmp_kmer = reverseComplement(*kmer);
+        pos = DR->find(tmp_kmer);
+        if(pos != string::npos)
+        {
+            // found the kmer!
+            *didRevComp = true;
+            *startPosition = (int)pos;           
+            return true;
+        }
+    }
+    else
+    {
+        // found the kmer!
+        *didRevComp = false;
+        *startPosition = (int)pos;
+        return true;
+    }
+    *startPosition = -1;
+    return false;
+}
+
+std::vector<std::string> WorkHorse::getNMostAbundantKmers(int num2Get, std::map<std::string, int> * kmer_CountMap)
+{
     int previous_max = 100000000;
-    
     std::string top_kmer;    
     std::vector<std::string> top_kmers;
     
-    
-   int iterations = (kmer_CountMap->size() < 5 ) ? (int)kmer_CountMap->size() : 5;
+    int iterations = (kmer_CountMap->size() < num2Get ) ? (int)kmer_CountMap->size() : num2Get;
     
     for (int i = 1; i <= iterations; i++) 
     {
         std::map<std::string, int>::iterator map_iter = kmer_CountMap->begin();
+        int max_count = 0;
         
         while (map_iter != kmer_CountMap->end()) 
         {
             if (map_iter->second > max_count && map_iter->second < previous_max)
             {
-                previous_max = max_count = map_iter->second;
+                max_count = map_iter->second;
                 top_kmer = map_iter->first;
             }
-            
-            ++map_iter;
+            map_iter++;
         }
-
+        
+        previous_max = max_count;
+        top_kmers.push_back(top_kmer);
     }
-
-    top_kmers.push_back(top_kmer);
-    
-    
     return top_kmers;
 }
 
@@ -491,7 +783,9 @@ void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup ,
 
 void WorkHorse::dumpReads(DR_Cluster * DR2GID_map)
 {
-    
+    //-----
+    // Print the reads from one cluster to a file...
+    //
     DR_ClusterIterator dr_clust_iter = DR2GID_map->begin();
     while (dr_clust_iter != DR2GID_map->end()) 
     {

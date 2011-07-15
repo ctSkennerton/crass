@@ -593,7 +593,6 @@ bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
     return true; 
 }
 
-
 bool isLowComplexity(DirectRepeat &dr_match, std::string read)
 {
     int cCount = 0;
@@ -914,6 +913,7 @@ std::string DRLowLexi(std::string matchedRead, ReadHolder * tmp_holder)
     else
     {
         tmp_holder->RH_Seq = reverseComplement(matchedRead);
+        tmp_holder->reverseStartStops();
         tmp_holder->RH_WasLowLexi = false;
         logInfo("DR not in low lexi"<<endl<<tmp_holder->RH_Seq, 9);
         return rev_comp;

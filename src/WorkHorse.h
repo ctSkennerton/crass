@@ -68,6 +68,7 @@ class WorkHorse {
         { 
             mOpts = opts; 
             mOutFileDir = outDir;
+            mAveReadLength = 0;
         }
         ~WorkHorse();
         
@@ -89,13 +90,15 @@ class WorkHorse {
         void dumpReads(DR_Cluster * DR2GID_map);
         int mungeDRs(void);                         // cluster potential DRs and make node managers
         bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
-        std::vector<std::string> getFiveMostAbundantKmers(std::map<std::string, int> * kmer_CountMap);
+        bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string * kmer, const std::string * DR);
+        std::vector<std::string> getNMostAbundantKmers(int num2Get, std::map<std::string, int> * kmer_CountMap);
         
     // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
         ReadMap mReads;                             // reads containing possible double DRs
         const options * mOpts;                      // search options
         std::string mOutFileDir;                    // where to spew text to
+        float mAveReadLength;                       // the average seen read length
 };
 
 #endif //WorkHorse_h
