@@ -144,7 +144,6 @@ int main(int argc, char *argv[])
 {
     
     int opt_idx;
-    std::string out_fp;
     
     /* application of default options */
     options opts = {
@@ -161,7 +160,7 @@ int main(int argc, char *argv[])
         26,            // minimum spacer size
         50,            // maximum spacer size
         0,             // maxiumum allowable errors in direct repeat
-        "",            // output file directory
+        "./",            // output file directory
         "\t",          // delimiter string for stats report
         NULL,          //  pattern file name
         8             // the number of the kmers that need to be shared for clustering
@@ -172,15 +171,15 @@ int main(int argc, char *argv[])
     
     
     /* setup the appropriate output file pointer */
-    if ( opts.output_fastq.length() == 0 ) 
-    {
-        out_fp = "./";
-    }
-    else 
-    {
-        out_fp = opts.output_fastq;
-    }
-    std::string logFileName = out_fp+ "crass.log";
+//    if ( opts.output_fastq.length() == 0 ) 
+//    {
+//        out_fp = "./";
+//    }
+//    else 
+//    {
+//        out_fp = opts.output_fastq;
+//    }
+    std::string logFileName = opts.output_fastq+ "crass.log";
 
     intialiseGlobalLogger(logFileName, opts.logger_level);
 
@@ -205,7 +204,7 @@ int main(int argc, char *argv[])
     }
     
     // Time to make the workhorse
-    WorkHorse * mHorse = new WorkHorse(&opts, out_fp);
+    WorkHorse * mHorse = new WorkHorse(&opts);
     mHorse->doWork(seq_files);
     delete mHorse;
         

@@ -209,7 +209,10 @@ int WorkHorse::mungeDRs(void)
     
     // print the reads to a file if requested
     if (mOpts->detect)
+    {
         dumpReads(&DR2GID_map);
+        return 1;
+    }
     
     // go through all the counts for each group
     std::map<int, std::map<std::string, int> * >::iterator group_count_iter = group_kmer_counts_map.begin();
@@ -767,12 +770,12 @@ void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup ,
     //-----
     // Print all the information from a single round
     //
-    logInfo("Printing lookup tables from file: " << fileName << "to " << mOutFileDir, 1);
+    logInfo("Printing lookup tables from file: " << fileName << "to " << mOpts->output_fastq, 1);
     
     // Make file names
-    std::string kmer_lookup_name = mOutFileDir + CRASS_DEF_DEF_KMER_LOOKUP_EXT;
-    std::string patterns_lookup_name = mOutFileDir + CRASS_DEF_DEF_PATTERN_LOOKUP_EXT;
-    std::string spacer_lookup_name = mOutFileDir + CRASS_DEF_DEF_SPACER_LOOKUP_EXT;
+    std::string kmer_lookup_name = mOpts->output_fastq + CRASS_DEF_DEF_KMER_LOOKUP_EXT;
+    std::string patterns_lookup_name = mOpts->output_fastq + CRASS_DEF_DEF_PATTERN_LOOKUP_EXT;
+    std::string spacer_lookup_name = mOpts->output_fastq + CRASS_DEF_DEF_SPACER_LOOKUP_EXT;
     
     // Write!
     writeLookupToFile(kmer_lookup_name, kmerLookup);  
@@ -790,7 +793,7 @@ void WorkHorse::dumpReads(DR_Cluster * DR2GID_map)
     while (dr_clust_iter != DR2GID_map->end()) 
     {
         std::ofstream reads_file;
-        reads_file.open((mOutFileDir + "Cluster_"+ to_string(dr_clust_iter->first) ).c_str());
+        reads_file.open((mOpts->output_fastq + "Cluster_"+ to_string(dr_clust_iter->first) ).c_str());
         std::vector<std::string>::iterator dr_iter = dr_clust_iter->second->begin();
         while (dr_iter != dr_clust_iter->second->end()) 
         {

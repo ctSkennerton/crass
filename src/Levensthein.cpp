@@ -19,14 +19,13 @@
 
 
 #include "Levensthein.h"
-
-using namespace std;
-int Levensthein_distance( string source,  string target) {
+#include <algorithm>
+int Levensthein_distance( std::string source,  std::string target) {
     
     // Step 1
     
-     int n = source.length();
-     int m = target.length();
+     int n = (int)source.length();
+     int m = (int)target.length();
     if (n == 0) {
         return m;
     }
@@ -83,7 +82,7 @@ int Levensthein_distance( string source,  string target) {
              int above = matrix[i-1][j];
              int left = matrix[i][j-1];
              int diag = matrix[i-1][j-1];
-             int cell = min( above + 1, min(left + 1, diag + cost));
+            int cell = std::min( above + 1, std::min(left + 1, diag + cost));
             
             // Step 6A: Cover transposition, in addition to deletion,
             // insertion and substitution. This step is taken from:

@@ -21,7 +21,7 @@
 #define HAVE_MEMSET 1
 
 /* Define to 1 if you have the `pow' function. */
-/* #undef HAVE_POW */
+#define HAVE_POW 1
 
 /* Define to 1 if your system has a GNU libc compatible `realloc' function,
    and to 0 otherwise. */

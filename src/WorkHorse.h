@@ -64,10 +64,9 @@ bool sortDirectRepeatByLength( const std::string &a, const std::string &b);
 
 class WorkHorse {
     public:
-        WorkHorse (const options * opts, std::string outDir) 
+        WorkHorse (const options * opts) 
         { 
             mOpts = opts; 
-            mOutFileDir = outDir;
             mAveReadLength = 0;
         }
         ~WorkHorse();

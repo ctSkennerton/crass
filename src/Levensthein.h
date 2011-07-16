@@ -21,10 +21,9 @@
 #define __LEV_H
 #include <string>
 #include <vector>
-using namespace std;
 
-typedef vector< vector<int> > Tmatrix; 
+typedef std::vector< std::vector<int> > Tmatrix; 
 
 
-int Levensthein_distance( string source,  string target);
+int Levensthein_distance( std::string source,  std::string target);
 #endif

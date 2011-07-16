@@ -57,6 +57,7 @@
 #include "bm.h"
 #include "kseq.h"
 #include "SeqUtils.h"
+#include "Levensthein.h"
 
 //**************************************
 // DirectRepeat
@@ -91,10 +92,10 @@ void DirectRepeat::reset(void)
     DR_EndPos = 0;
     DR_NumMismatches = 0;
 }
-
-//**************************************
-// RepeatMatch
-//**************************************
+/*
+**************************************
+ RepeatMatch
+**************************************
 ReadMatch::ReadMatch() {
     //-----
     // Constructor!
@@ -110,7 +111,7 @@ ReadMatch::ReadMatch() {
     RM_NumDeletions = 0;
     RM_NumSubstitutions = 0;
 }
-
+*/
 /* 
 declare the type of file handler and the read() function
 as described here:
@@ -345,14 +346,12 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
         std::string read = seq->seq.s;
 
         
-        int temp_mismatch = 0;
         bitapType b;
         
         ReadHolder * tmp_holder = new ReadHolder;
 
         for (int start = 0; start < search_end; start++)
         {
-            ReadMatch match_info;
             // don't search too far into the read if we don't need to
             int search_begin = start + opts.lowDRsize + opts.lowSpacerSize;
             
@@ -380,41 +379,50 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
             
             NewBitap(&b, query_word.c_str());
             
-            if (NULL != (match_info.RM_SubstrEnd = FindWithBitap (&b, subject_word.c_str(), subject_word.length(), opts.max_mismatches, &match_info.RM_NumMismatches, &match_info.RM_SubstrStart))) 
+            
+            const char * substrEnd = NULL;
+            const char * substrStart = NULL;
+            int numMismatches = 0;
+            
+            
+            if (NULL != (substrEnd = FindWithBitap (&b, subject_word.c_str(), (int)subject_word.length(), opts.max_mismatches, &numMismatches, &substrStart))) 
             {
                 dr_match.DR_MatchStartPos = start;
-                dr_match.DR_StartPos = (int) (match_info.RM_SubstrStart - subject_word.c_str()) + search_begin;
+                dr_match.DR_StartPos = (int) (substrStart - subject_word.c_str()) + search_begin;
 
                 
-                match_info.RM_MatchEndPos = start + opts.lowDRsize;
-                match_info.RM_SubstrEnd = match_info.RM_SubstrStart + opts.lowDRsize;
-                match_info.RM_EndPos = (int) ( dr_match.DR_StartPos + opts.lowDRsize );
+                dr_match.DR_MatchEndPos = start + opts.lowDRsize;
+                substrEnd = substrStart + opts.lowDRsize;
+                dr_match.DR_EndPos = dr_match.DR_StartPos + opts.lowDRsize ;
                 
                             
-                ++match_info.RM_MatchEndPos;
-                ++match_info.RM_EndPos;
+                ++dr_match.DR_MatchEndPos;
+                ++dr_match.DR_EndPos;
                 
-                while (match_info.RM_NumMismatches <= opts.max_mismatches && match_info.RM_EndPos < seq_length) 
+                while (numMismatches <= opts.max_mismatches && dr_match.DR_EndPos < seq_length) 
                 {
-                    char dr_A = read.at(match_info.RM_MatchEndPos);
-                    char dr_B = read.at(match_info.RM_EndPos);
+                    char dr_A = read.at(dr_match.DR_MatchEndPos);
+                    char dr_B = read.at(dr_match.DR_EndPos);
                     
-                    logInfo("Match end pos: "<<match_info.RM_MatchEndPos<<" end pos: "<<match_info.RM_EndPos, 10);
-                    logInfo(read.at(match_info.RM_MatchEndPos) << " : " << match_info.RM_MatchEndPos << " == " << read.at(match_info.RM_EndPos) << " : " << match_info.RM_EndPos, 10);
+                    logInfo("Match end pos: "<<dr_match.DR_MatchEndPos<<" end pos: "<<dr_match.DR_EndPos, 10);
+                    logInfo(read.at(dr_match.DR_MatchEndPos) << " : " << dr_match.DR_MatchEndPos << " == " << read.at(dr_match.DR_EndPos) << " : " << dr_match.DR_EndPos, 10);
                     
                     if (dr_A != dr_B)
                     {
-                        match_info.RM_NumMismatches++;
-                        if (match_info.RM_NumMismatches <= opts.max_mismatches) break;
+                        numMismatches++;
+                        if (numMismatches > opts.max_mismatches)
+                        {
+                            // since the number of mismatches would have been one higher from the above loop
+                            numMismatches--;
+                            break;
+                        }
                     }
                     
-                    ++match_info.RM_MatchEndPos;
-                    ++match_info.RM_EndPos;
+                    ++dr_match.DR_MatchEndPos;
+                    ++dr_match.DR_EndPos;
                 }
-                
-                dr_match.DR_MatchEndPos = match_info.RM_MatchEndPos;
-                dr_match.DR_NumMismatches = match_info.RM_NumMismatches;
-                dr_match.DR_EndPos = match_info.RM_EndPos;
+            
+                dr_match.DR_NumMismatches = numMismatches; 
                 
                 if (cutDirectRepeatSequence(dr_match, opts, read))
                 {
@@ -451,9 +459,8 @@ float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupT
     
     kseq_destroy(seq); // destroy seq  
     gzclose(fp);       // close the file handler  
-    
-    std::cout<<total_base<<" "<<match_counter<<endl;
-    
+    logInfo("finished processing file:"<<input_fastq, 1);
+
     return total_base / match_counter;
 }
 
@@ -556,19 +563,15 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
 bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string &read)
 {
     dr_match.DR_Length = dr_match.DR_EndPos - dr_match.DR_StartPos;
+    dr_match.DR_Sequence = read.substr(dr_match.DR_StartPos, (dr_match.DR_EndPos - dr_match.DR_StartPos + 1));
+    dr_match.DR_MatchSequence = read.substr(dr_match.DR_MatchStartPos, (dr_match.DR_MatchEndPos - dr_match.DR_MatchStartPos + 1));
+    dr_match.DR_Spacer = read.substr(dr_match.DR_MatchEndPos, (dr_match.DR_StartPos - dr_match.DR_MatchEndPos));
 
-    if (!(checkDRAndSpacerLength(opts, dr_match)) || isLowComplexity(dr_match, read))
+    if (!(checkDRAndSpacerLength(opts, dr_match)) || isLowComplexity(dr_match) || isSpacerAndDirectRepeatSimilar(dr_match))
     {
         return false;
     }
     
-    // if the length of both spacer and direct repeat are okay cut the subsequences
-    else
-    {
-        dr_match.DR_Sequence = read.substr(dr_match.DR_StartPos, (dr_match.DR_EndPos - dr_match.DR_StartPos + 1));
-        dr_match.DR_MatchSequence = read.substr(dr_match.DR_MatchStartPos, (dr_match.DR_MatchEndPos - dr_match.DR_MatchStartPos + 1));
-        dr_match.DR_Spacer = read.substr(dr_match.DR_MatchEndPos, (dr_match.DR_StartPos - dr_match.DR_MatchEndPos));
-    } 
     return true;
 }
 
@@ -576,7 +579,7 @@ bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
 {
     logInfo("dr end pos: "<<dr_match.DR_EndPos<<" dr start pos: "<<dr_match.DR_StartPos, 10);
     
-    int spacer_length = dr_match.DR_StartPos - dr_match.DR_MatchEndPos;
+    int spacer_length = (int)dr_match.DR_Spacer.length();
     logInfo("DR len: "<<dr_match.DR_Length<<" SP length: "<<spacer_length, 10);
     // check if the direct repeat is in the right size range
     if ((dr_match.DR_Length < opts.lowDRsize) or (dr_match.DR_Length > opts.highDRsize)) 
@@ -593,7 +596,7 @@ bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match)
     return true; 
 }
 
-bool isLowComplexity(DirectRepeat &dr_match, std::string read)
+bool isLowComplexity(DirectRepeat &dr_match)
 {
     int cCount = 0;
     int gCount = 0;
@@ -605,11 +608,11 @@ bool isLowComplexity(DirectRepeat &dr_match, std::string read)
     float gPercetn;
     float tPercent;
 
-    
-    int i = dr_match.DR_StartPos;
-    while (i <= dr_match.DR_EndPos) 
+    std::string::iterator dr_iter = dr_match.DR_Sequence.begin();
+    //int i = dr_match.DR_StartPos;
+    while (dr_iter != dr_match.DR_Sequence.end()) 
     {
-        switch (read[i]) 
+        switch (*dr_iter) 
         {
             case 'c':
             case 'C':
@@ -625,7 +628,7 @@ bool isLowComplexity(DirectRepeat &dr_match, std::string read)
                 gCount++; break;
             default: break;
         }
-        i++;
+        dr_iter++;
     }
     aPercent = aCount/dr_match.DR_Length;
     tPercent = tCount/dr_match.DR_Length;
@@ -634,7 +637,22 @@ bool isLowComplexity(DirectRepeat &dr_match, std::string read)
     
     if (aPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || tPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || gPercetn > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || cPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD)
     {
+        logInfo("Direct repeat has more than "<<CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD<<" of bases the same", 6);
         return true;   
+    }
+    return false;
+}
+
+bool isSpacerAndDirectRepeatSimilar(DirectRepeat &dr_match)
+{
+    int max_length = std::max((int)dr_match.DR_Spacer.length(), dr_match.DR_Length);
+    
+    int edit_distance = Levensthein_distance(dr_match.DR_Sequence, dr_match.DR_Spacer);
+    float similarity = 1.0 - (edit_distance/max_length);
+    logInfo("similarity between spacer: "<<dr_match.DR_Spacer<<" and direct repeat: "<<dr_match.DR_Sequence<<" is: "<<similarity, 6);
+    if (similarity > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD)
+    {
+        return true;
     }
     return false;
 }

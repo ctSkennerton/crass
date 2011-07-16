@@ -66,7 +66,7 @@ typedef std::vector<ReadHolder *>::iterator ReadListIterator;
 typedef std::map<std::string, ReadList *> ReadMap;
 typedef std::map<std::string, ReadList *>::iterator ReadMapIterator;
 
-// The following two classes are simple data storages objects
+// The following  class is simple data storages objects
 // they are stupidly public for that reason
 
 class DirectRepeat {
@@ -79,8 +79,9 @@ class DirectRepeat {
         ~DirectRepeat() {}
         
         void reset(void);
-    
-        // members
+
+        
+    // members
         std::string DR_Sequence;
         std::string DR_MatchSequence;
         std::string DR_Spacer;
@@ -94,24 +95,6 @@ class DirectRepeat {
 };
 
 
-class ReadMatch {
-    public:
-        // constructor / destructor
-        ReadMatch ();
-        ~ReadMatch () {}
-        
-        // members
-        const char * RM_SubstrStart;        // the read sequence
-        const char * RM_SubstrEnd;          // the read sequence minus the start to the pattern
-        int  RM_StartPos;                   // the start position
-        int  RM_EndPos;                     // the end pos
-        int  RM_MatchStartPos;              // the start position
-        int  RM_MatchEndPos;                // the end pos
-        int  RM_NumMismatches;
-        int  RM_NumInsertions;
-        int  RM_NumDeletions;
-        int  RM_NumSubstitutions;
-};
 
 //**************************************
 // search functions
@@ -141,7 +124,9 @@ bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string
 
 bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match);
 
-bool isLowComplexity(DirectRepeat &dr_match, std::string read);
+bool isLowComplexity(DirectRepeat &dr_match);
+
+bool isSpacerAndDirectRepeatSimilar(DirectRepeat &dr_match);
 
 //int getActualRepeatLength(std::vector<int> &candidateCRISPR, std::string &read, int searchWindowLength, int minSpacerLength);
 
