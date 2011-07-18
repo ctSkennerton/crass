@@ -67,7 +67,7 @@ void help_message() {
     std::cout<< "\t-l <INT>         Output a log file and set a log level [1 - 10]"<<std::endl;
     std::cout<< "\t-m <INT>         Total number of mismatches to at most allow for"<<std::endl;
     std::cout<< "\t                 in search pattern [Default: 0]"<<std::endl;
-    std::cout<< "\t-o <DIRECTORY>   Output directory [default: .]"<<std::endl;
+    std::cout<< "\t-o <DIRECTORY>   Output directory [Default: .]"<<std::endl;
     std::cout<< "\t-s <INT>         Minimim length of the spacer to search for [Default: 26]"<<std::endl;
     std::cout<< "\t-S <INT>         Maximim length of the spacer to search for [Default: 50]"<<std::endl;
     std::cout<< "\t-V               Program and version information"<<std::endl;
@@ -153,15 +153,15 @@ int main(int argc, char *argv[])
         false,             // sanger reads
         false,             // genome
         false,             // output stats report
-        23,            // minimum direct repeat size
-        47,            // maximum direct repeat size
-        26,            // minimum spacer size
-        50,            // maximum spacer size
-        0,             // maxiumum allowable errors in direct repeat
+        CRASS_DEF_MIN_DR_SIZE,      // minimum direct repeat size
+        CRASS_DEF_MAX_DR_SIZE,      // maximum direct repeat size
+        CRASS_DEF_MIN_SPACER_SIZE,  // minimum spacer size
+        CRASS_DEF_MAX_SPACER_SIZE,  // maximum spacer size
+        CRASS_DEF_NUM_DR_ERRORS,    // maxiumum allowable errors in direct repeat
         "",            // output file directory
         "\t",          // delimiter string for stats report
         NULL,          //  pattern file name
-        8             // the number of the kmers that need to be shared for clustering
+        CRASS_DEF_K_CLUST_MIN             // the number of the kmers that need to be shared for clustering
     };
     
     // initialize the log file

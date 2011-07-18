@@ -50,8 +50,6 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 
-
-
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
 typedef std::map<std::string, NodeManager *>::iterator DR_ListIterator;
@@ -86,12 +84,21 @@ class WorkHorse {
         
         void clearReadList(ReadList * tmp_list);
         void clearReadMap(ReadMap * tmp_map);
-        void printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup);
-        void dumpReads(DR_Cluster * DR2GID_map);
+        
+        //**************************************
+        // functions used to cluster DRs into groups and identify the "true" DR
+        //**************************************
         int mungeDRs(void);                         // cluster potential DRs and make node managers
         bool clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster * DR2GIDMap, std::map<int, bool> * groups, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
         bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string * kmer, const std::string * DR);
         std::vector<std::string> getNMostAbundantKmers(int num2Get, std::map<std::string, int> * kmer_CountMap);
+        bool parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, std::vector<std::string> * clustered_DRs, DR_Cluster * DR2GID_map, int * nextFreeGID);
+        
+        //**************************************
+        // file IO
+        //**************************************
+        void printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup);
+        void dumpReads(DR_Cluster * DR2GID_map);
         
     // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat

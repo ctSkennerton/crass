@@ -145,6 +145,7 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
         int seq_length = read.length() - 1;
         int search_end = seq_length - opts.lowDRsize;
         
+                
         logInfo("read counter: "<<match_counter, 8);
         
         total_base += seq_length;
@@ -167,7 +168,6 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
             std::string subject_word = read.substr(search_begin);
             
             logInfo("query: "<<query_word<<" subject: "<<subject_word, 10);
-            
             
             int MatchStartPos = PatternMatcher::bmpSearch( subject_word, query_word );
             logInfo("bm return: "<<MatchStartPos, 8);
@@ -211,7 +211,6 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
                     {
                         patterns_hash[dr_match.DR_MatchSequence] = true;
 
-                        
                         tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchStartPos);
                         tmp_holder->RH_StartStops.push_back( dr_match.DR_MatchEndPos);
                         tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
@@ -291,10 +290,11 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
                          */
                     } 
                     else 
-                    {                        
+                    {    
                         // increment the for loop so that it begins at the start of the 
                         // matched kmer/direct repeat
                         // minus 1 cause it will be incremented again at the top of the for loop
+                        match_found = false;
                         start = dr_match.DR_StartPos - 1;
                         dr_match.reset();
                         continue;
@@ -307,6 +307,10 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
             readsFound[read_header] = true;
             addReadHolder(mReads, tmp_holder, read_header, read);
         }
+        else
+        {
+            delete tmp_holder;
+        }
 
         match_counter++;
     }
@@ -316,7 +320,6 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
     logInfo("finished processing file:"<<input_fastq, 1);
     return total_base / match_counter;
 }
-
 
 float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads) 
 {
@@ -487,10 +490,11 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
         int endPos = -1;
         
         std::string read = seq->seq.s;
-        
+
         dr_match.DR_Sequence = search.Search(strlen(seq->seq.s), seq->seq.s, patterns, endPos);
         
         dr_match.DR_StartPos = endPos;
+        
         if (endPos != -1)
         {
             std::string header = seq->name.s;
@@ -501,7 +505,6 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
                 // TODO: change this to some smarter logic
                 // really silly way or breaking it up!!
                 int thirds = read.length()/3;
-                
                 
                 // create the read holder
                 ReadHolder * tmp_holder = new ReadHolder;
@@ -556,12 +559,12 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
 bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string &read)
 {
     dr_match.DR_Length = dr_match.DR_EndPos - dr_match.DR_StartPos;
-
+    
     if (!(checkDRAndSpacerLength(opts, dr_match)) || isLowComplexity(dr_match, read))
     {
         return false;
     }
-    
+
     // if the length of both spacer and direct repeat are okay cut the subsequences
     else
     {
