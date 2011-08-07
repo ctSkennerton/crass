@@ -48,17 +48,23 @@
 #include "CrisprNode.h"
 #include "WorkHorse.h"
 
-using namespace std;
-
 //**************************************
 // user input + system
 //**************************************
 
-void  help_message(void);
+void  readsHelp(void);
+
+void  mainHelp(void);
 
 void  version_info(void);
 
-int   process_options(int argc, char *argv[], options *opts);
+int   processReadsOptions(int argc, char *argv[], options *opts);
+
+int   genomeMain(int argc, char * argv[]);
+
+int   readsMain(int argc, char * argv[]);
+
+int   processGenomeOptions(int argc, char * argv[], genOptions * opts);
 
 
 #endif

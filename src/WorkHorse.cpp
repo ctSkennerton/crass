@@ -255,7 +255,7 @@ int WorkHorse::mungeDRs(void)
                 // did this guy have all 5?
                 if(got_all_mode_mers)
                 {
-                    int tmp_count = mReads[*dr_iter]->size();
+                    int tmp_count = (int)mReads[*dr_iter]->size();
                     if(tmp_count > master_read_count)
                     {
                         master_read_count = tmp_count;
@@ -563,7 +563,7 @@ bool WorkHorse::clusterDRReads(std::string DR, int * nextFreeGID, std::map<std::
     //-----
     // hash a DR!
     //
-    int str_len = DR.length();
+    int str_len = (int)DR.length();
     int off = str_len - CRASS_DEF_KMER_SIZE;
     int num_mers = off + 1;
     
@@ -789,11 +789,13 @@ void WorkHorse::dumpReads(DR_Cluster * DR2GID_map)
     //-----
     // Print the reads from one cluster to a file...
     //
+    std::cout<<"dumping reads"<<std::endl;
     DR_ClusterIterator dr_clust_iter = DR2GID_map->begin();
     while (dr_clust_iter != DR2GID_map->end()) 
     {
         std::ofstream reads_file;
-        reads_file.open((mOpts->output_fastq + "Cluster_"+ to_string(dr_clust_iter->first) ).c_str());
+        std::string output_file_name = mOpts->output_fastq + "Cluster_"+ to_string(dr_clust_iter->first);
+        reads_file.open( output_file_name.c_str() );
         std::vector<std::string>::iterator dr_iter = dr_clust_iter->second->begin();
         while (dr_iter != dr_clust_iter->second->end()) 
         {

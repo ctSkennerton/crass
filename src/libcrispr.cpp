@@ -645,9 +645,9 @@ bool isLowComplexity(DirectRepeat &dr_match)
 
 bool isSpacerAndDirectRepeatSimilar(DirectRepeat &dr_match)
 {
-    int max_length = std::max((int)dr_match.DR_Spacer.length(), dr_match.DR_Length);
+    float max_length = std::max((int)dr_match.DR_Spacer.length(), dr_match.DR_Length);
     
-    int edit_distance = Levensthein_distance(dr_match.DR_Sequence, dr_match.DR_Spacer);
+    float edit_distance = Levensthein_distance(dr_match.DR_Sequence, dr_match.DR_Spacer);
     float similarity = 1.0 - (edit_distance/max_length);
     logInfo("similarity between spacer: "<<dr_match.DR_Spacer<<" and direct repeat: "<<dr_match.DR_Sequence<<" is: "<<similarity, 6);
     if (similarity > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD)
@@ -974,33 +974,6 @@ void addToLookup(const std::string &dr, lookupTable &patternsLookup)
     ++ID;
 }
 
-//**************************************
-// system
-//**************************************
-
-gzFile getFileHandle(const char * inputFile)
-{
-    gzFile fp;
-    if ( strcmp(inputFile, "-") == 0 ) {
-        fp = gzdopen(fileno(stdin), "r");
-    }
-    else {
-        fp = gzopen(inputFile, "r");
-    }
-    
-    if ( (fp == NULL) && (strcmp(inputFile, "-") != 0) ) {
-        fprintf(stderr, "%s : [ERROR] Could not open FASTQ '%s' for reading.\n",
-                CRASS_DEF_PRG_NAME, inputFile);
-                exit(1);
-    }
-    
-    if ( (fp == NULL) && (strcmp(inputFile, "-") == 0) ) {
-        fprintf(stderr, "%s : [ERROR] Could not open stdin for reading.\n",
-                CRASS_DEF_PRG_NAME);
-                exit(1);
-    }
-    return fp;
-}
 
 //**************************************
 // STL extensions

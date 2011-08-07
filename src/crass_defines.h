@@ -64,6 +64,16 @@
 #define CRASS_DEF_KMER_SIZE                     7
 #define CRASS_DEF_NUM_KMERS_4_MODE              5
 // --------------------------------------------------------------------
+// GENOME ALGORITHM DEFINES
+// --------------------------------------------------------------------
+#define  CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY 0.62
+#define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF 12
+#define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF 30
+#define CRASS_DEF_MINREPEATIDENTITY 0.75
+#define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH 6
+#define CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH 9
+#define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH 8
+// --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------
 #define CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH     1024
@@ -81,7 +91,6 @@ typedef struct {
     bool illumina;
     bool fourFiveFour;
     bool sanger;
-    bool genome;
     bool report_stats;
     int lowDRsize;
     int highDRsize;
@@ -112,9 +121,43 @@ static struct option long_options [] = {
     {"454", no_argument, NULL, 0},
     {"illumina", no_argument, NULL, 0},
     {"sanger", no_argument, NULL, 0},
-    {"genome", no_argument, NULL, 0}
-    
-
+    {NULL, no_argument, NULL, 0}
 };
+typedef struct {
+    //std::string inputFileName;
+    std::string outputFileDir;    // option 'o'
+    int minNumRepeats;            // option 'n'
+    int minRepeatLength;          // option 'd'
+    int maxRepeatLength;          // option 'D'
+    int minSpacerLength;          // option 's'
+    int maxSpacerLength;          // option 'S'
+    int searchWindowLength;       // option 'w'
+    int logLevel;                 // option 'l'
+} genOptions;
+
+static struct option gen_long_options [] = {
+    
+    {"minDR", required_argument, NULL, 'd'},
+    {"maxDR", required_argument, NULL, 'D'},
+    {"minSpacer", required_argument, NULL, 's'},
+    {"maxSpacer", required_argument, NULL, 'S'},
+    {"logLevel", required_argument, NULL, 'l'},
+    {"minNumRepeats", required_argument, NULL, 'n'},
+    {"version", no_argument, NULL, 'V'},
+    {"windowLength", required_argument, NULL, 'w'},
+    {"outDir", required_argument, NULL, 'o'},
+    {"help", no_argument, NULL, 'h'},
+    //{"reportStats", no_argument, NULL, 'r'},
+    //{"dumpReads", no_argument, NULL, 0},
+    //{"454", no_argument, NULL, 0},
+    //{"illumina", no_argument, NULL, 0},
+    //{"sanger", no_argument, NULL, 0},
+    //{"genome", no_argument, NULL, 0},
+    {NULL, no_argument, NULL, 0}
+};
+
+
+
+
 // --------------------------------------------------------------------
 #endif // __CRASSDEFINES_H

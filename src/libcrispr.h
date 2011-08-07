@@ -144,11 +144,7 @@ void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, std::string read_h
 
 void addToLookup(const string &dr ,lookupTable &patternsLookup);
 
-//**************************************
-// system
-//**************************************
 
-gzFile getFileHandle(const char * inputFile);
 
 //**************************************
 // STL extensions

@@ -100,7 +100,7 @@ double findMax(double a, double b, double c, double d, int * index)
 stringPair smithWaterman(std::string seqA, std::string seqB )
 {
     int waste1, waste2;
-    return smithWaterman(seqA, seqB, &waste1, &waste2, 0, seqA.length());
+    return smithWaterman(seqA, seqB, &waste1, &waste2, 0, (int)seqA.length());
 }
 
 stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aSearchLen)

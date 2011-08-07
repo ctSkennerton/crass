@@ -1,12 +1,10 @@
+7/8/11
+# Finish off porting CRT algorithm for genome finding
 
 16/7/11
-# Remove double up of variables for the output directory 
-        -- change constructor of the work horse
-        -- chane printing functions
 # Implement 454 specific algorithm
 # Implement subcommands
         -- ability to only find or only assemble
         -- give ability to search for known patterns
 # Build extra logic into libcrispr to check for repeats that have both the DR and spacer the same sequenes
 # Implement new user options to remove advanced CRISPR checking
-# Return workhorse if the dumpReads option is set

@@ -36,6 +36,7 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include "crass_defines.h"
 
 std::string reverseComplement(std::string str)
 {
@@ -124,4 +125,32 @@ std::string laurenize (std::string seq1)
     }
     return seq2;
 }
+
+
+gzFile getFileHandle(const char * inputFile)
+{
+    gzFile fp;
+    if ( strcmp(inputFile, "-") == 0 ) 
+    {
+        fp = gzdopen(fileno(stdin), "r");
+    }
+    else 
+    {
+        fp = gzopen(inputFile, "r");
+    }
+    
+    if ( (fp == NULL) && (strcmp(inputFile, "-") != 0) ) 
+    {
+        std::cerr<< CRASS_DEF_PRG_NAME<<" : [ERROR] Could not open FASTQ "<<inputFile<<" for reading."<<std::endl;
+        exit(1);
+    }
+    
+    if ( (fp == NULL) && (strcmp(inputFile, "-") == 0) ) 
+    {
+        std::cerr<< CRASS_DEF_PRG_NAME<<" : [ERROR] Could not open stdin for reading."<<std::endl;
+        exit(1);
+    }
+    return fp;
+}
+
 
