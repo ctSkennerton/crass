@@ -67,12 +67,14 @@
 // GENOME ALGORITHM DEFINES
 // --------------------------------------------------------------------
 #define  CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY 0.62
-#define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF 12
-#define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF 30
-#define CRASS_DEF_MINREPEATIDENTITY 0.75
-#define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH 6
-#define CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH 9
-#define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH 8
+#define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF     12
+#define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF     30
+#define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH         6
+#define CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH         9
+#define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH     8
+#define CRASS_DEF_SCAN_LENGTH                      30
+#define CRASS_DEF_SCAN_CONFIDENCE                  0.70
+#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           0.75
 // --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------
@@ -147,12 +149,6 @@ static struct option gen_long_options [] = {
     {"windowLength", required_argument, NULL, 'w'},
     {"outDir", required_argument, NULL, 'o'},
     {"help", no_argument, NULL, 'h'},
-    //{"reportStats", no_argument, NULL, 'r'},
-    //{"dumpReads", no_argument, NULL, 0},
-    //{"454", no_argument, NULL, 0},
-    //{"illumina", no_argument, NULL, 0},
-    //{"sanger", no_argument, NULL, 0},
-    //{"genome", no_argument, NULL, 0},
     {NULL, no_argument, NULL, 0}
 };
 

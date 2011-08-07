@@ -200,7 +200,6 @@ int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLe
     std::string currRepeat;
     int charCountA, charCountC, charCountT, charCountG;
     charCountA = charCountC = charCountT = charCountG = 0;
-    double threshold = CRASS_DEF_MINREPEATIDENTITY;
     bool done = false;
     
     
@@ -224,7 +223,7 @@ int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLe
         double percentT = (double)charCountT/numRepeats;
         double percentG = (double)charCountG/numRepeats;
         
-        if ( (percentA >= threshold) || (percentC >= threshold) || (percentT >= threshold) || (percentG >= threshold) )
+        if ( (percentA >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentC >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentT >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentG >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
         {
             rightExtensionLength++;
             charCountA = charCountC = charCountT = charCountG = 0;
@@ -262,7 +261,7 @@ int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLe
         double percentT = (double)charCountT/numRepeats;
         double percentG = (double)charCountG/numRepeats;
         
-        if ( (percentA >= threshold) || (percentC >= threshold) || (percentT >= threshold) || (percentG >= threshold) )
+        if ( (percentA >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentC >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentT >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentG >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
         {
             leftExtensionLength++;
             charCountA = charCountC = charCountT = charCountG = 0;
@@ -286,6 +285,88 @@ int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLe
     return (rightExtensionLength + leftExtensionLength);
 }
 
+
+void GenomeCrispr::trim( int minRepeatLength)
+{
+    int numRepeats = this->numRepeats();
+    
+    std::string currRepeat;
+    int charCountA, charCountC, charCountT, charCountG;
+    charCountA = charCountC = charCountT = charCountG = 0;
+    bool done = false;
+    
+    //trim from right
+    while (!done && (this->repeatLength() > minRepeatLength) )
+    {
+        for (int k = 0; k < this->numRepeats(); k++ )
+        {
+            currRepeat = this->repeatStringAt(k);
+            char lastChar = currRepeat.at(currRepeat.length() - 1);
+            
+            if (lastChar == 'A')   charCountA++;
+            if (lastChar == 'C')   charCountC++;
+            if (lastChar == 'T')   charCountT++;
+            if (lastChar == 'G')   charCountG++;
+        }
+        
+        double percentA = (double)charCountA/numRepeats;
+        double percentC = (double)charCountC/numRepeats;
+        double percentT = (double)charCountT/numRepeats;
+        double percentG = (double)charCountG/numRepeats;
+        
+        if ( (percentA < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentC < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentT < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentG < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
+        {
+            this->setRepeatLength(this->repeatLength() - 1);
+            charCountA = charCountC = charCountT = charCountG = 0;
+        }
+        else
+        {
+            done = true;
+        }
+    }
+    
+    
+    
+    charCountA = charCountC = charCountT = charCountG = 0;
+    done = false;
+    
+    //trim from left
+    while (!done && (this->repeatLength() > minRepeatLength) )
+    {
+        for (int k = 0; k < this->numRepeats(); k++ )
+        {
+            currRepeat = this->repeatStringAt(k);
+            char firstChar = currRepeat.at(0);
+            
+            if (firstChar == 'A')   charCountA++;
+            if (firstChar == 'C')   charCountC++;
+            if (firstChar == 'T')   charCountT++;
+            if (firstChar == 'G')   charCountG++;
+        }
+        
+        double percentA = (double)charCountA/numRepeats;
+        double percentC = (double)charCountC/numRepeats;
+        double percentT = (double)charCountT/numRepeats;
+        double percentG = (double)charCountG/numRepeats;
+        
+        if ( (percentA < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentC < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentT < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentG < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
+        {
+            for (int m = 0; m < numRepeats; m++ )
+            {
+                int newValue = this->repeatAt(m) + 1;
+                this->setRepeatAt(newValue, m);
+            }
+            this->setRepeatLength(this->repeatLength() - 1);
+            charCountA = charCountC = charCountT = charCountG = 0;
+        }
+        else
+        {
+            done = true;
+        }
+    }
+    
+    //return candidateCRISPR;
+}
 
 bool GenomeCrispr::hasSimilarlySizedSpacers(void)
 {

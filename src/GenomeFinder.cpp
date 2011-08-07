@@ -165,9 +165,9 @@ bool GenomeFinder::findRepeats(void)
                 {
                     if (candidateCRISPR->hasSimilarlySizedSpacers())
                     {
-                        this->checkFlank(GenomeFinder::left, candidateCRISPR, mOpts->minSpacerLength, 30, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, .70);
-                        this->checkFlank(GenomeFinder::right, candidateCRISPR, mOpts->minSpacerLength, 30, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, .70);
-                         this->trim(candidateCRISPR, mOpts->minRepeatLength);
+                        this->checkFlank(GenomeFinder::left, candidateCRISPR, mOpts->minSpacerLength, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE);
+                        this->checkFlank(GenomeFinder::right, candidateCRISPR, mOpts->minSpacerLength, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE);
+                         candidateCRISPR->trim(mOpts->minRepeatLength);
                          CRISPRVector.push_back(candidateCRISPR);
                          repeatsFound = true;
                         
@@ -192,7 +192,7 @@ bool GenomeFinder::findRepeats(void)
         
         std::ofstream outputFileStream;
 
-        std::string outputFileName = mOpts->outputFileDir + "a.out";
+        std::string outputFileName = mOpts->outputFileDir + "crass_genome.out";
             
         std::cout<<"Writing results in file " << outputFileName <<std::endl;            
         outputFileStream.open(outputFileName.c_str());
@@ -217,7 +217,6 @@ bool GenomeFinder::findRepeats(void)
             std::vector<GenomeCrispr*>::iterator crispr_iter = CRISPRVector.begin();
             while (crispr_iter != CRISPRVector.end()) 
             {
-                //currCRISPR = (CRISPR)CRISPRVector.elementAt(k);
                 outputFileStream<<"crispr_" << ((*crispr_iter)->start() + 1) << "-" <<  ((*crispr_iter)->end() + 1) << "_";
                 outputFileStream<<"RN_" + (*crispr_iter)->numRepeats() << "_RL_" << (*crispr_iter)->averageRepeatLength() + "_SL_" <<  (*crispr_iter)->averageSpacerLength() <<std::endl;
                 outputFileStream<<mSequence<<std::endl;
@@ -246,93 +245,7 @@ bool GenomeFinder::findRepeats(void)
     return true;
 }
 
-
-void GenomeFinder::trim(GenomeCrispr * candidateCRISPR, int minRepeatLength)
-    {
-        int numRepeats = candidateCRISPR->numRepeats();
-//        int left = (int)candidateCRISPR->start();
-//        int right = (int)candidateCRISPR->end();
-//        
-        std::string currRepeat;
-        int charCountA, charCountC, charCountT, charCountG;
-        charCountA = charCountC = charCountT = charCountG = 0;
-        bool done = false;
-        
-        //trim from right
-        while (!done && (candidateCRISPR->repeatLength() > minRepeatLength) )
-        {
-            for (int k = 0; k < candidateCRISPR->numRepeats(); k++ )
-            {
-                currRepeat = candidateCRISPR->repeatStringAt(k);
-                char lastChar = currRepeat.at(currRepeat.length() - 1);
-                
-                if (lastChar == 'A')   charCountA++;
-                if (lastChar == 'C')   charCountC++;
-                if (lastChar == 'T')   charCountT++;
-                if (lastChar == 'G')   charCountG++;
-            }
-            
-            double percentA = (double)charCountA/numRepeats;
-            double percentC = (double)charCountC/numRepeats;
-            double percentT = (double)charCountT/numRepeats;
-            double percentG = (double)charCountG/numRepeats;
-            
-            if ( (percentA < .75) && (percentC < .75) && (percentT < .75) && (percentG < .75) )
-            {
-                candidateCRISPR->setRepeatLength(candidateCRISPR->repeatLength() - 1);
-                charCountA = charCountC = charCountT = charCountG = 0;
-            }
-            else
-            {
-                done = true;
-            }
-        }
-        
-        
-        
-        charCountA = charCountC = charCountT = charCountG = 0;
-        done = false;
-        
-        //trim from left
-        while (!done && (candidateCRISPR->repeatLength() > minRepeatLength) )
-        {
-            for (int k = 0; k < candidateCRISPR->numRepeats(); k++ )
-            {
-                currRepeat = candidateCRISPR->repeatStringAt(k);
-                char firstChar = currRepeat.at(0);
-                
-                if (firstChar == 'A')   charCountA++;
-                if (firstChar == 'C')   charCountC++;
-                if (firstChar == 'T')   charCountT++;
-                if (firstChar == 'G')   charCountG++;
-            }
-            
-            double percentA = (double)charCountA/numRepeats;
-            double percentC = (double)charCountC/numRepeats;
-            double percentT = (double)charCountT/numRepeats;
-            double percentG = (double)charCountG/numRepeats;
-            
-            if ( (percentA < .75) && (percentC < .75) && (percentT < .75) && (percentG < .75) )
-            {
-                for (int m = 0; m < numRepeats; m++ )
-                {
-                    int newValue = candidateCRISPR->repeatAt(m) + 1;
-                    candidateCRISPR->setRepeatAt(newValue, m);
-                }
-                candidateCRISPR->setRepeatLength(candidateCRISPR->repeatLength() - 1);
-                charCountA = charCountC = charCountT = charCountG = 0;
-            }
-            else
-            {
-                done = true;
-            }
-        }
-        
-        //return candidateCRISPR;
-    }
-    
- 
-    
+   
 void GenomeFinder::checkFlank(int side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence)
     {
         bool moreToSearch = true;
@@ -354,11 +267,11 @@ void GenomeFinder::checkFlank(int side, GenomeCrispr * candidateCRISPR, int minS
         //return candidateCRISPR;
     }
     
-    /*
-     scan to the right and left of the first and last repeat to see if there is a region
-     that is similar to the repeats.  necessary in case we missed a repeat because of
-     inexact matches or a result of one of the filters
-     */
+/*
+ scan to the right and left of the first and last repeat to see if there is a region
+ that is similar to the repeats.  necessary in case we missed a repeat because of
+ inexact matches or a result of one of the filters
+ */
 int GenomeFinder::scan(int side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence)
     {
         int repeatSpacing1, repeatSpacing2, avgRepeatSpacing;
@@ -531,8 +444,8 @@ int GenomeFinder::min (int * array)
 {
     int min = array[0];
     int minIndex = 0;
-    
-    int length = (sizeof(array)/sizeof(int));
+    // get the number of elements in the array
+    int length = (sizeof(*array)/sizeof(array[0]));
     
     for (int i = 0; i < length; i++)
     {

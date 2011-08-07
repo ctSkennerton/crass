@@ -165,6 +165,8 @@ public:
     bool hasSimilarlySizedSpacers(void);
     bool hasNonRepeatingSpacers(void);
     int getActualRepeatLength( int searchWindowLength, int minSpacerLength);
+    void trim( int minRepeatLength);
+
     
     friend class GenomeFinder;
 private:
