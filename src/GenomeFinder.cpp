@@ -32,6 +32,17 @@
  *                               A
  */
 
+/*
+ This code represents the algorithm for finding CRISPRs in genomes. 
+ There are already a number of options out there so instead of 
+ reinventing the wheel, I've decided to port much of the code from 
+ CRT with slight modifications.
+ 
+ Bland et al. (2007) "CRISPR Recognition Tool (CRT): a tool for automatic 
+ detection of clustered regularly interspaced palindromic repeats" BMC 
+ Bioinformatics 8:209.
+ 
+ */
 #include <iostream>
 #include <string>
 #include <vector>
@@ -45,6 +56,7 @@
 #include "SeqUtils.h"
 #include "bm.h"
 #include "crass_defines.h"
+#include "Levensthein.h"
 /* 
  declare the type of file handler and the read() function
  as described here:
@@ -153,8 +165,8 @@ bool GenomeFinder::findRepeats(void)
                 {
                     if (candidateCRISPR->hasSimilarlySizedSpacers())
                     {
-                         this->checkFlank("left", candidateCRISPR, mOpts->minSpacerLength, 30, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, .70);
-                         this->checkFlank("right", candidateCRISPR, mOpts->minSpacerLength, 30, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, .70);
+                        this->checkFlank(GenomeFinder::left, candidateCRISPR, mOpts->minSpacerLength, 30, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, .70);
+                        this->checkFlank(GenomeFinder::right, candidateCRISPR, mOpts->minSpacerLength, 30, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, .70);
                          this->trim(candidateCRISPR, mOpts->minRepeatLength);
                          CRISPRVector.push_back(candidateCRISPR);
                          repeatsFound = true;
@@ -321,7 +333,7 @@ void GenomeFinder::trim(GenomeCrispr * candidateCRISPR, int minRepeatLength)
     
  
     
-void GenomeFinder::checkFlank(std::string side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence)
+void GenomeFinder::checkFlank(int side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence)
     {
         bool moreToSearch = true;
         
@@ -330,9 +342,9 @@ void GenomeFinder::checkFlank(std::string side, GenomeCrispr * candidateCRISPR, 
             int result = scan(side, candidateCRISPR, minSpacerLength, scanRange, confidence);
             if (result > 0)  //if another repeat found on flank
             {
-                if (side == "left")
+                if (side == GenomeFinder::left)
                     candidateCRISPR->insertRepeatAt(result, 0);
-                else if (side == "right")
+                else if (side == GenomeFinder::right)
                     candidateCRISPR->addRepeat(result);
             }
             else
@@ -347,7 +359,7 @@ void GenomeFinder::checkFlank(std::string side, GenomeCrispr * candidateCRISPR, 
      that is similar to the repeats.  necessary in case we missed a repeat because of
      inexact matches or a result of one of the filters
      */
-int GenomeFinder::scan(std::string side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence)
+int GenomeFinder::scan(int side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence)
     {
         int repeatSpacing1, repeatSpacing2, avgRepeatSpacing;
         int firstRepeatIndex, lastRepeatIndex, candidateRepeatIndex;
@@ -359,7 +371,7 @@ int GenomeFinder::scan(std::string side, GenomeCrispr * candidateCRISPR, int min
         firstRepeatIndex = candidateCRISPR->repeatAt(0);
         lastRepeatIndex = candidateCRISPR->repeatAt(numRepeats-1);
         
-        if (side == "left")
+        if (side == GenomeFinder::left)
         {
             repeatString = candidateCRISPR->repeatStringAt(0);
             repeatSpacing1 = candidateCRISPR->repeatSpacing(0, 1);
@@ -397,13 +409,13 @@ int GenomeFinder::scan(std::string side, GenomeCrispr * candidateCRISPR, int min
         int scanLeftMaxEnd    = firstRepeatIndex - repeatLength - minSpacerLength;
         int scanRightMinBegin = lastRepeatIndex + repeatLength + minSpacerLength;
         
-        if (side == "left")
+        if (side == GenomeFinder::left)
         {
             if (end > scanLeftMaxEnd)
                 end = scanLeftMaxEnd;
         }
         
-        if (side == "right")
+        if (side == GenomeFinder::right)
         {
             if (begin < scanRightMinBegin)
                 begin = scanRightMinBegin;
@@ -505,8 +517,11 @@ void GenomeFinder::scanRight(GenomeCrispr * candidateCRISPR, std::string pattern
     
 bool GenomeFinder::patternMatches(std::string pattern1, std::string pattern2, double confidence)
     {
-        double patternSimilarity = DNASequence.getSimilarity(pattern1, pattern2);
-        if (patternSimilarity >= confidence)
+        float max_length = std::max((int)pattern1.length(), (int)pattern2.length());
+        
+        float edit_distance =  Levensthein_distance(pattern1, pattern2);
+        float similarity = 1.0 - (edit_distance/max_length);
+        if (similarity >= confidence)
             return true;
         else
             return false;
@@ -517,7 +532,9 @@ int GenomeFinder::min (int * array)
     int min = array[0];
     int minIndex = 0;
     
-    for (int i = 0; i < array.length; i++)
+    int length = (sizeof(array)/sizeof(int));
+    
+    for (int i = 0; i < length; i++)
     {
         if (array[i] < min)
         {

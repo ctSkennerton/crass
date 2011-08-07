@@ -32,6 +32,17 @@
  *                               A
  */
 
+/*
+ This code represents the algorithm for finding CRISPRs in genomes. 
+ There are already a number of options out there so instead of 
+ reinventing the wheel, I've decided to port much of the code from 
+ CRT with slight modifications.
+ 
+ Bland et al. (2007) "CRISPR Recognition Tool (CRT): a tool for automatic 
+ detection of clustered regularly interspaced palindromic repeats" BMC 
+ Bioinformatics 8:209.
+ 
+ */
 #ifndef crass_GenomeFinder_h
 #define crass_GenomeFinder_h
 
@@ -46,6 +57,8 @@
 class GenomeFinder
 {
 public:
+    enum side{right, left};
+
     GenomeFinder(genOptions * opts)
     {
         mOpts = opts;
@@ -56,8 +69,8 @@ public:
 private:
     bool  findRepeats(void);
     void  trim(GenomeCrispr * candidateCRISPR, int minRepeatLength);
-    void  checkFlank(std::string side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence);
-    int   scan(std::string side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence);
+    void  checkFlank(int side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence);
+    int   scan(int side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence);
     void  scanRight(GenomeCrispr * candidateCRISPR, std::string pattern, int minSpacerLength, int scanRange);
     bool  patternMatches(std::string pattern1, std::string pattern2, double confidence);
     int   min (int * array);

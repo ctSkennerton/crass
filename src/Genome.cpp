@@ -282,7 +282,7 @@ int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLe
     {
         *newPositions = *newPositions - leftExtensionLength;
     }
-
+    mRepeatLength = rightExtensionLength + leftExtensionLength;
     return (rightExtensionLength + leftExtensionLength);
 }
 
