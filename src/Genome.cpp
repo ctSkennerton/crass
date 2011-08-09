@@ -208,7 +208,6 @@ int Crispr::getActualRepeatLength( int searchWindowLength, int minSpacerLength)
         {
             currRepeatStartIndex = mRepeats.at(k);
             currRepeat = mSequence.substr(currRepeatStartIndex, rightExtensionLength);
-            std::cout<<"current repeat: "<<currRepeat<<std::endl;
             char lastChar = currRepeat.at(currRepeat.length() - 1);
             
             if (lastChar == 'A')   charCountA++;
@@ -400,7 +399,7 @@ bool Crispr::hasNonRepeatingSpacers(void)
     float max_length;
     float similarity;
     float edit_distance;
-    if ((mRepeats.size() - 1) >= 3)
+    if (mRepeats.size() >= 3)
     {
         int i = 0;
         while ( (i < this->numSpacers() - 1) )
@@ -442,7 +441,7 @@ bool Crispr::hasNonRepeatingSpacers(void)
     }
     
     //we check that the spacer is different from the repeat
-    else if ((mRepeats.size() - 1) == 2)
+    else if (mRepeats.size() == 2)
     {
         if (firstSpacer == "")
             return false;

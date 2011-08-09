@@ -147,8 +147,8 @@ int processGenomeOptions(int argc, char * argv[], genOptions * opts)
                 }
                 break;
             case 'l': opts->logLevel = atoi(optarg); break;
-            case '?': version_info(); genomeHelp(); exit(1); break;
-            default: abort(); break;
+            case '?': 
+            default: version_info(); genomeHelp(); exit(1); break;
         }
     }
     if (optind == argc)
@@ -170,64 +170,27 @@ int processReadsOptions(int argc, char *argv[], options *opts) {
     
     while( (c = getopt_long(argc, argv, "hVrl:k:p:m:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
         switch(c) {
-            case 'h': 
-                readsHelp(); 
-                exit(0); 
-                break;
-            case 'V': 
-                version_info(); 
-                exit(0); 
-                break;
-            case 'o': 
-                opts->output_fastq = optarg; 
-                break;
-            case 'p': 
-                opts->pat_file = optarg; 
-                break;
-            case 'b': 
-                opt_b_value = optarg; 
-                break;
-            case 'r': 
-                opts->report_stats = true; 
-                break;
-            case 'm': 
-                opts->max_mismatches = atoi(optarg); 
-                break;
-            case 'd': 
-                opts->lowDRsize = atoi(optarg); 
-                break;
-            case 'D': 
-                opts->highDRsize = atoi(optarg); 
-                break;
-            case 's': 
-                opts->lowSpacerSize = atoi(optarg); 
-                break;
-            case 'S': 
-                opts->highSpacerSize = atoi(optarg); 
-                break;
-            case 'c': 
-                opts->count = 1; 
-                break;
-            case 'k': 
-                opts->kmer_size = atoi(optarg); 
-                break;
-            case 'l': 
-                opts->logger_level = atoi(optarg); 
-                break;
-            case '?': 
-                version_info(); 
-                readsHelp(); 
-                exit(1); 
-                break;
+            case 'h': readsHelp(); exit(0); break;
+            case 'V': version_info(); exit(0); break;
+            case 'o': opts->output_fastq = optarg; break;
+            case 'p': opts->pat_file = optarg; break;
+            case 'b': opt_b_value = optarg; break;
+            case 'r': opts->report_stats = true; break;
+            case 'm': opts->max_mismatches = atoi(optarg); break;
+            case 'd': opts->lowDRsize = atoi(optarg); break;
+            case 'D': opts->highDRsize = atoi(optarg); break;
+            case 's': opts->lowSpacerSize = atoi(optarg); break;
+            case 'S': opts->highSpacerSize = atoi(optarg); break;
+            case 'c': opts->count = 1; break;
+            case 'k': opts->kmer_size = atoi(optarg); break;
+            case 'l': opts->logger_level = atoi(optarg); break;
             case 0:
                 if( strcmp( "dumpReads", long_options[index].name ) == 0 ) opts->detect = true;
                 else if ( strcmp( "454", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
                 else if ( strcmp( "illumina", long_options[index].name ) == 0 ) opts->illumina = true;
                 else if ( strcmp( "sanger", long_options[index].name ) == 0 ) opts->sanger = true;
                 break;
-            default: 
-                abort(); 
-                break;
+            default: version_info(); readsHelp(); exit(1); break;
         }
     }
     if (optind == argc)
@@ -354,6 +317,7 @@ int genomeMain(int argc, char * argv[])
     delete gFinder;
     return 0;  
 }
+
 //**************************************
 // rock and roll
 //**************************************
