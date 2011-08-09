@@ -240,7 +240,6 @@ bool GenomeFinder::findRepeats(void)
     }
     
     delete candidateCRISPR;
-    //delete [] CRISPRVector;
     
     return true;
 }
