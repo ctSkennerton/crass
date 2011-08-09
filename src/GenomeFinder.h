@@ -68,10 +68,10 @@ public:
     bool goGenomeFinder(std::vector<std::string>& inputFiles);
 private:
     bool  findRepeats(void);
-    void  trim(GenomeCrispr * candidateCRISPR, int minRepeatLength);
-    void  checkFlank(int side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence);
-    int   scan(int side, GenomeCrispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence);
-    void  scanRight(GenomeCrispr * candidateCRISPR, std::string pattern, int minSpacerLength, int scanRange);
+    void  trim(Crispr * candidateCRISPR, int minRepeatLength);
+    void  checkFlank(int side, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence);
+    int   scan(int side, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence);
+    void  scanRight(Crispr * candidateCRISPR, std::string pattern, int minSpacerLength, int scanRange);
     bool  patternMatches(std::string pattern1, std::string pattern2, double confidence);
     int   min (int * array);
     int   getHammingDistance(std::string seq1, std::string seq2);

@@ -48,89 +48,88 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 #include "Genome.h"
 #include "crass_defines.h"
 #include "Levensthein.h"
-std::string GenomeCrispr::toString()
+#include <sstream>
+std::string Crispr::toString()
 {
-    std::string str = "";
-    std::string under_str = ""; //CTS//
-    std::string under_dr_str = ""; //CTS//
+    std::stringstream str;
+    
     std::string repeat, spacer, prevSpacer;
     repeat = spacer = prevSpacer = "";
     
-    //CTS//
-    //str += "POSITION\tREPEAT\t\t\t\tSPACER\n";
-    //str +="--------\t";
-    /*
-     
-     for (int y = 0; y <  this.repeatLength(); y++)
-     str +="-";
-     str +="\t";
-     
-     for (int z = 0; z <  this.averageSpacerLength(); z++)
-     str += "-";
-     */      
-    str +="# ";
+    str << "POSITION\tREPEAT\t\t\t\tSPACER"<<std::endl;
     
+    str <<"--------\t";
+    
+    for (int y = 0; y <  this->repeatLength(); y++) str <<"-";
+    str<<"\t";
+    
+    for (int z = 0; z <  this->averageSpacerLength(); z++) str << "-";
+    str<<std::endl;
     
     
     //add 1 to each position, to offset programming languagues that begin at 0 rather than 1
-    for (int m = 0; m < numRepeats(); m++)
-    {
-        //repeat = getRepeat(m);
-        str += repeatStringAt(m) + " ";
+    for (int m = 0; m < this->numRepeats(); m++)
+    {   //repeat = getRepeat(m);
+        str << (this->repeatAt(m) + 1) << "\t\t" << repeatStringAt(m) << "\t";
         
         // print spacer
         // because there are no spacers after the last repeat, we stop early (m < crisprIndexVector.size() - 1)
         if (m < numSpacers())
-        {
-            prevSpacer = spacer;
+        {   prevSpacer = spacer;
             spacer = spacerStringAt(m);
-            str += spacer;
+            str << spacer;
             
-            //str +="\t[ " + repeatStringAt(m).length() + ", " + spacerStringAt(m).length() + " ]\n";
+            str <<"\t[ " << this->repeatStringAt(m).length() << ", " << this->spacerStringAt(m).length() << " ]";
             //str +="--[" + DNASequence.getSimilarity(repeatStringAt(m), spacerStringAt(m)) + "]";
             //str +="--[" + DNASequence.getSimilarity(spacer, prevSpacer) + "]";
-            str += " ";
+            str <<std::endl;
+            
         }
     }
     
-    //CTS//
-    str +="\n# ";
+    
+    str <<std::endl<<"--------\t";
     
     for (int x = 0; x < this->repeatLength(); x++)
-        under_dr_str += "-";
-    under_dr_str +=" ";
-    //CTS//
-    under_str += under_dr_str + " ";
-    for (int z = 0; z <  this->averageSpacerLength(); z++)
-        under_str += " ";
-    under_str += under_dr_str;
-    str += under_str + "\n";
+    {
+        str << "-";
+    }
+    str <<"\t";
     
-    return str;
+    for (int z = 0; z <  this->averageSpacerLength(); z++)
+    {
+        str << "-";
+    }
+    str <<std::endl;
+    
+    
+    return str.str();
+    
 }
 
-std::string GenomeCrispr::repeatStringAt(int i)
+std::string Crispr::repeatStringAt(int i)
 {
-    int currRepeatStartIndex = mRepeats.at(i);
-    int currRepeatEndIndex = currRepeatStartIndex + mRepeatLength - 1;
-    return mSequence.substr(currRepeatStartIndex, currRepeatEndIndex + 1);
+    int currRepeatStartIndex = mRepeats[i];
+    int currRepeatEndIndex = currRepeatStartIndex + mRepeatLength;
+    return mSequence.substr(currRepeatStartIndex, (currRepeatEndIndex - currRepeatStartIndex));
 }
 
 
-std::string GenomeCrispr::spacerStringAt(int i)
+std::string Crispr::spacerStringAt(int i)
 {
-    int currRepeatEndIndex = mRepeats.at(i) + mRepeatLength - 1;
-    int nextRepeatStartIndex = mRepeats.at(i + 1);
+    int currRepeatEndIndex = mRepeats[i] + mRepeatLength - 1;
+    int nextRepeatStartIndex = mRepeats[i + 1];
     int currSpacerStartIndex = currRepeatEndIndex + 1;
     int currSpacerEndIndex = nextRepeatStartIndex - 1;
     
-    return mSequence.substr(currSpacerStartIndex, currSpacerEndIndex + 1);
+    return mSequence.substr(currSpacerStartIndex, (currSpacerEndIndex - currSpacerStartIndex));
 }
 
-int GenomeCrispr::averageSpacerLength()
+int Crispr::averageSpacerLength()
 {
     int sum = 0;
     for (int i = 0; i < numSpacers(); i++)
@@ -140,7 +139,7 @@ int GenomeCrispr::averageSpacerLength()
     return sum/numSpacers();
 }
 
-int GenomeCrispr::averageRepeatLength()
+int Crispr::averageRepeatLength()
 {
     int sum = 0;
     for (int i = 0; i < numRepeats(); i++)
@@ -153,7 +152,7 @@ int GenomeCrispr::averageRepeatLength()
 
 // no remove element equivelent in c++
 // going to have to hack this
-void GenomeCrispr::removeRepeat(int val)
+void Crispr::removeRepeat(int val)
 {
     // load what we've got into a tmp vector
     repeatList tmp_rep_list = mRepeats;
@@ -174,22 +173,21 @@ void GenomeCrispr::removeRepeat(int val)
     //mRepeats.insert(mRepeats.begin(),tmp_rep_list.begin(),tmp_rep_list.end());
 }
 
-int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLength)
+int Crispr::getActualRepeatLength( int searchWindowLength, int minSpacerLength)
 {
     int numRepeats = (int)(mRepeats.size() - 1);
     int firstRepeatStartIndex = mRepeats.front();
     int lastRepeatStartIndex = mRepeats.back();
     
-    int shortestRepeatSpacing = mRepeats.at(1) - mRepeats.at(0);
+    int shortestRepeatSpacing = mRepeats[1] - mRepeats[0];
     for (int i = 0; i < mRepeats.size() - 1; i++)
     {
-        int currRepeatIndex = mRepeats.at(i);
-        int nextRepeatIndex = mRepeats.at(i + 1);
+        int currRepeatIndex = mRepeats[i];
+        int nextRepeatIndex = mRepeats[i + 1];
         int currRepeatSpacing = nextRepeatIndex - currRepeatIndex;
         if (currRepeatSpacing < shortestRepeatSpacing)
             shortestRepeatSpacing = currRepeatSpacing;
     }
-    
     int sequenceLength = (int)mSequence.length();
     
     int rightExtensionLength = searchWindowLength;
@@ -202,14 +200,15 @@ int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLe
     charCountA = charCountC = charCountT = charCountG = 0;
     bool done = false;
     
-    
+
     //(from the right side) extend the length of the repeat to the right as long as the last base of all repeats are at least threshold
     while (!done && (rightExtensionLength <= maxRightExtensionLength) && (lastRepeatStartIndex + rightExtensionLength < sequenceLength))
     {
         for (int k = 0; k < numRepeats; k++ )
         {
             currRepeatStartIndex = mRepeats.at(k);
-            currRepeat = mSequence.substr(currRepeatStartIndex, currRepeatStartIndex + rightExtensionLength);
+            currRepeat = mSequence.substr(currRepeatStartIndex, rightExtensionLength);
+            std::cout<<"current repeat: "<<currRepeat<<std::endl;
             char lastChar = currRepeat.at(currRepeat.length() - 1);
             
             if (lastChar == 'A')   charCountA++;
@@ -217,7 +216,6 @@ int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLe
             if (lastChar == 'T')   charCountT++;
             if (lastChar == 'G')   charCountG++;
         }
-        
         double percentA = (double)charCountA/numRepeats;
         double percentC = (double)charCountC/numRepeats;
         double percentT = (double)charCountT/numRepeats;
@@ -234,7 +232,7 @@ int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLe
         }
     }
     rightExtensionLength--;
-    
+
     
     int leftExtensionLength = 0;
     charCountA = charCountC = charCountT = charCountG = 0;
@@ -272,21 +270,20 @@ int GenomeCrispr::getActualRepeatLength( int searchWindowLength, int minSpacerLe
         }
     }
     leftExtensionLength--;
-    
-    // Ok to suppress warnings since we know that we are casting integers
-    //@SuppressWarnings("unchecked")
+
     std::vector<int>::iterator newPositions = mRepeats.begin();
     
     while (newPositions != mRepeats.end()) 
     {
         *newPositions = *newPositions - leftExtensionLength;
+        ++newPositions;
     }
     mRepeatLength = rightExtensionLength + leftExtensionLength;
     return (rightExtensionLength + leftExtensionLength);
 }
 
 
-void GenomeCrispr::trim( int minRepeatLength)
+void Crispr::trim( int minRepeatLength)
 {
     int numRepeats = this->numRepeats();
     
@@ -368,7 +365,7 @@ void GenomeCrispr::trim( int minRepeatLength)
     //return candidateCRISPR;
 }
 
-bool GenomeCrispr::hasSimilarlySizedSpacers(void)
+bool Crispr::hasSimilarlySizedSpacers(void)
 {
     int initialSpacerLength =(int)this->spacerStringAt(0).length();
     int repeatLength = this->repeatLength();
@@ -395,7 +392,7 @@ bool GenomeCrispr::hasSimilarlySizedSpacers(void)
 
 
 //checks first five spacers
-bool GenomeCrispr::hasNonRepeatingSpacers(void)
+bool Crispr::hasNonRepeatingSpacers(void)
 {
     //assumes at least two elements
     std::string firstRepeat = this->repeatStringAt(0);

@@ -62,7 +62,7 @@ void mainHelp(void)
 {
     std::cout<<CRASS_DEF_PRG_NAME<<" can be executed on either contigs/genomes or on"<<std::endl;
     std::cout<<"files containing reads from any sequencing platform."<<std::endl;
-    std::cout<<"Please choose either "<<CRASS_DEF_PRG_NAME<<" genome"<<std::endl;
+    std::cout<<"Please choose either "<<std::endl<<CRASS_DEF_PRG_NAME<<" genome"<<std::endl;
     std::cout<<"OR"<<std::endl;
     std::cout<<CRASS_DEF_PRG_NAME<<" reads"<<std::endl;
     std::cout<<"for further information about each algorithm"<<std::endl<<std::endl;
@@ -73,11 +73,11 @@ void mainHelp(void)
 
 void genomeHelp(void)
 {
-    std::cout<<"Usage:"<<CRASS_DEF_PRG_NAME<<" genome -[dDsSwlnhoV] <inputFiles>"<<std::endl;
+    std::cout<<"Usage: "<<CRASS_DEF_PRG_NAME<<" genome -[dDsSwlnhoV] <inputFiles>"<<std::endl;
     std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
-    std::cout<< "                             to search for [Default: 23]"<<std::endl;
+    std::cout<< "\t                           to search for [Default: 23]"<<std::endl;
     std::cout<< "\t-D --maxDR <INT>           Maximim length of the direct repeat"<<std::endl; 
-    std::cout<<"                              to search for [Default: 47]"<<std::endl;
+    std::cout<< "\t                           to search for [Default: 47]"<<std::endl;
     std::cout<< "\t-h --help                  This help message"<<std::endl;
     std::cout<< "\t-w --windowLength <INT>    The length of the search window. Can only be"<<std::endl; 
     std::cout<< "\t                           a number between 6 - 9 [Default: 8]"<<std::endl;
@@ -95,9 +95,9 @@ void readsHelp(void)
 {
     std::cout<<"Usage:  "<<CRASS_DEF_PRG_NAME<<" [options]  <inputFiles>"<<std::endl<<std::endl;
     std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
-    std::cout<< "                             to search for [Default: 23]"<<std::endl;
+    std::cout<< "\t                           to search for [Default: 23]"<<std::endl;
     std::cout<< "\t-D --maxDR <INT>           Maximim length of the direct repeat"<<std::endl; 
-    std::cout<<"                              to search for [Default: 47]"<<std::endl;
+    std::cout<< "\t                            to search for [Default: 47]"<<std::endl;
     std::cout<< "\t-h --help                  This help message"<<std::endl;
     std::cout<< "\t-k --kmerCount <INT>       The number of the kmers that need to be"<<std::endl; 
     std::cout<< "\t                           shared for clustering [Default: 8]"<<std::endl;

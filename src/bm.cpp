@@ -42,7 +42,7 @@ int PatternMatcher::bmpSearch(const std::string &text, const std::string &patter
         {
             if(pIdx == 0)
             {   //found a match
-                return tIdx;
+                return (int)tIdx;
             }
             tIdx--;
             pIdx--;
@@ -51,7 +51,7 @@ int PatternMatcher::bmpSearch(const std::string &text, const std::string &patter
         {
             //Character Jump Heuristics
             int lastOccur = bmpLast[text[tIdx]];
-            tIdx = tIdx + patternSize - min<int>(pIdx, 1 + lastOccur);
+            tIdx = tIdx + patternSize - min<int>((int)pIdx, 1 + lastOccur);
             pIdx = patternSize - 1;
         }
     }
@@ -80,7 +80,7 @@ void PatternMatcher::bmpMultiSearch(const std::string &text, const std::string &
         {
             if(pIdx == 0)
             {   //found a match
-                startOffsetVec.push_back(tIdx) ;
+                startOffsetVec.push_back((int)tIdx) ;
             }
             tIdx--;
             pIdx--;
@@ -89,7 +89,7 @@ void PatternMatcher::bmpMultiSearch(const std::string &text, const std::string &
         {
             //Character Jump Heuristics
             int lastOccur = bmpLast[text[tIdx]];
-            tIdx = tIdx + patternSize - min<int>(pIdx, 1 + lastOccur);
+            tIdx = tIdx + patternSize - min<int>((int)pIdx, 1 + lastOccur);
             pIdx = patternSize - 1;
         }
     }
@@ -103,7 +103,7 @@ vector<int> PatternMatcher::computeBmpLast(const std::string &pattern){
         bmpLast[i] = -1;
     }
     for(size_t i = 0; i < pattern.size(); i++){
-        bmpLast[pattern[i]] = i;
+        bmpLast[pattern[i]] = (int)i;
     }
     return bmpLast;
 }

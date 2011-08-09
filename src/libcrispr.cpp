@@ -55,7 +55,6 @@
 #include "WuManber.h"
 #include "libbitap.h"
 #include "bm.h"
-#include "kseq.h"
 #include "SeqUtils.h"
 #include "Levensthein.h"
 
