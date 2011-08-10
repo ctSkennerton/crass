@@ -91,26 +91,7 @@ void DirectRepeat::reset(void)
     DR_EndPos = 0;
     DR_NumMismatches = 0;
 }
-/*
-**************************************
- RepeatMatch
-**************************************
-ReadMatch::ReadMatch() {
-    //-----
-    // Constructor!
-    //
-    RM_SubstrStart = NULL;
-    RM_SubstrEnd = NULL;
-    RM_StartPos = 0;
-    RM_EndPos = 0;
-    RM_MatchStartPos = 0;
-    RM_MatchEndPos = 0;
-    RM_NumMismatches = 0;
-    RM_NumInsertions = 0;
-    RM_NumDeletions = 0;
-    RM_NumSubstitutions = 0;
-}
-*/
+
 /* 
 declare the type of file handler and the read() function
 as described here:

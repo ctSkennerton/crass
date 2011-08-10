@@ -10,7 +10,12 @@
 .Nm crass
 .Nd the CRISPR Assembler.
 .Sh SYNOPSIS             
+.Nm
+\fBgenome
+.Op Fl dhwlnosDSV
+.Ao Em sequence_files Ac
 .Nm 
+\fBreads
 .Op Fl dhklmorsDSV
 .Op Fl "-dumpReads" 
 .Em "READTYPE"  
@@ -44,8 +49,72 @@ assembler uses the direct informtion to determine the linkages between the space
 which contains all of the possible variations of the CRISPR based on the forking of the spacer linkages.
 
 .Pp
-.Sh OPTIONS
+.Sh COMMANDS AND OPTIONS
 
+.Bl -tag -width -indent
+.It \fBgenome 
+.Nm
+\fBgenome
+.Op Fl hV
+.Op Fl d Ar INT 
+.Op Fl w Ar INT
+.Op Fl l Ar INT
+.Op Fl n Ar INT
+.Op Fl o Ar LOCATION
+.Op Fl s Ar INT
+.Op Fl D Ar INT
+.Op Fl S Ar INT
+.Pp
+Use 
+.Nm
+to search a genome or set of contigs for CRISPR elements.
+The algorithm is based on the one described by 
+ 
+.Bl -tag -width -indent 
+.It Fl d Ar INT Fl "\^\-minDR" Ar INT             
+The minimim length of the direct repeat to search for [Default: 23] 
+.It Fl D Ar INT Fl "\^\-maxDR" Ar INT             
+The Maximum length of the direct repeat to search for [Default: 47] 
+.It Fl h Ar ""  Fl "\^\-help" Ar ""           
+Output basic usage informtion to screen
+.It Fl w Ar INT Fl "\^\-windowLength" Ar INT            
+The length of the window size for searching a genome.  Must be between 6 - 9 [Default: 8]
+.It Fl l Ar INT Fl "\^\-logLevel" Ar INT
+The level of verbosity to ouput in the
+.Nm 
+log file 
+.It Fl n Ar INT Fl "\^\-minNumRepeats" Ar INT            
+The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real' [Default: 3]
+.It Fl o Ar LOCATION  Fl "\^\-outDir" Ar LOCATION          
+The name of the ouput directory for the output files [Default: .]
+.It Fl s Ar INT Fl "\^\-minSpacer" Ar INT            
+The minimim length of the spacer to search for [Default: 26]
+.It Fl S Ar INT Fl "\^\-maxSpacer" Ar INT          
+The maximim length of the spacer to search for [Default: 50]
+.It Fl V   Ar ""  Fl "\^\-version" Ar ""        
+Print version and copy right information
+.El
+.El
+.Pp
+
+
+.Bl -tag -width -indent
+.It \fBreads
+.Nm 
+\fBreads
+.Op Fl hrV
+.Op Fl d Ar INT 
+.Op Fl k Ar INT
+.Op Fl l Ar INT
+.Op Fl m Ar INT
+.Op Fl o Ar LOCATION
+.Op Fl s Ar INT
+.Op Fl D Ar INT
+.Op Fl S Ar INT
+.Op Fl "-dumpReads"
+.Op Fl "-454"
+.Op Fl "-illumina"
+.Op Fl "sanger"
 .Bl -tag -width -indent 
 .It Fl "-454" Ar ""
 Specify that the input files have been sourced from 454 sequencing
@@ -55,8 +124,6 @@ The minimim length of the direct repeat to search for [Default: 23]
 The Maximum length of the direct repeat to search for [Default: 47] 
 .It Fl "\^\-dumpReads" Ar ""
 Prints all of the reads to file after the search is completed
-.It Fl "-genome" Ar ""
-Specify that the input files are a single genome or a collection of contigs
 .It Fl h Ar ""  Fl "\^\-help" Ar ""           
 Output basic usage informtion to screen
 .It Fl "-illumina" Ar ""
@@ -82,7 +149,8 @@ The maximim length of the spacer to search for [Default: 50]
 Specify that the input files have been sourced from sanger sequencing
 .It Fl V   Ar ""  Fl "\^\-version" Ar ""        
 Print version and copy right information
-.El                      
+.El
+.El
 .Pp
 .\" .Sh ENVIRONMENT      \" May not be needed
 .\" .Bl -tag -width "ENV_VAR_1" -indent \" ENV_VAR_1 is width of the string ENV_VAR_1
