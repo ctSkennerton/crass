@@ -51,28 +51,29 @@
 #include <vector>
 #include <string>
 
-class GenomeCrispr
+class Crispr
 {
     typedef std::vector<int> repeatList;
     typedef std::vector<int>::iterator repeatListIterator;
+
 public:
     // constriuctors
-    GenomeCrispr()
+    Crispr(std::string& _sequence)
     {
         repeatList mRepeats;
         mRepeatLength = 0;
-        //mDnaSequence = _sequence;
+        mSequence = _sequence;
     }
     
-    GenomeCrispr( repeatList _positions, int _length)
+    Crispr( std::string& _sequence, repeatList _positions, int _length)
     {
         mRepeats = _positions;
         mRepeatLength = _length;
-        //mDnaSequence = _sequence;
+        mSequence = _sequence;
     }
     
     //destructor
-    ~GenomeCrispr()
+    ~Crispr()
     {
         //delete repeats;
     }
@@ -110,7 +111,7 @@ public:
     
     inline void insertRepeatAt(int val, int pos)
     {
-        repeatListIterator iter = mRepeats.begin()+pos;
+        repeatListIterator iter = mRepeats.begin() + pos;
         mRepeats.insert(iter, val);
     }
     
@@ -121,7 +122,7 @@ public:
     
     inline int repeatAt(int i)
     {
-        return mRepeats.at(i);
+        return mRepeats[i];
     }
     
     inline int start()
@@ -147,14 +148,18 @@ public:
     
     inline int numRepeats()
     {
-        return (int)mRepeats.size() - 1;
+        return (int)mRepeats.size();
     }
     
     inline int numSpacers()
     {
         return numRepeats() - 1;
     }
-    
+    inline void clear()
+    {
+        mRepeats.clear();
+        mRepeatLength = 0;
+    }
     
     std::string repeatStringAt(int i);
     std::string spacerStringAt(int i);
@@ -165,11 +170,13 @@ public:
     bool hasSimilarlySizedSpacers(void);
     bool hasNonRepeatingSpacers(void);
     int getActualRepeatLength( int searchWindowLength, int minSpacerLength);
+    void trim( int minRepeatLength);
+
     
-    friend class GenomeFinder;
 private:
     repeatList mRepeats;
     int mRepeatLength;
+    std::string mSequence;
 };
     
     

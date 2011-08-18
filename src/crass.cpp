@@ -62,7 +62,7 @@ void mainHelp(void)
 {
     std::cout<<CRASS_DEF_PRG_NAME<<" can be executed on either contigs/genomes or on"<<std::endl;
     std::cout<<"files containing reads from any sequencing platform."<<std::endl;
-    std::cout<<"Please choose either "<<CRASS_DEF_PRG_NAME<<" genome"<<std::endl;
+    std::cout<<"Please choose either "<<std::endl<<CRASS_DEF_PRG_NAME<<" genome"<<std::endl;
     std::cout<<"OR"<<std::endl;
     std::cout<<CRASS_DEF_PRG_NAME<<" reads"<<std::endl;
     std::cout<<"for further information about each algorithm"<<std::endl<<std::endl;
@@ -73,11 +73,11 @@ void mainHelp(void)
 
 void genomeHelp(void)
 {
-    std::cout<<"Usage:"<<CRASS_DEF_PRG_NAME<<" genome -[dDsSwlnhoV] <inputFiles>"<<std::endl;
+    std::cout<<"Usage: "<<CRASS_DEF_PRG_NAME<<" genome -[dDsSwlnhoV] <inputFiles>"<<std::endl;
     std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
-    std::cout<< "                             to search for [Default: 23]"<<std::endl;
+    std::cout<< "\t                           to search for [Default: 23]"<<std::endl;
     std::cout<< "\t-D --maxDR <INT>           Maximim length of the direct repeat"<<std::endl; 
-    std::cout<<"                              to search for [Default: 47]"<<std::endl;
+    std::cout<< "\t                           to search for [Default: 47]"<<std::endl;
     std::cout<< "\t-h --help                  This help message"<<std::endl;
     std::cout<< "\t-w --windowLength <INT>    The length of the search window. Can only be"<<std::endl; 
     std::cout<< "\t                           a number between 6 - 9 [Default: 8]"<<std::endl;
@@ -95,9 +95,9 @@ void readsHelp(void)
 {
     std::cout<<"Usage:  "<<CRASS_DEF_PRG_NAME<<" [options]  <inputFiles>"<<std::endl<<std::endl;
     std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
-    std::cout<< "                             to search for [Default: 23]"<<std::endl;
+    std::cout<< "\t                           to search for [Default: 23]"<<std::endl;
     std::cout<< "\t-D --maxDR <INT>           Maximim length of the direct repeat"<<std::endl; 
-    std::cout<<"                              to search for [Default: 47]"<<std::endl;
+    std::cout<< "\t                            to search for [Default: 47]"<<std::endl;
     std::cout<< "\t-h --help                  This help message"<<std::endl;
     std::cout<< "\t-k --kmerCount <INT>       The number of the kmers that need to be"<<std::endl; 
     std::cout<< "\t                           shared for clustering [Default: 8]"<<std::endl;
@@ -147,8 +147,8 @@ int processGenomeOptions(int argc, char * argv[], genOptions * opts)
                 }
                 break;
             case 'l': opts->logLevel = atoi(optarg); break;
-            case '?': version_info(); genomeHelp(); exit(1); break;
-            default: abort(); break;
+            case '?': 
+            default: version_info(); genomeHelp(); exit(1); break;
         }
     }
     if (optind == argc)
@@ -170,64 +170,27 @@ int processReadsOptions(int argc, char *argv[], options *opts) {
     
     while( (c = getopt_long(argc, argv, "hVrl:k:p:m:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
         switch(c) {
-            case 'h': 
-                readsHelp(); 
-                exit(0); 
-                break;
-            case 'V': 
-                version_info(); 
-                exit(0); 
-                break;
-            case 'o': 
-                opts->output_fastq = optarg; 
-                break;
-            case 'p': 
-                opts->pat_file = optarg; 
-                break;
-            case 'b': 
-                opt_b_value = optarg; 
-                break;
-            case 'r': 
-                opts->report_stats = true; 
-                break;
-            case 'm': 
-                opts->max_mismatches = atoi(optarg); 
-                break;
-            case 'd': 
-                opts->lowDRsize = atoi(optarg); 
-                break;
-            case 'D': 
-                opts->highDRsize = atoi(optarg); 
-                break;
-            case 's': 
-                opts->lowSpacerSize = atoi(optarg); 
-                break;
-            case 'S': 
-                opts->highSpacerSize = atoi(optarg); 
-                break;
-            case 'c': 
-                opts->count = 1; 
-                break;
-            case 'k': 
-                opts->kmer_size = atoi(optarg); 
-                break;
-            case 'l': 
-                opts->logger_level = atoi(optarg); 
-                break;
-            case '?': 
-                version_info(); 
-                readsHelp(); 
-                exit(1); 
-                break;
+            case 'h': readsHelp(); exit(0); break;
+            case 'V': version_info(); exit(0); break;
+            case 'o': opts->output_fastq = optarg; break;
+            case 'p': opts->pat_file = optarg; break;
+            case 'b': opt_b_value = optarg; break;
+            case 'r': opts->report_stats = true; break;
+            case 'm': opts->max_mismatches = atoi(optarg); break;
+            case 'd': opts->lowDRsize = atoi(optarg); break;
+            case 'D': opts->highDRsize = atoi(optarg); break;
+            case 's': opts->lowSpacerSize = atoi(optarg); break;
+            case 'S': opts->highSpacerSize = atoi(optarg); break;
+            case 'c': opts->count = 1; break;
+            case 'k': opts->kmer_size = atoi(optarg); break;
+            case 'l': opts->logger_level = atoi(optarg); break;
             case 0:
                 if( strcmp( "dumpReads", long_options[index].name ) == 0 ) opts->detect = true;
                 else if ( strcmp( "454", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
                 else if ( strcmp( "illumina", long_options[index].name ) == 0 ) opts->illumina = true;
                 else if ( strcmp( "sanger", long_options[index].name ) == 0 ) opts->sanger = true;
                 break;
-            default: 
-                abort(); 
-                break;
+            default: version_info(); readsHelp(); exit(1); break;
         }
     }
     if (optind == argc)
@@ -355,6 +318,7 @@ int genomeMain(int argc, char * argv[])
     delete gFinder;
     return 0;  
 }
+
 //**************************************
 // rock and roll
 //**************************************

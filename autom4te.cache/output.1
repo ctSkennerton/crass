@@ -6132,6 +6132,87 @@ which seems to be undefined.  Please make sure it is defined." >&2;}
   #
   # CONFIG_HEADER
   #
+<<<<<<< HEAD
+=======
+_ACEOF
+
+# Transform confdefs.h into a sed script `conftest.defines', that
+# substitutes the proper values into config.h.in to produce config.h.
+rm -f conftest.defines conftest.tail
+# First, append a space to every undef/define line, to ease matching.
+echo 's/$/ /' >conftest.defines
+# Then, protect against being on the right side of a sed subst, or in
+# an unquoted here document, in config.status.  If some macros were
+# called several times there might be several #defines for the same
+# symbol, which is useless.  But do not sort them, since the last
+# AC_DEFINE must be honored.
+ac_word_re=[_$as_cr_Letters][_$as_cr_alnum]*
+# These sed commands are passed to sed as "A NAME B PARAMS C VALUE D", where
+# NAME is the cpp macro being defined, VALUE is the value it is being given.
+# PARAMS is the parameter list in the macro definition--in most cases, it's
+# just an empty string.
+ac_dA='s,^\\([	 #]*\\)[^	 ]*\\([	 ]*'
+ac_dB='\\)[	 (].*,\\1define\\2'
+ac_dC=' '
+ac_dD=' ,'
+
+uniq confdefs.h |
+  sed -n '
+	t rset
+	:rset
+	s/^[	 ]*#[	 ]*define[	 ][	 ]*//
+	t ok
+	d
+	:ok
+	s/[\\&,]/\\&/g
+	s/^\('"$ac_word_re"'\)\(([^()]*)\)[	 ]*\(.*\)/ '"$ac_dA"'\1'"$ac_dB"'\2'"${ac_dC}"'\3'"$ac_dD"'/p
+	s/^\('"$ac_word_re"'\)[	 ]*\(.*\)/'"$ac_dA"'\1'"$ac_dB$ac_dC"'\2'"$ac_dD"'/p
+  ' >>conftest.defines
+
+# Remove the space that was appended to ease matching.
+# Then replace #undef with comments.  This is necessary, for
+# example, in the case of _POSIX_SOURCE, which is predefined and required
+# on some systems where configure will not decide to define it.
+# (The regexp can be short, since the line contains either #define or #undef.)
+echo 's/ $//
+s,^[	 #]*u.*,/* & */,' >>conftest.defines
+
+# Break up conftest.defines:
+ac_max_sed_lines=50
+
+# First sed command is:	 sed -f defines.sed $ac_file_inputs >"$tmp/out1"
+# Second one is:	 sed -f defines.sed "$tmp/out1" >"$tmp/out2"
+# Third one will be:	 sed -f defines.sed "$tmp/out2" >"$tmp/out1"
+# et cetera.
+ac_in='$ac_file_inputs'
+ac_out='"$tmp/out1"'
+ac_nxt='"$tmp/out2"'
+
+while :
+do
+  # Write a here document:
+    cat >>$CONFIG_STATUS <<_ACEOF
+    # First, check the format of the line:
+    cat >"\$tmp/defines.sed" <<\\CEOF
+/^[	 ]*#[	 ]*undef[	 ][	 ]*$ac_word_re[	 ]*/b def
+/^[	 ]*#[	 ]*define[	 ][	 ]*$ac_word_re[(	 ]/b def
+b
+:def
+_ACEOF
+  sed ${ac_max_sed_lines}q conftest.defines >>$CONFIG_STATUS
+  echo 'CEOF
+    sed -f "$tmp/defines.sed"' "$ac_in >$ac_out" >>$CONFIG_STATUS
+  ac_in=$ac_out; ac_out=$ac_nxt; ac_nxt=$ac_in
+  sed 1,${ac_max_sed_lines}d conftest.defines >conftest.tail
+  grep . conftest.tail >/dev/null || break
+  rm -f conftest.defines
+  mv conftest.tail conftest.defines
+done
+rm -f conftest.defines conftest.tail
+
+echo "ac_result=$ac_in" >>$CONFIG_STATUS
+cat >>$CONFIG_STATUS <<\_ACEOF
+>>>>>>> Genome
   if test x"$ac_file" != x-; then
     {
       $as_echo "/* $configure_input  */" \

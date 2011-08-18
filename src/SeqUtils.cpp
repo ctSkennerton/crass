@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <iostream>
 #include "crass_defines.h"
+#include <zlib.h>
 
 std::string reverseComplement(std::string str)
 {

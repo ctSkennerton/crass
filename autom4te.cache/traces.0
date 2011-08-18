@@ -637,6 +637,14 @@ m4trace:configure.ac:6: -1- m4_pattern_allow([^am__isrc$])
 m4trace:configure.ac:6: -1- _AM_SUBST_NOTMAKE([am__isrc])
 m4trace:configure.ac:6: -1- m4_pattern_allow([^CYGPATH_W$])
 m4trace:configure.ac:6: -1- _AM_SET_OPTIONS([])
+<<<<<<< HEAD
+=======
+m4trace:configure.ac:6: -1- _m4_warn([obsolete], [The macro `AC_FOREACH' is obsolete.
+You should run autoupdate.], [/private/var/tmp/autoconf/autoconf-17.1~328/SRC/autoconf/lib/autoconf/general.m4:198: AC_FOREACH is expanded from...
+/usr/bin/../share/aclocal-1.10/options.m4:26: _AM_SET_OPTIONS is expanded from...
+/usr/bin/../share/aclocal-1.10/init.m4:103: AM_INIT_AUTOMAKE is expanded from...
+configure.ac:6: the top level])
+>>>>>>> Genome
 m4trace:configure.ac:6: -1- m4_pattern_allow([^PACKAGE$])
 m4trace:configure.ac:6: -1- m4_pattern_allow([^VERSION$])
 m4trace:configure.ac:6: -1- _AM_IF_OPTION([no-define], [], [AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE", [Name of package])
