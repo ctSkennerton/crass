@@ -998,6 +998,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     }
     else
     {
+
         logInfo("Found DR: " << true_DR, 2);
         (*trueDRs)[GID] = true_DR;
     
@@ -1303,12 +1304,12 @@ void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup ,
     //-----
     // Print all the information from a single round
     //
-    logInfo("Printing lookup tables from file: " << fileName << "to " << mOpts->output_fastq, 1);
+    logInfo("Printing lookup tables from file: " << fileName << "to " << mOutFileDir, 1);
     
     // Make file names
-    std::string kmer_lookup_name = mOpts->output_fastq + CRASS_DEF_DEF_KMER_LOOKUP_EXT;
-    std::string patterns_lookup_name = mOpts->output_fastq + CRASS_DEF_DEF_PATTERN_LOOKUP_EXT;
-    std::string spacer_lookup_name = mOpts->output_fastq + CRASS_DEF_DEF_SPACER_LOOKUP_EXT;
+    std::string kmer_lookup_name = mOutFileDir + CRASS_DEF_DEF_KMER_LOOKUP_EXT;
+    std::string patterns_lookup_name = mOutFileDir + CRASS_DEF_DEF_PATTERN_LOOKUP_EXT;
+    std::string spacer_lookup_name = mOutFileDir + CRASS_DEF_DEF_SPACER_LOOKUP_EXT;
     
     // Write!
     writeLookupToFile(kmer_lookup_name, kmerLookup);  
