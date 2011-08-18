@@ -101,6 +101,9 @@
 #define CRASS_DEF_MIN_SPACER_SIZE               26                  // minimum spacer size
 #define CRASS_DEF_MAX_SPACER_SIZE               50                  // maximum spacer size
 #define CRASS_DEF_NUM_DR_ERRORS                 0                   // maxiumum allowable errors in direct repeat
+#define CRASS_DEF_MAX_DEBUG_LOGGING             10
+#define CRASS_DEF_MAX_LOGGING                   4
+
 
 typedef struct {
     int count;

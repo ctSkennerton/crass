@@ -62,13 +62,12 @@ void mainHelp(void)
 {
     std::cout<<CRASS_DEF_PRG_NAME<<" can be executed on either contigs/genomes or on"<<std::endl;
     std::cout<<"files containing reads from any sequencing platform."<<std::endl;
-    std::cout<<"Please choose either "<<std::endl<<CRASS_DEF_PRG_NAME<<" genome"<<std::endl;
-    std::cout<<"OR"<<std::endl;
-    std::cout<<CRASS_DEF_PRG_NAME<<" reads"<<std::endl;
-    std::cout<<"for further information about each algorithm"<<std::endl<<std::endl;
-    std::cout<<"Usage:"<<std::endl;
-    std::cout<<"\t"<<CRASS_DEF_PRG_NAME<<" genome [options] <inputFiles>"<<std::endl;
-    std::cout<<"\t"<<CRASS_DEF_PRG_NAME<<" reads [options] <inputFiles>"<<std::endl;
+    std::cout<<"Please choose either "<<std::endl<<std::endl<<CRASS_DEF_PRG_NAME<<" genome [options] <inputFiles>"<<std::endl;
+    std::cout<<"\t   --OR--  "<<std::endl;
+    std::cout<<CRASS_DEF_PRG_NAME<<" reads [options] <inputFiles>"<<std::endl<<std::endl;
+    std::cout<<"for further information about each algorithm try:"<<std::endl;
+    std::cout<<"\t"<<CRASS_DEF_PRG_NAME<<" genome -h"<<std::endl;
+    std::cout<<"\t"<<CRASS_DEF_PRG_NAME<<" reads -h"<<std::endl;
 }
 
 void genomeHelp(void)
@@ -81,7 +80,11 @@ void genomeHelp(void)
     std::cout<< "\t-h --help                  This help message"<<std::endl;
     std::cout<< "\t-w --windowLength <INT>    The length of the search window. Can only be"<<std::endl; 
     std::cout<< "\t                           a number between 6 - 9 [Default: 8]"<<std::endl;
+#ifdef DEBUG
     std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 10]"<<std::endl;
+#else
+    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 4]"<<std::endl;
+#endif
     std::cout<< "\t-n --minNumRepeats <INT>   Total number of direct repeats in a CRISPR for"<<std::endl;
     std::cout<< "\t                           it to be considered real [Default: 3]"<<std::endl;
     std::cout<< "\t-o --outDir <DIRECTORY>    Output directory [default: .]"<<std::endl;
@@ -101,7 +104,11 @@ void readsHelp(void)
     std::cout<< "\t-h --help                  This help message"<<std::endl;
     std::cout<< "\t-k --kmerCount <INT>       The number of the kmers that need to be"<<std::endl; 
     std::cout<< "\t                           shared for clustering [Default: 8]"<<std::endl;
+#ifdef DEBUG
     std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 10]"<<std::endl;
+#else
+    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 4]"<<std::endl;
+#endif
     std::cout<< "\t-m --maxMismatches <INT>   Total number of mismatches to at most allow for"<<std::endl;
     std::cout<< "\t                           in search pattern [Default: 0]"<<std::endl;
     std::cout<< "\t-o --outDir <DIRECTORY>    Output directory [default: .]"<<std::endl;
@@ -127,6 +134,7 @@ int processGenomeOptions(int argc, char * argv[], genOptions * opts)
     int c;
     int index;
     int w_val;
+    int l_val;
     while( (c = getopt_long(argc, argv, "hVl:w:n:o:d:D:s:S:", gen_long_options, &index)) != -1 ) {
         switch(c) {
             case 'h': genomeHelp(); exit(0); break;
@@ -143,10 +151,33 @@ int processGenomeOptions(int argc, char * argv[], genOptions * opts)
                 {
                     // Change window length
                     opts->searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH;
-                    std::cerr<<"Changing window length to " << opts->searchWindowLength << " instead of " << w_val<<std::endl;
+                    std::cerr<<"WARNING: Specified window length higher than max. Changing window length to " << opts->searchWindowLength << " instead of " << w_val<<std::endl;
                 }
                 break;
-            case 'l': opts->logLevel = atoi(optarg); break;
+            case 'l': 
+                l_val =  atoi(optarg);
+#ifdef DEBUG
+                if (l_val > CRASS_DEF_MAX_DEBUG_LOGGING)
+                {
+                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<l_val<<std::endl;
+                    opts->logLevel = CRASS_DEF_MAX_DEBUG_LOGGING;
+                }
+                else
+                {
+                    opts->logLevel = l_val;
+                }
+#else
+                if(l_val > CRASS_DEF_MAX_LOGGING)
+                {
+                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<l_val<<std::endl;
+                    opts->logLevel = CRASS_DEF_MAX_LOGGING;
+                }
+                else
+                {
+                    opts->logLevel = l_val;
+                }
+#endif
+                break;
             case '?': 
             default: version_info(); genomeHelp(); exit(1); break;
         }
@@ -275,14 +306,14 @@ int genomeMain(int argc, char * argv[])
 { 
     
     genOptions genOpts = {
-        "./",            // output file directory
-        3,               // the minimum number of repeats needed for a crispr
-        23,              // minimum direct repeat size
-        47,              // maximum direct repeat size
-        26,              // minimum spacer size
-        50,              // maximum spacer size
-        8,               // the search window length
-        1                // logging minimum by default    
+        "./",                       // output file directory
+        3,                          // the minimum number of repeats needed for a crispr
+        CRASS_DEF_MIN_DR_SIZE,      // minimum direct repeat size
+        CRASS_DEF_MAX_DR_SIZE,      // maximum direct repeat size
+        CRASS_DEF_MIN_SPACER_SIZE,  // minimum spacer size
+        CRASS_DEF_MAX_SPACER_SIZE,  // maximum spacer size
+        8,                          // the search window length
+        1                           // logging minimum by default    
     };
     
     int optIdx = processGenomeOptions(argc, argv, &genOpts);
