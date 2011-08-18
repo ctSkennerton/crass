@@ -196,6 +196,7 @@ int processGenomeOptions(int argc, char * argv[], genOptions * opts)
 int processReadsOptions(int argc, char *argv[], options *opts) {
     int c;
     int index;
+    int l_val;
     //char *opt_o_value = NULL;
     char *opt_b_value = NULL;
     
@@ -214,7 +215,30 @@ int processReadsOptions(int argc, char *argv[], options *opts) {
             case 'S': opts->highSpacerSize = atoi(optarg); break;
             case 'c': opts->count = 1; break;
             case 'k': opts->kmer_size = atoi(optarg); break;
-            case 'l': opts->logger_level = atoi(optarg); break;
+            case 'l': 
+                l_val =  atoi(optarg);
+#ifdef DEBUG
+                if (l_val > CRASS_DEF_MAX_DEBUG_LOGGING)
+                {
+                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<l_val<<std::endl;
+                    opts->logger_level = CRASS_DEF_MAX_DEBUG_LOGGING;
+                }
+                else
+                {
+                    opts->logger_level = l_val;
+                }
+#else
+                if(l_val > CRASS_DEF_MAX_LOGGING)
+                {
+                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<l_val<<std::endl;
+                    opts->logger_level = CRASS_DEF_MAX_LOGGING;
+                }
+                else
+                {
+                    opts->logger_level = l_val;
+                }
+#endif
+                break;
             case 0:
                 if( strcmp( "dumpReads", long_options[index].name ) == 0 ) opts->detect = true;
                 else if ( strcmp( "454", long_options[index].name ) == 0 ) opts->fourFiveFour = true;

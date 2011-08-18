@@ -53,6 +53,8 @@
 #include "crass_defines.h"
 #include "Levensthein.h"
 #include <sstream>
+
+
 std::string Crispr::toString()
 {
     std::stringstream str;
@@ -134,7 +136,7 @@ int Crispr::averageSpacerLength()
     int sum = 0;
     for (int i = 0; i < numSpacers(); i++)
     {
-        sum += spacerStringAt(i).length();
+        sum += (int)spacerStringAt(i).length();
     }
     return sum/numSpacers();
 }
@@ -144,7 +146,7 @@ int Crispr::averageRepeatLength()
     int sum = 0;
     for (int i = 0; i < numRepeats(); i++)
     {
-        sum += repeatStringAt(i).length();
+        sum += (int)repeatStringAt(i).length();
     }
     return sum/numRepeats();
 }

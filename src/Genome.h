@@ -75,8 +75,11 @@ public:
     //destructor
     ~Crispr()
     {
-        //delete repeats;
+        mRepeats.clear();
+        mSequence.clear();
+        mRepeatLength = NULL;
     }
+
     
     // Getters and Setters
     inline repeatList repeats()
