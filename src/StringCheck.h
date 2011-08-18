@@ -1,10 +1,13 @@
-// File: NodeManager.cpp
+// File: StringCheck.h
 // Original Author: Michael Imelfort 2011
 // --------------------------------------------------------------------
 //
 // OVERVIEW:
+//
+// Give this guy a string, get a token, give this guy a token, get a string
+// All token are unique, all strings aren't!
 // 
-// Implementation of NodeManager functions
+// Basically a glorified map
 //
 // --------------------------------------------------------------------
 //  Copyright  2011 Michael Imelfort and Connor Skennerton
@@ -34,96 +37,34 @@
 //               A B R A C A D A B R  
 //              A B R A C A D A B R A 
 //
+
+#ifndef StringCheck_h
+#define StringCheck_h
+
 // system includes
 #include <iostream>
-#include <vector>
-#include <string>
+#include <map>
 
 // local includes
-#include "NodeManager.h"
-#include "LoggerSimp.h"
 #include "crass_defines.h"
-#include "CrisprNode.h"
-#include "SpacerInstance.h"
-#include "libcrispr.h"
-#include "StringCheck.h"
-#include "ReadHolder.h"
 
-NodeManager::NodeManager(std::string drSeq)
+// typedefs
+typedef int StringToken;
+
+class StringCheck 
 {
-    //-----
-    // constructor
-    //
-    mDirectRepeatSequence = drSeq;
-}
+    public:
+        StringCheck() { mNextFreeToken = 1; }  
+        ~StringCheck() {}  
+        
+        StringToken addString(std::string newStr);
+        std::string getString(StringToken token);
+        StringToken getToken(std::string queryStr);
 
-NodeManager::~NodeManager(void)
-{
-    //-----
-    // destructor
-    //
-    
-    // clean up al lthe cripsr nodes
-    NodeListIterator node_iter = mNodes.begin();
-    while(node_iter != mNodes.end())
-    {
-        if(NULL != *node_iter)
-        {
-            delete *node_iter;
-            *node_iter = NULL;
-        }
-        node_iter++;
-    }
-    mNodes.clear();
-    
-    SpacerListIterator spacer_iter = mSpacers.begin();
-    while(spacer_iter != mSpacers.end())
-    {
-        if(NULL != *spacer_iter)
-        {
-            delete *spacer_iter;
-            *spacer_iter = NULL;
-        }
-        spacer_iter++;
-    }
-    mSpacers.clear();
-}
+        // members
+        StringToken mNextFreeToken;                            // der
+        std::map<StringToken, std::string> mT2S_map;           // token to string map
+        std::map<std::string, StringToken> mS2T_map;           // string to token map
+};
 
-bool NodeManager::addReadholder(ReadHolder * RH)
-{
-    //-----
-    // add a readholder to this mofo and fix all the start stops
-    //
-    mReadList.push_back(RH);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif //StringCheck_h

@@ -260,15 +260,16 @@ int readsMain(int argc, char * argv[])
         false,         // 454 reads
         false,         // sanger reads
         false,         // output stats report
-        23,            // minimum direct repeat size
-        47,            // maximum direct repeat size
-        26,            // minimum spacer size
-        50,            // maximum spacer size
-        0,             // maxiumum allowable errors in direct repeat
+        CRASS_DEF_MIN_DR_SIZE,      // minimum direct repeat size
+        CRASS_DEF_MAX_DR_SIZE,      // maximum direct repeat size
+        CRASS_DEF_MIN_SPACER_SIZE,  // minimum spacer size
+        CRASS_DEF_MAX_SPACER_SIZE,  // maximum spacer size
+        CRASS_DEF_NUM_DR_ERRORS,    // maxiumum allowable errors in direct repeat
         "./",          // output file directory
         "\t",          // delimiter string for stats report
         NULL,          //  pattern file name
-        8              // the number of the kmers that need to be shared for clustering
+        CRASS_DEF_K_CLUST_MIN             // the number of the kmers that need to be shared for clustering
+
     };
     
     int optIdx = processReadsOptions(argc, argv, &opts);

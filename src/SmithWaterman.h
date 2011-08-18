@@ -57,7 +57,7 @@
 #include <string>
 #include <map>
 
-#define SW_MATCH                5
+#define SW_MATCH                (1.2)
 #define SW_MISMATCH             (-1)
 #define SW_GAP                  (-1)
 #define SW_SIM_SCORE(_a, _b)    ((_a == _b) ? SW_MATCH : SW_MISMATCH )
@@ -67,6 +67,7 @@ typedef std::pair<std::string, std::string> stringPair;
 double findMax(double a, double b, double c, double d, int * index);
 
 stringPair smithWaterman(std::string seqA, std::string seqB);
+stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aEndSearch, double similarity);
 stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aEndSearch);
 
 #endif // __SMITH_WATERMAN_H

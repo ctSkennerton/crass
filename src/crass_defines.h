@@ -62,7 +62,17 @@
 #define CRASS_DEF_SW_SEARCH_EXT                 8
 #define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD     0.75
 #define CRASS_DEF_KMER_SIZE                     7
-#define CRASS_DEF_NUM_KMERS_4_MODE              5
+#define CRASS_DEF_K_CLUST_MIN                   12
+// --------------------------------------------------------------------
+// HARD CODED PARAMS FOR FINDING TRUE DRs
+// --------------------------------------------------------------------
+#define CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF       (0.85)              // amount that a DR must agrre with the existsing DR within a zone to be added
+#define CRASS_DEF_NUM_KMERS_4_MODE              (5)                 // find the top XX occuring in the DR
+#define CRASS_DEF_NUM_KMERS_4_MODE_HALF         (CRASS_DEF_NUM_KMERS_4_MODE - (CRASS_DEF_NUM_KMERS_4_MODE/2)) // Ceil of 50% of CRASS_DEF_NUM_KMERS_4_MODE
+#define CRASS_DEF_MIN_READ_DEPTH                4                   // read depth used for consensus building
+#define CRASS_DEF_CONS_CUT_OFF                  (0.80)              // minimum identity to extend a DR from the "zone" outwards
+#define CRASS_DEF_COLLAPSED_THRESHOLD           (0.30)              // in the event that clustering has collapsed two DRs into one, this number is used to plait them apart
+#define CRASS_DEF_PARTIAL_SIM_CUT_OFF           (0.85)              // The similarity needed to exted into partial matches
 // --------------------------------------------------------------------
 // GENOME ALGORITHM DEFINES
 // --------------------------------------------------------------------
@@ -83,7 +93,13 @@
 // --------------------------------------------------------------------
  // USER OPTION STRUCTURE -- TODO: REMOVE THIS!
 // --------------------------------------------------------------------
-#define CRASS_DEF_MAX_DELIM_LENGTH 10                               // delimiter used in stats report
+#define CRASS_DEF_MAX_DELIM_LENGTH              10                  // delimiter used in stats report
+#define CRASS_DEF_MIN_DR_SIZE                   23                  // minimum direct repeat size
+#define CRASS_DEF_MAX_DR_SIZE                   45                  // maximum direct repeat size
+#define CRASS_DEF_MIN_SPACER_SIZE               26                  // minimum spacer size
+#define CRASS_DEF_MAX_SPACER_SIZE               50                  // maximum spacer size
+#define CRASS_DEF_NUM_DR_ERRORS                 0                   // maxiumum allowable errors in direct repeat
+
 typedef struct {
     int count;
     bool detect;
