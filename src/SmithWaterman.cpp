@@ -62,6 +62,7 @@
 #include "SmithWaterman.h"
 #include "SeqUtils.h"
 #include "LoggerSimp.h"
+#include "Levensthein.h"
 
 double findMax(double a, double b, double c, double d, int * index)
 {
@@ -99,18 +100,29 @@ double findMax(double a, double b, double c, double d, int * index)
 
 stringPair smithWaterman(std::string seqA, std::string seqB )
 {
+    //-----
+    // The SW you've grown to know and love
+    //
     int waste1, waste2;
-    return smithWaterman(seqA, seqB, &waste1, &waste2, 0, seqA.length());
+    return smithWaterman(seqA, seqB, &waste1, &waste2, 0, seqA.length(), 0);
 }
 
 stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aSearchLen)
+{
+    //-----
+    // Same as below but ignore similarity
+    //
+    return smithWaterman(seqA, seqB, aStartAlign, aEndAlign, aStartSearch, aSearchLen, 0);
+}
+
+stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aSearchLen, double similarity)
 {
     //-----
     // Trickle-ier verison of the original version of the smith waterman algorithm I found in this file
     // 
     // This function is seqA centric, it will align ALL of seqB to the parts of seqA which lie INCLUSIVELY
     // between aStartSearch and aEndSearch. It will return the UNIMPUTED alignment strings for A and B respectively
-    // in the strinPair variable AND it also stores the start and end indexes used to cut the seqA substring in the 
+    // in the stringPair variable AND it also stores the start and end indexes used to cut the seqA substring in the 
     // two int references  aStartAlign, aEndAlign 
     // 
     // Hoi!
@@ -136,7 +148,7 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
     int i_max = 0, j_max = 0;
     for (int i=1;i<=aSearchLen;i++)
     {
-        for(int j=0;j<=lengthSeqB;j++)
+        for(int j=1;j<=lengthSeqB;j++)
         {
             int index;
             matrix[i][j] = findMax(   matrix[i-1][j-1] + SW_SIM_SCORE(seqA[i-1 + aStartSearch],seqB[j-1]), \
@@ -145,7 +157,7 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
                                       0, \
                                       &index
                                   );
-            
+
             if(matrix[i][j] > matrix_max)
             {
                 matrix_max = matrix[i][j];
@@ -174,6 +186,7 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
             }
         }
     }
+    
     int current_i = i_max;
     int current_j = j_max;
     int next_i = I_i[current_i][current_j];
@@ -194,9 +207,35 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
     if(0 > current_i) { current_i = 0; } 
     
     *aStartAlign = current_i+ aStartSearch;
-    *aEndAlign = (*aStartAlign) + i_max - current_i + aStartSearch;
-//    logInfo( current_i << " : " << aStartSearch << " : " << i_max << " [[ " << (current_i+ aStartSearch) << " : " << (i_max - current_i + aStartSearch), 1);
-//    logInfo( current_j << " : " << j_max << " : " << current_j << " [[ " << (j_max - current_j), 1);
-    // return the substrings
-    return std::pair<std::string, std::string>(laurenize(seqA.substr(current_i+ aStartSearch, i_max - current_i + aStartSearch)), laurenize(seqB.substr(current_j, j_max - current_j)));
+    *aEndAlign = (*aStartAlign) + i_max - current_i - 1;
+    
+    // calculate similarity and return substrings is need be
+    std::string a_ret = seqA.substr(current_i+ aStartSearch, i_max - current_i + aStartSearch);
+    std::string b_ret = seqB.substr(current_j, j_max - current_j);
+    if(0 != similarity)
+    {
+        // a_ret is always shorter than or equal to seqB
+        double similarity_ld = 1 - ((double)(Levensthein_distance(a_ret, seqB) - (seqB.length() - a_ret.length()))/(double)a_ret.length());
+        if(similarity_ld >= similarity)
+           return std::pair<std::string, std::string>(a_ret, b_ret); 
+        else
+        {
+            // no go joe
+            *aStartAlign = 0;
+            *aEndAlign = 0;
+            return std::pair<std::string, std::string>("","");
+        }
+    }
+    else
+    {
+        // just return the substrings
+        return std::pair<std::string, std::string>(a_ret, b_ret);
+    }
 }
+
+
+
+
+
+
+

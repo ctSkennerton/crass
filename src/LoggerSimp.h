@@ -103,7 +103,11 @@ private:
 };
 
 static LoggerSimp* logger = LoggerSimp::Inst();                     // this makes the singleton available to all classes
-// which include LoggerSimp.h
+                                                                    // which include LoggerSimp.h
+// get the log level
+#define isLogging(ll) (logger->getLogLevel() >= ll) 
+
+
 // for logging info
 #define logInfo(cOUTsTRING, ll) { \
 if(logger->getLogLevel() >= ll) { \

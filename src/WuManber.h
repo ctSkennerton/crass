@@ -23,9 +23,14 @@ public:
     void Initialize( WuVector &patterns, 
                     bool bCaseSensitive = false, bool bIncludeSpecialCharacters = false, bool bIncludeExtendedAscii = false );
     string Search( size_t TextLength, const char *Text, WuVector &patterns, int &start_pos );
+    
 protected:
     size_t k;  // number of patterns;
     size_t m;  // largest common pattern length
+    
+    size_t k_saved;
+    size_t m_saved;
+    
     static const size_t B = 3;  // Wu Manber paper suggests B is 2 or 3 
     // small number of patterns, use B=2, use an exact table
     // for large number of patterns, use B=3 use compressed table (their code uses 400 as a cross over )

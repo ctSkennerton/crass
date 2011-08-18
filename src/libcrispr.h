@@ -47,15 +47,13 @@
 
 // local includes
 #include "crass_defines.h"
-#include "CrisprNode.h"
-#include "NodeManager.h"
 #include "WuManber.h"
 #include "libbitap.h"
 #include "bm.h"
 #include "kseq.h"
 #include "ReadHolder.h"
 #include "SeqUtils.h"
-
+#include "StringCheck.h"
 
 typedef std::map<std::string, bool> lookupTable;
 
@@ -63,8 +61,8 @@ typedef std::vector<ReadHolder *> ReadList;
 typedef std::vector<ReadHolder *>::iterator ReadListIterator;
 
 // direct repeat as a string and a list of the read objects that contain that direct repeat
-typedef std::map<std::string, ReadList *> ReadMap;
-typedef std::map<std::string, ReadList *>::iterator ReadMapIterator;
+typedef std::map<StringToken, ReadList *> ReadMap;
+typedef std::map<StringToken, ReadList *>::iterator ReadMapIterator;
 
 // The following two classes are simple data storages objects
 // they are stupidly public for that reason
@@ -118,15 +116,15 @@ class ReadMatch {
 //**************************************
 
 
-float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads);
+float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
-float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads);
+float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
-void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads );
+void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
-bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq);
+bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int * f_start, int * f_end);
 
-bool partialEnding (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq);
+bool partialEnding (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int * f_start, int * f_end);
 //**************************************
 // kmer operators
 //**************************************
@@ -151,7 +149,7 @@ bool isLowComplexity(DirectRepeat &dr_match, std::string read);
 
 std::string DRLowLexi(std::string matchedRead, DirectRepeat * dr_match,  ReadHolder * tmp_holder);
 
-void addReadHolder(ReadMap * mReads, ReadHolder * tmp_holder, std::string read_header, std::string read);
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder, std::string read_header, std::string read);
 
 //**************************************
 // lookup table shite
@@ -171,10 +169,6 @@ gzFile getFileHandle(const char * inputFile);
 
 bool inline keyExists(lookupTable &patterns_hash, std::string &direct_repeat);
 
-bool inline keyExists(ReadMap * mReads, std::string &direct_repeat);
-
 void map2Vector(lookupTable &patterns_hash, std::vector<std::string> &patterns);
-
-void map2Vector(ReadMap * mReads, std::vector<std::string> &patterns);
 
 #endif //libcrispr_h

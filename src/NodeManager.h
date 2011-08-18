@@ -50,6 +50,9 @@
 #include "crass_defines.h"
 #include "CrisprNode.h"
 #include "SpacerInstance.h"
+#include "libcrispr.h"
+#include "StringCheck.h"
+#include "ReadHolder.h"
 
 // typedefs
 typedef std::vector<CrisprNode *> NodeList;
@@ -61,11 +64,15 @@ class NodeManager {
     public:
         NodeManager(std::string drSeq);
         ~NodeManager(void);
+        
+        bool addReadholder(ReadHolder * RH);
 
     private:
         std::string mDirectRepeatSequence;  // the sequence of this managers direct repeat
         NodeList mNodes;                    // list of CrisprNodes this manager manages
         SpacerList mSpacers;                // list of all the spacers
+        ReadList mReadList;                 // list of readholders
+        
 };
 
 #endif // NodeManager_h

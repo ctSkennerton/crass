@@ -49,16 +49,28 @@
 // typedefs
 typedef std::vector<unsigned int> StartStopList;
 typedef std::vector<unsigned int>::iterator StartStopListIterator;
+typedef std::vector<unsigned int>::reverse_iterator StartStopListRIterator;
 
 class ReadHolder 
 {
     public:
-        ReadHolder() {}  
+        ReadHolder() { mLastDREnd = 0; mLastSpacerEnd = 0; }  
         ~ReadHolder() {}  
 
         void reverseComplementSeq(void);     // reverse complement the sequence and fix the start stops
         void reverseStartStops(void);            // fix start stops what got corrupted during revcomping
 
+        // update the DR after finding the TRUE DR
+        void updateStartStops(int frontOffset, std::string * DR, const options * opts);
+
+        // cut DRs and Specers
+        bool getFirstDR(std::string * retStr);
+        bool getNextDR(std::string * retStr);
+        bool getFirstSpacer(std::string * retStr);
+        bool getNextSpacer(std::string * retStr);        
+        std::string splitApart(void);
+        std::string splitApartSimple(void);
+        
         void printContents(void);
         void logContents(int logLevel);
     
@@ -67,6 +79,9 @@ class ReadHolder
         std::string RH_Seq;                   // The DR_lowlexi sequence of this read
         bool RH_WasLowLexi;                   // was the sequence DR_low lexi in the file?
         StartStopList RH_StartStops;          // start stops for DRs, (must be even in length!)
+        
+        int mLastDREnd;                       // the end of the last DR cut (offset of the iterator)
+        int mLastSpacerEnd;                   // the end of the last spacer cut (offset of the iterator)
 };
 
 #endif //ReadHolder_h

@@ -66,11 +66,13 @@
 // --------------------------------------------------------------------
 // HARD CODED PARAMS FOR FINDING TRUE DRs
 // --------------------------------------------------------------------
+#define CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF       (0.85)              // amount that a DR must agrre with the existsing DR within a zone to be added
 #define CRASS_DEF_NUM_KMERS_4_MODE              (5)                 // find the top XX occuring in the DR
 #define CRASS_DEF_NUM_KMERS_4_MODE_HALF         (CRASS_DEF_NUM_KMERS_4_MODE - (CRASS_DEF_NUM_KMERS_4_MODE/2)) // Ceil of 50% of CRASS_DEF_NUM_KMERS_4_MODE
 #define CRASS_DEF_MIN_READ_DEPTH                4                   // read depth used for consensus building
-#define CRASS_DEF_CONS_CUT_OFF                  (0.75)              // minimum identity to extend a DR from the "zone" outwards
-#define CRASS_DEF_COLLAPSED_THRESHOLD           (0.3)               // in the event that clustering has collapsed two DRs into one, this number is used to plait them apart
+#define CRASS_DEF_CONS_CUT_OFF                  (0.80)              // minimum identity to extend a DR from the "zone" outwards
+#define CRASS_DEF_COLLAPSED_THRESHOLD           (0.30)              // in the event that clustering has collapsed two DRs into one, this number is used to plait them apart
+#define CRASS_DEF_PARTIAL_SIM_CUT_OFF           (0.85)              // The similarity needed to exted into partial matches
 // --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------

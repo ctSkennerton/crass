@@ -45,6 +45,9 @@
 #include "crass_defines.h"
 #include "CrisprNode.h"
 #include "SpacerInstance.h"
+#include "libcrispr.h"
+#include "StringCheck.h"
+#include "ReadHolder.h"
 
 NodeManager::NodeManager(std::string drSeq)
 {
@@ -85,4 +88,42 @@ NodeManager::~NodeManager(void)
     }
     mSpacers.clear();
 }
+
+bool NodeManager::addReadholder(ReadHolder * RH)
+{
+    //-----
+    // add a readholder to this mofo and fix all the start stops
+    //
+    mReadList.push_back(RH);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
