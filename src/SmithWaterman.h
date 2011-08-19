@@ -66,8 +66,8 @@ typedef std::pair<std::string, std::string> stringPair;
 
 double findMax(double a, double b, double c, double d, int * index);
 
-stringPair smithWaterman(std::string seqA, std::string seqB);
-stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aEndSearch, double similarity);
-stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aEndSearch);
+stringPair smithWaterman(std::string& seqA, std::string& seqB);
+stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aEndSearch, double similarity);
+stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aEndSearch);
 
 #endif // __SMITH_WATERMAN_H

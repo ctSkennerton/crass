@@ -141,9 +141,9 @@ bool isSpacerAndDirectRepeatSimilar(DirectRepeat &dr_match);
 // Read Holder
 //**************************************
 
-std::string DRLowLexi(std::string matchedRead, DirectRepeat * dr_match,  ReadHolder * tmp_holder);
+std::string DRLowLexi(std::string& matchedRead,  ReadHolder * tmp_holder);
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder, std::string read_header, std::string read);
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder, std::string& read_header, std::string& read);
 
 //**************************************
 // lookup table shite
@@ -170,16 +170,16 @@ bool  findRepeats(void);
 
 void  trim(Crispr * candidateCRISPR, int minRepeatLength);
 
-void  checkFlank(int side, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence,int sequenceLength, std::string& read);
+void  checkFlank(side sT, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence,int sequenceLength, std::string& read);
 
-int scan(int side, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence, int sequenceLength, std::string& sequence);
+int scan(side sT, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence, int sequenceLength, std::string& sequence);
 
-void scanRight(Crispr * candidateCRISPR, std::string pattern, int minSpacerLength, int scanRange, int sequenceLength, std::string& sequence);
+void scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLength, int scanRange, int sequenceLength, std::string& sequence);
 
-bool  patternMatches(std::string pattern1, std::string pattern2, double confidence);
+bool  patternMatches(std::string& pattern1, std::string& pattern2, double confidence);
 
 int   min (int * array);
 
-int   getHammingDistance(std::string seq1, std::string seq2);
+int   getHammingDistance(std::string& seq1, std::string& seq2);
 
 #endif //libcrispr_h

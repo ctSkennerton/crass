@@ -20,7 +20,7 @@
 
 #include "Levensthein.h"
 #include <algorithm>
-int Levensthein_distance( std::string source,  std::string target) {
+int LevenstheinDistance( std::string source,  std::string target) {
     
     // Step 1
     

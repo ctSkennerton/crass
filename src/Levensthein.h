@@ -25,5 +25,5 @@
 typedef std::vector< std::vector<int> > Tmatrix; 
 
 
-int Levensthein_distance( std::string source,  std::string target);
+int LevenstheinDistance( std::string source,  std::string target);
 #endif

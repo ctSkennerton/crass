@@ -58,43 +58,18 @@
 // user input + system
 //**************************************
 
-void mainHelp(void)
+void help(void)
 {
+    std::cout<<"Usage:  "<<CRASS_DEF_PRG_NAME<<" [options]  <inputFiles>"<<std::endl<<std::endl;
     std::cout<<CRASS_DEF_PRG_NAME<<" can be executed on either contigs/genomes or on"<<std::endl;
     std::cout<<"files containing reads from any sequencing platform."<<std::endl;
-    std::cout<<"Please choose either "<<std::endl<<std::endl<<CRASS_DEF_PRG_NAME<<" genome [options] <inputFiles>"<<std::endl;
-    std::cout<<"\t   --OR--  "<<std::endl;
-    std::cout<<CRASS_DEF_PRG_NAME<<" reads [options] <inputFiles>"<<std::endl<<std::endl;
-    std::cout<<"for further information about each algorithm try:"<<std::endl;
-    std::cout<<"\t"<<CRASS_DEF_PRG_NAME<<" genome -h"<<std::endl;
-    std::cout<<"\t"<<CRASS_DEF_PRG_NAME<<" reads -h"<<std::endl;
+    std::cout<<"for further information try:"<<std::endl;
+    std::cout<<"\t"<<CRASS_DEF_PRG_NAME<<" -h"<<std::endl;
 }
 
-void genomeHelp(void)
-{
-    std::cout<<"Usage: "<<CRASS_DEF_PRG_NAME<<" genome -[dDsSwlnhoV] <inputFiles>"<<std::endl;
-    std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
-    std::cout<< "\t                           to search for [Default: 23]"<<std::endl;
-    std::cout<< "\t-D --maxDR <INT>           Maximim length of the direct repeat"<<std::endl; 
-    std::cout<< "\t                           to search for [Default: 47]"<<std::endl;
-    std::cout<< "\t-h --help                  This help message"<<std::endl;
-    std::cout<< "\t-w --windowLength <INT>    The length of the search window. Can only be"<<std::endl; 
-    std::cout<< "\t                           a number between 6 - 9 [Default: 8]"<<std::endl;
-#ifdef DEBUG
-    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 10]"<<std::endl;
-#else
-    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 4]"<<std::endl;
-#endif
-    std::cout<< "\t-n --minNumRepeats <INT>   Total number of direct repeats in a CRISPR for"<<std::endl;
-    std::cout<< "\t                           it to be considered real [Default: 3]"<<std::endl;
-    std::cout<< "\t-o --outDir <DIRECTORY>    Output directory [default: .]"<<std::endl;
-    std::cout<< "\t-s --minSpacer <INT>       Minimim length of the spacer to search for [Default: 26]"<<std::endl;
-    std::cout<< "\t-S --maxSpacer <INT>       Maximim length of the spacer to search for [Default: 50]"<<std::endl;
-    std::cout<< "\t-V --version               Program and version information"<<std::endl;
 
-}
 
-void readsHelp(void) 
+void usage(void) 
 {
     std::cout<<"Usage:  "<<CRASS_DEF_PRG_NAME<<" [options]  <inputFiles>"<<std::endl<<std::endl;
     std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
@@ -111,15 +86,19 @@ void readsHelp(void)
 #endif
     std::cout<< "\t-m --maxMismatches <INT>   Total number of mismatches to at most allow for"<<std::endl;
     std::cout<< "\t                           in search pattern [Default: 0]"<<std::endl;
+    std::cout<< "\t-n --minNumRepeats <INT>   Total number of direct repeats in a CRISPR for"<<std::endl;
+    std::cout<< "\t                           it to be considered real [Default: 3]"<<std::endl;
     std::cout<< "\t-o --outDir <DIRECTORY>    Output directory [default: .]"<<std::endl;
     std::cout<< "\t-s --minSpacer <INT>       Minimim length of the spacer to search for [Default: 26]"<<std::endl;
     std::cout<< "\t-S --maxSpacer <INT>       Maximim length of the spacer to search for [Default: 50]"<<std::endl;
     std::cout<< "\t-V --version               Program and version information"<<std::endl;
     std::cout<< "\t--dumpReads                Print reads containing CRISPR to file after the find stage"<<std::endl;
-
+    std::cout<< "\t-w --windowLength <INT>    The length of the search window. Can only be"<<std::endl; 
+    std::cout<< "\t                           a number between 6 - 9 [Default: 8]"<<std::endl;
 }
 
-void version_info() {
+void versionInfo(void) 
+{
     std::cout<<std::endl<<CRASS_DEF_LONG_NAME<<" ("<<CRASS_DEF_PRG_NAME<<")"<<std::endl<<"revison "<<CRASS_DEF_REVISION<<" version "<<CRASS_DEF_MAJOR_VERSION<<" subversion "<<CRASS_DEF_MINOR_VERSION<<" ("<<CRASS_DEF_VERSION<<")"<<std::endl<<std::endl;
     std::cout<<"---------------------------------------------------------------"<<std::endl;
     std::cout<<"Copyright (C) 2011 Connor Skennerton & Michael Imelfort"<<std::endl;
@@ -129,71 +108,8 @@ void version_info() {
     std::cout<<"---------------------------------------------------------------"<<std::endl;
 }
 
-int processGenomeOptions(int argc, char * argv[], options * opts)
+int processOptions(int argc, char *argv[], options *opts) 
 {
-    int c;
-    int index;
-    int w_val;
-    int l_val;
-    while( (c = getopt_long(argc, argv, "hVl:w:n:o:d:D:s:S:", long_options, &index)) != -1 ) {
-        switch(c) {
-            case 'h': genomeHelp(); exit(0); break;
-            case 'V': version_info(); exit(0); break;
-            case 'o': opts->output_fastq = optarg; break;
-            case 'n': opts->minNumRepeats = atoi(optarg); break;
-            case 'd': opts->lowDRsize = atoi(optarg); break;
-            case 'D': opts->highDRsize = atoi(optarg); break;
-            case 's': opts->lowSpacerSize = atoi(optarg); break;
-            case 'S': opts->highSpacerSize = atoi(optarg); break;
-            case 'w': 
-                w_val = atoi(optarg); 
-                if ((w_val < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (w_val > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
-                {
-                    // Change window length
-                    opts->searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH;
-                    std::cerr<<"WARNING: Specified window length higher than max. Changing window length to " << opts->searchWindowLength << " instead of " << w_val<<std::endl;
-                }
-                break;
-            case 'l': 
-                l_val =  atoi(optarg);
-#ifdef DEBUG
-                if (l_val > CRASS_DEF_MAX_DEBUG_LOGGING)
-                {
-                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<l_val<<std::endl;
-                    opts->logger_level = CRASS_DEF_MAX_DEBUG_LOGGING;
-                }
-                else
-                {
-                    opts->logger_level = l_val;
-                }
-#else
-                if(l_val > CRASS_DEF_MAX_LOGGING)
-                {
-                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<l_val<<std::endl;
-                    opts->logger_level = CRASS_DEF_MAX_LOGGING;
-                }
-                else
-                {
-                    opts->logger_level = l_val;
-                }
-#endif
-                break;
-            case '?': 
-            default: version_info(); genomeHelp(); exit(1); break;
-        }
-    }
-    if (optind == argc)
-    {
-        std::cerr<<CRASS_DEF_PRG_NAME<<" : [ERROR] No input files were provided. Try ./"<<CRASS_DEF_PRG_NAME" genome -h for help."<<std::endl;
-        exit(1);
-        //        printf("no files given\n");
-        //        exit(1);
-    }
-    return optind;
-
-}
-
-int processReadsOptions(int argc, char *argv[], options *opts) {
     int c;
     int index;
     int l_val;
@@ -213,8 +129,8 @@ int processReadsOptions(int argc, char *argv[], options *opts) {
                     std::cerr<<"WARNING: Specified window length higher than max. Changing window length to " << opts->searchWindowLength << " instead of " << w_val<<std::endl;
                 }
                 break;        
-            case 'h': readsHelp(); exit(0); break;
-            case 'V': version_info(); exit(0); break;
+            case 'h': help(); usage();exit(0); break;
+            case 'V': versionInfo(); exit(0); break;
             case 'o': opts->output_fastq = optarg; break;
             case 'p': opts->pat_file = optarg; break;
             case 'b': opt_b_value = optarg; break;
@@ -256,15 +172,13 @@ int processReadsOptions(int argc, char *argv[], options *opts) {
                 else if ( strcmp( "illumina", long_options[index].name ) == 0 ) opts->illumina = true;
                 else if ( strcmp( "sanger", long_options[index].name ) == 0 ) opts->sanger = true;
                 break;
-            default: version_info(); readsHelp(); exit(1); break;
+            default: versionInfo(); help();exit(1); break;
         }
     }
     if (optind == argc)
     {
         std::cerr<<CRASS_DEF_PRG_NAME<<" : [ERROR] No input files were provided. Try ./"<<CRASS_DEF_PRG_NAME" -h for help."<<std::endl;
         exit(1);
-        //        printf("no files given\n");
-        //        exit(1);
     }
     
     /* setup delimiter for stats report (if given) */
@@ -274,128 +188,8 @@ int processReadsOptions(int argc, char *argv[], options *opts) {
     }
     return optind;
 }
-//**************************************
-// main when using reads 
-//**************************************
-int readsMain(int argc, char * argv[])
-{
-    
-    /* application of default options */
-    options opts = {
-        0,             // count flag
-        false,         // exit after first find
-        1,             // logging minimum by default
-        false,         // illumina reads
-        false,         // 454 reads
-        false,         // sanger reads
-        false,         // output stats report
-        CRASS_DEF_MIN_DR_SIZE,      // minimum direct repeat size
-        CRASS_DEF_MAX_DR_SIZE,      // maximum direct repeat size
-        CRASS_DEF_MIN_SPACER_SIZE,  // minimum spacer size
-        CRASS_DEF_MAX_SPACER_SIZE,  // maximum spacer size
-        CRASS_DEF_NUM_DR_ERRORS,    // maxiumum allowable errors in direct repeat
-        "./",          // output file directory
-        "\t",          // delimiter string for stats report
-        NULL,          //  pattern file name
-        CRASS_DEF_K_CLUST_MIN,             // the number of the kmers that need to be shared for clustering
-        CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH,                          // the search window length
-        1                           // logging minimum by default 
-    };
-    
-    int optIdx = processReadsOptions(argc, argv, &opts);
-    
-    // initialize the log file
-    
-    std::string logFileName = opts.output_fastq+ "crass.log";
-    
-    intialiseGlobalLogger(logFileName, opts.logger_level);
-    
-    
-    if (optIdx >= argc) 
-    {
-        std::cerr<<CRASS_DEF_PRG_NAME<<" : [ERROR] specify FASTQ files to process!"<<std::endl;
-        exit(1);
-    }
-    
-    // The remaining command line arguments are FASTQ(s) to process
-    // put them in a vector to pass to the workhorse
-    std::vector<std::string> seq_files;
-    
-    while (optIdx < argc) 
-    {
-        //
-        std::string seq_file(argv[optIdx]);
-        seq_files.push_back(seq_file);
-        logTimeStamp();
-        optIdx++;
-    }
-    WorkHorse * mHorse = new WorkHorse(&opts);
-    mHorse->doWork(seq_files);
-    delete mHorse;
-    return 0;
-}
 
-//**************************************
-// Start Genome Go! 
-//**************************************
-int genomeMain(int argc, char * argv[])
-{ 
-    
-    options opts = {
-        0,             // count flag
-        false,         // exit after first find
-        1,             // logging minimum by default
-        false,         // illumina reads
-        false,         // 454 reads
-        false,         // sanger reads
-        false,         // output stats report
-        CRASS_DEF_MIN_DR_SIZE,      // minimum direct repeat size
-        CRASS_DEF_MAX_DR_SIZE,      // maximum direct repeat size
-        CRASS_DEF_MIN_SPACER_SIZE,  // minimum spacer size
-        CRASS_DEF_MAX_SPACER_SIZE,  // maximum spacer size
-        CRASS_DEF_NUM_DR_ERRORS,    // maxiumum allowable errors in direct repeat
-        "./",          // output file directory
-        "\t",          // delimiter string for stats report
-        NULL,          //  pattern file name
-        CRASS_DEF_K_CLUST_MIN,             // the number of the kmers that need to be shared for clustering
-        CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH,                          // the search window length
-        1                           // logging minimum by default 
-   
-    };
-    
-    int optIdx = processGenomeOptions(argc, argv, &opts);
-    
-    // initialize the log file
-    
-    std::string logFileName = opts.output_fastq+ "crass.log";
-    
-    intialiseGlobalLogger(logFileName, opts.logger_level);
-    
-    
-    if (optIdx >= argc) 
-    {
-        std::cerr<<CRASS_DEF_PRG_NAME<<" : [ERROR] specify FASTQ files to process!"<<std::endl;
-        exit(1);
-    }
-    
-    // The remaining command line arguments are FASTQ(s) to process
-    // put them in a vector to pass to the workhorse
-    std::vector<std::string> seq_files;
-    
-    while (optIdx < argc) 
-    {
-        //
-        std::string seq_file(argv[optIdx]);
-        seq_files.push_back(seq_file);
-        logTimeStamp();
-        optIdx++;
-    }
-    
-//    GenomeFinder * gFinder = new GenomeFinder(&genOpts);
-//    gFinder->goGenomeFinder(seq_files);
-//    delete gFinder;
-    return 0;  
-}
+
 
 //**************************************
 // rock and roll
@@ -403,20 +197,63 @@ int genomeMain(int argc, char * argv[])
 
 int main(int argc, char *argv[]) 
 {
-
-
-    if(argc < 2)
+    
+    /* application of default options */
+    options opts = {
+        0,                                      // count flag
+        false,                                  // exit after first find
+        CRASS_DEF_DEFAULT_LOGGING,              // logging minimum by default
+        false,                                  // illumina reads
+        false,                                  // 454 reads
+        false,                                  // sanger reads
+        false,                                  // output stats report
+        CRASS_DEF_MIN_DR_SIZE,                  // minimum direct repeat size
+        CRASS_DEF_MAX_DR_SIZE,                  // maximum direct repeat size
+        CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
+        CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
+        CRASS_DEF_NUM_DR_ERRORS,                // maxiumum allowable errors in direct repeat
+        "./",                                   // output file directory
+        "\t",                                   // delimiter string for stats report
+        NULL,                                   //  pattern file name
+        CRASS_DEF_K_CLUST_MIN,                  // the number of the kmers that need to be shared for clustering
+        CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH, // the search window length
+        CRASS_DEF_DEFAULT_MIN_NUM_REPEATS       // mininum number of repeats for long read algorithm 
+    };
+    
+    if(argc == 1) 
     {
-        mainHelp();
+        help();
         exit(1);
     }
-    else if(strcmp(argv[1], "genome") == 0) return genomeMain(argc - 1, argv + 1);
-    else if (strcmp(argv[1], "reads") == 0) return readsMain(argc - 1, argv + 1 );    
-    else
+    int opt_idx = processOptions(argc, argv, &opts);
+    
+    // initialize the log file
+    
+    std::string logFileName = opts.output_fastq+ "crass.log";
+    
+    intialiseGlobalLogger(logFileName, opts.logger_level);
+    
+    
+    if (opt_idx >= argc) 
     {
-        mainHelp();
+        std::cerr<<CRASS_DEF_PRG_NAME<<" : [ERROR] specify FASTQ files to process!"<<std::endl;
         exit(1);
     }
-
+    
+    // The remaining command line arguments are FASTQ(s) to process
+    // put them in a vector to pass to the workhorse
+    std::vector<std::string> seq_files;
+    
+    while (opt_idx < argc) 
+    {
+        //
+        std::string seq_file(argv[opt_idx]);
+        seq_files.push_back(seq_file);
+        logTimeStamp();
+        opt_idx++;
+    }
+    WorkHorse * mHorse = new WorkHorse(&opts);
+    mHorse->doWork(seq_files);
+    delete mHorse;
     return 0;
 }

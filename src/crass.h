@@ -52,19 +52,16 @@
 // user input + system
 //**************************************
 
-void  readsHelp(void);
+void  usage(void);
 
-void  mainHelp(void);
+void  help(void);
 
-void  version_info(void);
+void  versionInfo(void);
 
-int   processReadsOptions(int argc, char *argv[], options *opts);
+int   processOptions(int argc, char *argv[], options *opts);
 
-int   genomeMain(int argc, char * argv[]);
 
-int   readsMain(int argc, char * argv[]);
 
-int   processGenomeOptions(int argc, char * argv[], options * opts);
 
 
 #endif

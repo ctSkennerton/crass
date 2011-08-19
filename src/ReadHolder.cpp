@@ -66,7 +66,7 @@ void ReadHolder::reverseStartStops(void)
     
     StartStopList tmp_ss;
     
-    int seq_len = RH_Seq.length();
+    int seq_len = (int)RH_Seq.length();
     int true_start_offset = seq_len - RH_StartStops.back() - 1;
     
     StartStopListRIterator ss_iter = RH_StartStops.rbegin();
@@ -94,7 +94,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
     //
     // Take this opportunity to look for partials at either end of the read
     //
-    int DR_length = DR->length();
+    int DR_length = (int)DR->length();
     StartStopListIterator ss_iter = RH_StartStops.begin();
     while(ss_iter != RH_StartStops.end())
     {
@@ -120,7 +120,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         // correct if we have gone beyond the end of the read
         if(*ss_iter >= RH_Seq.length())
         {
-            *ss_iter = RH_Seq.length() - 1;
+            *ss_iter = (unsigned int)RH_Seq.length() - 1;
         }
         ss_iter++;
         
@@ -150,7 +150,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
     }
     
     // then the back
-    unsigned int end_dist = RH_Seq.length() - RH_StartStops.back();
+    unsigned int end_dist = (unsigned int)RH_Seq.length() - RH_StartStops.back();
     if(end_dist > opts->lowSpacerSize)
     {
         // we should look for a DR here
@@ -193,14 +193,20 @@ bool ReadHolder::getNextDR(std::string * retStr)
     int start_cut = -1;
     int end_cut = -1;
     if(ss_iter < RH_StartStops.end())
+    {
         start_cut = *ss_iter;
+    }
     else
         return false;
     ss_iter++;
     if(ss_iter < RH_StartStops.end())
+    {
         end_cut = *ss_iter;
+    }
     else
+    {
         return false;
+    }
         
     // check to see if we made any good of start and end cut
     int dist = end_cut - start_cut;
@@ -211,7 +217,9 @@ bool ReadHolder::getNextDR(std::string * retStr)
         return true;
     }
     else
+    {
         return false;
+    }
 }
 
 bool ReadHolder::getFirstSpacer(std::string * retStr)
@@ -265,21 +273,31 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
         ss_iter = RH_StartStops.begin() + mLastSpacerEnd;
     
         if(ss_iter < RH_StartStops.end())
+        {
             start_cut = *ss_iter;
+        }
         else
+        {
             return false;
+        }
         ss_iter++;
         if(ss_iter < RH_StartStops.end())
+        {
             end_cut = *ss_iter;
+        }
         else
+        {
             return false;
+        }
 
         mLastSpacerEnd += 2; 
     }
         
     // check to see if we made any good of start and end cut
     if(0 != start_cut)
+    {
         start_cut++;
+    }
     if(end_cut == RH_Seq.length() - 1)
     {
         *retStr = RH_Seq.substr(start_cut);
@@ -304,28 +322,44 @@ std::string ReadHolder::splitApart(void)
     {
         // start with a DR
         if(getFirstDR(&working_str))
+        {
             ss << "DR: " << working_str;
+        }
         else
+        {
             return "---";
+        }
         ss << sep_str;
 
         if(getFirstSpacer(&working_str))
+        {
             ss << "SP: " << working_str;
+        }
         else
+        {
             return "---";
+        }
         ss << sep_str;
 
         while(1)
         {
             if(getNextDR(&working_str))
+            {
                 ss << "DR: " << working_str;  
+            }
             else
+            {
                 break;
+            }
             ss << sep_str;
             if(getNextSpacer(&working_str))
+            {
                 ss  << "SP: "<< working_str;  
+            }
             else
+            {
                 break;
+            }
             ss << sep_str;
         }
     }
@@ -333,29 +367,45 @@ std::string ReadHolder::splitApart(void)
     {
         // start with a spacer
         if(getFirstSpacer(&working_str))
+        {
             ss << "SP: " << working_str;
+        }
         else
+        {
             return "---";
+        }
         ss << sep_str;
 
         if(getFirstDR(&working_str))
+        {
             ss << "DR: " << working_str;
+        }
         else
+        {
             return "---";
+        }
         ss << sep_str;
         
         // oooohh naughty
         while(1)
         {
             if(getNextSpacer(&working_str))
+            {
                 ss << "SP: " << working_str;  
+            }
             else
+            {
                 break;
+            }
             ss << sep_str;
             if(getNextDR(&working_str))
-                ss << "DR: " << working_str;  
+            {
+                ss << "DR: " << working_str; 
+            }
             else
+            {
                 break;
+            }
             ss << sep_str;
         }
     }

@@ -32,18 +32,22 @@
  *                               A
  */
 
-#include <stdio.h>
-#include <string.h>
-#include "SeqUtils.h"
+
 #include <string>
 #include <algorithm>
 #include <iostream>
-#include "crass_defines.h"
+#include <sstream>
 #include <zlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "crass_defines.h"
+#include "SeqUtils.h"
+
+
 
 std::string reverseComplement(std::string str)
 {
-    std::string revcomp_string = "";
+    std::stringstream revcomp_string;
     std::string::reverse_iterator rit;
     for ( rit = str.rbegin() ; rit < str.rend(); rit++ )
     {
@@ -51,72 +55,72 @@ std::string reverseComplement(std::string str)
         {
             case 'A':
             case 'a':
-                revcomp_string += 'T';
+                revcomp_string << 'T';
                 break;
             case 'C':
             case 'c':
-                revcomp_string += 'G';
+                revcomp_string << 'G';
                 break;
             case 'G':
             case 'g':
-                revcomp_string += 'C';
+                revcomp_string << 'C';
                 break;
             case 'T':
             case 't':
             case 'U':
             case 'u':
-                revcomp_string += 'A';
+                revcomp_string << 'A';
                 break;
             case 'M':
             case 'm':
-                revcomp_string +='K'; 
+                revcomp_string <<'K'; 
                 break;
             case 'R':
             case 'r':
-                revcomp_string += 'Y';
+                revcomp_string << 'Y';
                 break;
             case 'W':
             case 'w':
-                revcomp_string += 'W';
+                revcomp_string << 'W';
                 break;
             case 'S':
             case 's':
-                revcomp_string += 'S';
+                revcomp_string << 'S';
                 break;
             case 'Y':
             case 'y':
-                revcomp_string += 'R';
+                revcomp_string << 'R';
                 break;
             case 'K':
             case 'k':
-                revcomp_string += 'M';
+                revcomp_string << 'M';
                 break;
             case 'V':
             case 'v':
-                revcomp_string += 'B';
+                revcomp_string << 'B';
                 break;
             case 'H':
             case 'h':
-                revcomp_string += 'D';
+                revcomp_string << 'D';
                 break;
             case 'D':
             case 'd':
-                revcomp_string += 'H';
+                revcomp_string << 'H';
                 break;
             case 'B':
             case 'b':
-                revcomp_string += 'V';
+                revcomp_string << 'V';
                 break;
             case 'N':
             case 'n':
-                revcomp_string += 'N';
+                revcomp_string << 'N';
                 break;
             default:
-                revcomp_string += 'N';
+                revcomp_string << 'N';
                 break;
 		}
 	}
-    return revcomp_string;
+    return revcomp_string.str();
 }
 
 std::string laurenize (std::string seq1)

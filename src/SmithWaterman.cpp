@@ -74,41 +74,72 @@ double findMax(double a, double b, double c, double d, int * index)
     {
         if(c > d)
         {
-            if(c > b) { *index = 2; return c; }
-            else { *index = 1; return b; }
+            if(c > b) 
+            { 
+                *index = 2; 
+                return c; 
+            }
+            else 
+            { 
+                *index = 1; 
+                return b; 
+            }
         }
         else
         {
-            if(d > b) if(d > a) { *index = 3; return d; }
-            else { *index = 1; return b; }
+            if(d > b) if(d > a) 
+            { 
+                *index = 3; 
+                return d; 
+            }
+            else 
+            { *index = 1; 
+                return b; 
+            }
         }
     }
     else
     {
         if(c > d)
         {
-            if(c > a) { *index = 2; return c; }
-            else { *index = 0; return a; }
+            if(c > a) 
+            { 
+                *index = 2; 
+                return c; 
+            }
+            else 
+            { 
+                *index = 0; 
+                return a; 
+            }
         }
         else
         {
-            if(d > a) { *index = 3; return d; }
-            else { *index = 0; return a; }
+            if(d > a) 
+            { 
+                *index = 3; 
+                return d; 
+            }
+            else 
+            { 
+                *index = 0; 
+                return a; 
+            }
         }
     }
 }
 
-stringPair smithWaterman(std::string seqA, std::string seqB )
+stringPair smithWaterman(std::string& seqA, std::string& seqB )
 {
     //-----
     // The SW you've grown to know and love
     //
     int waste1, waste2;
 
-    return smithWaterman(seqA, seqB, &waste1, &waste2, 0, seqA.length(), 0);
+    return smithWaterman(seqA, seqB, &waste1, &waste2, 0, (int)seqA.length(), 0);
 }
 
-stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aSearchLen)
+stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aSearchLen)
 {
     //-----
     // Same as below but ignore similarity
@@ -116,7 +147,7 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
     return smithWaterman(seqA, seqB, aStartAlign, aEndAlign, aStartSearch, aSearchLen, 0);
 }
 
-stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aSearchLen, double similarity)
+stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aSearchLen, double similarity)
 {
     //-----
     // Trickle-ier verison of the original version of the smith waterman algorithm I found in this file
@@ -129,27 +160,27 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
     // Hoi!
     //
     // initialize some variables
-    int lengthSeqB = (int)seqB.length();
+    int length_seq_B = (int)seqB.length();
     
     // initialize matrix
-    double matrix[aSearchLen+1][lengthSeqB+1];
+    double matrix[aSearchLen+1][length_seq_B+1];
     for(int i=0;i<=aSearchLen;i++)
     {
-        for(int j=0;j<=lengthSeqB;j++)
+        for(int j=0;j<=length_seq_B;j++)
         {
             matrix[i][j]=0;
         }
     }
     
-    int I_i[aSearchLen+1][lengthSeqB+1];
-    int I_j[aSearchLen+1][lengthSeqB+1];
+    int I_i[aSearchLen+1][length_seq_B+1];
+    int I_j[aSearchLen+1][length_seq_B+1];
       
     //start populating matrix
     double matrix_max = -1;
     int i_max = 0, j_max = 0;
     for (int i=1;i<=aSearchLen;i++)
     {
-        for(int j=1;j<=lengthSeqB;j++)
+        for(int j=1;j<=length_seq_B;j++)
         {
             int index;
             matrix[i][j] = findMax(   matrix[i-1][j-1] + SW_SIM_SCORE(seqA[i-1 + aStartSearch],seqB[j-1]), \
@@ -216,7 +247,7 @@ stringPair smithWaterman(std::string seqA, std::string seqB, int * aStartAlign, 
     if(0 != similarity)
     {
         // a_ret is always shorter than or equal to seqB
-        double similarity_ld = 1 - ((double)(Levensthein_distance(a_ret, seqB) - (seqB.length() - a_ret.length()))/(double)a_ret.length());
+        double similarity_ld = 1 - ((double)(LevenstheinDistance(a_ret, seqB) - (seqB.length() - a_ret.length()))/(double)a_ret.length());
         if(similarity_ld >= similarity)
            return std::pair<std::string, std::string>(a_ret, b_ret); 
         else

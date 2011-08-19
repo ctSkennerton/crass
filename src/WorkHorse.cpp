@@ -137,10 +137,10 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
         
         // direct repeat sequence and unique ID
-        lookupTable patternsLookup;
+        lookupTable patterns_lookup;
         
         // the sequence of whole spacers and their unique ID
-        lookupTable readsFound;
+        lookupTable reads_found;
         
         // Use a different search routine, depending on if we allow mismatches or not.
         READ_TYPE rt = decideWhichSearch(input_fastq);
@@ -151,7 +151,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         }
         else
         {
-            mAveReadLength = bmSearchFastqFile(input_fastq, *mOpts, patternsLookup, readsFound, &mReads, &mStringCheck);
+            mAveReadLength = bmSearchFastqFile(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
         }
 
         logInfo("Average read length: "<<mAveReadLength, 2);
@@ -162,7 +162,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         // only nessessary in instances where there are short reads
         if(SHORT_READ == rt)
         {
-            findSingletons(input_fastq, *mOpts, patternsLookup, readsFound, &mReads, &mStringCheck);
+            findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
         }
         
         // There will be an abundance of forms for each direct repeat.
@@ -278,6 +278,7 @@ int WorkHorse::mungeDRs(void)
         }
         drg_iter++;
     }
+    return 0;
 }
 
 bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, DR_Cluster_Map * DR2GID_map, int * nextFreeGID, std::map<int, std::string> * trueDRs)
@@ -321,7 +322,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         // did this guy have all 5?
         if(got_all_mode_mers)
         {
-            int tmp_count = (mReads[*dr_iter])->size();
+            int tmp_count = (int)(mReads[*dr_iter])->size();
             if(tmp_count > master_read_count)
             {
                 master_read_count = tmp_count;
@@ -578,7 +579,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                         // We need to check that at least CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF percent of bases agree within the "Zone"
                         int this_DR_start_index = 0;
                         int zone_start_index = dr_zone_start;
-                        int comparison_length = tmp_DR.length();
+                        int comparison_length = (int)tmp_DR.length();
                         
                         // we only need to compare "within" the zone
                         if(DR_offset_map[*dr_iter] < dr_zone_start)
@@ -592,7 +593,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                         
                         // work out the comparison length
                         int eff_zone_length = dr_zone_end - zone_start_index;
-                        int eff_DR_length = tmp_DR.length() - this_DR_start_index;
+                        int eff_DR_length = (int)tmp_DR.length() - this_DR_start_index;
                         if(eff_zone_length < eff_DR_length)
                             comparison_length = eff_zone_length;
                         else
@@ -805,7 +806,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     if(0 == collapsed_options.size())
     {
         // update the DR start and ends
-        int diffs = dr_zone_end - dr_zone_start + 1 - true_DR.length();
+        int diffs = dr_zone_end - dr_zone_start + 1 - (int)true_DR.length();
         while(0 != diffs)
         {
             // we need to update the start or end
@@ -1071,7 +1072,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     return true;
 }
 
-bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std::string * kmer, const std::string * DR)
+bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std::string *  kmer, const std::string *  DR)
 {
     //-----
     // Work out if a Kmer is present in a string and store positions etc...
@@ -1142,7 +1143,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     //
 
     std::string DR = mStringCheck.getString(DRToken);
-    int str_len = DR.length();
+    int str_len = (int)DR.length();
     int off = str_len - CRASS_DEF_KMER_SIZE;
     int num_mers = off + 1;
     

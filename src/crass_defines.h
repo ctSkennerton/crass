@@ -77,7 +77,7 @@
 // --------------------------------------------------------------------
 // GENOME ALGORITHM DEFINES
 // --------------------------------------------------------------------
-#define  CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY 0.62
+#define CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY  0.62
 #define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF     12
 #define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF     30
 #define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH         6
@@ -86,6 +86,7 @@
 #define CRASS_DEF_SCAN_LENGTH                      30
 #define CRASS_DEF_SCAN_CONFIDENCE                  0.70
 #define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           0.75
+#define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          3
 // --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------
@@ -104,7 +105,7 @@
 #define CRASS_DEF_NUM_DR_ERRORS                 0                   // maxiumum allowable errors in direct repeat
 #define CRASS_DEF_MAX_DEBUG_LOGGING             10
 #define CRASS_DEF_MAX_LOGGING                   4
-
+#define CRASS_DEF_DEFAULT_LOGGING               1
 
 typedef struct {
     int count;

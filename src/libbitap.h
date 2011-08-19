@@ -39,17 +39,20 @@
 
 //#include <string.h>
 
-typedef enum {
+typedef enum 
+{
     anyJump, infixLeft, infixRight
 } jumpType;
 
-struct bitapJumpType {
+struct bitapJumpType 
+{
     int foffset, fmask, toffset, tmask;
     jumpType t;
 };
 /* This structure contains data that is private to libbitap and should not */
 /* be modified directly */
-typedef struct {
+typedef struct 
+{
     int l, n;            /* l is the number of states. n is the number of */
     /* 'or'ing operations stored. */
     int *s, *x;          /* s shows which letter is allowed in which place. */
