@@ -1,3 +1,4 @@
+
 // File: crass_defines.h
 // Original Author: Connor Skennerton on 7/05/11
 // --------------------------------------------------------------------
@@ -122,6 +123,8 @@ typedef struct {
     char delim[CRASS_DEF_MAX_DELIM_LENGTH];                         // delimiter used in stats report
     char * pat_file;
     int kmer_size;
+    int searchWindowLength;       // option 'w'
+    int minNumRepeats;            // option 'n'
 } options;
 
 
@@ -142,34 +145,36 @@ static struct option long_options [] = {
     {"454", no_argument, NULL, 0},
     {"illumina", no_argument, NULL, 0},
     {"sanger", no_argument, NULL, 0},
-    {NULL, no_argument, NULL, 0}
-};
-typedef struct {
-    //std::string inputFileName;
-    std::string outputFileDir;    // option 'o'
-    int minNumRepeats;            // option 'n'
-    int minRepeatLength;          // option 'd'
-    int maxRepeatLength;          // option 'D'
-    int minSpacerLength;          // option 's'
-    int maxSpacerLength;          // option 'S'
-    int searchWindowLength;       // option 'w'
-    int logLevel;                 // option 'l'
-} genOptions;
-
-static struct option gen_long_options [] = {
-    
-    {"minDR", required_argument, NULL, 'd'},
-    {"maxDR", required_argument, NULL, 'D'},
-    {"minSpacer", required_argument, NULL, 's'},
-    {"maxSpacer", required_argument, NULL, 'S'},
-    {"logLevel", required_argument, NULL, 'l'},
-    {"minNumRepeats", required_argument, NULL, 'n'},
-    {"version", no_argument, NULL, 'V'},
     {"windowLength", required_argument, NULL, 'w'},
-    {"outDir", required_argument, NULL, 'o'},
-    {"help", no_argument, NULL, 'h'},
+    {"minNumRepeats", required_argument, NULL, 'n'},
     {NULL, no_argument, NULL, 0}
 };
+//typedef struct {
+//    //std::string inputFileName;
+//    std::string outputFileDir;    // option 'o'
+//    int minNumRepeats;            // option 'n'
+//    int minRepeatLength;          // option 'd'
+//    int maxRepeatLength;          // option 'D'
+//    int minSpacerLength;          // option 's'
+//    int maxSpacerLength;          // option 'S'
+//    int searchWindowLength;       // option 'w'
+//    int logLevel;                 // option 'l'
+//} genOptions;
+//
+//static struct option gen_long_options [] = {
+//    
+//    {"minDR", required_argument, NULL, 'd'},
+//    {"maxDR", required_argument, NULL, 'D'},
+//    {"minSpacer", required_argument, NULL, 's'},
+//    {"maxSpacer", required_argument, NULL, 'S'},
+//    {"logLevel", required_argument, NULL, 'l'},
+//    {"minNumRepeats", required_argument, NULL, 'n'},
+//    {"version", no_argument, NULL, 'V'},
+//    {"windowLength", required_argument, NULL, 'w'},
+//    {"outDir", required_argument, NULL, 'o'},
+//    {"help", no_argument, NULL, 'h'},
+//    {NULL, no_argument, NULL, 0}
+//};
 
 
 

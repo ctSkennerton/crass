@@ -53,14 +53,19 @@
 
 class Crispr
 {
+public:
     typedef std::vector<int> repeatList;
     typedef std::vector<int>::iterator repeatListIterator;
 
-public:
     // constriuctors
+    
+    Crispr(void)
+    {
+        mRepeatLength = 0;
+    }
+    
     Crispr(std::string& _sequence)
     {
-        repeatList mRepeats;
         mRepeatLength = 0;
         mSequence = _sequence;
     }
@@ -82,6 +87,13 @@ public:
 
     
     // Getters and Setters
+    
+    inline void setSequence(std::string& _sequence)
+    {
+        mRepeatLength = 0;
+        mSequence = _sequence;
+    }
+
     inline repeatList repeats()
     {
         return mRepeats;
@@ -162,6 +174,12 @@ public:
     {
         mRepeats.clear();
         mRepeatLength = 0;
+    }
+    inline void superClear()
+    {
+        mRepeats.clear();
+        mSequence.clear();
+        
     }
     
     std::string repeatStringAt(int i);

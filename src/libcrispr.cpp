@@ -1,5 +1,5 @@
 // File: libcrispr.cpp
-// Original Author: Michael Imelfort 2011
+// Original Author: Michael Imelfort 2011  :)
 // --------------------------------------------------------------------
 //
 // OVERVIEW:
@@ -55,6 +55,7 @@
 #include "bm.h"
 #include "SeqUtils.h"
 #include "Levensthein.h"
+#include "Genome.h"
 
 //**************************************
 // DirectRepeat
@@ -103,6 +104,145 @@ KSEQ_INIT(gzFile, gzread);
 //**************************************
 // search functions
 //**************************************
+
+READ_TYPE decideWhichSearch(const char *input_fastq)
+{
+    //-----
+    // Wrapper used for searching reads for DRs
+    // depending on the length of the read. this funciton may use the boyer moore algorithm
+    // of the CRT search algorithm
+    //
+    gzFile fp = getFileHandle(input_fastq);
+    kseq_t *seq;
+    int l, read_counter = 0;
+    unsigned int total_base = 0;
+
+    // initialize seq
+    seq = kseq_init(fp);
+    
+    // read sequence  
+    while ( (l = kseq_read(seq)) >= 0 ) 
+    {
+        //std::string read = seq->seq.s;
+        //std::string read_header = seq->name.s;
+        int seq_length = (int)strlen(seq->seq.s);//read.length();
+        total_base += seq_length;
+        read_counter++;
+        if(read_counter > 100)
+            break;
+    }
+    gzclose(fp);
+    if((total_base / read_counter) > CRASS_DEF_READ_LENGTH_CUTOFF)
+    {
+        return LONG_READ;
+    }
+    return SHORT_READ;
+}
+
+
+// CRT search
+
+float crtSearchFastqFile(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck)
+{
+    logInfo("Long reads algorithm selected", 1);
+    //-----
+    // Code lifted from CRT, ported by connor and hacked by Mike.
+    // Should do well at finding crisprs in long reads
+    //
+    gzFile fp = getFileHandle(input_fastq);
+    kseq_t *seq;
+    int l, read_counter = 0;
+    unsigned int total_base = 0;
+    // initialize seq
+    seq = kseq_init(fp);
+    
+    // read sequence  
+    Crispr * candidateCRISPR = new Crispr();
+    while ( (l = kseq_read(seq)) >= 0 ) 
+    {
+        std::string read = seq->seq.s;
+        std::string read_header = seq->name.s;
+        int seq_length = (int)read.length();
+        
+        candidateCRISPR->setSequence(read);
+        
+        total_base += seq_length;
+
+        int actualRepeatLength;
+        
+        std::string pattern;
+        
+        //the mumber of bases that can be skipped while we still guarantee that the entire search
+        //window will at some point in its iteration thru the sequence will not miss a any repeat
+        int skips = opts.lowDRsize - (2 * opts.searchWindowLength - 1);
+        if (skips < 1)
+            skips = 1;
+
+        int searchEnd = seq_length - opts.highDRsize - opts.highSpacerSize - opts.searchWindowLength;
+        for (int j = 0; j <= searchEnd; j = j + skips)
+        {
+            
+            int beginSearch = j + opts.lowDRsize + opts.lowSpacerSize;
+            int endSearch = j + opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength;
+            
+            if (endSearch > seq_length)
+                endSearch = seq_length;
+            
+            if (endSearch < beginSearch) //should never occur
+                endSearch = beginSearch;
+            
+            std::string text = read.substr(beginSearch, (endSearch - beginSearch));
+            pattern = read.substr(j, opts.searchWindowLength);
+            //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
+            int patternInTextIndex = PatternMatcher::bmpSearch(text, pattern);
+            if (patternInTextIndex >= 0)
+            {
+                candidateCRISPR->addRepeat(j);
+                candidateCRISPR->addRepeat(beginSearch + patternInTextIndex);
+                scanRight(candidateCRISPR, pattern, opts.lowSpacerSize, 24, seq_length, read);
+            }
+            if ( (candidateCRISPR->numRepeats() >= opts.minNumRepeats) ) //make sure minNumRepeats is always at least 2
+            {
+                actualRepeatLength = candidateCRISPR->getActualRepeatLength(opts.searchWindowLength, opts.lowSpacerSize);
+                if ( (actualRepeatLength >= opts.lowDRsize) && (actualRepeatLength <= opts.highDRsize) )
+                {
+
+                    if (candidateCRISPR->hasNonRepeatingSpacers())
+                    {
+                        if (candidateCRISPR->hasSimilarlySizedSpacers())
+                        {
+                            checkFlank(leftSide, candidateCRISPR, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
+                            checkFlank(rightSide, candidateCRISPR, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
+                            candidateCRISPR->trim(opts.lowDRsize);
+                            
+                            ReadHolder * tmp_holder = new ReadHolder();
+                            Crispr::repeatListIterator rl_iter = (candidateCRISPR->repeats()).begin();
+                            while(rl_iter != (candidateCRISPR->repeats()).end())
+                            {
+                                tmp_holder->RH_StartStops.push_back(*rl_iter);
+                                //TODO -1 ?
+                                tmp_holder->RH_StartStops.push_back(*rl_iter + candidateCRISPR->repeatLength());
+                                rl_iter++;
+                            }
+                            
+                            addReadHolder(mReads, mStringCheck, tmp_holder, read_header, read);
+                            break;
+                            //j = searchEnd + 1;
+                        }
+                    }
+                }
+            }
+        }
+        candidateCRISPR->superClear();
+        read_counter++;
+    }
+    
+    delete candidateCRISPR;
+    kseq_destroy(seq); // destroy seq  
+    gzclose(fp);       // close the file handler  
+    logInfo("finished processing file:"<<input_fastq, 1);
+    return total_base / read_counter;
+}
 
 // boyer moore functions
 float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
@@ -194,9 +334,6 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
                         tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
                         tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
                         match_found = true;
-                        start = dr_match.DR_StartPos - 1;
-                        dr_match.reset();
-//                        continue;
                     } 
                     else 
                     {    
@@ -204,10 +341,9 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
                         // matched kmer/direct repeat
                         // minus 1 cause it will be incremented again at the top of the for loop
                         match_found = false;
-                        start = dr_match.DR_StartPos - 1;
-                        dr_match.reset();
-//                        continue;
                     }
+                    start = dr_match.DR_StartPos - 1;
+                    dr_match.reset();
                 }
             }
         }
@@ -230,158 +366,10 @@ float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTabl
     return total_base / match_counter;
 }
 
-float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck) 
+
+void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
-    
-    gzFile fp = getFileHandle(input_fastq);
-    kseq_t *seq;
-    int l, match_counter = 0;
-    unsigned int total_base = 0;
-    
-    // initialize seq
-    seq = kseq_init(fp);
-    
-    DirectRepeat dr_match;
-    
-    // read sequence  
-    while ( (l = kseq_read(seq)) >= 0 ) 
-    {
-        int seq_length = (int) (strlen(seq->seq.s));
-        int search_end = seq_length - opts.lowDRsize;
-        bool match_found = false;
-
-        total_base += seq_length;
-        
-        dr_match.reset();
-        
-        std::string read = seq->seq.s;
-
-        
-        bitapType b;
-        
-        ReadHolder * tmp_holder = new ReadHolder;
-
-        for (int start = 0; start < search_end; start++)
-        {
-            // don't search too far into the read if we don't need to
-            int search_begin = start + opts.lowDRsize + opts.lowSpacerSize;
-            
-            logInfo("search begin: "<<search_begin<<" search end: "<<search_end, 10);
-            
-            if (search_begin >= search_end )
-            {
-                break;
-            }
-            // make sure that we are still under the number of mismatches
-            if (dr_match.DR_NumMismatches > opts.max_mismatches)
-            {
-                break;
-            }
-            
-            //stupid std::string concatenation stuff cause of the requirements of libbitap!!
-            std::string substring_word = read.substr(start, opts.lowDRsize);
-            std::string query_word = ".*" + substring_word + ".*";
-            
-            
-            std::string subject_word = read.substr(search_begin, (read.length() - search_begin));
-            //const char * 
-            
-            logInfo("query: "<<query_word<<" subject: "<<subject_word, 10);
-            
-            NewBitap(&b, query_word.c_str());
-            
-            
-            const char * substrEnd = NULL;
-            const char * substrStart = NULL;
-            int numMismatches = 0;
-            
-            
-            if (NULL != (substrEnd = FindWithBitap (&b, subject_word.c_str(), (int)subject_word.length(), opts.max_mismatches, &numMismatches, &substrStart))) 
-            {
-                dr_match.DR_MatchStartPos = start;
-                dr_match.DR_StartPos = (int) (substrStart - subject_word.c_str()) + search_begin;
-
-                
-                dr_match.DR_MatchEndPos = start + opts.lowDRsize;
-                substrEnd = substrStart + opts.lowDRsize;
-                dr_match.DR_EndPos = dr_match.DR_StartPos + opts.lowDRsize ;
-                
-                            
-                ++dr_match.DR_MatchEndPos;
-                ++dr_match.DR_EndPos;
-                
-                while (numMismatches <= opts.max_mismatches && dr_match.DR_EndPos < seq_length) 
-                {
-                    char dr_A = read.at(dr_match.DR_MatchEndPos);
-                    char dr_B = read.at(dr_match.DR_EndPos);
-                    
-                    logInfo("Match end pos: "<<dr_match.DR_MatchEndPos<<" end pos: "<<dr_match.DR_EndPos, 10);
-                    logInfo(read.at(dr_match.DR_MatchEndPos) << " : " << dr_match.DR_MatchEndPos << " == " << read.at(dr_match.DR_EndPos) << " : " << dr_match.DR_EndPos, 10);
-                    
-                    if (dr_A != dr_B)
-                    {
-                        numMismatches++;
-                        if (numMismatches > opts.max_mismatches)
-                        {
-                            // since the number of mismatches would have been one higher from the above loop
-                            numMismatches--;
-                            break;
-                        }
-                    }
-                    
-                    ++dr_match.DR_MatchEndPos;
-                    ++dr_match.DR_EndPos;
-                }
-            
-                dr_match.DR_NumMismatches = numMismatches; 
-                
-                if (cutDirectRepeatSequence(dr_match, opts, read))
-                {
-
-                    patterns_hash[dr_match.DR_MatchSequence] = true;
-                    
-                    tmp_holder->RH_StartStops.push_back(dr_match.DR_MatchStartPos);
-                    tmp_holder->RH_StartStops.push_back(dr_match.DR_MatchEndPos);
-                    tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
-                    tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
-                    match_found = true;
-                    start = dr_match.DR_StartPos - 1;
-                    dr_match.reset();
-                    continue;
-                } 
-                else 
-                {
-                    start = dr_match.DR_StartPos - 1;
-                    // TODO True or false?
-                    match_found = false;
-                    dr_match.reset();
-                    continue;
-                }
-            }
-            DeleteBitap (&b);
-        }
-        
-        if (match_found)
-        {
-            readsFound[seq->name.s] = true;
-            addReadHolder(mReads, mStringCheck, tmp_holder, seq->name.s, read);
-        }
-        else
-        {
-            delete tmp_holder;
-        }
-        match_counter++;
-    }
-    
-    kseq_destroy(seq); // destroy seq  
-    gzclose(fp);       // close the file handler  
-    logInfo("finished processing file:"<<input_fastq, 1);
-
-    return total_base / match_counter;
-}
-
-void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
-{
+    logInfo("Beginning multipattern matcher: " << mReads->size(), 1);
     std::vector<std::string> patterns;
     
     map2Vector(patterns_hash, patterns);
@@ -422,79 +410,15 @@ void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTab
             {
                 dr_match.DR_EndPos = start_pos + dr_match.DR_Sequence.length();
                 
-                // TODO: change this to some smarter logic
-                // really silly way or breaking it up!!
-                int thirds = read.length()/3;
-                int f_start = -1;
-                int f_end = -1;
-                
                 // create the read holder
                 ReadHolder * tmp_holder = new ReadHolder;
-                
-                if (dr_match.DR_EndPos <= thirds)
-                {
-                    // first third
-                    tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
-                    tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
-                    if(partialEnding(dr_match, tmp_holder, read, &f_start, &f_end))
-                    {
-                        int dist = f_start - dr_match.DR_EndPos;
-                        if ((dist >= opts.lowSpacerSize) and (dist <= opts.highSpacerSize))
-                        {
-                            tmp_holder->RH_StartStops.push_back(f_start);
-                            tmp_holder->RH_StartStops.push_back(f_end);
-                        }
-                    }
-                }
-                else if (dr_match.DR_EndPos >= thirds*2)
-                {
-                    // last third
-                    if(partialStarting(dr_match, tmp_holder, read, &f_start, &f_end))
-                    {
-                        int dist = dr_match.DR_StartPos - f_end;
-                        if ((dist >= opts.lowSpacerSize) and (dist <= opts.highSpacerSize))
-                        {
-                            tmp_holder->RH_StartStops.push_back(f_start);
-                            tmp_holder->RH_StartStops.push_back(f_end);
-                        }
-                    }
-                    tmp_holder->RH_StartStops.push_back( dr_match.DR_StartPos);
-                    tmp_holder->RH_StartStops.push_back( dr_match.DR_EndPos);
-                }
-                else
-                {
-                    // middle third
-                    if (partialStarting(dr_match, tmp_holder, read, &f_start, &f_end))
-                    {
-                        int dist = dr_match.DR_StartPos - f_end;
-                        if ((dist >= opts.lowSpacerSize) and (dist <= opts.highSpacerSize))
-                        {
-                            tmp_holder->RH_StartStops.push_back(f_start);
-                            tmp_holder->RH_StartStops.push_back(f_end);
-                        }
-                        tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
-                        tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
-                    }
-                    else
-                    {
-                        tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
-                        tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
-                        if(partialEnding(dr_match, tmp_holder, read, &f_start, &f_end))
-                        {
-                            int dist = f_start - dr_match.DR_EndPos;
-                            if ((dist >= opts.lowSpacerSize) and (dist <= opts.highSpacerSize))
-                            {
-                                tmp_holder->RH_StartStops.push_back(f_start);
-                                tmp_holder->RH_StartStops.push_back(f_end);
-                            }
-                        }
-                    }
-                }
+                tmp_holder->RH_StartStops.push_back(dr_match.DR_StartPos);
+                tmp_holder->RH_StartStops.push_back(dr_match.DR_EndPos);
                 addReadHolder(mReads, mStringCheck, tmp_holder, seq->name.s, read);
             }
         }
     }
-    logInfo("finished multi pattern matcher", 1);
+    logInfo("finished multi pattern matcher: " << mReads->size(), 1);
 }
 
 //**************************************
@@ -601,85 +525,6 @@ bool isSpacerAndDirectRepeatSimilar(DirectRepeat &dr_match)
     if (similarity > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD)
     {
         return true;
-    }
-    return false;
-}
-
-bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int * f_start, int * f_end)
-{
-return false;
-    // search in the start of the read
-    logInfo("searching the beginning of the read for partials", 5);
-    int tetra_start = 0;
-    std::string tetramer = seq.substr(tetra_start, 4);
-    // check for its presence in the DR
-    int index = dr_match.DR_Sequence.find(tetramer);
-    
-    // if yes then find its maximal position ( it should reach the end of the DR)
-    if (index != string::npos) 
-    {
-        // find max pos
-        int mismatch = 0;
-        // find max pos allowing for mismatches 
-        while (mismatch <= CRASS_DEF_MAX_LOST_SOULS_MISMATCHES && index < (dr_match.DR_Sequence).length()) 
-        {
-            logInfo("dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start), 9);
-            
-            if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
-            index++;
-            tetra_start++;
-        }
-        if ((index == ((dr_match.DR_Sequence).length())) && (mismatch <= CRASS_DEF_MAX_LOST_SOULS_MISMATCHES)) 
-        {
-            // we have reached the end of the DR
-            logInfo("reached the end of the DR!", 9);
-            // tetra start will now equal the final base in the partial DR
-            logInfo("spacer: "<<tetra_start<<" : "<<dr_match.DR_StartPos - 1, 9 );
-            logInfo(seq.substr(tetra_start, (dr_match.DR_StartPos - tetra_start)), 9);
-            
-            *f_start = 0;
-            *f_end = tetra_start;
-            return true;
-        }
-    }
-    return false;
-}
-
-bool partialEnding (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int * f_start, int * f_end)
-{
-return false;
-    // search in the end of the read
-    logInfo("searching the end of the read for partials", 5);
-    // cut a tetramer
-    int tetra_start = seq.length() - 5;
-    std::string tetramer = seq.substr(tetra_start, 4);
-    // check for its presence in the DR
-    int index = dr_match.DR_Sequence.rfind(tetramer);
-
-    // if yes then find its maximal position ( it should reach the end of the DR)
-    if (index != string::npos) 
-    {
-        int mismatch = 0;
-        // find max pos allowing for mismatches 
-        while (mismatch <= CRASS_DEF_MAX_LOST_SOULS_MISMATCHES && index >= 0 ) 
-        {
-            logInfo("dr pos: "<<index<<" char: "<<dr_match.DR_Sequence.at(index)<<" seq pos: "<<tetra_start<<" char: "<<seq.at(tetra_start), 10);
-            if (dr_match.DR_Sequence.at(index) != seq.at(tetra_start)) mismatch++;
-            index--;
-            tetra_start--;
-        }
-        if (index == -1 && (mismatch <= CRASS_DEF_MAX_LOST_SOULS_MISMATCHES)) 
-        {
-            logInfo("reached the start of the DR!", 8);
-            // we have reached the start of the DR
-            // tetra start will now equal the first base in the partial DR
-            logInfo("spacer: "<<dr_match.DR_EndPos<<" : "<<tetra_start, 9 );
-            logInfo(seq.substr(dr_match.DR_EndPos, (tetra_start - dr_match.DR_EndPos + 1)), 9);
-            
-            *f_start = tetra_start;
-            *f_end = seq.length() - 1;
-            return true;
-        }
     }
     return false;
 }
@@ -791,3 +636,346 @@ void map2Vector(lookupTable &patterns_hash, std::vector<std::string> &patterns)
     }
 }
 
+
+//*************************************
+// Old genome finder stuff
+//*************************************
+//bool goGenomeFinder(std::vector<std::string>& inputFiles)
+//{
+//    std::vector<std::string>::iterator inputFileName = inputFiles.begin();
+//    while (inputFileName != inputFiles.end()) 
+//    {
+//        gzFile fp = getFileHandle(inputFileName->c_str());
+//        std::cout<<std::endl<<std::endl<<"Reading file "<< *inputFileName<<std::endl;
+//        
+//        kseq_t *seq;
+//        seq = kseq_init(fp);
+//        int l;
+//        // read sequence  
+//        while ( (l = kseq_read(seq)) >= 0 ) 
+//        {
+//            mSequence = seq->seq.s;
+//            mHeader = seq->name.s;
+//            mSequenceLength = (int)mSequence.length();
+//            std::cout<<mSequenceLength<<std::endl;
+//            findRepeats();            
+//        }
+//        inputFileName++;
+//    }
+//    
+//    logInfo("Done!",1);
+//    return true;
+//}
+//
+
+void printGenomeCrispr(std::vector<Crispr*>& CRISPRVector, options& opts, std::string& mHeader, std::string& mSequence, bool repeatsFound)
+{
+    
+    std::ofstream outputFileStream;
+    
+    std::string outputFileName = opts.output_fastq + "crass_genome.out";
+    
+    std::cout<<"Writing results in file " << outputFileName <<std::endl;            
+    outputFileStream.open(outputFileName.c_str());
+    //out = new PrintStream(outputFileStream);
+    
+    //CTS//
+    //outputFileStream<<"Sequence '" + sequence.getName() + "' (" + sequence.length() + " bp)\n");
+    //outputFileStream<<"\n");
+    outputFileStream<<"ORGANISM: " << mHeader <<std::endl; 
+    outputFileStream<<"BASES: " << mSequence.length() << std::endl<< std::endl;
+    if (repeatsFound)
+    {
+        
+        std::string repeat, spacer, prevSpacer;
+        repeat = spacer = prevSpacer = "";
+        
+        //add 1 to each position, to offset programming languagues that begin at 0 rather than 1
+        std::vector<Crispr*>::iterator crispr_iter = CRISPRVector.begin();
+        int i = 1;
+        while (crispr_iter != CRISPRVector.end()) 
+        {
+            outputFileStream<<"CRISPR"<<i<<" RANGE: "<< (*crispr_iter)->start() + 1 <<"-"<<(*crispr_iter)->end() + 1<<std::endl;           
+            outputFileStream<<(*crispr_iter)->toString();
+            
+            outputFileStream<<"Total Repeats: " << (*crispr_iter)->numRepeats() <<" Average Repeat Length: " <<(*crispr_iter)->averageRepeatLength();
+            outputFileStream<<" Average Spacer Length: " <<  (*crispr_iter)->averageSpacerLength()<<std::endl;
+            outputFileStream<<std::endl<<std::endl;
+            crispr_iter++; i++;
+        }
+        
+    }
+    else
+    {
+        outputFileStream<<"No CRISPR elements were found."<<std::endl;
+    }
+    
+    
+    std::vector<Crispr*>::iterator crispr_iter = CRISPRVector.begin();
+    while (crispr_iter != CRISPRVector.end()) 
+    {
+        if ((*crispr_iter) != NULL) 
+        {
+            delete (*crispr_iter);
+            *crispr_iter = NULL;
+        }
+        crispr_iter++;
+    }
+    
+}
+
+
+void checkFlank(int side, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence, int sequenceLength, std::string& read)
+{
+    bool moreToSearch = true;
+    
+    while (moreToSearch)
+    {
+        int result = scan(side, candidateCRISPR, minSpacerLength, scanRange, confidence, sequenceLength, read);
+        if (result > 0)  //if another repeat found on flank
+        {
+            if (side == leftSide)
+                candidateCRISPR->insertRepeatAt(result, 0);
+            else if (side == rightSide)
+                candidateCRISPR->addRepeat(result);
+        }
+        else
+            moreToSearch = false;
+    }
+    
+}
+
+/*
+ scan to the right and left of the first and last repeat to see if there is a region
+ that is similar to the repeats.  necessary in case we missed a repeat because of
+ inexact matches or a result of one of the filters
+ */
+int scan(int side, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence, int mSequenceLength, std::string& mSequence)
+{
+    int repeatSpacing1, repeatSpacing2, avgRepeatSpacing;
+    int firstRepeatIndex, lastRepeatIndex, candidateRepeatIndex;
+    std::string repeatString, candidateRepeatString, newCandidateRepeatString;
+    
+    int repeatLength = candidateCRISPR->repeatLength();
+    int numRepeats = candidateCRISPR->numRepeats();
+    
+    firstRepeatIndex = candidateCRISPR->repeatAt(0);
+    lastRepeatIndex = candidateCRISPR->repeatAt(numRepeats-1);
+    
+    if (side == leftSide)
+    {
+        repeatString = candidateCRISPR->repeatStringAt(0);
+        repeatSpacing1 = candidateCRISPR->repeatSpacing(0, 1);
+        if (numRepeats >= 3)
+        {
+            repeatSpacing2 = candidateCRISPR->repeatSpacing(1, 2);
+            avgRepeatSpacing = (repeatSpacing1 + repeatSpacing2)/2;
+        }
+        else
+            avgRepeatSpacing = repeatSpacing1;
+        
+        candidateRepeatIndex = firstRepeatIndex - avgRepeatSpacing;
+    }
+    
+    else //if (side.equals("right"))
+    {
+        repeatString = candidateCRISPR->repeatStringAt(numRepeats-1);
+        repeatSpacing1 = candidateCRISPR->repeatSpacing(numRepeats-2, numRepeats-1);
+        if (numRepeats >= 3)
+        {
+            repeatSpacing2 = candidateCRISPR->repeatSpacing(numRepeats-3, numRepeats-2);
+            avgRepeatSpacing = (repeatSpacing1 + repeatSpacing2)/2;
+        }
+        else
+            avgRepeatSpacing = repeatSpacing1;
+        
+        candidateRepeatIndex = lastRepeatIndex + avgRepeatSpacing;
+    }
+    
+    int begin = candidateRepeatIndex - scanRange;
+    int end   = candidateRepeatIndex + scanRange;
+    
+    /******************** range checks ********************/
+    //check that we do not search too far within an existing repeat when scanning right and left
+    int scanLeftMaxEnd    = firstRepeatIndex - repeatLength - minSpacerLength;
+    int scanRightMinBegin = lastRepeatIndex + repeatLength + minSpacerLength;
+    
+    if (side == leftSide)
+    {
+        if (end > scanLeftMaxEnd)
+            end = scanLeftMaxEnd;
+    }
+    
+    if (side == rightSide)
+    {
+        if (begin < scanRightMinBegin)
+            begin = scanRightMinBegin;
+    }
+    
+    //out of bounds check for scanning left
+    if ( (begin) < 0)
+    {
+        return 0;
+    }
+    //out of bounds check for scanning right
+    if ( (begin + repeatLength) > mSequenceLength)
+    {
+        return 0;
+    }
+    if ( (end + repeatLength) > mSequenceLength)
+    {
+        end = mSequenceLength - repeatLength;
+    }
+    
+    if ( begin >= end)
+        return 0;
+    /******************** end range checks ********************/
+    
+    int array[end - begin + 1];
+    
+    int index = 0;
+    for (int i = begin; i <= end; i++)
+    {
+        candidateRepeatString = mSequence.substr(i, repeatLength);
+        array[index] = getHammingDistance(repeatString, candidateRepeatString);
+        index++;
+    }
+    
+    //min(array) returns the index of the smallest value in array  in this case, it refers to
+    //the candidate string theat is closest to the repeatString.  uses hamming distance as levenshteinDistance is not useful for this particular task
+    int newCandidateRepeatIndex = begin + min(array);
+    newCandidateRepeatString = mSequence.substr(newCandidateRepeatIndex, repeatLength);
+    
+    bool match = patternMatches(repeatString, newCandidateRepeatString, confidence);
+    
+    if (match)
+    {
+        return newCandidateRepeatIndex;
+    }
+    else
+    {
+        return 0;
+    }
+    
+}
+
+void scanRight(Crispr * candidateCRISPR, std::string pattern, int minSpacerLength, int scanRange, int mSequenceLength, std::string& mSequence)
+{
+    int numRepeats = candidateCRISPR->numRepeats();
+    int patternLength = (int)pattern.length();
+    
+    int lastRepeatIndex = candidateCRISPR->repeatAt(numRepeats-1);
+    
+    int secondToLastRepeatIndex = candidateCRISPR->repeatAt(numRepeats-2);
+    int repeatSpacing = lastRepeatIndex - secondToLastRepeatIndex;
+    
+    int candidateRepeatIndex, beginSearch, endSearch, position;
+    
+    bool moreToSearch = true;
+    while (moreToSearch)
+    {
+        candidateRepeatIndex = lastRepeatIndex + repeatSpacing;
+        beginSearch = candidateRepeatIndex - scanRange;
+        endSearch = candidateRepeatIndex + patternLength + scanRange;
+        
+        /******************** range checks ********************/
+        //check that we do not search too far within an existing repeat when scanning right
+        int scanRightMinBegin = lastRepeatIndex + patternLength + minSpacerLength;
+        
+        if (beginSearch < scanRightMinBegin)
+        {
+            beginSearch = scanRightMinBegin;
+        }
+        //        std::cout<<beginSearch<<" "<<mSequenceLength<<std::endl;
+        //System.outputFileStream<<"beginSearch " + beginSearch + "  " + "endSearch" + endSearch);
+        if (beginSearch > mSequenceLength - 1)
+        {
+            return;
+        }
+        if (endSearch > mSequenceLength)
+        {
+            endSearch = mSequenceLength;
+        }
+        
+        if ( beginSearch >= endSearch)
+        {
+            return;
+        }
+        /******************** end range checks ********************/
+        
+        std::string text = mSequence.substr(beginSearch, (endSearch - beginSearch));
+        //        std::cout<<pattern<<"\t"<<text<<std::endl;
+        position = PatternMatcher::bmpSearch(text, pattern);
+        //        std::cout<<"bm pos: "<<position<<std::endl;
+        
+        if (position >= 0)
+        {
+            candidateCRISPR->addRepeat(beginSearch + position);
+            secondToLastRepeatIndex = lastRepeatIndex;
+            lastRepeatIndex = beginSearch + position;
+            repeatSpacing = lastRepeatIndex - secondToLastRepeatIndex;
+            if (repeatSpacing < (minSpacerLength + patternLength))
+            {
+                moreToSearch = false;
+            }
+        }
+        else
+        {
+            moreToSearch = false;
+        }
+    }
+    return;
+}
+
+
+bool patternMatches(std::string pattern1, std::string pattern2, double confidence)
+{
+    float max_length = std::max((int)pattern1.length(), (int)pattern2.length());
+    float edit_distance =  Levensthein_distance(pattern1, pattern2);
+    float similarity = 1.0 - (edit_distance/max_length);
+    if (similarity >= confidence)
+        return true;
+    else
+        return false;
+}
+
+int min (int * array)
+{
+    int min = array[0];
+    int minIndex = 0;
+    // get the number of elements in the array
+    int length = (sizeof(*array)/sizeof(array[0]));
+    
+    for (int i = 0; i < length; i++)
+    {
+        if (array[i] < min)
+        {
+            min = array[i];
+            minIndex = i;
+        }
+    }
+    return minIndex;
+}
+
+
+int getHammingDistance(std::string seq1, std::string seq2)
+{
+    int length = (int)seq1.length();
+    int hammingDistance = 0;
+    
+    if (seq1.length() != seq2.length())
+    {
+        length = (int)std::min(seq1.length(), seq2.length());
+        hammingDistance = (int)seq1.length() - (int)seq2.length();
+    }
+    
+    for (int i =0; i < length; i++)
+    {
+        if ( seq1.at(i) != seq2.at(i))
+        {
+            hammingDistance++;
+        }
+    }
+    
+    return hammingDistance;
+}

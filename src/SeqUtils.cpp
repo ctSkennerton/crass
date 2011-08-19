@@ -32,6 +32,8 @@
  *                               A
  */
 
+#include <stdio.h>
+#include <string.h>
 #include "SeqUtils.h"
 #include <string>
 #include <algorithm>

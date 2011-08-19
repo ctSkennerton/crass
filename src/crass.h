@@ -64,7 +64,7 @@ int   genomeMain(int argc, char * argv[]);
 
 int   readsMain(int argc, char * argv[]);
 
-int   processGenomeOptions(int argc, char * argv[], genOptions * opts);
+int   processGenomeOptions(int argc, char * argv[], options * opts);
 
 
 #endif

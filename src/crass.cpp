@@ -1,3 +1,4 @@
+
 /*
  *  crass.cpp is part of the CRisprASSembler project
  *  
@@ -51,7 +52,6 @@
 #include "LoggerSimp.h"
 #include "SeqUtils.h"
 #include "WorkHorse.h"
-#include "GenomeFinder.h"
 
 
 //**************************************
@@ -129,22 +129,22 @@ void version_info() {
     std::cout<<"---------------------------------------------------------------"<<std::endl;
 }
 
-int processGenomeOptions(int argc, char * argv[], genOptions * opts)
+int processGenomeOptions(int argc, char * argv[], options * opts)
 {
     int c;
     int index;
     int w_val;
     int l_val;
-    while( (c = getopt_long(argc, argv, "hVl:w:n:o:d:D:s:S:", gen_long_options, &index)) != -1 ) {
+    while( (c = getopt_long(argc, argv, "hVl:w:n:o:d:D:s:S:", long_options, &index)) != -1 ) {
         switch(c) {
             case 'h': genomeHelp(); exit(0); break;
             case 'V': version_info(); exit(0); break;
-            case 'o': opts->outputFileDir = optarg; break;
+            case 'o': opts->output_fastq = optarg; break;
             case 'n': opts->minNumRepeats = atoi(optarg); break;
-            case 'd': opts->minRepeatLength = atoi(optarg); break;
-            case 'D': opts->maxRepeatLength = atoi(optarg); break;
-            case 's': opts->minSpacerLength = atoi(optarg); break;
-            case 'S': opts->maxSpacerLength = atoi(optarg); break;
+            case 'd': opts->lowDRsize = atoi(optarg); break;
+            case 'D': opts->highDRsize = atoi(optarg); break;
+            case 's': opts->lowSpacerSize = atoi(optarg); break;
+            case 'S': opts->highSpacerSize = atoi(optarg); break;
             case 'w': 
                 w_val = atoi(optarg); 
                 if ((w_val < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (w_val > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
@@ -160,21 +160,21 @@ int processGenomeOptions(int argc, char * argv[], genOptions * opts)
                 if (l_val > CRASS_DEF_MAX_DEBUG_LOGGING)
                 {
                     std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<l_val<<std::endl;
-                    opts->logLevel = CRASS_DEF_MAX_DEBUG_LOGGING;
+                    opts->logger_level = CRASS_DEF_MAX_DEBUG_LOGGING;
                 }
                 else
                 {
-                    opts->logLevel = l_val;
+                    opts->logger_level = l_val;
                 }
 #else
                 if(l_val > CRASS_DEF_MAX_LOGGING)
                 {
                     std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<l_val<<std::endl;
-                    opts->logLevel = CRASS_DEF_MAX_LOGGING;
+                    opts->logger_level = CRASS_DEF_MAX_LOGGING;
                 }
                 else
                 {
-                    opts->logLevel = l_val;
+                    opts->logger_level = l_val;
                 }
 #endif
                 break;
@@ -197,11 +197,22 @@ int processReadsOptions(int argc, char *argv[], options *opts) {
     int c;
     int index;
     int l_val;
+    int w_val;
     //char *opt_o_value = NULL;
     char *opt_b_value = NULL;
     
-    while( (c = getopt_long(argc, argv, "hVrl:k:p:m:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
+    while( (c = getopt_long(argc, argv, "w:hVrl:k:p:n:m:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
         switch(c) {
+            case 'n': opts->minNumRepeats = atoi(optarg); break;
+            case 'w': 
+                w_val = atoi(optarg); 
+                if ((w_val < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (w_val > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
+                {
+                    // Change window length
+                    opts->searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH;
+                    std::cerr<<"WARNING: Specified window length higher than max. Changing window length to " << opts->searchWindowLength << " instead of " << w_val<<std::endl;
+                }
+                break;        
             case 'h': readsHelp(); exit(0); break;
             case 'V': version_info(); exit(0); break;
             case 'o': opts->output_fastq = optarg; break;
@@ -286,8 +297,9 @@ int readsMain(int argc, char * argv[])
         "./",          // output file directory
         "\t",          // delimiter string for stats report
         NULL,          //  pattern file name
-        CRASS_DEF_K_CLUST_MIN             // the number of the kmers that need to be shared for clustering
-
+        CRASS_DEF_K_CLUST_MIN,             // the number of the kmers that need to be shared for clustering
+        CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH,                          // the search window length
+        1                           // logging minimum by default 
     };
     
     int optIdx = processReadsOptions(argc, argv, &opts);
@@ -329,24 +341,35 @@ int readsMain(int argc, char * argv[])
 int genomeMain(int argc, char * argv[])
 { 
     
-    genOptions genOpts = {
-        "./",                       // output file directory
-        3,                          // the minimum number of repeats needed for a crispr
+    options opts = {
+        0,             // count flag
+        false,         // exit after first find
+        1,             // logging minimum by default
+        false,         // illumina reads
+        false,         // 454 reads
+        false,         // sanger reads
+        false,         // output stats report
         CRASS_DEF_MIN_DR_SIZE,      // minimum direct repeat size
         CRASS_DEF_MAX_DR_SIZE,      // maximum direct repeat size
         CRASS_DEF_MIN_SPACER_SIZE,  // minimum spacer size
         CRASS_DEF_MAX_SPACER_SIZE,  // maximum spacer size
-        8,                          // the search window length
-        1                           // logging minimum by default    
+        CRASS_DEF_NUM_DR_ERRORS,    // maxiumum allowable errors in direct repeat
+        "./",          // output file directory
+        "\t",          // delimiter string for stats report
+        NULL,          //  pattern file name
+        CRASS_DEF_K_CLUST_MIN,             // the number of the kmers that need to be shared for clustering
+        CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH,                          // the search window length
+        1                           // logging minimum by default 
+   
     };
     
-    int optIdx = processGenomeOptions(argc, argv, &genOpts);
+    int optIdx = processGenomeOptions(argc, argv, &opts);
     
     // initialize the log file
     
-    std::string logFileName = genOpts.outputFileDir+ "crass.log";
+    std::string logFileName = opts.output_fastq+ "crass.log";
     
-    intialiseGlobalLogger(logFileName, genOpts.logLevel);
+    intialiseGlobalLogger(logFileName, opts.logger_level);
     
     
     if (optIdx >= argc) 
@@ -368,9 +391,9 @@ int genomeMain(int argc, char * argv[])
         optIdx++;
     }
     
-    GenomeFinder * gFinder = new GenomeFinder(&genOpts);
-    gFinder->goGenomeFinder(seq_files);
-    delete gFinder;
+//    GenomeFinder * gFinder = new GenomeFinder(&genOpts);
+//    gFinder->goGenomeFinder(seq_files);
+//    delete gFinder;
     return 0;  
 }
 

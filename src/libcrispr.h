@@ -54,6 +54,7 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "StringCheck.h"
+#include "Genome.h"
 
 typedef std::map<std::string, bool> lookupTable;
 
@@ -63,6 +64,13 @@ typedef std::vector<ReadHolder *>::iterator ReadListIterator;
 // direct repeat as a string and a list of the read objects that contain that direct repeat
 typedef std::map<StringToken, ReadList *> ReadMap;
 typedef std::map<StringToken, ReadList *>::iterator ReadMapIterator;
+
+enum READ_TYPE {
+    LONG_READ,
+    SHORT_READ,
+};
+
+enum side{rightSide, leftSide};
 
 // The following  class is simple data storages objects
 // they are stupidly public for that reason
@@ -98,12 +106,13 @@ class DirectRepeat {
 // search functions
 //**************************************
 
+READ_TYPE decideWhichSearch(const char *input_fastq);
+
+float crtSearchFastqFile(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
 
 float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
-float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
-
-void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
+void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
 bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int * f_start, int * f_end);
 
@@ -151,5 +160,26 @@ void addToLookup(const string &dr ,lookupTable &patternsLookup);
 bool inline keyExists(lookupTable &patterns_hash, std::string &direct_repeat);
 
 void map2Vector(lookupTable &patterns_hash, std::vector<std::string> &patterns);
+
+//*************************************
+// Old genome finder stuff
+//*************************************
+void printGenomeCrispr(std::vector<Crispr*>& CRISPRVector, options& opts, std::string& mHeader, std::string& mSequence, bool repeatsFound);
+
+bool  findRepeats(void);
+
+void  trim(Crispr * candidateCRISPR, int minRepeatLength);
+
+void  checkFlank(int side, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence,int sequenceLength, std::string& read);
+
+int scan(int side, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence, int sequenceLength, std::string& sequence);
+
+void scanRight(Crispr * candidateCRISPR, std::string pattern, int minSpacerLength, int scanRange, int sequenceLength, std::string& sequence);
+
+bool  patternMatches(std::string pattern1, std::string pattern2, double confidence);
+
+int   min (int * array);
+
+int   getHammingDistance(std::string seq1, std::string seq2);
 
 #endif //libcrispr_h
