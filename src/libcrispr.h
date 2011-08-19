@@ -54,6 +54,8 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "StringCheck.h"
+#include "Genome.h"
+#include "GenomeFinder.h"
 
 typedef std::map<std::string, bool> lookupTable;
 
@@ -63,6 +65,11 @@ typedef std::vector<ReadHolder *>::iterator ReadListIterator;
 // direct repeat as a string and a list of the read objects that contain that direct repeat
 typedef std::map<StringToken, ReadList *> ReadMap;
 typedef std::map<StringToken, ReadList *>::iterator ReadMapIterator;
+
+enum READ_TYPE {
+    LONG_READ,
+    SHORT_READ,
+};
 
 // The following  class is simple data storages objects
 // they are stupidly public for that reason
@@ -98,12 +105,15 @@ class DirectRepeat {
 // search functions
 //**************************************
 
+READ_TYPE decideWhichSearch(const char *input_fastq);
+
+float crtSearchFastqFile(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
 
 float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
 float bitapSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
-void scanForMultiMatches(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
+void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
 bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int * f_start, int * f_end);
 

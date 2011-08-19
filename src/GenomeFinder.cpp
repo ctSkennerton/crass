@@ -241,6 +241,17 @@ bool GenomeFinder::findRepeats(void)
     
     delete candidateCRISPR;
     
+    std::vector<Crispr*>::iterator crispr_iter = CRISPRVector.begin();
+    while (crispr_iter != CRISPRVector.end()) 
+    {
+        if ((*crispr_iter) != NULL) 
+        {
+            delete (*crispr_iter);
+            *crispr_iter = NULL;
+        }
+        crispr_iter++;
+    }
+    
     return true;
 }
 

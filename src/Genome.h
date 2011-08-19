@@ -58,9 +58,14 @@ class Crispr
 
 public:
     // constriuctors
+    
+    Crispr(void)
+    {
+        mRepeatLength = 0;
+    }
+    
     Crispr(std::string& _sequence)
     {
-        repeatList mRepeats;
         mRepeatLength = 0;
         mSequence = _sequence;
     }
@@ -75,10 +80,20 @@ public:
     //destructor
     ~Crispr()
     {
-        //delete repeats;
+        mRepeats.clear();
+        mSequence.clear();
+        mRepeatLength = NULL;
     }
+
     
     // Getters and Setters
+    
+    inline setSequence(std::string& _sequence)
+    {
+        mRepeatLength = 0;
+        mSequence = _sequence;
+    }
+
     inline repeatList repeats()
     {
         return mRepeats;

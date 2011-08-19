@@ -101,6 +101,9 @@
 #define CRASS_DEF_MIN_SPACER_SIZE               26                  // minimum spacer size
 #define CRASS_DEF_MAX_SPACER_SIZE               50                  // maximum spacer size
 #define CRASS_DEF_NUM_DR_ERRORS                 0                   // maxiumum allowable errors in direct repeat
+#define CRASS_DEF_MAX_DEBUG_LOGGING             10
+#define CRASS_DEF_MAX_LOGGING                   4
+
 
 typedef struct {
     int count;
@@ -119,6 +122,8 @@ typedef struct {
     char delim[CRASS_DEF_MAX_DELIM_LENGTH];                         // delimiter used in stats report
     char * pat_file;
     int kmer_size;
+    int searchWindowLength;       // option 'w'
+    int minNumRepeats;            // option 'n'
 } options;
 
 
@@ -139,6 +144,8 @@ static struct option long_options [] = {
     {"454", no_argument, NULL, 0},
     {"illumina", no_argument, NULL, 0},
     {"sanger", no_argument, NULL, 0},
+    {"windowLength", required_argument, NULL, 'w'},
+    {"minNumRepeats", required_argument, NULL, 'n'},
     {NULL, no_argument, NULL, 0}
 };
 typedef struct {

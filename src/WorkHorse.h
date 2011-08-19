@@ -50,6 +50,8 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 #include "StringCheck.h"
+#include "Genome.h"
+#include "GenomeFinder.h"
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
