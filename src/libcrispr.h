@@ -48,7 +48,6 @@
 // local includes
 #include "crass_defines.h"
 #include "WuManber.h"
-#include "libbitap.h"
 #include "bm.h"
 #include "kseq.h"
 #include "ReadHolder.h"
@@ -108,25 +107,15 @@ class DirectRepeat {
 
 READ_TYPE decideWhichSearch(const char *input_fastq);
 
-float crtSearchFastqFile(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
+float longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
 
-float bmSearchFastqFile(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
+float shortReadSearch(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
 void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
-bool partialStarting (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int * f_start, int * f_end);
-
-bool partialEnding (DirectRepeat &dr_match, ReadHolder *tmp_holder, std::string &seq, int * f_start, int * f_end);
 //**************************************
 // kmer operators
 //**************************************
-
-void cutLeftKmer( std::string &read, int &start, int &end, lookupTable &inputLookup, const options &opts);
-
-void cutRightKmer( std::string &read, int &start, int &end, lookupTable &inputLookup, const options &opts);
-
-void cutSpacerKmers( std::string &read, lookupTable &inputLookup, const options &opts);
-
 bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string &read);
 
 bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match);

@@ -4,7 +4,7 @@
 AC_PREREQ(2.61)
 AC_INIT(crass, 0.0.1, c.skennerton@gmail.com)
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([src/Bitap.cpp])
+AC_CONFIG_SRCDIR([src/bm.cpp])
 AC_CONFIG_HEADER([config.h])
 
 # Checks for programs.
@@ -16,6 +16,9 @@ AC_PROG_CC
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h unistd.h])
+
+# Checks for required libraries
+AC_CHECK_LIB([z],[gzread])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

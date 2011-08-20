@@ -147,11 +147,11 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         
         if(LONG_READ == rt)
         {
-            mAveReadLength = crtSearchFastqFile(input_fastq, *mOpts, &mReads, &mStringCheck);
+            mAveReadLength = longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck);
         }
         else
         {
-            mAveReadLength = bmSearchFastqFile(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            mAveReadLength = shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
         }
 
         logInfo("Average read length: "<<mAveReadLength, 2);

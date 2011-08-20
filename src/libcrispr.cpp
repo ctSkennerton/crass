@@ -51,7 +51,6 @@
 #include "LoggerSimp.h"
 #include "crass_defines.h"
 #include "WuManber.h"
-#include "libbitap.h"
 #include "bm.h"
 #include "SeqUtils.h"
 #include "Levensthein.h"
@@ -140,7 +139,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq)
 
 // CRT search
 
-float crtSearchFastqFile(const char *inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck)
+float longReadSearch(const char *inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck)
 {
     logInfo("Long reads algorithm selected", 1);
     //-----
@@ -229,26 +228,21 @@ float crtSearchFastqFile(const char *inputFastq, const options& opts, ReadMap * 
                                 tmp_holder->RH_StartStops.push_back((*rl_iter) + candidate_crispr->repeatLength());
                                 rl_iter++;
                             }
-                            //std::cout<<std::endl;
                             addReadHolder(mReads, mStringCheck, tmp_holder, read_header, read);
                             break;
-                            //j = searchEnd + 1;
                         }
                         else
                         {
-                            //candidate_crispr->superClear();
                             break;
                         }
                     }
                     else
                     {
-                        //candidate_crispr->superClear();
                         break;
                     }
                  }
                 else
                 {
-                    //candidate_crispr->superClear();
                     break;
                 }
             }
@@ -265,7 +259,7 @@ float crtSearchFastqFile(const char *inputFastq, const options& opts, ReadMap * 
 }
 
 // boyer moore functions
-float bmSearchFastqFile(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+float shortReadSearch(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
@@ -275,17 +269,16 @@ float bmSearchFastqFile(const char *inputFastq, const options &opts, lookupTable
     seq = kseq_init(fp);
     
     DirectRepeat dr_match;
-    
+
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         std::string read = seq->seq.s;
         std::string read_header = seq->name.s;
+        
+
         int seq_length = (int)read.length() - 1;
         int search_end = seq_length - opts.lowDRsize;
-        
-                
-        logInfo("read counter: "<<match_counter, 8);
         
         total_base += seq_length;
         
@@ -298,17 +291,14 @@ float bmSearchFastqFile(const char *inputFastq, const options &opts, lookupTable
         {
             int search_begin = start + opts.lowDRsize + opts.lowSpacerSize;
             
-            logInfo("search begin: " << search_begin << " search end: " << search_end, 8);
             
             if (search_begin >= search_end ) break;
             
             std::string query_word = read.substr(start, opts.lowDRsize);
             std::string subject_word = read.substr(search_begin);
             
-            logInfo("query: " << query_word << " subject: " << subject_word, 10);
             
             int match_start_pos = PatternMatcher::bmpSearch( subject_word, query_word );
-            logInfo("bm return: " << match_start_pos, 8);
             
             if (match_start_pos > -1) 
             {
@@ -316,11 +306,7 @@ float bmSearchFastqFile(const char *inputFastq, const options &opts, lookupTable
                 int matched_end_pos = start + opts.lowDRsize;
                 
                 dr_match.DR_StartPos = match_start_pos + search_begin;
-                //dr_match.DR_StartList.push_back(MatchStartPos + search_begin);
-                
                 dr_match.DR_MatchStartPos = start;
-                //dr_match.DR_StartList.push_back(start);
-                
                 dr_match.DR_MatchEndPos = matched_end_pos;
                 dr_match.DR_EndPos = end_pos;
                 
@@ -332,6 +318,7 @@ float bmSearchFastqFile(const char *inputFastq, const options &opts, lookupTable
                 {
                     // read through the subsuquent bases untill they don't match
                     logInfo("Read: "<<read_header<<" Len: "<<read.length(), 10);
+                    
                     while (read.at(matched_end_pos) == read.at(end_pos)) 
                     {
                         logInfo("Match end pos: "<<matched_end_pos<<" end pos: "<<end_pos, 10);
@@ -344,6 +331,7 @@ float bmSearchFastqFile(const char *inputFastq, const options &opts, lookupTable
                         ++matched_end_pos;
                         if (end_pos > seq_length) break;
                     }
+                    
                     
                     if (cutDirectRepeatSequence(dr_match, opts, read))
                     {

@@ -43,12 +43,12 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_crass_OBJECTS = Bitap.$(OBJEXT) bm.$(OBJEXT) Levensthein.$(OBJEXT) \
-	crass.$(OBJEXT) WuManber.$(OBJEXT) LoggerSimp.$(OBJEXT) \
-	SeqUtils.$(OBJEXT) CrisprNode.$(OBJEXT) NodeManager.$(OBJEXT) \
-	libcrispr.$(OBJEXT) WorkHorse.$(OBJEXT) \
-	SpacerInstance.$(OBJEXT) ReadHolder.$(OBJEXT) \
-	SmithWaterman.$(OBJEXT) StringCheck.$(OBJEXT) Genome.$(OBJEXT)
+am_crass_OBJECTS = bm.$(OBJEXT) Levensthein.$(OBJEXT) crass.$(OBJEXT) \
+	WuManber.$(OBJEXT) LoggerSimp.$(OBJEXT) SeqUtils.$(OBJEXT) \
+	CrisprNode.$(OBJEXT) NodeManager.$(OBJEXT) libcrispr.$(OBJEXT) \
+	WorkHorse.$(OBJEXT) SpacerInstance.$(OBJEXT) \
+	ReadHolder.$(OBJEXT) SmithWaterman.$(OBJEXT) \
+	StringCheck.$(OBJEXT) Genome.$(OBJEXT)
 crass_OBJECTS = $(am_crass_OBJECTS)
 crass_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
@@ -94,7 +94,7 @@ INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LDFLAGS = 
 LIBOBJS = 
-LIBS = 
+LIBS = -lz 
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /Users/uqcskenn/Documents/Projects/crass/missing --run makeinfo
 MKDIR_P = .././install-sh -c -d
@@ -152,8 +152,7 @@ sysconfdir = ${prefix}/etc
 target_alias = 
 top_builddir = ..
 top_srcdir = ..
-AM_LDFLAGS = -lz
-crass_SOURCES = Bitap.cpp bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp Genome.cpp 
+crass_SOURCES = bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp Genome.cpp 
 all: all-am
 
 .SUFFIXES:
@@ -220,7 +219,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-include ./$(DEPDIR)/Bitap.Po
 include ./$(DEPDIR)/CrisprNode.Po
 include ./$(DEPDIR)/Genome.Po
 include ./$(DEPDIR)/Levensthein.Po
