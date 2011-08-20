@@ -53,7 +53,7 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "StringCheck.h"
-#include "Genome.h"
+#include "Crispr.h"
 
 typedef std::map<std::string, bool> lookupTable;
 
@@ -74,30 +74,30 @@ enum side{rightSide, leftSide};
 // The following  class is simple data storages objects
 // they are stupidly public for that reason
 
-class DirectRepeat {
-    //-----
-    // 
-    //
-    public:
-        // constructor / destructor
-        DirectRepeat();
-        ~DirectRepeat() {}
-        
-        void reset(void);
-
-        
-    // members
-        std::string DR_Sequence;
-        std::string DR_MatchSequence;
-        std::string DR_Spacer;
-        std::vector<int> DR_StartStopList;      // a vector containing the starting positions of all the DR
-        int  DR_Length;
-        int  DR_StartPos;                   // the start of the 'right' dr in the read
-        int  DR_EndPos;                     // the end of the whole direct repeat
-        int  DR_MatchStartPos;              // the start of the 'left' dr in the read
-        int  DR_MatchEndPos;
-        int  DR_NumMismatches;              // difference between either string
-};
+//class DirectRepeat {
+//    //-----
+//    // 
+//    //
+//    public:
+//        // constructor / destructor
+//        DirectRepeat();
+//        ~DirectRepeat() {}
+//        
+//        void reset(void);
+//
+//        
+//    // members
+//        std::string DR_Sequence;
+//        std::string DR_MatchSequence;
+//        std::string DR_Spacer;
+//        std::vector<int> DR_StartStopList;      // a vector containing the starting positions of all the DR
+//        int  DR_Length;
+//        int  DR_StartPos;                   // the start of the 'right' dr in the read
+//        int  DR_EndPos;                     // the end of the whole direct repeat
+//        int  DR_MatchStartPos;              // the start of the 'left' dr in the read
+//        int  DR_MatchEndPos;
+//        int  DR_NumMismatches;              // difference between either string
+//};
 
 
 
@@ -107,22 +107,22 @@ class DirectRepeat {
 
 READ_TYPE decideWhichSearch(const char *input_fastq);
 
-float longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
+void longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
 
-float shortReadSearch(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
+void shortReadSearch(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
 void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
 //**************************************
 // kmer operators
 //**************************************
-bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string &read);
-
-bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match);
-
-bool isLowComplexity(DirectRepeat &dr_match);
-
-bool isSpacerAndDirectRepeatSimilar(DirectRepeat &dr_match);
+//bool cutDirectRepeatSequence(DirectRepeat &dr_match, const options &opts, string &read);
+//
+//bool checkDRAndSpacerLength(const options &opts, DirectRepeat &dr_match);
+//
+//bool isLowComplexity(DirectRepeat &dr_match);
+//
+//bool isSpacerAndDirectRepeatSimilar(DirectRepeat &dr_match);
 
 //int getActualRepeatLength(std::vector<int> &candidateCRISPR, std::string &read, int searchWindowLength, int minSpacerLength);
 

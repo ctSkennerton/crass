@@ -145,26 +145,24 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         // Use a different search routine, depending on if we allow mismatches or not.
         READ_TYPE rt = decideWhichSearch(input_fastq);
         
-        if(LONG_READ == rt)
+        if(rt == LONG_READ)
         {
-            mAveReadLength = longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck);
+            logInfo("long read algorithm selected", 2);
+           longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck);
         }
         else
         {
-            mAveReadLength = shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            logInfo("short read algorithm selected", 2);
+           shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
         }
 
-        logInfo("Average read length: "<<mAveReadLength, 2);
-        if (rt == LONG_READ) 
-        {
-            logInfo("long read algorithm selected", 2);
-        }
         // only nessessary in instances where there are short reads
-        if(SHORT_READ == rt)
+        if(rt == SHORT_READ)
         {
             findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
         }
-        
+        logInfo("Searching complete. " << mReads.size()<<" reads have been found", 1);
+
         // There will be an abundance of forms for each direct repeat.
         // We needs to do somes clustering! Then trim and concatenate the direct repeats
         mungeDRs();

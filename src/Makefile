@@ -48,7 +48,7 @@ am_crass_OBJECTS = bm.$(OBJEXT) Levensthein.$(OBJEXT) crass.$(OBJEXT) \
 	CrisprNode.$(OBJEXT) NodeManager.$(OBJEXT) libcrispr.$(OBJEXT) \
 	WorkHorse.$(OBJEXT) SpacerInstance.$(OBJEXT) \
 	ReadHolder.$(OBJEXT) SmithWaterman.$(OBJEXT) \
-	StringCheck.$(OBJEXT) Genome.$(OBJEXT)
+	StringCheck.$(OBJEXT) Crispr.$(OBJEXT)
 crass_OBJECTS = $(am_crass_OBJECTS)
 crass_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
@@ -152,7 +152,7 @@ sysconfdir = ${prefix}/etc
 target_alias = 
 top_builddir = ..
 top_srcdir = ..
-crass_SOURCES = bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp Genome.cpp 
+crass_SOURCES = bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp Crispr.cpp 
 all: all-am
 
 .SUFFIXES:
@@ -219,8 +219,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ./$(DEPDIR)/Crispr.Po
 include ./$(DEPDIR)/CrisprNode.Po
-include ./$(DEPDIR)/Genome.Po
 include ./$(DEPDIR)/Levensthein.Po
 include ./$(DEPDIR)/LoggerSimp.Po
 include ./$(DEPDIR)/NodeManager.Po
