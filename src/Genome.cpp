@@ -117,8 +117,8 @@ std::string Crispr::toString()
 std::string Crispr::repeatStringAt(int i)
 {
     int curr_repeat_start_index = mRepeats[i];
-    int curr_repeat_end_index = curr_repeat_end_index + mRepeatLength;
-    return mSequence.substr(curr_repeat_end_index, (curr_repeat_end_index - curr_repeat_start_index));
+    int curr_repeat_end_index = curr_repeat_start_index + mRepeatLength;
+    return mSequence.substr(curr_repeat_start_index, (curr_repeat_end_index - curr_repeat_start_index));
 }
 
 
@@ -128,7 +128,6 @@ std::string Crispr::spacerStringAt(int i)
     int next_repeat_start_index = mRepeats[i + 1];
     int curr_spacer_start_index = curr_repeat_end_index + 1;
     int curr_spacer_end_index = next_repeat_start_index - 1;
-    
     return mSequence.substr(curr_spacer_start_index, (curr_spacer_end_index - curr_spacer_start_index));
 }
 
@@ -177,12 +176,13 @@ void Crispr::removeRepeat(int val)
 
 int Crispr::getActualRepeatLength( int searchWindowLength, int minSpacerLength)
 {
-    int num_repeats = (int)(mRepeats.size() - 1);
+
+    int num_repeats = (int)(mRepeats.size());
     int first_repeat_start_index = mRepeats.front();
     int last_repeat_start_index = mRepeats.back();
     
     int shortest_repeat_spacing = mRepeats[1] - mRepeats[0];
-    for (int i = 0; i < mRepeats.size() - 1; i++)
+    for (int i = 0; i < mRepeats.size(); i++)
     {
         int curr_repeat_index = mRepeats[i];
         int next_repeat_index = mRepeats[i + 1];
@@ -282,37 +282,35 @@ int Crispr::getActualRepeatLength( int searchWindowLength, int minSpacerLength)
         ++repeat_iter;
     }
     mRepeatLength = right_extension_length + left_extension_length;
+
     return (right_extension_length + left_extension_length);
 }
 
 
 void Crispr::trim( int minRepeatLength)
 {
-    int num_repeats = this->numRepeats();
-    
+    float num_repeats = this->numRepeats();
     std::string curr_repeat;
-    int char_count_A, char_count_C, char_count_T, char_count_G;
+    float char_count_A, char_count_C, char_count_T, char_count_G;
     char_count_A = char_count_C = char_count_T = char_count_G = 0;
     bool done = false;
-    
     //trim from right
     while (!done && (this->repeatLength() > minRepeatLength) )
     {
         for (int k = 0; k < this->numRepeats(); k++ )
         {
             curr_repeat = this->repeatStringAt(k);
-            char lastChar = curr_repeat[curr_repeat.length() - 1];
-            
+            char lastChar = curr_repeat[curr_repeat.length()-1];
             if (lastChar == 'A')   char_count_A++;
             if (lastChar == 'C')   char_count_C++;
             if (lastChar == 'T')   char_count_T++;
             if (lastChar == 'G')   char_count_G++;
         }
+        float percentA = char_count_A/num_repeats;
+        float percentC = char_count_C/num_repeats;
+        float percentT = char_count_T/num_repeats;
+        float percentG = char_count_G/num_repeats;
         
-        double percentA = (double)char_count_A/num_repeats;
-        double percentC = (double)char_count_C/num_repeats;
-        double percentT = (double)char_count_T/num_repeats;
-        double percentG = (double)char_count_G/num_repeats;
         
         if ( (percentA < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentC < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentT < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentG < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
         {
@@ -342,12 +340,13 @@ void Crispr::trim( int minRepeatLength)
             if (firstChar == 'C')   char_count_C++;
             if (firstChar == 'T')   char_count_T++;
             if (firstChar == 'G')   char_count_G++;
-    }
+        }
+    
         
-        double percentA = (double)char_count_A/num_repeats;
-        double percentC = (double)char_count_C/num_repeats;
-        double percentT = (double)char_count_T/num_repeats;
-        double percentG = (double)char_count_G/num_repeats;
+        float percentA = char_count_A/num_repeats;
+        float percentC = char_count_C/num_repeats;
+        float percentT = char_count_T/num_repeats;
+        float percentG = char_count_G/num_repeats;
         
         if ( (percentA < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentC < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentT < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentG < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
         {
@@ -364,6 +363,7 @@ void Crispr::trim( int minRepeatLength)
             done = true;
         }
     }
+
 }
 
 bool Crispr::hasSimilarlySizedSpacers(void)
@@ -417,7 +417,6 @@ bool Crispr::hasNonRepeatingSpacers(void)
             
             edit_distance =  LevenstheinDistance(curr_spacer, next_spacer);
             similarity = 1.0 - (edit_distance/max_length);
-            
             //spacers should be different
             if ( similarity > CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY )
             {
@@ -428,6 +427,7 @@ bool Crispr::hasNonRepeatingSpacers(void)
             edit_distance =  LevenstheinDistance(curr_repeat, next_spacer);
             similarity = 1.0 - (edit_distance/max_length);
             //repeats should also be different from spacers, otherwise may be tandem repeat
+
             if (similarity > CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY )
             {
                 return false;
@@ -438,6 +438,7 @@ bool Crispr::hasNonRepeatingSpacers(void)
         max_length = std::max((int)this->repeatStringAt(i).length(), (int)this->spacerStringAt(i).length());
         edit_distance =  LevenstheinDistance(this->repeatStringAt(i), this->spacerStringAt(i));
         similarity = 1.0 - (edit_distance/max_length);
+        
         //checks last repeat/spacer
         if ( similarity > CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY )
         {
@@ -464,7 +465,6 @@ bool Crispr::hasNonRepeatingSpacers(void)
             }
         }
     }
-    
     else
     {
         return false;

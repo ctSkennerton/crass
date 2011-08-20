@@ -160,7 +160,7 @@ float crtSearchFastqFile(const char *inputFastq, const options& opts, ReadMap * 
     {
         std::string read = seq->seq.s;
         std::string read_header = seq->name.s;
-        int seq_length = (int)read.length();
+        int seq_length = (int)read.length() - 1;
         
         candidate_crispr->setSequence(read);
         
@@ -174,7 +174,9 @@ float crtSearchFastqFile(const char *inputFastq, const options& opts, ReadMap * 
         //window will at some point in its iteration thru the sequence will not miss a any repeat
         int skips = opts.lowDRsize - (2 * opts.searchWindowLength - 1);
         if (skips < 1)
+        {
             skips = 1;
+        }
 
         int searchEnd = seq_length - opts.highDRsize - opts.highSpacerSize - opts.searchWindowLength;
         for (int j = 0; j <= searchEnd; j = j + skips)
@@ -184,27 +186,32 @@ float crtSearchFastqFile(const char *inputFastq, const options& opts, ReadMap * 
             int endSearch = j + opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength;
             
             if (endSearch > seq_length)
+            {
                 endSearch = seq_length;
-            
-            if (endSearch < beginSearch) //should never occur
+            }
+            //should never occur
+            if (endSearch < beginSearch)
+            {
                 endSearch = beginSearch;
+            }
             
             std::string text = read.substr(beginSearch, (endSearch - beginSearch));
             pattern = read.substr(j, opts.searchWindowLength);
             //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
-            int patternInTextIndex = PatternMatcher::bmpSearch(text, pattern);
-            if (patternInTextIndex >= 0)
+            int pattern_in_text_index = PatternMatcher::bmpSearch(text, pattern);
+            if (pattern_in_text_index >= 0)
             {
                 candidate_crispr->addRepeat(j);
-                candidate_crispr->addRepeat(beginSearch + patternInTextIndex);
+                candidate_crispr->addRepeat(beginSearch + pattern_in_text_index);
+
                 scanRight(candidate_crispr, pattern, opts.lowSpacerSize, 24, seq_length, read);
             }
+
             if ( (candidate_crispr->numRepeats() >= opts.minNumRepeats) ) //make sure minNumRepeats is always at least 2
             {
                 actualRepeatLength = candidate_crispr->getActualRepeatLength(opts.searchWindowLength, opts.lowSpacerSize);
                 if ( (actualRepeatLength >= opts.lowDRsize) && (actualRepeatLength <= opts.highDRsize) )
                 {
-
                     if (candidate_crispr->hasNonRepeatingSpacers())
                     {
                         if (candidate_crispr->hasSimilarlySizedSpacers())
@@ -212,22 +219,37 @@ float crtSearchFastqFile(const char *inputFastq, const options& opts, ReadMap * 
                             checkFlank(leftSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
                             checkFlank(rightSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
                             candidate_crispr->trim(opts.lowDRsize);
-                            
+
                             ReadHolder * tmp_holder = new ReadHolder();
-                            Crispr::repeatListIterator rl_iter = (candidate_crispr->repeats()).begin();
-                            while(rl_iter != (candidate_crispr->repeats()).end())
+                            Crispr::repeatListIterator rl_iter = candidate_crispr->mRepeats.begin();
+                            while(rl_iter != candidate_crispr->mRepeats.end())
                             {
-                                tmp_holder->RH_StartStops.push_back(*rl_iter);
+                                tmp_holder->RH_StartStops.push_back((*rl_iter));
                                 //TODO -1 ?
-                                tmp_holder->RH_StartStops.push_back(*rl_iter + candidate_crispr->repeatLength());
+                                tmp_holder->RH_StartStops.push_back((*rl_iter) + candidate_crispr->repeatLength());
                                 rl_iter++;
                             }
-                            
+                            //std::cout<<std::endl;
                             addReadHolder(mReads, mStringCheck, tmp_holder, read_header, read);
                             break;
                             //j = searchEnd + 1;
                         }
+                        else
+                        {
+                            //candidate_crispr->superClear();
+                            break;
+                        }
                     }
+                    else
+                    {
+                        //candidate_crispr->superClear();
+                        break;
+                    }
+                 }
+                else
+                {
+                    //candidate_crispr->superClear();
+                    break;
                 }
             }
         }
@@ -863,16 +885,22 @@ int scan(side sT, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, 
     
 }
 
-void scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLength, int scanRange, int readLength, std::string& read)
+int scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLength, int scanRange, int readLength, std::string& read)
 {
+    //std::cout<<"@@@@@@@@@@@@@@@@@@@@@@@@@@@@"<<std::endl;
     int num_repeats = candidateCRISPR->numRepeats();
+    //std::cout<<"NR: "<<num_repeats<<std::endl;
     int pattern_length = (int)pattern.length();
     
     int last_repeat_index = candidateCRISPR->repeatAt(num_repeats-1);
-    
+    //std::cout<<"LR: "<<last_repeat_index<<std::endl;
+
     int second_last_repeat_index = candidateCRISPR->repeatAt(num_repeats-2);
+    //std::cout<<"SLR: "<<second_last_repeat_index<<std::endl;
+
     int repeat_spacing = last_repeat_index - second_last_repeat_index;
-    
+    //std::cout<<"RS: "<<repeat_spacing<<std::endl;
+
     int candidate_repeat_index, begin_search, end_search, position;
     
     bool more_to_search = true;
@@ -894,7 +922,7 @@ void scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLeng
         //System.outputFileStream<<"beginSearch " + beginSearch + "  " + "endSearch" + endSearch);
         if (begin_search > readLength - 1)
         {
-            return;
+            return readLength - 1;
         }
         if (end_search > readLength)
         {
@@ -903,7 +931,7 @@ void scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLeng
         
         if ( begin_search >= end_search)
         {
-            return;
+            return end_search;
         }
         /******************** end range checks ********************/
         
@@ -912,9 +940,12 @@ void scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLeng
         position = PatternMatcher::bmpSearch(text, pattern);
         //        std::cout<<"bm pos: "<<position<<std::endl;
         
+        
         if (position >= 0)
         {
+            //std::cout<<"NP: "<<position<<std::endl;
             candidateCRISPR->addRepeat(begin_search + position);
+            //std::cout<<"NEW: "<<begin_search + position<<std::endl;
             second_last_repeat_index = last_repeat_index;
             last_repeat_index = begin_search + position;
             repeat_spacing = last_repeat_index - second_last_repeat_index;
@@ -928,7 +959,8 @@ void scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLeng
             more_to_search = false;
         }
     }
-    return;
+
+    return begin_search + position;
 }
 
 

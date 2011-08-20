@@ -174,7 +174,7 @@ void  checkFlank(side sT, Crispr * candidateCRISPR, int minSpacerLength, int sca
 
 int scan(side sT, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence, int sequenceLength, std::string& sequence);
 
-void scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLength, int scanRange, int sequenceLength, std::string& sequence);
+int scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLength, int scanRange, int sequenceLength, std::string& sequence);
 
 bool  patternMatches(std::string& pattern1, std::string& pattern2, double confidence);
 

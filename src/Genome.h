@@ -93,7 +93,12 @@ public:
         mRepeatLength = 0;
         mSequence = _sequence;
     }
-
+    
+    inline std::string getSequence(void)
+    {
+        return mSequence;
+    }
+    
     inline repeatList repeats()
     {
         return mRepeats;
@@ -193,9 +198,9 @@ public:
     int getActualRepeatLength( int searchWindowLength, int minSpacerLength);
     void trim( int minRepeatLength);
 
-    
-private:
     repeatList mRepeats;
+
+private:
     int mRepeatLength;
     std::string mSequence;
 };
