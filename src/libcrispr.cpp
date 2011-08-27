@@ -132,10 +132,17 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
         if (opts.fourFiveFour) 
         {
             tmp_holder->encode();
-        } 
+        }
+        std::cout<< seq->seq.s<<std::endl;
+        
+        std::cout<<tmp_holder->seqLiteral()<<std::endl;
+        
         std::string read = tmp_holder->seq();
         
+        
+        std::cout<<tmp_holder->expand()<<std::endl;
         int seq_length = (int)read.length() - 1;
+        
         candidate_crispr->setSequence(read);
         
         total_base += seq_length;

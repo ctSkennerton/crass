@@ -535,9 +535,10 @@ std::string ReadHolder::squeeze(void)
         std::stringstream tmp;
         // make sure that the first comparison is to something that is never in DNA
         char previous_base = 'Z';
-        int count = 0;
+        
         for (int  i = 0; i < this->RH_Seq.length(); i++) 
         {
+            int count = 0;
             if (this->RH_Seq[i] == previous_base) 
             {
                 while (this->RH_Seq[i] == previous_base) 
@@ -545,12 +546,13 @@ std::string ReadHolder::squeeze(void)
                     count++;
                     i++;
                 }
-                tmp << previous_base << count;
+                tmp << count << this->RH_Seq[i];
             }
             else
             {
                 tmp << this->RH_Seq[i];
             }
+
             previous_base = this->RH_Seq[i];
         }
         return tmp.str();
@@ -575,7 +577,7 @@ std::string ReadHolder::expand(void)
                 int count = *str_iter - '0';
                 while (count != 0) 
                 {
-                    tmp<<*str_iter;
+                    tmp<<*(str_iter - 1);
                     count--;
                 }
             }

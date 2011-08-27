@@ -98,6 +98,11 @@ class ReadHolder
             return this->RH_Header;
         }
         
+        std::string seqLiteral(void)
+        {
+            return this->RH_Seq;
+        }
+    
         bool isLowLexi(void)
         {
             return this->RH_WasLowLexi;
