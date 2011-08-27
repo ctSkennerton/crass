@@ -1,0 +1,3 @@
+27/8/11
+    The ReadHolder class has been changed so that all members are now private.
+    Access to these members is available through getters and setters

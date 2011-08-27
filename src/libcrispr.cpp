@@ -560,11 +560,7 @@ void printGenomeCrispr(std::vector<Crispr*>& CRISPRVector, options& opts, std::s
     
     std::cout<<"Writing results in file " << output_file_name <<std::endl;            
     output_File_stream.open(output_file_name.c_str());
-    //out = new PrintStream(outputFileStream);
-    
-    //CTS//
-    //outputFileStream<<"Sequence '" + sequence.getName() + "' (" + sequence.length() + " bp)\n");
-    //outputFileStream<<"\n");
+
     output_File_stream<<"ORGANISM: " << readHeader <<std::endl; 
     output_File_stream<<"BASES: " << read.length() << std::endl<< std::endl;
     if (repeatsFound)
