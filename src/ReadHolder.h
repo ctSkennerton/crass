@@ -42,7 +42,7 @@
 // system includes
 #include <iostream>
 #include <vector>
-
+#include <map>
 // local includes
 #include "crass_defines.h"
 
@@ -51,15 +51,152 @@ typedef std::vector<unsigned int> StartStopList;
 typedef std::vector<unsigned int>::iterator StartStopListIterator;
 typedef std::vector<unsigned int>::reverse_iterator StartStopListRIterator;
 
+
 class ReadHolder 
 {
     public:
-        ReadHolder() { mLastDREnd = 0; mLastSpacerEnd = 0; }  
-        ~ReadHolder() {}  
+        
+        ReadHolder() 
+        { 
+            mLastDREnd = 0; 
+            mLastSpacerEnd = 0; 
+            RH_isSqueezed = false;
+            
+        }  
+        
+        ReadHolder(std::string& s, std::string& h) 
+        {
+            RH_Seq = s; 
+            RH_Header = h; 
+            mLastDREnd = 0; 
+            mLastSpacerEnd = 0; 
+            RH_isSqueezed = false;
+        }
+        
+        ReadHolder(const char * s, const char * h) 
+        {
+            RH_Seq = s; 
+            RH_Header = h;
+            mLastDREnd = 0; 
+            mLastSpacerEnd = 0; 
+            RH_isSqueezed = false;
+            
+        }
+        
+        void clear(void)
+        {
+            RH_Seq.clear();
+            RH_StartStops.clear();
+            RH_Header.clear();
+        }
+        
+        // getters
+        std::string seq(void);
 
-        void reverseComplementSeq(void);     // reverse complement the sequence and fix the start stops
-        void reverseStartStops(void);            // fix start stops what got corrupted during revcomping
-
+        std::string header(void)
+        {
+            return this->RH_Header;
+        }
+        
+        bool isLowLexi(void)
+        {
+            return this->RH_WasLowLexi;
+        }
+        
+        bool isSqueezed(void)
+        {
+            return this->RH_isSqueezed;
+        }
+        
+        StartStopList drPos(void)
+        {
+            return this->RH_StartStops;
+        }
+        
+        int lastDRPos(void)
+        {
+            return this->mLastDREnd;
+        }
+        
+        int lastSpacerPos(void)
+        {
+            return this->mLastSpacerEnd;
+        }
+        
+        // and setters
+        void seq(std::string s)
+        {
+            this->RH_Seq = s;
+        }
+        
+        void header(std::string h)
+        {
+            this->RH_Header = h;
+        }
+        
+        void isLowLexi(bool b)
+        {
+            this->RH_WasLowLexi = b;
+        }
+        
+        void isSqueezed(bool b)
+        {
+            this->RH_isSqueezed = b;
+        }
+        
+        void drPos(StartStopList& l)
+        {
+            this->RH_StartStops.clear();
+            this->RH_StartStops = l;
+        }
+        
+        void lastDRPos(int i)
+        {
+            this->mLastDREnd = i;
+        }
+        
+        void lastSpacerPos(int i)
+        {
+            this->mLastSpacerEnd = i;
+        }
+        
+        int seqLength(void)
+        {
+            return (int)this->RH_Seq.length();
+        }
+        
+        int drListSize(void)
+        {
+            return (int)this->RH_StartStops.size();
+        }
+        // access to things in start stop list
+        void add(int);
+        void add(int, int);
+        int at(int);
+        
+        int front(void)
+        {
+            return this->RH_StartStops.front();
+        }
+        int back(void)
+        {
+            return this->RH_StartStops.back();
+        }
+    
+        unsigned int& operator[]( const unsigned int i)
+        {
+            return this->RH_StartStops[i];
+        }
+    
+        void reverseComplementSeq(void);        // reverse complement the sequence and fix the start stops
+        void reverseStartStops(void);           // fix start stops what got corrupted during revcomping
+        
+        
+        void encode(void);                      // transforms a sequence to a run length encoding form
+        void decode (void);                     // transforms a sequence back to its original state
+        std::string squeeze(void);              //returns a copy of the string without homopolymers
+        std::string expand(void);               // returns a copy of the string with homopolymers
+        
         // update the DR after finding the TRUE DR
         void updateStartStops(int frontOffset, std::string * DR, const options * opts);
 
@@ -73,15 +210,15 @@ class ReadHolder
         
         void printContents(void);
         void logContents(int logLevel);
-    
+    private:
         // members
-        std::string RH_Header;                // header for the sequence
-        std::string RH_Seq;                   // The DR_lowlexi sequence of this read
-        bool RH_WasLowLexi;                   // was the sequence DR_low lexi in the file?
-        StartStopList RH_StartStops;          // start stops for DRs, (must be even in length!)
-        
-        int mLastDREnd;                       // the end of the last DR cut (offset of the iterator)
-        int mLastSpacerEnd;                   // the end of the last spacer cut (offset of the iterator)
+        std::string RH_Header;                  // header for the sequence
+        std::string RH_Seq;                     // The DR_lowlexi sequence of this read
+        bool RH_WasLowLexi;                     // was the sequence DR_low lexi in the file?
+        StartStopList RH_StartStops;            // start stops for DRs, (must be even in length!)
+        bool RH_isSqueezed;                     // Bool to tell whether the read has homopolymers removed
+        int mLastDREnd;                         // the end of the last DR cut (offset of the iterator)
+        int mLastSpacerEnd;                     // the end of the last spacer cut (offset of the iterator)
 };
 
 #endif //ReadHolder_h

@@ -45,6 +45,46 @@
 #include "SmithWaterman.h"
 #include "LoggerSimp.h"
 
+
+std::string ReadHolder::seq(void)
+{
+    if (this->RH_isSqueezed) 
+    {
+        std::stringstream tmp;
+        std::string::iterator str_iter = this->RH_Seq.begin();
+        
+        while (str_iter != this->RH_Seq.end()) 
+        {
+            if (!isdigit(*str_iter)) 
+            {
+                tmp<<*str_iter;
+            }
+            str_iter++;
+        }
+        return tmp.str();
+    }    
+    else
+    {
+        return this->RH_Seq;
+    }
+}
+
+void ReadHolder::add(int i)
+{
+    this->RH_StartStops.push_back(i);
+}
+
+void ReadHolder::add(int i, int j)
+{
+    this->RH_StartStops.push_back(i);
+    this->RH_StartStops.push_back(j);
+}
+
+int ReadHolder::at(int i)
+{
+    return this->RH_StartStops.at(i);
+}
+
 void ReadHolder::reverseComplementSeq(void)
 {
     //-----
@@ -468,6 +508,87 @@ std::string ReadHolder::splitApartSimple(void)
     
     return ss.str();
 }
+
+void ReadHolder::encode(void)
+{
+    std::string tmp = this->squeeze();
+    this->RH_isSqueezed = true;
+    this->RH_Seq = tmp;
+}
+
+void ReadHolder::decode(void)
+{
+    std::string tmp = this->expand();
+    this->RH_isSqueezed = false;
+    this->RH_Seq = tmp;
+}
+
+// simple run length encoding
+std::string ReadHolder::squeeze(void)
+{
+    if (this->RH_isSqueezed) 
+    {
+        return this->RH_Seq;
+    } 
+    else 
+    {
+        std::stringstream tmp;
+        // make sure that the first comparison is to something that is never in DNA
+        char previous_base = 'Z';
+        int count = 0;
+        for (int  i = 0; i < this->RH_Seq.length(); i++) 
+        {
+            if (this->RH_Seq[i] == previous_base) 
+            {
+                while (this->RH_Seq[i] == previous_base) 
+                {
+                    count++;
+                    i++;
+                }
+                tmp << previous_base << count;
+            }
+            else
+            {
+                tmp << this->RH_Seq[i];
+            }
+            previous_base = this->RH_Seq[i];
+        }
+        return tmp.str();
+    }
+}
+
+std::string ReadHolder::expand(void)
+{
+    if (!this->RH_isSqueezed) 
+    {
+        return this->RH_Seq;
+    } 
+    else 
+    {
+        std::stringstream tmp;
+        std::string::iterator str_iter = this->RH_Seq.begin();
+        
+        while (str_iter != this->RH_Seq.end()) 
+        {
+            if (isdigit(*str_iter)) 
+            {
+                int count = *str_iter - '0';
+                while (count != 0) 
+                {
+                    tmp<<*str_iter;
+                    count--;
+                }
+            }
+            else
+            {
+                tmp<<*str_iter;
+            }
+            str_iter++;
+        }
+        return tmp.str();
+    }
+}
+
 void ReadHolder::printContents(void)
 {
     //-----

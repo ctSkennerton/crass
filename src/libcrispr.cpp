@@ -40,6 +40,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <sstream>
 #include <zlib.h>  
 #include <fstream>
 #include <fcntl.h>
@@ -89,7 +90,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq)
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
-        int seq_length = (int)strlen(seq->seq.s);//read.length();
+        int seq_length = (int)strlen(seq->seq.s);
         total_base += seq_length;
         read_counter++;
         if(read_counter > 100)
@@ -118,6 +119,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
     kseq_t *seq;
     int l, read_counter = 0;
     unsigned int total_base = 0;
+    bool match_found = false;
     // initialize seq
     seq = kseq_init(fp);
     
@@ -125,16 +127,20 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
     Crispr * candidate_crispr = new Crispr();
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
-        std::string read = seq->seq.s;
-        std::string read_header = seq->name.s;
-        int seq_length = (int)read.length() - 1;
+        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s,seq->name.s);
         
+        if (opts.fourFiveFour) 
+        {
+            tmp_holder->encode();
+        } 
+        std::string read = tmp_holder->seq();
+        
+        int seq_length = (int)read.length() - 1;
         candidate_crispr->setSequence(read);
         
         total_base += seq_length;
 
         
-        std::string pattern;
         
         //the mumber of bases that can be skipped while we still guarantee that the entire search
         //window will at some point in its iteration thru the sequence will not miss a any repeat
@@ -162,7 +168,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
             }
             
             std::string text = read.substr(beginSearch, (endSearch - beginSearch));
-            pattern = read.substr(j, opts.searchWindowLength);
+            std::string pattern = read.substr(j, opts.searchWindowLength);
             //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
             int pattern_in_text_index = PatternMatcher::bmpSearch(text, pattern);
             if (pattern_in_text_index >= 0)
@@ -185,22 +191,21 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
                             checkFlank(leftSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
                             checkFlank(rightSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
                             candidate_crispr->trim(opts.lowDRsize);
-                            logInfo("potential CRISPR containing read found: "<<read_header, 3);
-
-                            ReadHolder * tmp_holder = new ReadHolder();
+                            logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 3);
+                            
+                            match_found = true;
+                            
                             Crispr::repeatListIterator rl_iter = candidate_crispr->mRepeats.begin();
                             while(rl_iter != candidate_crispr->mRepeats.end())
                             {
-                                tmp_holder->RH_StartStops.push_back((*rl_iter));
-                                //TODO -1 ?
-                                tmp_holder->RH_StartStops.push_back((*rl_iter) + candidate_crispr->repeatLength());
+                                tmp_holder->add((*rl_iter), ((*rl_iter) + candidate_crispr->repeatLength()));
                                 logInfo("direct repeat start index: "<<*rl_iter, 4);
 
                                 rl_iter++;
                             }
-                            logInfo(read, 4);
+                            logInfo(tmp_holder->seq(), 4);
 
-                            addReadHolder(mReads, mStringCheck, tmp_holder, read_header, read);
+                            addReadHolder(mReads, mStringCheck, tmp_holder, read);
                             break;
                         }
                         else
@@ -218,6 +223,10 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
                     break;
                 }
             }
+        }
+        if (!match_found) 
+        {
+            delete tmp_holder;
         }
         candidate_crispr->superClear();
         read_counter++;
@@ -243,8 +252,17 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
-        std::string read = seq->seq.s;
-        std::string read_header = seq->name.s;
+        // create the read holder
+        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+        
+        
+        if (opts.fourFiveFour) 
+        {
+            tmp_holder->encode();
+        } 
+        std::string read = tmp_holder->seq();
+        //std::string read = seq->seq.s;
+        //std::string read_header = seq->name.s;
         
         candidate_crispr->setSequence(read);
 
@@ -254,8 +272,7 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
         total_base += seq_length;
         
         bool match_found = false;
-        // create the read holder
-        ReadHolder * tmp_holder = new ReadHolder();
+
         
         // boyer-moore search
         for (int start = 0; start < search_end; start++)
@@ -302,15 +319,13 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
                         if (!(candidate_crispr->isRepeatLowComplexity())) 
                         {
                             match_found = true;
-                            logInfo("potential CRISPR containing read found: "<<read_header, 3);
+                            logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 3);
 
                             patternsHash[candidate_crispr->repeatStringAt(0)] = true;
                             Crispr::repeatListIterator rep_iter = candidate_crispr->mRepeats.begin();
                             while(rep_iter != candidate_crispr->mRepeats.end())
                             {
-                                tmp_holder->RH_StartStops.push_back((*rep_iter));
-                                //TODO -1 ?
-                                tmp_holder->RH_StartStops.push_back((*rep_iter) + candidate_crispr->repeatLength());
+                                tmp_holder->add((*rep_iter),((*rep_iter) + candidate_crispr->repeatLength()));
                                 logInfo("direct repeat start index: "<<*rep_iter, 4);
                                 rep_iter++;
                             }
@@ -326,8 +341,8 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
         }
         if (match_found)
         {
-            readsFound[read_header] = true;
-            addReadHolder(mReads, mStringCheck, tmp_holder, read_header, read);
+            readsFound[tmp_holder->header()] = true;
+            addReadHolder(mReads, mStringCheck, tmp_holder, read);
         }
         else
         {
@@ -367,26 +382,31 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     int l;
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
+        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+        
+        if (opts.fourFiveFour) 
+        {
+            tmp_holder->encode();
+        }
+        std::string read = tmp_holder->seq();
         //initialize with an impossible number
         int start_pos = -1;
-        std::string read = seq->seq.s;
-        std::string found_repeat = search.Search(strlen(seq->seq.s), seq->seq.s, patterns, start_pos);
+        std::string found_repeat = search.Search(read.length(), read.c_str(), patterns, start_pos);
         
         
         if (start_pos != -1)
         {
-            std::string header = seq->name.s;
-            if (readsFound.find(header) == readsFound.end())
-            //if (!(keyExists(readsFound, header)))
+            if (readsFound.find(tmp_holder->header()) == readsFound.end())
             {
-                logInfo("new read recruited: "<<header, 3);
-                logInfo(read, 4);
-                // create the read holder
-                ReadHolder * tmp_holder = new ReadHolder;
-                tmp_holder->RH_StartStops.push_back(start_pos);
-                tmp_holder->RH_StartStops.push_back(start_pos + (int)found_repeat.length());
-                addReadHolder(mReads, mStringCheck, tmp_holder, header, read);
+                logInfo("new read recruited: "<<tmp_holder->header(), 3);
+                logInfo(tmp_holder->seq(), 4);
+                tmp_holder->add(start_pos, (start_pos + (int)found_repeat.length()));
+                addReadHolder(mReads, mStringCheck, tmp_holder, read);
             }
+        }
+        else
+        {
+            delete tmp_holder;
         }
     }
     logInfo("finished multi pattern matcher. An extra " << mReads->size() - old_number<<" reads were recruited", 1);
@@ -397,7 +417,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
 // transform read to DRlowlexi
 //**************************************
 
-std::string DRLowLexi(std::string& matchedRead, ReadHolder * tmpReadholder)
+std::string DRLowLexi( ReadHolder * tmpReadholder, std::string& read)
 {
     //-----
     // Orientate a READ based on low lexi of the interalised DR
@@ -407,9 +427,9 @@ std::string DRLowLexi(std::string& matchedRead, ReadHolder * tmpReadholder)
     std::string rev_comp;
     
     // make sure that tere is 4 elements in the array, if not you can only cut one
-    if (tmpReadholder->RH_StartStops.size() == 2)
+    if (tmpReadholder->drListSize() == 2)
     {
-        tmp_dr = matchedRead.substr(tmpReadholder->RH_StartStops.at(0), (tmpReadholder->RH_StartStops.at(1) - tmpReadholder->RH_StartStops.at(0) + 1));
+        tmp_dr = read.substr(tmpReadholder->at(0), (tmpReadholder->at(1) - tmpReadholder->at(0) + 1));
         rev_comp = reverseComplement(tmp_dr);
     }
     else
@@ -417,32 +437,32 @@ std::string DRLowLexi(std::string& matchedRead, ReadHolder * tmpReadholder)
         // choose the dr that is not a partial ( no start at 0 or end at length)
         
         // if they both are then just take whichever is longer
-        if (tmpReadholder->RH_StartStops.front() == 0 && tmpReadholder->RH_StartStops.back() == tmpReadholder->RH_Seq.length())
+        if (tmpReadholder->front() == 0 && tmpReadholder->back() == read.length())
         {
-            int lenA = tmpReadholder->RH_StartStops.at(1) - tmpReadholder->RH_StartStops.at(0);
-            int lenB = tmpReadholder->RH_StartStops.at(3) - tmpReadholder->RH_StartStops.at(2);
+            int lenA = tmpReadholder->at(1) - tmpReadholder->at(0);
+            int lenB = tmpReadholder->at(3) - tmpReadholder->at(2);
             
             if (lenA > lenB)
             {
-                tmp_dr = matchedRead.substr(tmpReadholder->RH_StartStops.at(0), (tmpReadholder->RH_StartStops.at(1) - tmpReadholder->RH_StartStops.at(0) + 1));
+                tmp_dr = read.substr(tmpReadholder->at(0), (tmpReadholder->at(1) - tmpReadholder->at(0) + 1));
                 rev_comp = reverseComplement(tmp_dr);
             }
             else
             {
-                tmp_dr = matchedRead.substr(tmpReadholder->RH_StartStops.at(2), (tmpReadholder->RH_StartStops.at(3) - tmpReadholder->RH_StartStops.at(2) + 1));
+                tmp_dr = read.substr(tmpReadholder->at(2), (tmpReadholder->at(3) - tmpReadholder->at(2) + 1));
                 rev_comp = reverseComplement(tmp_dr);
             }
         }
         // take the second
-        else if (tmpReadholder->RH_StartStops.front() == 0)
+        else if (tmpReadholder->at(0) == 0)
         {
-            tmp_dr = matchedRead.substr(tmpReadholder->RH_StartStops.at(2), (tmpReadholder->RH_StartStops.at(3) - tmpReadholder->RH_StartStops.at(2) + 1));
+            tmp_dr = read.substr(tmpReadholder->at(2), (tmpReadholder->at(3) - tmpReadholder->at(2) + 1));
             rev_comp = reverseComplement(tmp_dr);
         }
         // take the first
         else 
         {
-            tmp_dr = matchedRead.substr(tmpReadholder->RH_StartStops.at(0), (tmpReadholder->RH_StartStops.at(1) - tmpReadholder->RH_StartStops.at(0) + 1));
+            tmp_dr = read.substr(tmpReadholder->at(0), (tmpReadholder->at(1) - tmpReadholder->at(0) + 1));
             rev_comp = reverseComplement(tmp_dr);
         }
     }
@@ -451,28 +471,28 @@ std::string DRLowLexi(std::string& matchedRead, ReadHolder * tmpReadholder)
     if (tmp_dr < rev_comp)
     {
         // the direct repeat is in it lowest lexicographical form
-        tmpReadholder->RH_WasLowLexi = true;
-        tmpReadholder->RH_Seq = matchedRead;
-        logInfo("DR in low lexi"<<endl<<tmpReadholder->RH_Seq, 9);
+        tmpReadholder->isLowLexi(true);
+        //tmpReadholder->RH_Seq = matchedRead;
+        logInfo("DR in low lexi"<<endl<<read, 9);
         return tmp_dr;
     }
     else
     {
-        tmpReadholder->RH_Seq = reverseComplement(matchedRead);
+        tmpReadholder->seq(reverseComplement(tmpReadholder->seq()));
         tmpReadholder->reverseStartStops();
-        tmpReadholder->RH_WasLowLexi = false;
-        logInfo("DR not in low lexi"<<endl<<tmpReadholder->RH_Seq, 9);
+        tmpReadholder->isLowLexi(false);
+        logInfo("DR not in low lexi"<<endl<<tmpReadholder->seq(), 9);
         return rev_comp;
     }
 }
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder, std::string& readHeader, std::string& read)
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder, std::string&  read)
 {
-    logInfo("Add (header): \t" << tmpReadholder, 9);
+    logInfo("Add (header): \t" << tmpReadholder->header(), 9);
     
     //add the header for the matched read
-    tmpReadholder->RH_Header = readHeader;
-    std::string dr_lowlexi = DRLowLexi(read, tmpReadholder);
+    //tmpReadholder->RH_Header = readHeader;
+    std::string dr_lowlexi = DRLowLexi( tmpReadholder, read);
     StringToken st = mStringCheck->getToken(dr_lowlexi);
     if(0 == st)
     {
@@ -482,7 +502,6 @@ void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tm
     }
     (*mReads)[st]->push_back(tmpReadholder);
 }
-
 
 //**************************************
 // STL extensions
@@ -731,19 +750,14 @@ int scan(side sT, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, 
 
 int scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLength, int scanRange, int readLength, std::string& read)
 {
-    //std::cout<<"@@@@@@@@@@@@@@@@@@@@@@@@@@@@"<<std::endl;
     int num_repeats = candidateCRISPR->numRepeats();
-    //std::cout<<"NR: "<<num_repeats<<std::endl;
     int pattern_length = (int)pattern.length();
     
     int last_repeat_index = candidateCRISPR->repeatAt(num_repeats-1);
-    //std::cout<<"LR: "<<last_repeat_index<<std::endl;
 
     int second_last_repeat_index = candidateCRISPR->repeatAt(num_repeats-2);
-    //std::cout<<"SLR: "<<second_last_repeat_index<<std::endl;
 
     int repeat_spacing = last_repeat_index - second_last_repeat_index;
-    //std::cout<<"RS: "<<repeat_spacing<<std::endl;
 
     int candidate_repeat_index, begin_search, end_search, position;
     
@@ -762,8 +776,6 @@ int scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLengt
         {
             begin_search = scanRightMinBegin;
         }
-        //        std::cout<<beginSearch<<" "<<mSequenceLength<<std::endl;
-        //System.outputFileStream<<"beginSearch " + beginSearch + "  " + "endSearch" + endSearch);
         if (begin_search > readLength - 1)
         {
             return readLength - 1;
@@ -780,16 +792,12 @@ int scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLengt
         /******************** end range checks ********************/
         
         std::string text = read.substr(begin_search, (end_search - begin_search));
-        //        std::cout<<pattern<<"\t"<<text<<std::endl;
         position = PatternMatcher::bmpSearch(text, pattern);
-        //        std::cout<<"bm pos: "<<position<<std::endl;
         
         
         if (position >= 0)
         {
-            //std::cout<<"NP: "<<position<<std::endl;
             candidateCRISPR->addRepeat(begin_search + position);
-            //std::cout<<"NEW: "<<begin_search + position<<std::endl;
             second_last_repeat_index = last_repeat_index;
             last_repeat_index = begin_search + position;
             repeat_spacing = last_repeat_index - second_last_repeat_index;

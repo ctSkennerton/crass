@@ -439,20 +439,20 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     while (read_iter != mReads[master_DR_token]->end()) 
     {
         // don't care about partials
-        if(((*read_iter)->RH_StartStops[1] - (*read_iter)->RH_StartStops[0]) == (master_DR_sequence.length() - 1))
+        if(((*read_iter)->at(1) - (*read_iter)->at(0)) == (master_DR_sequence.length() - 1))
         {
             // the start of the read is 
-            int this_read_start_pos = kmer_positions_ARRAY[0] - (*read_iter)->RH_StartStops[0] - kmer_positions_DR[0] ;
+            int this_read_start_pos = kmer_positions_ARRAY[0] - (*read_iter)->at(0) - kmer_positions_DR[0] ;
             if(first_run)
             {
-                dr_zone_start =  this_read_start_pos + (*read_iter)->RH_StartStops[0];
-                dr_zone_end =  this_read_start_pos + (*read_iter)->RH_StartStops[1];
+                dr_zone_start =  this_read_start_pos + (*read_iter)->at(0);
+                dr_zone_end =  this_read_start_pos + (*read_iter)->at(1);
                 first_run = false;
             }
-            for(int i = 0; i < ((*read_iter)->RH_Seq).length(); i++)
+            for(int i = 0; i < ((*read_iter)->seq()).length(); i++)
             {
                 int index = -1;
-                switch((*read_iter)->RH_Seq[i])
+                switch(((*read_iter)->seq())[i])
                 {
                     case 'A':
                         index = 0;
@@ -631,14 +631,14 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                             while (read_iter != mReads[*dr_iter]->end()) 
                             {
                                 // don't care about partials
-                                if(((*read_iter)->RH_StartStops[1] - (*read_iter)->RH_StartStops[0]) == (tmp_DR.length() - 1))
+                                if(((*read_iter)->at(1) - (*read_iter)->at(0)) == (tmp_DR.length() - 1))
                                 {
                                     // we need to find the first kmer which matches the mode.
-                                    int this_read_start_pos = positional_offset - (*read_iter)->RH_StartStops[0] -kmer_positions_DR[0] ;
-                                    for(int i = 0; i < ((*read_iter)->RH_Seq).length(); i++)
+                                    int this_read_start_pos = positional_offset - (*read_iter)->at(0) - kmer_positions_DR[0] ;
+                                    for(int i = 0; i < ((*read_iter)->seq()).length(); i++)
                                     {
                                         int index = -1;
-                                        switch((*read_iter)->RH_Seq[i])
+                                        switch(((*read_iter)->seq())[i])
                                         {
                                             case 'A':
                                                 index = 0;
@@ -901,13 +901,13 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                     ReadListIterator read_iter = mReads[*dr_iter]->begin();
                     while (read_iter != mReads[*dr_iter]->end()) 
                     {
-                        StartStopListIterator ss_iter = ((*read_iter)->RH_StartStops).begin();
-                        while(ss_iter != ((*read_iter)->RH_StartStops).end())
+                        StartStopListIterator ss_iter = ((*read_iter)->drPos()).begin();
+                        while(ss_iter != ((*read_iter)->drPos()).end())
                         {
                             int within_read_dec_pos = *ss_iter + dec_diff;
-                            if(within_read_dec_pos > 0 && within_read_dec_pos < ((*read_iter)->RH_Seq).length())
+                            if(within_read_dec_pos > 0 && within_read_dec_pos < ((*read_iter)->seq()).length())
                             {
-                                char decision_char = ((*read_iter)->RH_Seq)[within_read_dec_pos];
+                                char decision_char = ((*read_iter)->seq())[within_read_dec_pos];
                                 forms_map[decision_char] = NULL;
                                 break;
                             }
@@ -927,13 +927,13 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                             bool break_out = false;
                             while (read_iter != mReads[*dr_iter]->end()) 
                             {
-                                StartStopListIterator ss_iter = ((*read_iter)->RH_StartStops).begin();
-                                while(ss_iter != ((*read_iter)->RH_StartStops).end())
+                                StartStopListIterator ss_iter = ((*read_iter)->drPos()).begin();
+                                while(ss_iter != ((*read_iter)->drPos()).end())
                                 {
                                     int within_read_dec_pos = *ss_iter + dec_diff;
-                                    if(within_read_dec_pos > 0 && within_read_dec_pos < ((*read_iter)->RH_Seq).length())
+                                    if(within_read_dec_pos > 0 && within_read_dec_pos < ((*read_iter)->seq()).length())
                                     {
-                                        char decision_char = ((*read_iter)->RH_Seq)[within_read_dec_pos];
+                                        char decision_char = ((*read_iter)->seq())[within_read_dec_pos];
                                         ((*DR2GID_map)[ coll_char_to_GID_map[ decision_char ] ])->push_back(*dr_iter);
                                         break_out = true;
                                         break;
@@ -985,13 +985,13 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                             read_iter = mReads[*dr_iter]->begin();
                             while (read_iter != mReads[*dr_iter]->end()) 
                             {
-                                StartStopListIterator ss_iter = ((*read_iter)->RH_StartStops).begin();
-                                while(ss_iter != ((*read_iter)->RH_StartStops).end())
+                                StartStopListIterator ss_iter = ((*read_iter)->drPos()).begin();
+                                while(ss_iter != ((*read_iter)->drPos()).end())
                                 {
                                     int within_read_dec_pos = *ss_iter + dec_diff;
-                                    if(within_read_dec_pos > 0 && within_read_dec_pos < ((*read_iter)->RH_Seq).length())
+                                    if(within_read_dec_pos > 0 && within_read_dec_pos < ((*read_iter)->seq()).length())
                                     {
-                                        char decision_char = ((*read_iter)->RH_Seq)[within_read_dec_pos];
+                                        char decision_char = ((*read_iter)->seq())[within_read_dec_pos];
 
                                         // push this readholder onto the correct list
                                         (forms_map[decision_char])->push_back(*read_iter);
@@ -1056,7 +1056,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             while (read_iter != mReads[*drc_iter]->end()) 
             {
                 std::cout << true_DR << std::endl << std::endl;
-                std::cout << (*read_iter)->RH_Seq << std::endl;
+                std::cout << (*read_iter)->seq() << std::endl;
                 std::cout << (*read_iter)->splitApart() << std::endl;
                 (*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
                 std::cout << (*read_iter)->splitApart() << std::endl;
@@ -1379,8 +1379,8 @@ void WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map)
             ReadListIterator read_iter = mReads[*dr_iter]->begin();
             while (read_iter != mReads[*dr_iter]->end()) 
             {
-                reads_file<<">"<<(*read_iter)->RH_Header<<std::endl;
-                reads_file<<(*read_iter)->RH_Seq<<std::endl;
+                reads_file<<">"<<(*read_iter)->header()<<std::endl;
+                reads_file<<(*read_iter)->seq()<<std::endl;
                 read_iter++;
             }
             dr_iter++;
