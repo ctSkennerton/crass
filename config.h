@@ -69,6 +69,9 @@
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "c.skennerton@gmail.com"
 
+/* Define the full name of the package */
+#define PACKAGE_FULL_NAME "CRisprASSembler"
+
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "crass"
 

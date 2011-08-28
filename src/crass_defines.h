@@ -49,8 +49,8 @@
 #define CRASS_DEF_LONG_NAME                     "CRisprASSembler"
 #define CRASS_DEF_VERSION                       "0.0.1"
 #define CRASS_DEF_MAJOR_VERSION                 0
-#define CRASS_DEF_MINOR_VERSION                 1
-#define CRASS_DEF_REVISION                      0
+#define CRASS_DEF_MINOR_VERSION                 0
+#define CRASS_DEF_REVISION                      1
 // --------------------------------------------------------------------
  // STRING LENGTH / MISMATCH / CLUSTER SIZE PARAMETERS
 // --------------------------------------------------------------------
@@ -95,7 +95,7 @@
 #define CRASS_DEF_DEF_PATTERN_LOOKUP_EXT        "crass_direct_repeats.txt"
 #define CRASS_DEF_DEF_SPACER_LOOKUP_EXT         "crass_spacers.txt"
 // --------------------------------------------------------------------
- // USER OPTION STRUCTURE -- TODO: REMOVE THIS!
+ // USER OPTION STRUCTURE
 // --------------------------------------------------------------------
 #define CRASS_DEF_MAX_DELIM_LENGTH              10                  // delimiter used in stats report
 #define CRASS_DEF_MIN_DR_SIZE                   23                  // minimum direct repeat size
@@ -119,7 +119,7 @@ typedef struct {
     int highDRsize;
     int lowSpacerSize;
     int highSpacerSize;
-    int max_mismatches;
+//    int max_mismatches;
     std::string output_fastq;
     char delim[CRASS_DEF_MAX_DELIM_LENGTH];                         // delimiter used in stats report
     char * pat_file;
@@ -144,38 +144,14 @@ static struct option long_options [] = {
     {"reportStats", no_argument, NULL, 'r'},
     {"dumpReads", no_argument, NULL, 0},
     {"454", no_argument, NULL, 0},
+    {"ionTorrent", no_argument, NULL, 0},
     {"illumina", no_argument, NULL, 0},
     {"sanger", no_argument, NULL, 0},
     {"windowLength", required_argument, NULL, 'w'},
     {"minNumRepeats", required_argument, NULL, 'n'},
     {NULL, no_argument, NULL, 0}
 };
-//typedef struct {
-//    //std::string inputFileName;
-//    std::string outputFileDir;    // option 'o'
-//    int minNumRepeats;            // option 'n'
-//    int minRepeatLength;          // option 'd'
-//    int maxRepeatLength;          // option 'D'
-//    int minSpacerLength;          // option 's'
-//    int maxSpacerLength;          // option 'S'
-//    int searchWindowLength;       // option 'w'
-//    int logLevel;                 // option 'l'
-//} genOptions;
-//
-//static struct option gen_long_options [] = {
-//    
-//    {"minDR", required_argument, NULL, 'd'},
-//    {"maxDR", required_argument, NULL, 'D'},
-//    {"minSpacer", required_argument, NULL, 's'},
-//    {"maxSpacer", required_argument, NULL, 'S'},
-//    {"logLevel", required_argument, NULL, 'l'},
-//    {"minNumRepeats", required_argument, NULL, 'n'},
-//    {"version", no_argument, NULL, 'V'},
-//    {"windowLength", required_argument, NULL, 'w'},
-//    {"outDir", required_argument, NULL, 'o'},
-//    {"help", no_argument, NULL, 'h'},
-//    {NULL, no_argument, NULL, 0}
-//};
+
 
 
 

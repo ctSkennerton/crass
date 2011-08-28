@@ -7,18 +7,19 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/bm.cpp])
 AC_CONFIG_HEADER([config.h])
 
+# custom defines for config.h
+AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 
 # Checks for libraries.
+AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found in $LD_PATH])])
 
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h unistd.h])
-
-# Checks for required libraries
-AC_CHECK_LIB([z],[gzread])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

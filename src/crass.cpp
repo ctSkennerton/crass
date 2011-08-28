@@ -61,10 +61,8 @@
 void help(void)
 {
     std::cout<<"Usage:  "<<CRASS_DEF_PRG_NAME<<" [options]  <inputFiles>"<<std::endl<<std::endl;
-    std::cout<<CRASS_DEF_PRG_NAME<<" can be executed on either contigs/genomes or on"<<std::endl;
-    std::cout<<"files containing reads from any sequencing platform."<<std::endl;
     std::cout<<"for further information try:"<<std::endl;
-    std::cout<<"\t"<<CRASS_DEF_PRG_NAME<<" -h"<<std::endl;
+    std::cout<<CRASS_DEF_PRG_NAME<<" -h"<<std::endl;
 }
 
 
@@ -79,27 +77,31 @@ void usage(void)
     std::cout<< "\t-h --help                  This help message"<<std::endl;
     std::cout<< "\t-k --kmerCount <INT>       The number of the kmers that need to be"<<std::endl; 
     std::cout<< "\t                           shared for clustering [Default: 8]"<<std::endl;
-#ifdef DEBUG
+//#ifdef DEBUG
     std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 10]"<<std::endl;
-#else
-    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 4]"<<std::endl;
-#endif
-    std::cout<< "\t-m --maxMismatches <INT>   Total number of mismatches to at most allow for"<<std::endl;
-    std::cout<< "\t                           in search pattern [Default: 0]"<<std::endl;
+//#else
+//    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 4]"<<std::endl;
+//#endif
+//    std::cout<< "\t-m --maxMismatches <INT>   Total number of mismatches to at most allow for"<<std::endl;
+//    std::cout<< "\t                           in search pattern [Default: 0]"<<std::endl;
     std::cout<< "\t-n --minNumRepeats <INT>   Total number of direct repeats in a CRISPR for"<<std::endl;
     std::cout<< "\t                           it to be considered real [Default: 3]"<<std::endl;
     std::cout<< "\t-o --outDir <DIRECTORY>    Output directory [default: .]"<<std::endl;
     std::cout<< "\t-s --minSpacer <INT>       Minimim length of the spacer to search for [Default: 26]"<<std::endl;
     std::cout<< "\t-S --maxSpacer <INT>       Maximim length of the spacer to search for [Default: 50]"<<std::endl;
     std::cout<< "\t-V --version               Program and version information"<<std::endl;
-    std::cout<< "\t--dumpReads                Print reads containing CRISPR to file after the find stage"<<std::endl;
     std::cout<< "\t-w --windowLength <INT>    The length of the search window. Can only be"<<std::endl; 
     std::cout<< "\t                           a number between 6 - 9 [Default: 8]"<<std::endl;
+    std::cout<< "\t--dumpReads                Print reads containing CRISPR to file after the find stage"<<std::endl;
+    std::cout<< "\t--454                      Mark the reads as being produced by 454 sequencing"<<std::endl; 
+    std::cout<< "\t--ionTorrent               Mark the Reads as being produced by Ion Torrent sequencing"<<std::endl;
+    std::cout<< "\t--illumina                 Mark the reads as being produced by Illumina sequencing"<<std::endl; 
+    std::cout<< "\t--sanger                   Mark the Reads as being produced by Sanger sequencing"<<std::endl;
 }
 
 void versionInfo(void) 
 {
-    std::cout<<std::endl<<CRASS_DEF_LONG_NAME<<" ("<<CRASS_DEF_PRG_NAME<<")"<<std::endl<<"revison "<<CRASS_DEF_REVISION<<" version "<<CRASS_DEF_MAJOR_VERSION<<" subversion "<<CRASS_DEF_MINOR_VERSION<<" ("<<CRASS_DEF_VERSION<<")"<<std::endl<<std::endl;
+    std::cout<<std::endl<<CRASS_DEF_LONG_NAME<<" ("<<CRASS_DEF_PRG_NAME<<")"<<std::endl<<"version "<<CRASS_DEF_MAJOR_VERSION<<" subversion "<<CRASS_DEF_MINOR_VERSION<<" revison "<<CRASS_DEF_REVISION<<" ("<<CRASS_DEF_VERSION<<")"<<std::endl<<std::endl;
     std::cout<<"---------------------------------------------------------------"<<std::endl;
     std::cout<<"Copyright (C) 2011 Connor Skennerton & Michael Imelfort"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<std::endl;
@@ -117,7 +119,7 @@ int processOptions(int argc, char *argv[], options *opts)
     //char *opt_o_value = NULL;
     char *opt_b_value = NULL;
     
-    while( (c = getopt_long(argc, argv, "w:hVrl:k:p:n:m:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
+    while( (c = getopt_long(argc, argv, "w:hVrl:k:p:n:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
         switch(c) {
             case 'n': opts->minNumRepeats = atoi(optarg); break;
             case 'w': 
@@ -129,13 +131,13 @@ int processOptions(int argc, char *argv[], options *opts)
                     std::cerr<<"WARNING: Specified window length higher than max. Changing window length to " << opts->searchWindowLength << " instead of " << w_val<<std::endl;
                 }
                 break;        
-            case 'h': help(); usage();exit(0); break;
+            case 'h': versionInfo(); usage();exit(0); break;
             case 'V': versionInfo(); exit(0); break;
             case 'o': opts->output_fastq = optarg; break;
             case 'p': opts->pat_file = optarg; break;
             case 'b': opt_b_value = optarg; break;
             case 'r': opts->report_stats = true; break;
-            case 'm': opts->max_mismatches = atoi(optarg); break;
+//            case 'm': opts->max_mismatches = atoi(optarg); break;
             case 'd': opts->lowDRsize = atoi(optarg); break;
             case 'D': opts->highDRsize = atoi(optarg); break;
             case 's': opts->lowSpacerSize = atoi(optarg); break;
@@ -144,7 +146,7 @@ int processOptions(int argc, char *argv[], options *opts)
             case 'k': opts->kmer_size = atoi(optarg); break;
             case 'l': 
                 l_val =  atoi(optarg);
-#ifdef DEBUG
+//#ifdef DEBUG
                 if (l_val > CRASS_DEF_MAX_DEBUG_LOGGING)
                 {
                     std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<l_val<<std::endl;
@@ -154,23 +156,24 @@ int processOptions(int argc, char *argv[], options *opts)
                 {
                     opts->logger_level = l_val;
                 }
-#else
-                if(l_val > CRASS_DEF_MAX_LOGGING)
-                {
-                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<l_val<<std::endl;
-                    opts->logger_level = CRASS_DEF_MAX_LOGGING;
-                }
-                else
-                {
-                    opts->logger_level = l_val;
-                }
-#endif
+//#else
+//                if(l_val > CRASS_DEF_MAX_LOGGING)
+//                {
+//                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<l_val<<std::endl;
+//                    opts->logger_level = CRASS_DEF_MAX_LOGGING;
+//                }
+//                else
+//                {
+//                    opts->logger_level = l_val;
+//                }
+//#endif
                 break;
             case 0:
                 if( strcmp( "dumpReads", long_options[index].name ) == 0 ) opts->detect = true;
                 else if ( strcmp( "454", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
                 else if ( strcmp( "illumina", long_options[index].name ) == 0 ) opts->illumina = true;
                 else if ( strcmp( "sanger", long_options[index].name ) == 0 ) opts->sanger = true;
+                else if ( strcmp( "ionTorrent", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
                 break;
             default: versionInfo(); help();exit(1); break;
         }
@@ -211,7 +214,7 @@ int main(int argc, char *argv[])
         CRASS_DEF_MAX_DR_SIZE,                  // maximum direct repeat size
         CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
         CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
-        CRASS_DEF_NUM_DR_ERRORS,                // maxiumum allowable errors in direct repeat
+//        CRASS_DEF_NUM_DR_ERRORS,                // maxiumum allowable errors in direct repeat
         "./",                                   // output file directory
         "\t",                                   // delimiter string for stats report
         NULL,                                   //  pattern file name

@@ -1,5 +1,4 @@
 CFLAGS = --pedantic -Wall -std=c99 -O2 -ggdb
-#AM_LDFLAGS = -lz
 
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
 # the previous manual Makefile
