@@ -98,7 +98,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq)
     }
     gzclose(fp);
     
-    logInfo("Average read length (of the first 100 reads): "<<(total_base / read_counter), 1);
+    logInfo("Average read length (of the first 100 reads): "<<(total_base / read_counter), 2);
     if((total_base / read_counter) > CRASS_DEF_READ_LENGTH_CUTOFF)
     {
         return LONG_READ;
@@ -193,7 +193,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
                             checkFlank(leftSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
                             checkFlank(rightSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
                             candidate_crispr->trim(opts.lowDRsize);
-                            logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 3);
+                            logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 7);
                             
                             match_found = true;
                             
@@ -201,11 +201,11 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
                             while(rl_iter != candidate_crispr->mRepeats.end())
                             {
                                 tmp_holder->add((*rl_iter), ((*rl_iter) + candidate_crispr->repeatLength()));
-                                logInfo("direct repeat start index: "<<*rl_iter, 4);
+                                logInfo("direct repeat start index: "<<*rl_iter, 8);
 
                                 rl_iter++;
                             }
-                            logInfo(tmp_holder->seq(), 4);
+                            logInfo(tmp_holder->seq(), 9);
 
                             addReadHolder(mReads, mStringCheck, tmp_holder, read);
                             break;
@@ -237,7 +237,9 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
     delete candidate_crispr;
     kseq_destroy(seq); // destroy seq  
     gzclose(fp);       // close the file handler  
-    logInfo("finished processing file:"<<inputFastq, 1);
+    logInfo("finished processing file:"<<inputFastq, 1);    
+    logInfo("So far " << mReads->size()<<" direct repeat variants have been found", 2);
+
 }
 
 // boyer moore functions
@@ -321,17 +323,17 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
                         if (!(candidate_crispr->isRepeatLowComplexity())) 
                         {
                             match_found = true;
-                            logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 3);
+                            logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 7);
 
                             patternsHash[candidate_crispr->repeatStringAt(0)] = true;
                             Crispr::repeatListIterator rep_iter = candidate_crispr->mRepeats.begin();
                             while(rep_iter != candidate_crispr->mRepeats.end())
                             {
                                 tmp_holder->add((*rep_iter),((*rep_iter) + candidate_crispr->repeatLength()));
-                                logInfo("direct repeat start index: "<<*rep_iter, 4);
+                                logInfo("direct repeat start index: "<<*rep_iter, 8);
                                 rep_iter++;
                             }
-                            logInfo(read, 4);
+                            logInfo(read, 9);
 
                         }
                     }
@@ -357,12 +359,13 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
     kseq_destroy(seq); // destroy seq  
     gzclose(fp);       // close the file handler  
     logInfo("finished processing file:"<<inputFastq, 1);
+    logInfo("So far " << mReads->size()<<" direct repeat variants have been found", 2);
+
 }
 
 
 void findSingletons(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
-    logInfo("Beginning multipattern matcher. So far " << mReads->size()<<" reads have been found", 1);
     std::vector<std::string> patterns;
     int old_number = (int)mReads->size();
     map2Vector(patternsHash, patterns);
@@ -400,7 +403,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         {
             if (readsFound.find(tmp_holder->header()) == readsFound.end())
             {
-                logInfo("new read recruited: "<<tmp_holder->header(), 3);
+                logInfo("new read recruited: "<<tmp_holder->header(), 7);
                 logInfo(tmp_holder->seq(), 4);
                 tmp_holder->add(start_pos, (start_pos + (int)found_repeat.length()));
                 addReadHolder(mReads, mStringCheck, tmp_holder, read);
@@ -411,7 +414,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
             delete tmp_holder;
         }
     }
-    logInfo("finished multi pattern matcher. An extra " << mReads->size() - old_number<<" reads were recruited", 1);
+    logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 
 

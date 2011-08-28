@@ -147,21 +147,22 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         
         if(rt == LONG_READ)
         {
-            logInfo("long read algorithm selected", 2);
+            logInfo("Long read algorithm selected", 2);
            longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck);
         }
         else
         {
-            logInfo("short read algorithm selected", 2);
+            logInfo("Short read algorithm selected", 2);
            shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
         }
 
         // only nessessary in instances where there are short reads
         if(rt == SHORT_READ)
         {
+            logInfo("Begining Second iteration through file to recruit singletons", 2);
             findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
         }
-        logInfo("Searching complete. " << mReads.size()<<" reads have been found", 1);
+        logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
 
         // There will be an abundance of forms for each direct repeat.
         // We needs to do somes clustering! Then trim and concatenate the direct repeats
