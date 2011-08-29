@@ -485,11 +485,11 @@ bool Crispr::repeatAndSpacerIsDifferent(int i)
 
 bool Crispr::isRepeatLowComplexity()
 {
-    int cCount = 0;
-    int gCount = 0;
-    int aCount = 0;
-    int tCount = 0;
-    int nCount = 0;
+    float cCount = 0;
+    float gCount = 0;
+    float aCount = 0;
+    float tCount = 0;
+    float nCount = 0;
     
     float aPercent;
     float cPercent;
@@ -498,7 +498,7 @@ bool Crispr::isRepeatLowComplexity()
     float nPercent;
     
     std::string curr_repeat = this->repeatStringAt(0);
-    int curr_repeat_length = (int)curr_repeat.length();
+    float curr_repeat_length = (float)curr_repeat.length();
     std::string::iterator dr_iter = curr_repeat.begin();
     //int i = dr_match.DR_StartPos;
     while (dr_iter != curr_repeat.end()) 
