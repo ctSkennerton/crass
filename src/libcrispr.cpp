@@ -408,7 +408,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
             if (readsFound.find(tmp_holder->header()) == readsFound.end())
             {
                 logInfo("new read recruited: "<<tmp_holder->header(), 7);
-                logInfo(tmp_holder->seq(), 4);
+                logInfo(tmp_holder->seq(), 8);
                 tmp_holder->add(start_pos, (start_pos + (int)found_repeat.length()));
                 addReadHolder(mReads, mStringCheck, tmp_holder, read);
             }

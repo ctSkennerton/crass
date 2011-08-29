@@ -45,10 +45,11 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
+#include "LoggerSimp.h"
 #include "Crispr.h"
 #include "crass_defines.h"
 #include "Levensthein.h"
-#include <sstream>
 
 
 std::string Crispr::toString()
@@ -488,11 +489,13 @@ bool Crispr::isRepeatLowComplexity()
     int gCount = 0;
     int aCount = 0;
     int tCount = 0;
+    int nCount = 0;
     
     float aPercent;
     float cPercent;
     float gPercetn;
     float tPercent;
+    float nPercent;
     
     std::string curr_repeat = this->repeatStringAt(0);
     int curr_repeat_length = (int)curr_repeat.length();
@@ -514,7 +517,7 @@ bool Crispr::isRepeatLowComplexity()
             case 'g':
             case 'G':
                 gCount++; break;
-            default: break;
+            default: nCount++; break;
         }
         dr_iter++;
     }
@@ -522,8 +525,13 @@ bool Crispr::isRepeatLowComplexity()
     tPercent = tCount/curr_repeat_length;
     gPercetn = gCount/curr_repeat_length;
     cPercent = cCount/curr_repeat_length;
+    nPercent = nCount/curr_repeat_length;
     
-    if (aPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || tPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || gPercetn > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || cPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD)
+    if (aPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || 
+        tPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || 
+        gPercetn > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD || 
+        cPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD ||
+        nPercent > CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD)
     {
         return true;   
     }
