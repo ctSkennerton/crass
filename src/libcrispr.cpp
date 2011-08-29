@@ -296,7 +296,7 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
                 candidate_crispr->addRepeat(start);
                 candidate_crispr->addRepeat(match_start_pos + search_begin);
                 candidate_crispr->setRepeatLength(matched_end_pos - match_start_pos);
-
+                
                 // make sure that the kmer match is not already at the end of the read before incrementing
                 // increment so we are looking at the next base after the match
                 ++end_pos;
@@ -312,33 +312,37 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
 
                     }
                     candidate_crispr->setRepeatLength(candidate_crispr->repeatLength() + extenstion_length);
+
                 }
                 
                 int repeat_length = candidate_crispr->repeatLength();
-                int spacer_length = candidate_crispr->averageSpacerLength();
-                if ( (repeat_length >= opts.lowDRsize) && (repeat_length <= opts.highDRsize) && (spacer_length >= opts.lowSpacerSize) && (spacer_length <= opts.highSpacerSize) )
+                if ( (repeat_length >= opts.lowDRsize) && (repeat_length <= opts.highDRsize) )
                 {
-                    if (candidate_crispr->repeatAndSpacerIsDifferent()) 
+                    int spacer_length = candidate_crispr->averageSpacerLength();
+
+                    if ((spacer_length >= opts.lowSpacerSize) && (spacer_length <= opts.highSpacerSize))
                     {
-                        if (!(candidate_crispr->isRepeatLowComplexity())) 
+                        if (candidate_crispr->repeatAndSpacerIsDifferent()) 
                         {
-                            match_found = true;
-                            logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 7);
-
-                            patternsHash[candidate_crispr->repeatStringAt(0)] = true;
-                            Crispr::repeatListIterator rep_iter = candidate_crispr->mRepeats.begin();
-                            while(rep_iter != candidate_crispr->mRepeats.end())
+                            if (!(candidate_crispr->isRepeatLowComplexity())) 
                             {
-                                tmp_holder->add((*rep_iter),((*rep_iter) + candidate_crispr->repeatLength()));
-                                logInfo("direct repeat start index: "<<*rep_iter, 8);
-                                rep_iter++;
+                                match_found = true;
+                                logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 7);
+                                
+                                patternsHash[candidate_crispr->repeatStringAt(0)] = true;
+                                Crispr::repeatListIterator rep_iter = candidate_crispr->mRepeats.begin();
+                                while(rep_iter != candidate_crispr->mRepeats.end())
+                                {
+                                    tmp_holder->add((*rep_iter),((*rep_iter) + candidate_crispr->repeatLength()));
+                                    logInfo("direct repeat start index: "<<*rep_iter, 8);
+                                    rep_iter++;
+                                }
+                                logInfo(read, 9);
+                                
                             }
-                            logInfo(read, 9);
-
                         }
                     }
                 }
-
                 start = candidate_crispr->end() - 1;
                 candidate_crispr->clear();
             }

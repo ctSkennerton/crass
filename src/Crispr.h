@@ -87,7 +87,6 @@ public:
     {
         mRepeats.clear();
         mSequence.clear();
-        mRepeatLength = NULL;
     }
 
     
