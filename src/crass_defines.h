@@ -45,12 +45,12 @@
 // --------------------------------------------------------------------
  // PROGRAM NAME AND VERISON INFORMATION
 // --------------------------------------------------------------------
-#define CRASS_DEF_PRG_NAME                      "crass"
-#define CRASS_DEF_LONG_NAME                     "CRisprASSembler"
-#define CRASS_DEF_VERSION                       "0.0.1"
-#define CRASS_DEF_MAJOR_VERSION                 0
-#define CRASS_DEF_MINOR_VERSION                 0
-#define CRASS_DEF_REVISION                      1
+//#define CRASS_DEF_PRG_NAME                      "crass"
+//#define CRASS_DEF_LONG_NAME                     "CRisprASSembler"
+//#define CRASS_DEF_VERSION                       "0.0.1"
+//#define CRASS_DEF_MAJOR_VERSION                 0
+//#define CRASS_DEF_MINOR_VERSION                 0
+//#define CRASS_DEF_REVISION                      1
 // --------------------------------------------------------------------
  // STRING LENGTH / MISMATCH / CLUSTER SIZE PARAMETERS
 // --------------------------------------------------------------------
@@ -111,9 +111,6 @@ typedef struct {
     int count;
     bool detect;
     int logger_level;
-    bool illumina;
-    bool fourFiveFour;
-    bool sanger;
     bool report_stats;
     int lowDRsize;
     int highDRsize;
@@ -126,7 +123,9 @@ typedef struct {
     int kmer_size;
     int searchWindowLength;       // option 'w'
     int minNumRepeats;            // option 'n'
+    bool logToScreen;
 } options;
+
 
 
 static struct option long_options [] = {
@@ -143,16 +142,17 @@ static struct option long_options [] = {
     {"help", no_argument, NULL, 'h'},
     {"reportStats", no_argument, NULL, 'r'},
     {"dumpReads", no_argument, NULL, 0},
-    {"454", no_argument, NULL, 0},
-    {"ionTorrent", no_argument, NULL, 0},
-    {"illumina", no_argument, NULL, 0},
-    {"sanger", no_argument, NULL, 0},
     {"windowLength", required_argument, NULL, 'w'},
     {"minNumRepeats", required_argument, NULL, 'n'},
+    {"logToScreen", no_argument, NULL, 0},
     {NULL, no_argument, NULL, 0}
 };
 
-
+enum SequenceType {
+    sanger,
+    fourFiveFour,
+    illumina
+    };
 
 
 

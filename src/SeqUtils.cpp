@@ -40,7 +40,7 @@
 #include <zlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "crass_defines.h"
+#include <config.h>
 #include "SeqUtils.h"
 
 
@@ -148,13 +148,13 @@ gzFile getFileHandle(const char * inputFile)
     
     if ( (fp == NULL) && (strcmp(inputFile, "-") != 0) ) 
     {
-        std::cerr<< CRASS_DEF_PRG_NAME<<" : [ERROR] Could not open FASTQ "<<inputFile<<" for reading."<<std::endl;
+        std::cerr<< PACKAGE_NAME<<" : [ERROR] Could not open FASTQ "<<inputFile<<" for reading."<<std::endl;
         exit(1);
     }
     
     if ( (fp == NULL) && (strcmp(inputFile, "-") == 0) ) 
     {
-        std::cerr<< CRASS_DEF_PRG_NAME<<" : [ERROR] Could not open stdin for reading."<<std::endl;
+        std::cerr<< PACKAGE_NAME<<" : [ERROR] Could not open stdin for reading."<<std::endl;
         exit(1);
     }
     return fp;

@@ -109,7 +109,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq)
 
 // CRT search
 
-void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck)
+void longReadSearch(const char *inputFastq, SequenceType seqType, const options& opts, ReadMap * mReads, StringCheck * mStringCheck)
 {
     //-----
     // Code lifted from CRT, ported by connor and hacked by Mike.
@@ -129,7 +129,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
     {
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s,seq->name.s);
         
-        if (opts.fourFiveFour) 
+        if (seqType == fourFiveFour) 
         {
             tmp_holder->encode();
         }
@@ -243,7 +243,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
 }
 
 // boyer moore functions
-void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+void shortReadSearch(const char *inputFastq, SequenceType seqType, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
@@ -260,7 +260,7 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
         
         
-        if (opts.fourFiveFour) 
+        if (seqType == fourFiveFour) 
         {
             tmp_holder->encode();
         } 
@@ -368,7 +368,7 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
 }
 
 
-void findSingletons(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+void findSingletons(const char *inputFastq, SequenceType seqType, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
     std::vector<std::string> patterns;
     int old_number = (int)mReads->size();
@@ -393,7 +393,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     {
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
         
-        if (opts.fourFiveFour) 
+        if (seqType == fourFiveFour) 
         {
             tmp_holder->encode();
         }

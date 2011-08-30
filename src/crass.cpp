@@ -45,8 +45,9 @@
 #include <iostream>
 #include <sstream>
 #include <map>
-
+#include <time.h>
 // local includes
+#include <config.h>
 #include "crass.h"
 #include "crass_defines.h"
 #include "LoggerSimp.h"
@@ -60,16 +61,19 @@
 
 void help(void)
 {
-    std::cout<<"Usage:  "<<CRASS_DEF_PRG_NAME<<" [options]  <inputFiles>"<<std::endl<<std::endl;
+    std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { <inputFiles> <read_type> } {...}"<<std::endl<<std::endl;
     std::cout<<"for further information try:"<<std::endl;
-    std::cout<<CRASS_DEF_PRG_NAME<<" -h"<<std::endl;
+    std::cout<<PACKAGE_NAME<<" -h"<<std::endl;
 }
 
 
 
 void usage(void) 
 {
-    std::cout<<"Usage:  "<<CRASS_DEF_PRG_NAME<<" [options]  <inputFiles>"<<std::endl<<std::endl;
+    std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { <inputFiles> <read_type> } {...}"<<std::endl<<std::endl;
+    std::cout<<"where read_type is one of the following:"<<std::endl;
+    std::cout<<"--sanger"<<std::endl<<"--illumina"<<std::endl<<"--454"<<std::endl<<"--ionTorrent"<<std::endl<<std::endl;
+    std::cout<<"Options:"<<std::endl;
     std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
     std::cout<< "\t                           to search for [Default: 23]"<<std::endl;
     std::cout<< "\t-D --maxDR <INT>           Maximim length of the direct repeat"<<std::endl; 
@@ -93,15 +97,12 @@ void usage(void)
     std::cout<< "\t-w --windowLength <INT>    The length of the search window. Can only be"<<std::endl; 
     std::cout<< "\t                           a number between 6 - 9 [Default: 8]"<<std::endl;
     std::cout<< "\t--dumpReads                Print reads containing CRISPR to file after the find stage"<<std::endl;
-    std::cout<< "\t--454                      Mark the reads as being produced by 454 sequencing"<<std::endl; 
-    std::cout<< "\t--ionTorrent               Mark the Reads as being produced by Ion Torrent sequencing"<<std::endl;
-    std::cout<< "\t--illumina                 Mark the reads as being produced by Illumina sequencing"<<std::endl; 
-    std::cout<< "\t--sanger                   Mark the Reads as being produced by Sanger sequencing"<<std::endl;
+    std::cout<< "\t--logToScreen              Print the logging information to screen rather than a file"<<std::endl;
 }
 
 void versionInfo(void) 
 {
-    std::cout<<std::endl<<CRASS_DEF_LONG_NAME<<" ("<<CRASS_DEF_PRG_NAME<<")"<<std::endl<<"version "<<CRASS_DEF_MAJOR_VERSION<<" subversion "<<CRASS_DEF_MINOR_VERSION<<" revison "<<CRASS_DEF_REVISION<<" ("<<CRASS_DEF_VERSION<<")"<<std::endl<<std::endl;
+    std::cout<<std::endl<<PACKAGE_FULL_NAME<<" ("<<PACKAGE_NAME<<")"<<std::endl<<"version "<<PACKAGE_MAJOR_VERSION<<" subversion "<<PACKAGE_MINOR_VERSION<<" revison "<<PACKAGE_REVISION<<" ("<<PACKAGE_VERSION<<")"<<std::endl<<std::endl;
     std::cout<<"---------------------------------------------------------------"<<std::endl;
     std::cout<<"Copyright (C) 2011 Connor Skennerton & Michael Imelfort"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<std::endl;
@@ -119,7 +120,7 @@ int processOptions(int argc, char *argv[], options *opts)
     //char *opt_o_value = NULL;
     char *opt_b_value = NULL;
     
-    while( (c = getopt_long(argc, argv, "w:hVrl:k:p:n:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
+    while( (c = getopt_long(argc, argv, "+w:hVrl:k:p:n:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
         switch(c) {
             case 'n': opts->minNumRepeats = atoi(optarg); break;
             case 'w': 
@@ -170,19 +171,21 @@ int processOptions(int argc, char *argv[], options *opts)
                 break;
             case 0:
                 if( strcmp( "dumpReads", long_options[index].name ) == 0 ) opts->detect = true;
-                else if ( strcmp( "454", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
-                else if ( strcmp( "illumina", long_options[index].name ) == 0 ) opts->illumina = true;
-                else if ( strcmp( "sanger", long_options[index].name ) == 0 ) opts->sanger = true;
-                else if ( strcmp( "ionTorrent", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
+//                else if ( strcmp( "454", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
+//                else if ( strcmp( "illumina", long_options[index].name ) == 0 ) opts->illumina = true;
+//                else if ( strcmp( "sanger", long_options[index].name ) == 0 ) opts->sanger = true;
+//                else if ( strcmp( "ionTorrent", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
+                else if ( strcmp( "logToScreen", long_options[index].name ) == 0 ) opts->logToScreen = true;
+
                 break;
-            default: versionInfo(); help();exit(1); break;
+            default: versionInfo(); help(); exit(1); break;
         }
     }
-    if (optind == argc)
-    {
-        std::cerr<<CRASS_DEF_PRG_NAME<<" : [ERROR] No input files were provided. Try ./"<<CRASS_DEF_PRG_NAME" -h for help."<<std::endl;
-        exit(1);
-    }
+//    if (optind == argc)
+//    {
+//        std::cerr<<PACKAGE_NAME<<" : [ERROR] No input files were provided. Try ./"<<PACKAGE_NAME" -h for help."<<std::endl;
+//        exit(1);
+//    }
     
     /* setup delimiter for stats report (if given) */
     if ( opt_b_value != NULL ) 
@@ -197,66 +200,213 @@ int processOptions(int argc, char *argv[], options *opts)
 //**************************************
 // rock and roll
 //**************************************
-
 int main(int argc, char *argv[]) 
 {
-    
-    /* application of default options */
-    options opts = {
-        0,                                      // count flag
-        false,                                  // exit after first find
-        CRASS_DEF_DEFAULT_LOGGING,              // logging minimum by default
-        false,                                  // illumina reads
-        false,                                  // 454 reads
-        false,                                  // sanger reads
-        false,                                  // output stats report
-        CRASS_DEF_MIN_DR_SIZE,                  // minimum direct repeat size
-        CRASS_DEF_MAX_DR_SIZE,                  // maximum direct repeat size
-        CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
-        CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
-//        CRASS_DEF_NUM_DR_ERRORS,                // maxiumum allowable errors in direct repeat
-        "./",                                   // output file directory
-        "\t",                                   // delimiter string for stats report
-        NULL,                                   //  pattern file name
-        CRASS_DEF_K_CLUST_MIN,                  // the number of the kmers that need to be shared for clustering
-        CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH, // the search window length
-        CRASS_DEF_DEFAULT_MIN_NUM_REPEATS       // mininum number of repeats for long read algorithm 
-    };
     
     if(argc == 1) 
     {
         help();
         exit(1);
     }
+    /* application of default options */
+    options opts = {
+        0,                                      // count flag
+        false,                                  // exit after first find
+        CRASS_DEF_DEFAULT_LOGGING,              // logging minimum by default
+        false,                                  // output stats report
+        CRASS_DEF_MIN_DR_SIZE,                  // minimum direct repeat size
+        CRASS_DEF_MAX_DR_SIZE,                  // maximum direct repeat size
+        CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
+        CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
+        //        CRASS_DEF_NUM_DR_ERRORS,                // maxiumum allowable errors in direct repeat
+        "./",                                   // output file directory
+        "\t",                                   // delimiter string for stats report
+        NULL,                                   //  pattern file name
+        CRASS_DEF_K_CLUST_MIN,                  // the number of the kmers that need to be shared for clustering
+        CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH, // the search window length
+        CRASS_DEF_DEFAULT_MIN_NUM_REPEATS,      // mininum number of repeats for long read algorithm 
+        false                                   // should we log to screen
+    };
+
     int opt_idx = processOptions(argc, argv, &opts);
-    
-    // initialize the log file
-    
-    std::string logFileName = opts.output_fastq+ "crass.log";
-    
-    intialiseGlobalLogger(logFileName, opts.logger_level);
-    
-    
+
     if (opt_idx >= argc) 
     {
-        std::cerr<<CRASS_DEF_PRG_NAME<<" : [ERROR] specify FASTQ files to process!"<<std::endl;
+        std::cerr<<PACKAGE_NAME<<" : [ERROR] Specify sequence files to process!"<<std::endl;
+        help();
         exit(1);
     }
+    
+    // initialize the log file
+    std::string logFileName;
+    if (opts.logToScreen) 
+    {
+        logFileName = "";
+    } 
+    else 
+    {
+        // create a time stamp for the log file
+        time_t rawtime;
+        struct tm * timeinfo;
+        char buffer [80];
+        
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        
+        strftime (buffer,80,"%d_%m_%Y_%H%M%S",timeinfo);
+        std::string tmp(buffer);
+        logFileName = opts.output_fastq+ "crass."+tmp+".log";
+        
+    }
+    
+    intialiseGlobalLogger(logFileName, opts.logger_level);
     
     // The remaining command line arguments are FASTQ(s) to process
     // put them in a vector to pass to the workhorse
     std::vector<std::string> seq_files;
+    std::vector<SequenceType> seq_type_files;
     
     while (opt_idx < argc) 
     {
         //
         std::string seq_file(argv[opt_idx]);
+        
         seq_files.push_back(seq_file);
-        logTimeStamp();
+        
+        opt_idx++;
+
+        if (opt_idx >= argc || '-' != argv[opt_idx][0]) 
+        {
+            //throw error
+            std::cerr<<PACKAGE_NAME<<" : [ERROR] A file must be followed by a read type!"<<std::endl;
+            help();
+            exit(1);
+            
+        } 
+        else 
+        {
+            //check for the sequence type
+            if (strcmp(argv[opt_idx],"--454") == 0) 
+            {
+                seq_type_files.push_back(fourFiveFour);
+            }
+            else if(strcmp(argv[opt_idx],"--illumina") == 0)
+            {
+                seq_type_files.push_back(illumina);
+            }
+            else if(strcmp(argv[opt_idx],"--sanger") == 0)
+            {
+                seq_type_files.push_back(sanger);
+            }
+            else if(strcmp(argv[opt_idx],"--ionTorrent") == 0)
+            {
+                seq_type_files.push_back(fourFiveFour);
+            }
+            else
+            {
+                // throw error
+                std::cerr<<PACKAGE_NAME<<" : [ERROR] The sequence format you provided, "<<argv[opt_idx]<<", is not recognized!"<<std::endl;
+                help();
+                exit(1);
+            }
+        }
         opt_idx++;
     }
+    logTimeStamp();
+
     WorkHorse * mHorse = new WorkHorse(&opts);
-    mHorse->doWork(seq_files);
+    mHorse->doWork(seq_files, seq_type_files);
     delete mHorse;
     return 0;
 }
+
+//int main(int argc, char *argv[]) 
+//{
+//    if(argc == 1) 
+//    {
+//        help();
+//        exit(1);
+//    }
+//    
+//    int index = 0;
+//    while (index < argc) 
+//    {
+//        std::cout<<index<<" : "<<argc<<std::endl;
+//
+//        /* application of default options */
+//        options opts = {
+//            0,                                      // count flag
+//            false,                                  // exit after first find
+//            CRASS_DEF_DEFAULT_LOGGING,              // logging minimum by default
+//            false,                                  // illumina reads
+//            false,                                  // 454 reads
+//            false,                                  // sanger reads
+//            false,                                  // output stats report
+//            CRASS_DEF_MIN_DR_SIZE,                  // minimum direct repeat size
+//            CRASS_DEF_MAX_DR_SIZE,                  // maximum direct repeat size
+//            CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
+//            CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
+//            //        CRASS_DEF_NUM_DR_ERRORS,                // maxiumum allowable errors in direct repeat
+//            "./",                                   // output file directory
+//            "\t",                                   // delimiter string for stats report
+//            NULL,                                   //  pattern file name
+//            CRASS_DEF_K_CLUST_MIN,                  // the number of the kmers that need to be shared for clustering
+//            CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH, // the search window length
+//            CRASS_DEF_DEFAULT_MIN_NUM_REPEATS,       // mininum number of repeats for long read algorithm 
+//            false
+//        };
+//        index = processOptions(argc, argv, &opts);
+//
+//            
+//        if (index >= argc) 
+//        {
+//            std::cerr<<PACKAGE_NAME<<" : [ERROR] specify sequence files to process!"<<std::endl;
+//            exit(1);
+//        }
+//        else
+//        {
+//
+//            
+//            // initialize the log file
+//            std::string logFileName;
+//            if (opts.logToScreen) {
+//                logFileName = "";
+//            } else {
+//                // create a time stamp for the log file
+//                time_t rawtime;
+//                struct tm * timeinfo;
+//                char buffer [80];
+//                
+//                time ( &rawtime );
+//                timeinfo = localtime ( &rawtime );
+//                
+//                strftime (buffer,80,"%d_%m_%Y_%H%M%S",timeinfo);
+//                std::string tmp(buffer);
+//                logFileName = opts.output_fastq+ "crass."+tmp+".log";
+//
+//            }
+//            
+//            intialiseGlobalLogger(logFileName, opts.logger_level);
+//            
+//            // The remaining command line arguments are FASTQ(s) to process
+//            // put them in a vector to pass to the workhorse
+//            std::vector<std::string> seq_files;
+//            while (index < argc && '-' != argv[index][0]) 
+//            {
+//                std::string seq_file(argv[index]);
+//                seq_files.push_back(seq_file);
+//                logTimeStamp();
+//                index++;
+//            }
+//            
+//            // do work
+//            WorkHorse * mHorse = new WorkHorse(&opts);
+//            mHorse->doWork(seq_files);
+//            delete mHorse;
+//        }
+//        //set the position for the next options call
+//        optind = index;
+//        std::cout<<index<<" : "<<argc<<std::endl;
+//    }
+//    return 0;
+//}

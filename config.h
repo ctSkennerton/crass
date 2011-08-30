@@ -72,8 +72,17 @@
 /* Define the full name of the package */
 #define PACKAGE_FULL_NAME "CRisprASSembler"
 
+/* Define the major version of the package */
+#define PACKAGE_MAJOR_VERSION 0
+
+/* Define the minor version of the package */
+#define PACKAGE_MINOR_VERSION 0
+
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "crass"
+
+/* Define the revision of the package */
+#define PACKAGE_REVISION 1
 
 /* Define to the full name and version of this package. */
 #define PACKAGE_STRING "crass 0.0.1"

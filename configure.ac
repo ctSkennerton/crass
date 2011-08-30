@@ -9,6 +9,9 @@ AC_CONFIG_HEADER([config.h])
 
 # custom defines for config.h
 AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
+AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
+AC_DEFINE([PACKAGE_MINOR_VERSION],[0],[Define the minor version of the package])
+AC_DEFINE([PACKAGE_REVISION],[1],[Define the revision of the package])
 
 # Checks for programs.
 AC_PROG_CXX

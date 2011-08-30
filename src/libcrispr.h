@@ -80,11 +80,11 @@ enum side{rightSide, leftSide};
 
 READ_TYPE decideWhichSearch(const char *input_fastq);
 
-void longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
+void longReadSearch(const char *input_fastq, SequenceType seqType, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
 
-void shortReadSearch(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
+void shortReadSearch(const char *input_fastq, SequenceType seqType, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
-void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
+void findSingletons(const char *input_fastq, SequenceType seqType, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
 
 //**************************************

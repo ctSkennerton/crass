@@ -77,7 +77,7 @@ class WorkHorse {
         ~WorkHorse();
         
         // do all the work!
-        int doWork(std::vector<std::string> seqFiles);
+    int doWork(std::vector<std::string> seqFiles, std::vector<SequenceType> seqTypeOfFiles);
 
         //**************************************
         // file IO

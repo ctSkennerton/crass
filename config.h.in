@@ -71,8 +71,17 @@
 /* Define the full name of the package */
 #undef PACKAGE_FULL_NAME
 
+/* Define the major version of the package */
+#undef PACKAGE_MAJOR_VERSION
+
+/* Define the minor version of the package */
+#undef PACKAGE_MINOR_VERSION
+
 /* Define to the full name of this package. */
 #undef PACKAGE_NAME
+
+/* Define the revision of the package */
+#undef PACKAGE_REVISION
 
 /* Define to the full name and version of this package. */
 #undef PACKAGE_STRING

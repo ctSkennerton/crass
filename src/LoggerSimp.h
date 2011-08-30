@@ -47,6 +47,7 @@
 #include <time.h>
 #include <iostream>
 #include "crass_defines.h"
+#include <config.h>
 using namespace std;
 
 // for making the main logger
@@ -129,7 +130,7 @@ if(logger->getLogLevel() >= ll) { \
 
 // time stamp
 #define logTimeStamp() { \
-(*(logger->mGlobalHandle)) << "----------------------------------------------------------------------\n----------------------------------------------------------------------\n -- " << logger->timeToString(false) << "  --  " << CRASS_DEF_LONG_NAME<<" ("<<CRASS_DEF_PRG_NAME<<")" << " --  Version: " << CRASS_DEF_VERSION << " --\n----------------------------------------------------------------------\n----------------------------------------------------------------------\n" << std::endl; \
+(*(logger->mGlobalHandle)) << "----------------------------------------------------------------------\n----------------------------------------------------------------------\n -- " << logger->timeToString(false) << "  --  " << PACKAGE_FULL_NAME<<" ("<<PACKAGE_NAME<<")" << " --  Version: " << PACKAGE_VERSION << " --\n----------------------------------------------------------------------\n----------------------------------------------------------------------\n" << std::endl; \
 }
 
 #ifdef SUPER_LOGGING
