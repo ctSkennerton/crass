@@ -119,6 +119,20 @@ void WorkHorse::clearReadMap(ReadMap * tmp_map)
     }
     tmp_map->clear();
 }
+int WorkHorse::numOfReads(void)
+{
+    int count = 0;
+    ReadMapIterator read_iter = mReads.begin();
+    while(read_iter != mReads.end())
+    {
+        if (read_iter->second != NULL)
+        {
+            count += (int)(read_iter->second)->size();
+        }
+        read_iter++;
+    }
+    return count;
+}
 
 // do all the work!
 int WorkHorse::doWork(std::vector<std::string> seqFiles, std::vector<SequenceType> seqTypeOfFile)
@@ -162,18 +176,23 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles, std::vector<SequenceTyp
         {
             logInfo("Long read algorithm selected", 2);
            longReadSearch(input_fastq, *seq_type_iter, *mOpts, &mReads, &mStringCheck);
+            logInfo("number of reads found so far: "<<this->numOfReads(), 2);
+
         }
         else
         {
             logInfo("Short read algorithm selected", 2);
            shortReadSearch(input_fastq, *seq_type_iter, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
-        }
+            logInfo("number of reads found so far: "<<this->numOfReads(), 2);
 
+        }
         // only nessessary in instances where there are short reads
         if(rt == SHORT_READ)
         {
             logInfo("Begining Second iteration through file to recruit singletons", 2);
             findSingletons(input_fastq, *seq_type_iter, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            logInfo("number of reads found so far: "<<this->numOfReads(), 2);
+
         }
         logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
 

@@ -214,6 +214,8 @@ public:
         return repeatAndSpacerIsDifferent(0);
     }
     
+    bool areSpacersAtPosDifferent(int i, int j);
+    
     bool isRepeatLowComplexity(void);
     
     int getActualRepeatLength( int searchWindowLength, int minSpacerLength);

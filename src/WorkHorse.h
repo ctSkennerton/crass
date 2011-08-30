@@ -85,6 +85,7 @@ class WorkHorse {
         //void write_spacerID(direct_repeat &dr_match, kseq_t *seq);
         //void write_direct_repeatID(direct_repeat &dr_match, kseq_t *seq);
         void writeLookupToFile(string &outFileName, lookupTable &outLookup);
+        int numOfReads(void);
         
     private:
         

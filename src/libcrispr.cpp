@@ -128,14 +128,18 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s,seq->name.s);
-        
-        if (seqType == fourFiveFour) 
+        std::string read;
+        switch (seqType)
         {
-            tmp_holder->encode();
+            case fourFiveFour:
+                tmp_holder->encode();
+                read = tmp_holder->seq();
+                break;
+            default:
+                read = seq->seq.s;
+                break;
         }
-        
-        std::string read = tmp_holder->seq();
-        
+
         int seq_length = (int)read.length() - 1;
         
         candidate_crispr->setSequence(read);
@@ -183,17 +187,25 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
 
             if ( (candidate_crispr->numRepeats() >= opts.minNumRepeats) ) //make sure minNumRepeats is always at least 2
             {
+                logInfo(tmp_holder->header(), 8);
+                logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " repeated kmers found", 8);
+                
                 int actual_repeat_length = candidate_crispr->getActualRepeatLength(opts.searchWindowLength, opts.lowSpacerSize);
                 if ( (actual_repeat_length >= opts.lowDRsize) && (actual_repeat_length <= opts.highDRsize) )
                 {
+                    logInfo("\tPassed test 2. The repeat length is between "<<opts.lowDRsize<<" and "<<opts.highDRsize, 8);
                     if (candidate_crispr->hasNonRepeatingSpacers())
                     {
+                        logInfo("\tPassed test 3. The repeats and spacers are no more than "<<CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY<<" similar", 8);
                         if (candidate_crispr->hasSimilarlySizedSpacers())
                         {
+                            logInfo("\tPassed test 4. The spacer lengths differ by less than "<<CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF, 8);
+                            logInfo("\tand the repeat and spacer lengths differ by less than "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
+
                             checkFlank(leftSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
                             checkFlank(rightSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
                             candidate_crispr->trim(opts.lowDRsize);
-                            logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 7);
+                            logInfo("Potential CRISPR containing read found: "<<tmp_holder->header(), 7);
                             
                             match_found = true;
                             
@@ -208,23 +220,21 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
                             logInfo(tmp_holder->seq(), 9);
 
                             addReadHolder(mReads, mStringCheck, tmp_holder, read);
+                            
                             break;
                         }
-                        else
-                        {
-                            break;
-                        }
+                        
                     }
-                    else
-                    {
-                        break;
-                    }
-                 }
+                
+                }
                 else
                 {
-                    break;
+                    logInfo("\tFailed test 2. Repeat length: "<<candidate_crispr->repeatLength(), 8); 
                 }
+                j = candidate_crispr->end() - 1;
             }
+                candidate_crispr->clear();
+
         }
         if (!match_found) 
         {

@@ -217,6 +217,7 @@ class ReadHolder
         void logContents(int logLevel);
     private:
         // members
+        std::string RH_Rle;                      // run length encoded string
         std::string RH_Header;                  // header for the sequence
         std::string RH_Seq;                     // The DR_lowlexi sequence of this read
         bool RH_WasLowLexi;                     // was the sequence DR_low lexi in the file?
