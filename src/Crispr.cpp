@@ -155,7 +155,7 @@ void Crispr::removeRepeat(int val)
     // load what we've got into a tmp vector
     repeatList tmp_rep_list = mRepeats;
     mRepeats.clear();
-    for (int i = 0; i < tmp_rep_list.size(); ++i) 
+    for (int i = 0; i < (int)(tmp_rep_list.size()); ++i) 
     {
         // skip the element
         if (i == val) 
@@ -170,120 +170,143 @@ void Crispr::removeRepeat(int val)
     }
 }
 
-int Crispr::getActualRepeatLength( int searchWindowLength, int minSpacerLength)
+int Crispr::extendPreRepeat(int searchWindowLength, int minSpacerLength)
 {
+    //-----
+    // Extend a preliminary repeat - return the final repeat size
+    //
     // the number of repeats
     int num_repeats = (int)(mRepeats.size());
+    mRepeatLength = searchWindowLength;
+    int cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * num_repeats);
+        
     // the index in the read of the first DR kmer
     int first_repeat_start_index = mRepeats.front();
+    
     // the index in the read of the last DR kmer
     int last_repeat_start_index = mRepeats.back();
     
     // the length between the first two DR kmers
     int shortest_repeat_spacing = mRepeats[1] - mRepeats[0];
-    // loop througth all of the members of mRepeats
-    for (int i = 0; i < mRepeats.size() - 1; i++)
+    
+    // loop througth all remaining members of mRepeats
+    int end_index = (int)mRepeats.size();
+    for (int i = 2; i < end_index; i++)
     {
-        int curr_repeat_index = mRepeats[i];
-        int next_repeat_index = mRepeats[i + 1];
         // get the repeat spacing of this pair of DR kmers
-        int curr_repeat_spacing = next_repeat_index - curr_repeat_index;
+        int curr_repeat_spacing = mRepeats[i] - mRepeats[i - 1];
+
         // if it is shorter than what we already have, make it the shortest
         if (curr_repeat_spacing < shortest_repeat_spacing)
         {
             shortest_repeat_spacing = curr_repeat_spacing;
         }
     }
-    
-    int sequence_length = (int)mSequence.length();
-    // initial position of the end of the DR, equal to the length of the DR kmer
-    int right_extension_length = searchWindowLength;
+
     // don't search too far  
     int max_right_extension_length = shortest_repeat_spacing - minSpacerLength;
 
-    
-    int curr_repeat_start_index;
+    // Sometimes we shouldn't use the far right DR. (it may lie too close to the end)
+    int DR_index_end = num_repeats;
+    int dist_to_end = (int)mSequence.length() - last_repeat_start_index - 1;
+    if(dist_to_end < max_right_extension_length)
+    {
+        DR_index_end--;
+        cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * (num_repeats - 1));
+    }
     std::string curr_repeat;
     int char_count_A, char_count_C, char_count_T, char_count_G;
     char_count_A = char_count_C = char_count_T = char_count_G = 0;
-    bool done = false;
-    
+
 
     //(from the right side) extend the length of the repeat to the right as long as the last base of all repeats are at least threshold
-    while (!done && (right_extension_length <= max_right_extension_length) && (last_repeat_start_index + right_extension_length < sequence_length))
+    while (max_right_extension_length > 0)
     {
-        for (int k = 0; k < num_repeats; k++ )
+        for (int k = 0; k < DR_index_end; k++ )
         {
-            curr_repeat_start_index = mRepeats[k];
-            curr_repeat = mSequence.substr(curr_repeat_start_index, right_extension_length);
-            char lastChar = curr_repeat.at(curr_repeat.length() - 1);
-            
-            if (lastChar == 'A')   char_count_A++;
-            else if (lastChar == 'C')   char_count_C++;
-            else if (lastChar == 'T')   char_count_T++;
-            else if (lastChar == 'G')   char_count_G++;
+            // look at the character just past the end of the last repeat
+            switch(mSequence.at(mRepeats.at(k) + mRepeatLength))
+            {
+                case 'A':
+                    char_count_A++;
+                    break;
+                case 'C':
+                    char_count_C++;
+                    break;
+                case 'G':
+                    char_count_G++;
+                    break;
+                case 'T':
+                    char_count_T++;
+                    break;
+            }
         }
-        double percentA = (double)char_count_A/num_repeats;
-        double percentC = (double)char_count_C/num_repeats;
-        double percentT = (double)char_count_T/num_repeats;
-        double percentG = (double)char_count_G/num_repeats;
         
-        if ( (percentA >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentC >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentT >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentG >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
+        if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
         {
-            right_extension_length++;
+            mRepeatLength++;
+            max_right_extension_length--;
             char_count_A = char_count_C = char_count_T = char_count_G = 0;
         }
         else
-        {
-            done = true;
-        }
+            break;
     }
-    right_extension_length--;
     
-    int left_extension_length = 0;
     char_count_A = char_count_C = char_count_T = char_count_G = 0;
-    done = false;
+
+    // again, not too far
+    int left_extension_length = 0;
+    int max_left_extension_length = shortest_repeat_spacing - minSpacerLength - mRepeatLength;
     
-    int max_left_extension_length = shortest_repeat_spacing - minSpacerLength - right_extension_length;
+    // and again, we may not wat to use the first DR
+    int DR_index_start = 0;
+    if(max_left_extension_length > first_repeat_start_index)
+    {
+        DR_index_start++;
+        cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * (num_repeats - 1));
+    }
     
     //(from the left side) extends the length of the repeat to the left as long as the first base of all repeats is at least threshold
-    while (!done && (left_extension_length <= max_left_extension_length) && (first_repeat_start_index - left_extension_length >= 0) )
+    while (left_extension_length < max_left_extension_length)
     {
-        for (int k = 0; k < num_repeats; k++ )
+        for (int k = DR_index_start; k < num_repeats; k++ )
         {
-            curr_repeat_start_index = mRepeats.at(k);
-            char firstChar = mSequence.at(curr_repeat_start_index - left_extension_length);
-            
-            if (firstChar == 'A')    char_count_A++;
-            else if (firstChar == 'C')    char_count_C++;
-            else if (firstChar == 'T')    char_count_T++;
-            else if (firstChar == 'G')    char_count_G++;
+            switch(mSequence.at(mRepeats.at(k) - left_extension_length - 1))
+            {
+                case 'A':
+                    char_count_A++;
+                    break;
+                case 'C':
+                    char_count_C++;
+                    break;
+                case 'G':
+                    char_count_G++;
+                    break;
+                case 'T':
+                    char_count_T++;
+                    break;
+            }
         }
-        
-        double percentA = (double)char_count_A/num_repeats;
-        double percentC = (double)char_count_C/num_repeats;
-        double percentT = (double)char_count_T/num_repeats;
-        double percentG = (double)char_count_G/num_repeats;
-        
-        if ( (percentA >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentC >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentT >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) || (percentG >= CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
+
+        if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
         {
+            mRepeatLength++;
             left_extension_length++;
             char_count_A = char_count_C = char_count_T = char_count_G = 0;
         }
         else
-        {
-            done = true;
-        }
+            break;
     }
-    left_extension_length--;
+
     repeatListIterator repeat_iter = mRepeats.begin();
     
     while (repeat_iter != mRepeats.end()) 
     {
-        *repeat_iter = *repeat_iter - left_extension_length;
+        *repeat_iter -= left_extension_length;
+        if(*repeat_iter < 0)
+            *repeat_iter = 0;
         ++repeat_iter;
     }
-    mRepeatLength = right_extension_length + left_extension_length;
 
     return mRepeatLength;
 }
@@ -462,13 +485,14 @@ bool Crispr::areSpacersAtPosDifferent(int i, int j)
     std::string curr_spacer = this->spacerStringAt(i);
     std::string next_spacer = this->spacerStringAt(j);
     
+    logInfo (curr_spacer << " : " << next_spacer, 1);
     float max_length = std::max(curr_spacer.length(), next_spacer.length());
     
     float edit_distance =  LevenstheinDistance(curr_spacer, next_spacer);
     float similarity = 1.0 - (edit_distance/max_length);
-    if ( similarity > CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY )
+    if ( similarity > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY )
     {
-        logInfo("\tFailed test 3a. Spacers are too similar: "<<similarity<< " > " << CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, 8);
+        logInfo("\tFailed test 3a. Spacers are too similar: "<<similarity<< " > " << CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
         return false;
     }
     return true;
@@ -485,9 +509,9 @@ bool Crispr::repeatAndSpacerIsDifferent(int i)
     float max_length = std::max(first_spacer.length(), first_repeat.length());
     float edit_distance =  LevenstheinDistance(first_spacer, first_repeat);
     float similarity = 1.0 - (edit_distance/max_length);
-    if(similarity > CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY)
+    if(similarity > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY)
     {
-        logInfo("\tFailed test 3b. Repeat and Spacer is too similar: "<<similarity<< " > " << CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, 8);
+        logInfo("\tFailed test 3b. Repeat and Spacer is too similar: "<<similarity<< " > " << CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
         return false;
     }
     return true;

@@ -73,20 +73,20 @@ void WuManber::Initialize( const WuVector &patterns,
         for ( unsigned short i = 'A'; i <= 'Z'; ++i ) {
             char letter = i - 'A' + 'a';  // map upper case to lower case
             m_lu[i].letter = letter; // map upper case to lower case
-            m_lu[i].offset = m_lu[letter].offset;  
+            m_lu[i].offset = m_lu[(int)letter].offset;  
             // no unique characters so don't increment size
         }
     }
     if ( bIncludeSpecialCharacters ) {
         for ( char *c = rchSpecialCharacters; 0 != *c; ++c ) {
-            m_lu[*c].letter = *c;
-            m_lu[*c].offset = m_nSizeOfAlphabet++;
+            m_lu[(int)*c].letter = *c;
+            m_lu[(int)*c].offset = m_nSizeOfAlphabet++;
         }
     }
     if ( bIncludeExtendedAscii ) {
         for ( unsigned char *c = rchExtendedAscii; 0 != *c; ++c ) {
-            m_lu[*c].letter = static_cast<char>( *c );
-            m_lu[*c].offset = m_nSizeOfAlphabet++;
+            m_lu[(unsigned int)*c].letter = static_cast<char>( *c );
+            m_lu[(unsigned int)*c].offset = m_nSizeOfAlphabet++;
         }
     }
     
@@ -108,18 +108,18 @@ void WuManber::Initialize( const WuVector &patterns,
     for ( size_t j = 0; j < k; ++j ) {  // loop through patterns
         for ( size_t q = m; q >= B; --q ) {
             unsigned int hash;
-            hash  = m_lu[patterns[j][q - 2 - 1]].offset; // bring in offsets of X in pattern j
+            hash  = m_lu[(int)(patterns[j][q - 2 - 1])].offset; // bring in offsets of X in pattern j
             hash <<= m_nBitsInShift;
-            hash += m_lu[patterns[j][q - 1 - 1]].offset;
+            hash += m_lu[(int)(patterns[j][q - 1 - 1])].offset;
             hash <<= m_nBitsInShift;
-            hash += m_lu[patterns[j][q     - 1]].offset;
+            hash += m_lu[(int)(patterns[j][q     - 1])].offset;
             size_t shiftlen = m - q;
             m_ShiftTable[ hash ] = min( m_ShiftTable[ hash ], shiftlen );
             if ( 0 == shiftlen ) {
                 m_PatternMapElement.ix = j;
-                m_PatternMapElement.PrefixHash = m_lu[patterns[j][0]].offset;
+                m_PatternMapElement.PrefixHash = m_lu[(int)(patterns[j][0])].offset;
                 m_PatternMapElement.PrefixHash <<= m_nBitsInShift;
-                m_PatternMapElement.PrefixHash += m_lu[patterns[j][1]].offset;
+                m_PatternMapElement.PrefixHash += m_lu[(int)(patterns[j][1])].offset;
                 m_vPatternMap[ hash ].push_back( m_PatternMapElement );
             }
         }
@@ -138,11 +138,11 @@ string WuManber::Search( size_t TextLength, const char *Text, WuVector &patterns
     while ( ix < TextLength ) 
     {
         unsigned int hash1;
-        hash1 = m_lu[Text[ix-2]].offset;
+        hash1 = m_lu[(int)(Text[ix-2])].offset;
         hash1 <<= m_nBitsInShift;
-        hash1 += m_lu[Text[ix-1]].offset;
+        hash1 += m_lu[(int)(Text[ix-1])].offset;
         hash1 <<= m_nBitsInShift;
-        hash1 += m_lu[Text[ix]].offset;
+        hash1 += m_lu[(int)(Text[ix])].offset;
         size_t shift = m_ShiftTable[ hash1 ];
         if ( shift > 0 ) 
         {
@@ -151,9 +151,9 @@ string WuManber::Search( size_t TextLength, const char *Text, WuVector &patterns
         else 
         {  // we have a potential match when shift is 0
             unsigned int hash2;  // check for matching prefixes
-            hash2 = m_lu[Text[ix-m+1]].offset;
+            hash2 = m_lu[(int)(Text[ix-m+1])].offset;
             hash2 <<= m_nBitsInShift;
-            hash2 += m_lu[Text[ix-m+2]].offset;
+            hash2 += m_lu[(int)(Text[ix-m+2])].offset;
             vector<structPatternMap> &element = m_vPatternMap[ hash1 ];
             vector<structPatternMap>::iterator iter = element.begin();
             while ( element.end() != iter ) 
@@ -165,7 +165,7 @@ string WuManber::Search( size_t TextLength, const char *Text, WuVector &patterns
                     const char *ixPattern = &(patterns[ (*iter).ix ][2]);  // ditto
                     while ( ( 0 != *ixTarget ) && ( 0 != *ixPattern ) ) 
                     { // match until we reach end of either string
-                        if ( m_lu[ *ixTarget ].letter == m_lu[ *ixPattern ].letter ) 
+                        if ( m_lu[(int)(*ixTarget)].letter == m_lu[(int)(*ixPattern)].letter ) 
                         {  // match against chosen case sensitivity
                             ++ixTarget;
                             ++ixPattern;

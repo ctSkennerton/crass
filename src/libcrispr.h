@@ -68,7 +68,7 @@ typedef std::map<StringToken, ReadList *>::iterator ReadMapIterator;
 
 enum READ_TYPE {
     LONG_READ,
-    SHORT_READ,
+    SHORT_READ
 };
 
 enum side{rightSide, leftSide};
@@ -78,7 +78,7 @@ enum side{rightSide, leftSide};
 // search functions
 //**************************************
 
-READ_TYPE decideWhichSearch(const char *input_fastq);
+READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength);
 
 void longReadSearch(const char *input_fastq, SequenceType seqType, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
 

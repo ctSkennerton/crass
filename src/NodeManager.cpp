@@ -95,6 +95,7 @@ bool NodeManager::addReadholder(ReadHolder * RH)
     // add a readholder to this mofo and fix all the start stops
     //
     mReadList.push_back(RH);
+    return true;
 }
 
 

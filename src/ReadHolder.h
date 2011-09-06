@@ -61,7 +61,6 @@ class ReadHolder
             mLastDREnd = 0; 
             mLastSpacerEnd = 0; 
             RH_isSqueezed = false;
-            
         }  
         
         ReadHolder(std::string& s, std::string& h) 
@@ -72,7 +71,7 @@ class ReadHolder
             mLastSpacerEnd = 0; 
             RH_isSqueezed = false;
         }
-        
+
         ReadHolder(const char * s, const char * h) 
         {
             RH_Seq = s; 
@@ -80,7 +79,6 @@ class ReadHolder
             mLastDREnd = 0; 
             mLastSpacerEnd = 0; 
             RH_isSqueezed = false;
-            
         }
         
         void clear(void)
@@ -174,6 +172,7 @@ class ReadHolder
         {
             return (int)this->RH_StartStops.size();
         }
+        
         // access to things in start stop list
         void add(int);
         void add(int, int);
@@ -201,6 +200,7 @@ class ReadHolder
         void decode (void);                     // transforms a sequence back to its original state
         std::string squeeze(void);              //returns a copy of the string without homopolymers
         std::string expand(void);               // returns a copy of the string with homopolymers
+        std::string expand(bool fixStopStarts); // returns a copy of the string with homopolymers (fixes stop starts)
         
         // update the DR after finding the TRUE DR
         void updateStartStops(int frontOffset, std::string * DR, const options * opts);
@@ -217,8 +217,8 @@ class ReadHolder
         void logContents(int logLevel);
     private:
         // members
-        std::string RH_Rle;                      // run length encoded string
-        std::string RH_Header;                  // header for the sequence
+        std::string RH_Rle;                     // Run length encoded string
+        std::string RH_Header;                  // Header for the sequence
         std::string RH_Seq;                     // The DR_lowlexi sequence of this read
         bool RH_WasLowLexi;                     // was the sequence DR_low lexi in the file?
         StartStopList RH_StartStops;            // start stops for DRs, (must be even in length!)

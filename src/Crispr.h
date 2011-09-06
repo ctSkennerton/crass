@@ -218,7 +218,7 @@ public:
     
     bool isRepeatLowComplexity(void);
     
-    int getActualRepeatLength( int searchWindowLength, int minSpacerLength);
+    int extendPreRepeat( int searchWindowLength, int minSpacerLength);
     
     void trim( int minRepeatLength);
 

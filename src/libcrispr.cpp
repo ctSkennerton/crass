@@ -56,6 +56,7 @@
 #include "SeqUtils.h"
 #include "Levensthein.h"
 #include "Crispr.h"
+#include "kseq.h"
 
 
 /* 
@@ -66,13 +67,13 @@ http://lh3lh3.users.sourceforge.net/parsefastq.shtml
 THIS JUST DEFINES A BUNCH OF **templated** structs
 
 */
-KSEQ_INIT(gzFile, gzread);  
+    KSEQ_INIT(gzFile, gzread)
 
 //**************************************
 // search functions
 //**************************************
 
-READ_TYPE decideWhichSearch(const char *inputFastq)
+READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
 {
     //-----
     // Wrapper used for searching reads for DRs
@@ -98,7 +99,8 @@ READ_TYPE decideWhichSearch(const char *inputFastq)
     }
     gzclose(fp);
     
-    logInfo("Average read length (of the first 100 reads): "<<(total_base / read_counter), 2);
+    *aveReadLength = total_base / read_counter;
+    logInfo("Average read length (of the first 100 reads): "<< *aveReadLength, 2);
     if((total_base / read_counter) > CRASS_DEF_READ_LENGTH_CUTOFF)
     {
         return LONG_READ;
@@ -127,11 +129,14 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
     Crispr * candidate_crispr = new Crispr();
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
-        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s,seq->name.s);
         std::string read;
+        
+        // grab a readholder
+        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s,seq->name.s);
         switch (seqType)
         {
             case fourFiveFour:
+                // RLE is necessary...
                 tmp_holder->encode();
                 read = tmp_holder->seq();
                 break;
@@ -139,15 +144,15 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
                 read = seq->seq.s;
                 break;
         }
-
-        int seq_length = (int)read.length() - 1;
         
+        // get the length of this sequence
+        int seq_length = (int)read.length();
+
+        // update the crispr
         candidate_crispr->setSequence(read);
         
         total_base += seq_length;
 
-        
-        
         //the mumber of bases that can be skipped while we still guarantee that the entire search
         //window will at some point in its iteration thru the sequence will not miss a any repeat
         int skips = opts.lowDRsize - (2 * opts.searchWindowLength - 1);
@@ -156,16 +161,16 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
             skips = 1;
         }
 
-        int searchEnd = seq_length - opts.highDRsize - opts.highSpacerSize - opts.searchWindowLength;
+        int searchEnd = seq_length - opts.highDRsize - opts.highSpacerSize - opts.searchWindowLength - 1;
         for (int j = 0; j <= searchEnd; j = j + skips)
         {
             
             int beginSearch = j + opts.lowDRsize + opts.lowSpacerSize;
             int endSearch = j + opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength;
             
-            if (endSearch > seq_length)
+            if (endSearch >= seq_length)
             {
-                endSearch = seq_length;
+                endSearch = seq_length - 1;
             }
             //should never occur
             if (endSearch < beginSearch)
@@ -181,30 +186,30 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
             {
                 candidate_crispr->addRepeat(j);
                 candidate_crispr->addRepeat(beginSearch + pattern_in_text_index);
-
-                scanRight(candidate_crispr, pattern, opts.lowSpacerSize, 24, seq_length, read);
+                scanRight(candidate_crispr, pattern, opts.lowSpacerSize, 24, (seq_length - 1), read);
             }
 
-            if ( (candidate_crispr->numRepeats() >= opts.minNumRepeats) ) //make sure minNumRepeats is always at least 2
+            if ( (candidate_crispr->numRepeats() > opts.minNumRepeats) ) //make sure minNumRepeats is always at least 2
             {
                 logInfo(tmp_holder->header(), 8);
-                logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " repeated kmers found", 8);
-                
-                int actual_repeat_length = candidate_crispr->getActualRepeatLength(opts.searchWindowLength, opts.lowSpacerSize);
+                logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " ("<<candidate_crispr->numRepeats()<<") repeated kmers found", 8);
+                logInfo(seq->name.s, 1);
+                logInfo(read << " : " << pattern , 1);
+                int actual_repeat_length = candidate_crispr->extendPreRepeat(opts.searchWindowLength, opts.lowSpacerSize);
                 if ( (actual_repeat_length >= opts.lowDRsize) && (actual_repeat_length <= opts.highDRsize) )
                 {
                     logInfo("\tPassed test 2. The repeat length is between "<<opts.lowDRsize<<" and "<<opts.highDRsize, 8);
                     if (candidate_crispr->hasNonRepeatingSpacers())
                     {
-                        logInfo("\tPassed test 3. The repeats and spacers are no more than "<<CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY<<" similar", 8);
+                        logInfo("\tPassed test 3. The repeats and spacers are no more than "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY<<" similar", 8);
                         if (candidate_crispr->hasSimilarlySizedSpacers())
                         {
                             logInfo("\tPassed test 4. The spacer lengths differ by less than "<<CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF, 8);
                             logInfo("\tand the repeat and spacer lengths differ by less than "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
 
-                            checkFlank(leftSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
-                            checkFlank(rightSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, seq_length, read);
-                            candidate_crispr->trim(opts.lowDRsize);
+                            //checkFlank(leftSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, (seq_length - 1), read);
+                            //checkFlank(rightSide, candidate_crispr, opts.lowSpacerSize, CRASS_DEF_SCAN_LENGTH, CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, CRASS_DEF_SCAN_CONFIDENCE, (seq_length - 1), read);
+                            //candidate_crispr->trim(opts.lowDRsize);
                             logInfo("Potential CRISPR containing read found: "<<tmp_holder->header(), 7);
                             
                             match_found = true;
@@ -212,8 +217,13 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
                             Crispr::repeatListIterator rl_iter = candidate_crispr->mRepeats.begin();
                             while(rl_iter != candidate_crispr->mRepeats.end())
                             {
-                                tmp_holder->add((*rl_iter), ((*rl_iter) + candidate_crispr->repeatLength()));
-                                logInfo("direct repeat start index: "<<*rl_iter, 8);
+                                int DR_end = (*rl_iter) + candidate_crispr->repeatLength();
+                                if(DR_end >= tmp_holder->seqLength())
+                                {
+                                    DR_end = tmp_holder->seqLength() - 1;
+                                }
+                                tmp_holder->add((*rl_iter), DR_end);                            
+                                logInfo("Direct repeat start index: "<<*rl_iter, 8);
 
                                 rl_iter++;
                             }
@@ -248,7 +258,7 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
     kseq_destroy(seq); // destroy seq  
     gzclose(fp);       // close the file handler  
     logInfo("finished processing file:"<<inputFastq, 1);    
-    logInfo("So far " << mReads->size()<<" direct repeat variants have been found", 2);
+    logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
 
 }
 
@@ -263,20 +273,18 @@ void shortReadSearch(const char *inputFastq, SequenceType seqType, const options
     seq = kseq_init(fp);
     
     Crispr * candidate_crispr = new Crispr();
+    
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         // create the read holder
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
-        
-        
+            
         if (seqType == fourFiveFour) 
         {
             tmp_holder->encode();
         } 
         std::string read = tmp_holder->seq();
-        //std::string read = seq->seq.s;
-        //std::string read_header = seq->name.s;
         
         candidate_crispr->setSequence(read);
 
@@ -286,13 +294,11 @@ void shortReadSearch(const char *inputFastq, SequenceType seqType, const options
         total_base += seq_length;
         
         bool match_found = false;
-
         
         // boyer-moore search
         for (int start = 0; start < search_end; start++)
         {
             int search_begin = start + opts.lowDRsize + opts.lowSpacerSize;
-            
             
             if (search_begin >= search_end ) break;
             
@@ -305,7 +311,7 @@ void shortReadSearch(const char *inputFastq, SequenceType seqType, const options
                 
                 candidate_crispr->addRepeat(start);
                 candidate_crispr->addRepeat(match_start_pos + search_begin);
-                candidate_crispr->setRepeatLength(matched_end_pos - match_start_pos);
+                candidate_crispr->setRepeatLength(opts.lowDRsize);
                 
                 // make sure that the kmer match is not already at the end of the read before incrementing
                 // increment so we are looking at the next base after the match
@@ -322,7 +328,6 @@ void shortReadSearch(const char *inputFastq, SequenceType seqType, const options
 
                     }
                     candidate_crispr->setRepeatLength(candidate_crispr->repeatLength() + extenstion_length);
-
                 }
                 
                 int repeat_length = candidate_crispr->repeatLength();
@@ -337,14 +342,19 @@ void shortReadSearch(const char *inputFastq, SequenceType seqType, const options
                             if (!(candidate_crispr->isRepeatLowComplexity())) 
                             {
                                 match_found = true;
-                                logInfo("potential CRISPR containing read found: "<<tmp_holder->header(), 7);
+                                logInfo("Potential CRISPR containing read found: "<<tmp_holder->header(), 7);
                                 
                                 patternsHash[candidate_crispr->repeatStringAt(0)] = true;
                                 Crispr::repeatListIterator rep_iter = candidate_crispr->mRepeats.begin();
                                 while(rep_iter != candidate_crispr->mRepeats.end())
                                 {
-                                    tmp_holder->add((*rep_iter),((*rep_iter) + candidate_crispr->repeatLength()));
-                                    logInfo("direct repeat start index: "<<*rep_iter, 8);
+                                    int DR_end = (*rep_iter) + candidate_crispr->repeatLength();
+                                    if(DR_end >= tmp_holder->seqLength())
+                                    {
+                                        DR_end = tmp_holder->seqLength() - 1;
+                                    }
+                                    tmp_holder->add((*rep_iter), DR_end);
+                                    logInfo("Direct repeat start index: "<<*rep_iter, 8);
                                     rep_iter++;
                                 }
                                 logInfo(read, 9);
@@ -372,9 +382,8 @@ void shortReadSearch(const char *inputFastq, SequenceType seqType, const options
     
     kseq_destroy(seq); // destroy seq  
     gzclose(fp);       // close the file handler  
-    logInfo("finished processing file:"<<inputFastq, 1);
+    logInfo("Finished processing file:"<<inputFastq, 1);
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found", 2);
-
 }
 
 
@@ -391,7 +400,6 @@ void findSingletons(const char *inputFastq, SequenceType seqType, const options 
     
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
-    //ReadMatch match_info;
     
     seq = kseq_init(fp);
 
@@ -419,7 +427,12 @@ void findSingletons(const char *inputFastq, SequenceType seqType, const options 
             {
                 logInfo("new read recruited: "<<tmp_holder->header(), 7);
                 logInfo(tmp_holder->seq(), 8);
-                tmp_holder->add(start_pos, (start_pos + (int)found_repeat.length()));
+                int DR_end = start_pos + (int)found_repeat.length();
+                if(DR_end >= tmp_holder->seqLength())
+                {
+                    DR_end = tmp_holder->seqLength() - 1;
+                }
+                tmp_holder->add(start_pos, DR_end);
                 addReadHolder(mReads, mStringCheck, tmp_holder, read);
             }
         }
@@ -456,7 +469,7 @@ std::string DRLowLexi( ReadHolder * tmpReadholder, std::string& read)
         // choose the dr that is not a partial ( no start at 0 or end at length)
         
         // if they both are then just take whichever is longer
-        if (tmpReadholder->front() == 0 && tmpReadholder->back() == read.length())
+        if (tmpReadholder->front() == 0 && tmpReadholder->back() == (int)(read.length()))
         {
             int lenA = tmpReadholder->at(1) - tmpReadholder->at(0);
             int lenB = tmpReadholder->at(3) - tmpReadholder->at(2);
@@ -735,19 +748,22 @@ int scan(side sT, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, 
         return 0;
     /******************** end range checks ********************/
     
-    int array[end - begin + 1];
+    //int array[end - begin + 1];
     
     int index = 0;
+    int min = 10000000;
     for (int i = begin; i <= end; i++)
     {
         candidate_repeat_string = read.substr(i, repeat_length);
-        array[index] = getHammingDistance(repeat_string, candidate_repeat_string);
+        int hd = getHammingDistance(repeat_string, candidate_repeat_string);
+        if(hd < min) { min = hd; }
+        //array[index] = getHammingDistance(repeat_string, candidate_repeat_string);
         index++;
     }
     
     //min(array) returns the index of the smallest value in array  in this case, it refers to
     //the candidate string theat is closest to the repeatString.  uses hamming distance as levenshteinDistance is not useful for this particular task
-    int new_candidate_repeat_index = begin + min(array);
+    int new_candidate_repeat_index = begin + min;//(array);
     new_candidate_repeat_string = read.substr(new_candidate_repeat_index, repeat_length);
     
     bool match = patternMatches(repeat_string, new_candidate_repeat_string, confidence);

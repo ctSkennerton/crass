@@ -1,4 +1,4 @@
-CFLAGS = --pedantic -Wall -std=c99 -O2 -ggdb
+CXXFLAGS = -Werror -pedantic -Wall -O2 -ggdb
 
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
 # the previous manual Makefile

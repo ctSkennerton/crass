@@ -52,6 +52,26 @@
 // user input + system
 //**************************************
 
+static struct option long_options [] = {
+
+    {"minDR", required_argument, NULL, 'd'},
+    {"maxDR", required_argument, NULL, 'D'},
+    {"minSpacer", required_argument, NULL, 's'},
+    {"maxSpacer", required_argument, NULL, 'S'},
+    {"logLevel", required_argument, NULL, 'l'},
+    {"maxMismatches", required_argument, NULL, 'm'},
+    {"version", no_argument, NULL, 'V'},
+    {"kmerCount", required_argument, NULL, 'k'},
+    {"outDir", required_argument, NULL, 'o'},
+    {"help", no_argument, NULL, 'h'},
+    {"reportStats", no_argument, NULL, 'r'},
+    {"dumpReads", no_argument, NULL, 0},
+    {"windowLength", required_argument, NULL, 'w'},
+    {"minNumRepeats", required_argument, NULL, 'n'},
+    {"logToScreen", no_argument, NULL, 0},
+    {NULL, no_argument, NULL, 0}
+};
+
 void  usage(void);
 
 void  help(void);

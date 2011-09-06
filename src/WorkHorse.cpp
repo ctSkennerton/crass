@@ -149,7 +149,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles, std::vector<SequenceTyp
         }
     } catch (char * c) 
     {
-        std::cerr<<c<<std::endl;
+        std::cerr << c << std::endl;
     }
     
     std::vector<std::string>::iterator seq_iter = seqFiles.begin();
@@ -170,22 +170,23 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles, std::vector<SequenceTyp
         lookupTable reads_found;
         
         // Use a different search routine, depending on if we allow mismatches or not.
-        READ_TYPE rt = decideWhichSearch(input_fastq);
+        READ_TYPE rt = decideWhichSearch(input_fastq, &mAveReadLength);
         
         if(rt == LONG_READ)
         {
             logInfo("Long read algorithm selected", 2);
-           longReadSearch(input_fastq, *seq_type_iter, *mOpts, &mReads, &mStringCheck);
+            longReadSearch(input_fastq, *seq_type_iter, *mOpts, &mReads, &mStringCheck);
             logInfo("number of reads found so far: "<<this->numOfReads(), 2);
 
         }
         else
         {
             logInfo("Short read algorithm selected", 2);
-           shortReadSearch(input_fastq, *seq_type_iter, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            shortReadSearch(input_fastq, *seq_type_iter, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
             logInfo("number of reads found so far: "<<this->numOfReads(), 2);
 
         }
+        
         // only nessessary in instances where there are short reads
         if(rt == SHORT_READ)
         {
@@ -379,7 +380,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     }
     
     logInfo("Identified: " << master_DR_sequence << " as a master potential DR", 4);
-    
+
     // now we have the 5 most abundant kmers and one DR which contains them all
     // time to rock and rrrroll!
 
@@ -465,25 +466,34 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         kmer_rcs_DR_master[i] = kmer_rcs_DR[i];
         kmer_positions_DR_master[i] = kmer_positions_DR[i];
     }
-
+    
     // note the position of the master DR in the array
     DR_offset_map[master_DR_token] = (kmer_positions_ARRAY[0] - kmer_positions_DR[0]);
     
     ReadListIterator read_iter = mReads[master_DR_token]->begin();
+
     while (read_iter != mReads[master_DR_token]->end()) 
     {
         // don't care about partials
-        if(((*read_iter)->at(1) - (*read_iter)->at(0)) == (master_DR_sequence.length() - 1))
+        int dr_start_index = 0;
+        int dr_end_index = 1;
+        while(((*read_iter)->at(dr_end_index) - (*read_iter)->at(dr_start_index)) != (int)(master_DR_sequence.length() - 1))
+        {
+            dr_start_index += 2;
+            dr_end_index += 2;
+        }
+        // this should be OK
+        if(((*read_iter)->at(dr_end_index) - (*read_iter)->at(dr_start_index)) == (int)(master_DR_sequence.length() - 1))
         {
             // the start of the read is 
-            int this_read_start_pos = kmer_positions_ARRAY[0] - (*read_iter)->at(0) - kmer_positions_DR[0] ;
+            int this_read_start_pos = kmer_positions_ARRAY[0] - (*read_iter)->at(dr_start_index) - kmer_positions_DR[0] ;
             if(first_run)
             {
-                dr_zone_start =  this_read_start_pos + (*read_iter)->at(0);
-                dr_zone_end =  this_read_start_pos + (*read_iter)->at(1);
+                dr_zone_start =  this_read_start_pos + (*read_iter)->at(dr_start_index);
+                dr_zone_end =  this_read_start_pos + (*read_iter)->at(dr_end_index);
                 first_run = false;
             }
-            for(int i = 0; i < ((*read_iter)->seq()).length(); i++)
+            for(int i = 0; i < (int)(((*read_iter)->seq()).length()); i++)
             {
                 int index = -1;
                 switch(((*read_iter)->seq())[i])
@@ -507,9 +517,12 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                 }
             }
         }
+        else
+        {
+            logError("Everything is wrong (A)");
+        }
         read_iter++;
     }
-
 //++++++++++++++++++++++++++++++++++++++++++++++++
 // now go thru all the other DRs in this group and add them into
 // the consensus array
@@ -665,11 +678,18 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                             while (read_iter != mReads[*dr_iter]->end()) 
                             {
                                 // don't care about partials
-                                if(((*read_iter)->at(1) - (*read_iter)->at(0)) == (tmp_DR.length() - 1))
+                                int dr_start_index = 0;
+                                int dr_end_index = 1;
+                                while(((*read_iter)->at(dr_end_index) - (*read_iter)->at(dr_start_index)) != (int)(tmp_DR.length() - 1))
+                                {
+                                    dr_start_index += 2;
+                                    dr_end_index += 2;
+                                }                                
+                                if(((*read_iter)->at(dr_end_index) - (*read_iter)->at(dr_start_index)) == ((int)(tmp_DR.length()) - 1))
                                 {
                                     // we need to find the first kmer which matches the mode.
-                                    int this_read_start_pos = positional_offset - (*read_iter)->at(0) - kmer_positions_DR[0] ;
-                                    for(int i = 0; i < ((*read_iter)->seq()).length(); i++)
+                                    int this_read_start_pos = positional_offset - (*read_iter)->at(dr_start_index) - kmer_positions_DR[0] ;
+                                    for(int i = 0; i < (int)(((*read_iter)->seq()).length()); i++)
                                     {
                                         int index = -1;
                                         switch(((*read_iter)->seq())[i])
@@ -693,6 +713,8 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                                         }
                                     }
                                 }
+                                else
+                                    logError("Everything is wrong (B)");
                                 read_iter++;
                             }
                         }
@@ -731,6 +753,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             conservation_array[j] = 0;
     }
     
+    // trim these back a bit (if we trim too much we'll get it back right now anywho)
+    dr_zone_start += CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
+    dr_zone_end -= CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
 
     for(int i = dr_zone_start; i <= dr_zone_end; i++)
     {
@@ -778,17 +803,17 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     for(int i = dr_zone_start; i <= dr_zone_end; i++)
     {
         collapsed_pos++;
+        true_DR += consensus_array[i];
         if(conservation_array[i] >= CRASS_DEF_CONS_CUT_OFF)
         {
             refined_DR_ends[i] = true;
-            true_DR += consensus_array[i];
         }
         else
         {
             // possible collapsed cluster
             refined_DR_ends[i] = false;
             logInfo("-------------", 5);
-            logInfo("Possible collapsed cluster at position: " << collapsed_pos << " (" << (dr_zone_start + collapsed_pos) << ")", 5);
+            logInfo("Possible collapsed cluster at position: " << collapsed_pos << " (" << (dr_zone_start + collapsed_pos) << " || " << conservation_array[i] << ")", 5);
             
             float total_count = coverage_array[0][i] + coverage_array[1][i] + coverage_array[2][i] + coverage_array[3][i];
             logInfo("Base:  Count:  Cov:",5);
@@ -808,19 +833,51 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             {
                 collapsed_options.clear();
                 logInfo("", 5);
-                logInfo("   ...ignoring", 5);
+                logInfo("   ...ignoring (FA)", 5);
             }
             else
             {
-                // make the collapsed pos array specific and exit this loop
-                collapsed_pos += dr_zone_start;
-                i = dr_zone_end + 1;
+                // make sure this is seen at the DR level and not just at the DR level
+                std::map<char, int> collapsed_options2;
+                DR_ClusterIterator  dr_iter2 = clustered_DRs->begin();
+                while (dr_iter2 != clustered_DRs->end()) 
+                {
+                    std::string tmp_DR = mStringCheck.getString(*dr_iter2);
+                    if(-1 != DR_offset_map[*dr_iter2])
+                    {
+                        // check if the deciding character is within range of this DR
+                        if(DR_offset_map[*dr_iter2] <= dr_zone_start && dr_zone_start < (DR_offset_map[*dr_iter2] + (int)(tmp_DR.length())))
+                        {
+                            // this is easy, we can compare based on this char only
+                            char decision_char = tmp_DR[dr_zone_start - DR_offset_map[*dr_iter2]];
+                            collapsed_options2[decision_char] = collapsed_options[decision_char];
+                        }
+                    }
+                    dr_iter2++;
+                }
+                
+                // If it aint in collapsed_options2 it aint super fantastic!
+                collapsed_options.clear();
+                collapsed_options = collapsed_options2;
+                
+                if(2 > collapsed_options.size())
+                {
+                    collapsed_options.clear();
+                    logInfo("", 5);
+                    logInfo("   ...ignoring (RLO)", 5);
+                }
+                else
+                {
+                    // make the collapsed pos array specific and exit this loop
+                    collapsed_pos += dr_zone_start;
+                    i = dr_zone_end + 1;
+                }
             }
         }
     }
 
     // check to make sure that the DR is not just some random long RE
-    if(true_DR.length() > mOpts->highDRsize)
+    if((int)(true_DR.length()) > mOpts->highDRsize)
     {
         // probably a dud. throw it out
         // free the memory and clean up
@@ -828,10 +885,21 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         clustered_DRs = NULL;
         (*DR2GID_map)[GID] = NULL;
         
-        logInfo("Killed: " << true_DR << " cause it was too long", 1);
+        logInfo("Killed: {" << true_DR << "} cause it was too long", 1);
         return false;
     }
-    
+    if(((int)(true_DR.length()) < mOpts->lowDRsize) && (collapsed_options.size() == 0))
+    {
+        // probably a dud. throw it out
+        // free the memory and clean up
+        delete clustered_DRs;
+        clustered_DRs = NULL;
+        (*DR2GID_map)[GID] = NULL;
+        
+        logInfo("Killed: {" << true_DR << "} cause it was invisible...", 1);
+        return false;
+    }
+
 //++++++++++++++++++++++++++++++++++++++++++++++++
 // print out the consensus array 
 
@@ -903,6 +971,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             int group = (*nextFreeGID)++;
             (*DR2GID_map)[group] = new DR_Cluster;
             coll_char_to_GID_map[co_iter->first] = group;
+            logInfo(co_iter->first << " = " << group, 1);
             co_iter++;
         }
     
@@ -913,10 +982,11 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             if(-1 != DR_offset_map[*dr_iter])
             {
                 // check if the deciding character is within range of this DR
-                if(DR_offset_map[*dr_iter] <= collapsed_pos && collapsed_pos < (DR_offset_map[*dr_iter] + tmp_DR.length()))
+                if(DR_offset_map[*dr_iter] <= collapsed_pos && collapsed_pos < (DR_offset_map[*dr_iter] + (int)(tmp_DR.length())))
                 {
                     // this is easy, we can compare based on this char only
                     char decision_char = tmp_DR[collapsed_pos - DR_offset_map[*dr_iter]];
+                    logInfo(tmp_DR << " DC: " << decision_char, 1);
                     ((*DR2GID_map)[ coll_char_to_GID_map[ decision_char ] ])->push_back(*dr_iter);
                 }
                 else
@@ -939,7 +1009,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                         while(ss_iter != ((*read_iter)->drPos()).end())
                         {
                             int within_read_dec_pos = *ss_iter + dec_diff;
-                            if(within_read_dec_pos > 0 && within_read_dec_pos < ((*read_iter)->seq()).length())
+                            if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(((*read_iter)->seq()).length()))
                             {
                                 char decision_char = ((*read_iter)->seq())[within_read_dec_pos];
                                 forms_map[decision_char] = NULL;
@@ -965,7 +1035,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                                 while(ss_iter != ((*read_iter)->drPos()).end())
                                 {
                                     int within_read_dec_pos = *ss_iter + dec_diff;
-                                    if(within_read_dec_pos > 0 && within_read_dec_pos < ((*read_iter)->seq()).length())
+                                    if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(((*read_iter)->seq()).length()))
                                     {
                                         char decision_char = ((*read_iter)->seq())[within_read_dec_pos];
                                         ((*DR2GID_map)[ coll_char_to_GID_map[ decision_char ] ])->push_back(*dr_iter);
@@ -1023,7 +1093,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                                 while(ss_iter != ((*read_iter)->drPos()).end())
                                 {
                                     int within_read_dec_pos = *ss_iter + dec_diff;
-                                    if(within_read_dec_pos > 0 && within_read_dec_pos < ((*read_iter)->seq()).length())
+                                    if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(((*read_iter)->seq()).length()))
                                     {
                                         char decision_char = ((*read_iter)->seq())[within_read_dec_pos];
 
@@ -1089,7 +1159,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             ReadListIterator read_iter = mReads[*drc_iter]->begin();
             while (read_iter != mReads[*drc_iter]->end()) 
             {
-                std::cout << true_DR << std::endl << std::endl;
+                std::cout << "Group_"<<GID<<" " << (*read_iter)->header() << std::endl << true_DR << std::endl;
                 std::cout << (*read_iter)->seq() << std::endl;
                 std::cout << (*read_iter)->splitApart() << std::endl;
                 (*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
@@ -1140,7 +1210,7 @@ std::vector<std::string> WorkHorse::getNMostAbundantKmers(int num2Get, std::map<
     std::string top_kmer;    
     std::map<std::string, bool> top_kmer_map;
     
-    int iterations = (kmer_CountMap->size() < num2Get ) ? (int)kmer_CountMap->size() : num2Get;
+    int iterations = ((int)(kmer_CountMap->size()) < num2Get ) ? (int)kmer_CountMap->size() : num2Get;
     
     for (int i = 1; i <= iterations; i++) 
     {
@@ -1370,6 +1440,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     }
     delete [] kmers;
     
+    return true;
     
 }
 

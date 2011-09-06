@@ -87,7 +87,7 @@ double findMax(double a, double b, double c, double d, int * index)
         }
         else
         {
-            if(d > b) if(d > a) 
+            if(d > b)
             { 
                 *index = 3; 
                 return d; 
@@ -163,17 +163,26 @@ stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign
     int length_seq_B = (int)seqB.length();
     
     // initialize matrix
-    double matrix[aSearchLen+1][length_seq_B+1];
+    double ** matrix = new double*[aSearchLen+1];
+    int ** I_i = new int*[aSearchLen+1];
+    int ** I_j = new int*[aSearchLen+1];
+    
     for(int i=0;i<=aSearchLen;i++)
     {
+        double * tmp_mat = new double[length_seq_B+1];
+        int * tmp_i = new int[length_seq_B+1];
+        int * tmp_j = new int[length_seq_B+1];
+
+        matrix[i] = tmp_mat;
+        I_i[i] = tmp_i;
+        I_j[i] = tmp_j;
+        
         for(int j=0;j<=length_seq_B;j++)
         {
             matrix[i][j]=0;
         }
     }
     
-    int I_i[aSearchLen+1][length_seq_B+1];
-    int I_j[aSearchLen+1][length_seq_B+1];
       
     //start populating matrix
     double matrix_max = -1;
@@ -241,6 +250,17 @@ stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign
     *aStartAlign = current_i+ aStartSearch;
     *aEndAlign = (*aStartAlign) + i_max - current_i - 1;
     
+    // we don't need these guys anymore
+    for(int i=0;i<=aSearchLen;i++)
+    {
+        delete [] matrix[i];
+        delete [] I_i[i];
+        delete [] I_j[i];
+    }
+    delete [] matrix;
+    delete [] I_i;
+    delete [] I_j;
+    
     // calculate similarity and return substrings is need be
     std::string a_ret = seqA.substr(current_i+ aStartSearch, i_max - current_i + aStartSearch);
     std::string b_ret = seqB.substr(current_j, j_max - current_j);
@@ -249,7 +269,9 @@ stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign
         // a_ret is always shorter than or equal to seqB
         double similarity_ld = 1 - ((double)(LevenstheinDistance(a_ret, seqB) - (seqB.length() - a_ret.length()))/(double)a_ret.length());
         if(similarity_ld >= similarity)
-           return std::pair<std::string, std::string>(a_ret, b_ret); 
+        {
+            return std::pair<std::string, std::string>(a_ret, b_ret); 
+        }
         else
         {
             // no go joe

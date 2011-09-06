@@ -58,7 +58,15 @@ void ReadHolder::add(int i)
 
 void ReadHolder::add(int i, int j)
 {
+    if(i < 0)
+    {
+        logError("Adding DR start index less than 0 ("<<i<<")");
+    }
     this->RH_StartStops.push_back(i);
+    if(j >= seqLength())
+    {
+        logError("Adding DR end index greater than "<<(seqLength()-1)<<" ("<<j<<")");
+    }
     this->RH_StartStops.push_back(j);
 }
 
@@ -117,13 +125,14 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
     // Take this opportunity to look for partials at either end of the read
     //
     int DR_length = (int)DR->length();
+    
     StartStopListIterator ss_iter = RH_StartStops.begin();
     while(ss_iter != RH_StartStops.end())
     {
         int usable_length = DR_length - 1;
         
         // the first guy is the start of the DR
-        if(frontOffset >= *ss_iter)
+        if(frontOffset >= (int)(*ss_iter))
         {
             // this will be less than 0
             int amount_below_zero = frontOffset - (int)(*ss_iter);
@@ -132,7 +141,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         }
         else
         {
-            *ss_iter -= frontOffset;
+                *ss_iter -= frontOffset;
         }
             
         // the second guy is the end of the DR
@@ -173,7 +182,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
     
     // then the back
     unsigned int end_dist = (unsigned int)RH_Seq.length() - RH_StartStops.back();
-    if(end_dist > opts->lowSpacerSize)
+    if(end_dist > (unsigned int)(opts->lowSpacerSize))
     {
         // we should look for a DR here
         int part_s, part_e;
@@ -182,7 +191,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, (RH_StartStops.back() + opts->lowSpacerSize), (end_dist - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
         if(0 != part_e)
         {
-            if(((RH_Seq.length() - 1 ) == part_e) && (0 == DR->find(sp.second)))
+            if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
             {
                 //std::cout << sp.first << " : " << sp.second << " : " << part_s << " : " << part_e << std::endl;
                 RH_StartStops.push_back(part_s);
@@ -264,7 +273,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     int start_cut = -1;
     int end_cut = -1;
 
-    if(mLastSpacerEnd == (RH_StartStops.size() - 1))
+    if(mLastSpacerEnd == ((int)(RH_StartStops.size()) - 1))
     {
         ss_iter += mLastSpacerEnd;
         if(RH_Seq.length() != ((*ss_iter) + 1))
@@ -320,7 +329,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     {
         start_cut++;
     }
-    if(end_cut == RH_Seq.length() - 1)
+    if(end_cut == (int)(RH_Seq.length()) - 1)
     {
         *retStr = RH_Seq.substr(start_cut);
     }
@@ -493,7 +502,11 @@ std::string ReadHolder::splitApartSimple(void)
 
 void ReadHolder::decode(void)
 {
-    std::string tmp = this->expand();
+    //-----
+    // Go from RLE to normal
+    // Call it anytime. Fixes start stops
+    //
+    std::string tmp = this->expand(true);
     this->RH_isSqueezed = false;
     this->RH_Seq = tmp;
 }
@@ -501,6 +514,12 @@ void ReadHolder::decode(void)
 // simple run length encoding
 void ReadHolder::encode(void)
 {
+    //-----
+    // Encode the sequence using RLE
+    // Yo FOOL! ONly call this mofo B4 you make any start stops!
+    //
+    if(RH_StartStops.size() != 0)
+        logError("Trying to squeeze on non-empty start stops!");
     if (this->RH_isSqueezed) 
     {
         return;
@@ -510,7 +529,7 @@ void ReadHolder::encode(void)
         std::stringstream rle, seq;
         rle<<this->RH_Seq[0];
         seq<<this->RH_Seq[0];
-        for (int  i = 1; i < this->RH_Seq.length(); i++) 
+        for (int  i = 1; i < (int)(this->RH_Seq.length()); i++) 
         {
             if (this->RH_Seq[i] == this->RH_Seq[i - 1]) 
             {
@@ -537,6 +556,18 @@ void ReadHolder::encode(void)
 
 std::string ReadHolder::expand(void)
 {
+    //----
+    // Expand the string from RLE but don't fix stop starts.
+    //
+    return expand(false);
+}
+
+std::string ReadHolder::expand(bool fixStopStarts)
+{
+    //----
+    // Expand the string from RLE and fix stope starts as needed
+    //
+
     if (!this->RH_isSqueezed) 
     {
         return this->RH_Seq;
@@ -544,24 +575,54 @@ std::string ReadHolder::expand(void)
     else 
     {
         std::stringstream tmp;
-        std::string::iterator str_iter = this->RH_Rle.begin();
+     
+        int main_index = 0;
+        int new_index = 0;
+        int old_index = 0;
+        int stop_index = (int)RH_Seq.length();
+        int next_ss_index = -1;
+        StartStopListIterator ss_iter = RH_StartStops.begin();
         
-        while (str_iter != this->RH_Rle.end()) 
+        // no point in fixing starts and stops if there are none
+        if(RH_StartStops.size() == 0) { fixStopStarts = false; }
+        
+        if(fixStopStarts)
         {
-            if (isdigit(*str_iter)) 
+            next_ss_index = *ss_iter;
+        }
+        
+        while (main_index < stop_index) 
+        {
+            if (isdigit(RH_Rle[main_index])) 
             {
-                int count = *str_iter - '0';
+                int count = RH_Rle[main_index] - '0';
+                new_index += count;
                 while (count != 0) 
                 {
-                    tmp<<*(str_iter - 1);
+                    tmp << RH_Rle[main_index -1];
                     count--;
                 }
             }
             else
             {
-                tmp<<*str_iter;
+                if(next_ss_index == old_index)
+                {
+                    *ss_iter = new_index;
+                    ss_iter++;
+                    if(ss_iter != RH_StartStops.end())
+                    {
+                        next_ss_index = *ss_iter;
+                    }
+                    else
+                    {
+                        next_ss_index = -1;
+                    }
+                }
+                tmp << RH_Rle[main_index];
+                old_index++;
+                new_index++;
             }
-            str_iter++;
+            main_index++;
         }
         return tmp.str();
     }

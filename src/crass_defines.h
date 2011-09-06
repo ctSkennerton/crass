@@ -43,15 +43,6 @@
 #include <string>
 #include <getopt.h>
 // --------------------------------------------------------------------
- // PROGRAM NAME AND VERISON INFORMATION
-// --------------------------------------------------------------------
-//#define CRASS_DEF_PRG_NAME                      "crass"
-//#define CRASS_DEF_LONG_NAME                     "CRisprASSembler"
-//#define CRASS_DEF_VERSION                       "0.0.1"
-//#define CRASS_DEF_MAJOR_VERSION                 0
-//#define CRASS_DEF_MINOR_VERSION                 0
-//#define CRASS_DEF_REVISION                      1
-// --------------------------------------------------------------------
  // STRING LENGTH / MISMATCH / CLUSTER SIZE PARAMETERS
 // --------------------------------------------------------------------
 #define CRASS_DEF_READ_LENGTH_CUTOFF            (200.0)             // The length of read where the multipattern matcher would become insignificant. 
@@ -61,7 +52,7 @@
 #define CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW       30                  // Maximum number of cluster reps we will all vs all sw for
 #define CRASS_DEF_MIN_SW_ALIGNMENT_RATIO        (0.85)              // SW alignments need to be this percentage of the original query to be considered real
 #define CRASS_DEF_SW_SEARCH_EXT                 8
-#define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD     0.75
+#define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD     (0.75)
 #define CRASS_DEF_KMER_SIZE                     7
 #define CRASS_DEF_K_CLUST_MIN                   12
 // --------------------------------------------------------------------
@@ -70,22 +61,23 @@
 #define CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF       (0.85)              // amount that a DR must agrre with the existsing DR within a zone to be added
 #define CRASS_DEF_NUM_KMERS_4_MODE              (5)                 // find the top XX occuring in the DR
 #define CRASS_DEF_NUM_KMERS_4_MODE_HALF         (CRASS_DEF_NUM_KMERS_4_MODE - (CRASS_DEF_NUM_KMERS_4_MODE/2)) // Ceil of 50% of CRASS_DEF_NUM_KMERS_4_MODE
-#define CRASS_DEF_MIN_READ_DEPTH                4                   // read depth used for consensus building
+#define CRASS_DEF_MIN_READ_DEPTH                2                   // read depth used for consensus building
 #define CRASS_DEF_CONS_CUT_OFF                  (0.80)              // minimum identity to extend a DR from the "zone" outwards
 #define CRASS_DEF_COLLAPSED_THRESHOLD           (0.30)              // in the event that clustering has collapsed two DRs into one, this number is used to plait them apart
 #define CRASS_DEF_PARTIAL_SIM_CUT_OFF           (0.85)              // The similarity needed to exted into partial matches
+#define CRASS_DEF_DR_ZONE_TRIM_AMOUNT           (3)                 // trim this many bases off the start and end of the DR
 // --------------------------------------------------------------------
 // GENOME ALGORITHM DEFINES
 // --------------------------------------------------------------------
-#define CRASS_DEF_SPACER_TO_SPACER_MAX_SIMILARITY  0.62
+#define CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY  (0.82)
 #define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF     12
 #define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF     30
 #define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH         6
 #define CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH         9
 #define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH     8
 #define CRASS_DEF_SCAN_LENGTH                      30
-#define CRASS_DEF_SCAN_CONFIDENCE                  0.70
-#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           0.75
+#define CRASS_DEF_SCAN_CONFIDENCE                  (0.70)
+#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           (0.75)
 #define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          3
 // --------------------------------------------------------------------
   // FILE IO
@@ -125,28 +117,6 @@ typedef struct {
     int minNumRepeats;            // option 'n'
     bool logToScreen;
 } options;
-
-
-
-static struct option long_options [] = {
-
-    {"minDR", required_argument, NULL, 'd'},
-    {"maxDR", required_argument, NULL, 'D'},
-    {"minSpacer", required_argument, NULL, 's'},
-    {"maxSpacer", required_argument, NULL, 'S'},
-    {"logLevel", required_argument, NULL, 'l'},
-    {"maxMismatches", required_argument, NULL, 'm'},
-    {"version", no_argument, NULL, 'V'},
-    {"kmerCount", required_argument, NULL, 'k'},
-    {"outDir", required_argument, NULL, 'o'},
-    {"help", no_argument, NULL, 'h'},
-    {"reportStats", no_argument, NULL, 'r'},
-    {"dumpReads", no_argument, NULL, 0},
-    {"windowLength", required_argument, NULL, 'w'},
-    {"minNumRepeats", required_argument, NULL, 'n'},
-    {"logToScreen", no_argument, NULL, 0},
-    {NULL, no_argument, NULL, 0}
-};
 
 enum SequenceType {
     sanger,
