@@ -77,7 +77,7 @@
 #define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH     8
 #define CRASS_DEF_SCAN_LENGTH                      30
 #define CRASS_DEF_SCAN_CONFIDENCE                  (0.70)
-#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           (0.75)
+#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           (0.5)
 #define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          3
 // --------------------------------------------------------------------
   // FILE IO

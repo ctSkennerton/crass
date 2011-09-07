@@ -196,6 +196,10 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
                 logInfo(seq->name.s, 1);
                 logInfo(read << " : " << pattern , 1);
                 int actual_repeat_length = candidate_crispr->extendPreRepeat(opts.searchWindowLength, opts.lowSpacerSize);
+                
+                // drop partials
+                candidate_crispr->dropPartials();
+                
                 if ( (actual_repeat_length >= opts.lowDRsize) && (actual_repeat_length <= opts.highDRsize) )
                 {
                     logInfo("\tPassed test 2. The repeat length is between "<<opts.lowDRsize<<" and "<<opts.highDRsize, 8);
