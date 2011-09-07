@@ -178,6 +178,7 @@ int Crispr::extendPreRepeat(int searchWindowLength, int minSpacerLength)
     // the number of repeats
     int num_repeats = (int)(mRepeats.size());
     mRepeatLength = searchWindowLength;
+    
     int cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * num_repeats);
         
     // the index in the read of the first DR kmer
@@ -241,7 +242,7 @@ int Crispr::extendPreRepeat(int searchWindowLength, int minSpacerLength)
                     break;
             }
         }
-        
+        //logInfo("R: " << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << mRepeatLength << " : " << max_right_extension_length, 1);
         if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
         {
             mRepeatLength++;
@@ -287,6 +288,7 @@ int Crispr::extendPreRepeat(int searchWindowLength, int minSpacerLength)
                     break;
             }
         }
+        //logInfo("L:" << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << mRepeatLength << " : " << left_extension_length, 1);
 
         if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
         {
@@ -311,6 +313,25 @@ int Crispr::extendPreRepeat(int searchWindowLength, int minSpacerLength)
     return mRepeatLength;
 }
 
+void Crispr::dropPartials(void)
+{
+    //-----
+    // Drop any partial DRs
+    //
+    repeatListIterator r_iter = mRepeats.begin();
+    if(*r_iter == 0)
+    {
+        // this is a partial
+        mRepeats.erase(r_iter);
+    }
+    
+    r_iter = mRepeats.begin() + mRepeats.size() - 1;
+    if(*r_iter > (int)mSequence.length() - mRepeatLength)
+    {
+        // this is a partial
+        mRepeats.erase(r_iter);
+    }
+}
 
 void Crispr::trim( int minRepeatLength)
 {
@@ -392,13 +413,17 @@ void Crispr::trim( int minRepeatLength)
 
 bool Crispr::hasSimilarlySizedSpacers(void)
 {
+    std::cout << this->toString() << std::endl;
+    
+
     int initial_spacer_length =(int)this->spacerStringAt(0).length();
     int repeat_length = this->repeatLength();
-    
+
     for (int i = 0 ; i < this->numSpacers(); i++)
     {
         int curr_spacer_length = (int)this->spacerStringAt(i).length();
-        
+
+        logInfo(curr_spacer_length, 1);
         //checks that each spacer is of similar size to other spacers
         int spacer_spacing = curr_spacer_length - initial_spacer_length;
         if ( spacer_spacing >  CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF )
@@ -485,7 +510,6 @@ bool Crispr::areSpacersAtPosDifferent(int i, int j)
     std::string curr_spacer = this->spacerStringAt(i);
     std::string next_spacer = this->spacerStringAt(j);
     
-    logInfo (curr_spacer << " : " << next_spacer, 1);
     float max_length = std::max(curr_spacer.length(), next_spacer.length());
     
     float edit_distance =  LevenstheinDistance(curr_spacer, next_spacer);

@@ -220,6 +220,8 @@ public:
     
     int extendPreRepeat( int searchWindowLength, int minSpacerLength);
     
+    void dropPartials(void);
+    
     void trim( int minRepeatLength);
 
     repeatList mRepeats;
