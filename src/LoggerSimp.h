@@ -46,7 +46,7 @@
 
 #include <time.h>
 #include <iostream>
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include <config.h>
 using namespace std;
 

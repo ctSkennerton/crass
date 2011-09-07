@@ -50,7 +50,7 @@
 // local includes
 #include "libcrispr.h"
 #include "LoggerSimp.h"
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "WuManber.h"
 #include "bm.h"
 #include "SeqUtils.h"
@@ -111,7 +111,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
 
 // CRT search
 
-void longReadSearch(const char *inputFastq, SequenceType seqType, const options& opts, ReadMap * mReads, StringCheck * mStringCheck)
+void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck)
 {
     //-----
     // Code lifted from CRT, ported by connor and hacked by Mike.
@@ -129,21 +129,15 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
     Crispr * candidate_crispr = new Crispr();
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
-        std::string read;
         
         // grab a readholder
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s,seq->name.s);
-        switch (seqType)
+        if (opts.removeHomopolymers)
         {
-            case fourFiveFour:
                 // RLE is necessary...
                 tmp_holder->encode();
-                read = tmp_holder->seq();
-                break;
-            default:
-                read = seq->seq.s;
-                break;
         }
+        std::string read = tmp_holder->seq();
         
         // get the length of this sequence
         int seq_length = (int)read.length();
@@ -267,7 +261,7 @@ void longReadSearch(const char *inputFastq, SequenceType seqType, const options&
 }
 
 // boyer moore functions
-void shortReadSearch(const char *inputFastq, SequenceType seqType, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
@@ -284,10 +278,12 @@ void shortReadSearch(const char *inputFastq, SequenceType seqType, const options
         // create the read holder
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
             
-        if (seqType == fourFiveFour) 
+        if (opts.removeHomopolymers)
         {
+            // RLE is necessary...
             tmp_holder->encode();
-        } 
+        }
+        
         std::string read = tmp_holder->seq();
         
         candidate_crispr->setSequence(read);
@@ -391,7 +387,7 @@ void shortReadSearch(const char *inputFastq, SequenceType seqType, const options
 }
 
 
-void findSingletons(const char *inputFastq, SequenceType seqType, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+void findSingletons(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
     std::vector<std::string> patterns;
     int old_number = (int)mReads->size();
@@ -415,11 +411,12 @@ void findSingletons(const char *inputFastq, SequenceType seqType, const options 
     {
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
         
-        if (seqType == fourFiveFour) 
+        if (opts.removeHomopolymers) 
         {
             tmp_holder->encode();
         }
         std::string read = tmp_holder->seq();
+        
         //initialize with an impossible number
         int start_pos = -1;
         std::string found_repeat = search.Search(read.length(), read.c_str(), patterns, start_pos);

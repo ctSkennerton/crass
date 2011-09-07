@@ -43,7 +43,7 @@
 #include <string>
 
 // local includes
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "StringCheck.h"
 
 class CrisprNode;

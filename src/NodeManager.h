@@ -47,7 +47,7 @@
 
 // local includes
 #include "NodeManager.h"
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "CrisprNode.h"
 #include "SpacerInstance.h"
 #include "libcrispr.h"

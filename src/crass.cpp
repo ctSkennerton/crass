@@ -50,7 +50,7 @@
 // local includes
 #include <config.h>
 #include "crass.h"
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "LoggerSimp.h"
 #include "SeqUtils.h"
 #include "WorkHorse.h"
@@ -69,7 +69,7 @@
 
 void help(void)
 {
-    std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { <inputFiles> <read_type> } {...}"<<std::endl<<std::endl;
+    std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { inputFile ...}"<<std::endl<<std::endl;
     std::cout<<"for further information try:"<<std::endl;
     std::cout<<PACKAGE_NAME<<" -h"<<std::endl;
 }
@@ -78,9 +78,7 @@ void help(void)
 
 void usage(void) 
 {
-    std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { <inputFiles> <read_type> } {...}"<<std::endl<<std::endl;
-    std::cout<<"where read_type is one of the following:"<<std::endl;
-    std::cout<<"--sanger"<<std::endl<<"--illumina"<<std::endl<<"--454"<<std::endl<<"--ionTorrent"<<std::endl<<std::endl;
+    std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { inputFile ...}"<<std::endl<<std::endl;
     std::cout<<"Options:"<<std::endl;
     std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
     std::cout<< "\t                           to search for [Default: 23]"<<std::endl;
@@ -94,8 +92,6 @@ void usage(void)
 //#else
 //    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 4]"<<std::endl;
 //#endif
-//    std::cout<< "\t-m --maxMismatches <INT>   Total number of mismatches to at most allow for"<<std::endl;
-//    std::cout<< "\t                           in search pattern [Default: 0]"<<std::endl;
     std::cout<< "\t-n --minNumRepeats <INT>   Total number of direct repeats in a CRISPR for"<<std::endl;
     std::cout<< "\t                           it to be considered real [Default: 3]"<<std::endl;
     std::cout<< "\t-o --outDir <DIRECTORY>    Output directory [default: .]"<<std::endl;
@@ -106,6 +102,7 @@ void usage(void)
     std::cout<< "\t                           a number between 6 - 9 [Default: 8]"<<std::endl;
     std::cout<< "\t--dumpReads                Print reads containing CRISPR to file after the find stage"<<std::endl;
     std::cout<< "\t--logToScreen              Print the logging information to screen rather than a file"<<std::endl;
+    std::cout<< "\t--removeHomopolymers       Correct for homopolymer errors [default: no correction]"<<std::endl;
 }
 
 void versionInfo(void) 
@@ -123,82 +120,54 @@ int processOptions(int argc, char *argv[], options *opts)
 {
     int c;
     int index;
-    int l_val;
-    int w_val;
-    //char *opt_o_value = NULL;
-    char *opt_b_value = NULL;
     
-    while( (c = getopt_long(argc, argv, "+w:hVrl:k:p:n:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
+    while( (c = getopt_long(argc, argv, "w:hVrl:k:n:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
         switch(c) {
             case 'n': opts->minNumRepeats = atoi(optarg); break;
             case 'w': 
-                w_val = atoi(optarg); 
-                if ((w_val < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (w_val > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
+                opts->searchWindowLength = atoi(optarg); 
+                if ((opts->searchWindowLength < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (opts->searchWindowLength > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
                 {
+                    std::cerr<<"WARNING: Specified window length higher than max. Changing window length to " << CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH << " instead of " << opts->searchWindowLength<<std::endl;
                     // Change window length
                     opts->searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH;
-                    std::cerr<<"WARNING: Specified window length higher than max. Changing window length to " << opts->searchWindowLength << " instead of " << w_val<<std::endl;
                 }
                 break;        
             case 'h': versionInfo(); usage();exit(0); break;
             case 'V': versionInfo(); exit(0); break;
             case 'o': opts->output_fastq = optarg; break;
-            case 'p': opts->pat_file = optarg; break;
-            case 'b': opt_b_value = optarg; break;
-            case 'r': opts->report_stats = true; break;
-//            case 'm': opts->max_mismatches = atoi(optarg); break;
+            case 'b': opts->delim = optarg; break;
+            case 'r': opts->reportStats = true; break;
             case 'd': opts->lowDRsize = atoi(optarg); break;
             case 'D': opts->highDRsize = atoi(optarg); break;
             case 's': opts->lowSpacerSize = atoi(optarg); break;
             case 'S': opts->highSpacerSize = atoi(optarg); break;
-            case 'c': opts->count = 1; break;
             case 'k': opts->kmer_size = atoi(optarg); break;
             case 'l': 
-                l_val =  atoi(optarg);
+                opts->logLevel =  atoi(optarg);
 //#ifdef DEBUG
-                if (l_val > CRASS_DEF_MAX_DEBUG_LOGGING)
+                if (opts->logLevel > CRASS_DEF_MAX_DEBUG_LOGGING)
                 {
-                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<l_val<<std::endl;
-                    opts->logger_level = CRASS_DEF_MAX_DEBUG_LOGGING;
+                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
+                    opts->logLevel = CRASS_DEF_MAX_DEBUG_LOGGING;
                 }
-                else
-                {
-                    opts->logger_level = l_val;
-                }
+
 //#else
-//                if(l_val > CRASS_DEF_MAX_LOGGING)
+//                if(opts->logLevel > CRASS_DEF_MAX_LOGGING)
 //                {
-//                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<l_val<<std::endl;
-//                    opts->logger_level = CRASS_DEF_MAX_LOGGING;
-//                }
-//                else
-//                {
-//                    opts->logger_level = l_val;
+//                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
+//                    opts->logLevel = CRASS_DEF_MAX_LOGGING;
 //                }
 //#endif
                 break;
             case 0:
                 if( strcmp( "dumpReads", long_options[index].name ) == 0 ) opts->detect = true;
-//                else if ( strcmp( "454", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
-//                else if ( strcmp( "illumina", long_options[index].name ) == 0 ) opts->illumina = true;
-//                else if ( strcmp( "sanger", long_options[index].name ) == 0 ) opts->sanger = true;
-//                else if ( strcmp( "ionTorrent", long_options[index].name ) == 0 ) opts->fourFiveFour = true;
+                else if ( strcmp( "removeHomopolymers", long_options[index].name ) == 0 ) opts->removeHomopolymers = true;
                 else if ( strcmp( "logToScreen", long_options[index].name ) == 0 ) opts->logToScreen = true;
 
                 break;
             default: versionInfo(); help(); exit(1); break;
         }
-    }
-//    if (optind == argc)
-//    {
-//        std::cerr<<PACKAGE_NAME<<" : [ERROR] No input files were provided. Try ./"<<PACKAGE_NAME" -h for help."<<std::endl;
-//        exit(1);
-//    }
-    
-    /* setup delimiter for stats report (if given) */
-    if ( opt_b_value != NULL ) 
-    {
-        strncpy(opts->delim, opt_b_value, CRASS_DEF_MAX_DELIM_LENGTH);
     }
     return optind;
 }
@@ -218,7 +187,6 @@ int main(int argc, char *argv[])
     }
     /* application of default options */
     options opts = {
-        0,                                      // count flag
         false,                                  // exit after first find
         CRASS_DEF_DEFAULT_LOGGING,              // logging minimum by default
         false,                                  // output stats report
@@ -227,12 +195,12 @@ int main(int argc, char *argv[])
         CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
         CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
         "./",                                   // output file directory
-        "\t",                                   // delimiter string for stats report
-        NULL,                                   //  pattern file name
+        CRASS_DEF_STATS_REPORT_DELIM,           // delimiter string for stats report
         CRASS_DEF_K_CLUST_MIN,                  // the number of the kmers that need to be shared for clustering
         CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH, // the search window length
         CRASS_DEF_DEFAULT_MIN_NUM_REPEATS,      // mininum number of repeats for long read algorithm 
-        false                                   // should we log to screen
+        false,                                  // should we log to screen
+        false                                   // should we remove homopolymers in reads
     };
 
     int opt_idx = processOptions(argc, argv, &opts);
@@ -266,12 +234,11 @@ int main(int argc, char *argv[])
         
     }
     
-    intialiseGlobalLogger(logFileName, opts.logger_level);
+    intialiseGlobalLogger(logFileName, opts.logLevel);
     
     // The remaining command line arguments are FASTQ(s) to process
     // put them in a vector to pass to the workhorse
     std::vector<std::string> seq_files;
-    std::vector<SequenceType> seq_type_files;
     
     while (opt_idx < argc) 
     {
@@ -280,43 +247,6 @@ int main(int argc, char *argv[])
         
         seq_files.push_back(seq_file);
         
-        opt_idx++;
-
-        if (opt_idx >= argc || '-' != argv[opt_idx][0]) 
-        {
-            //throw error
-            std::cerr<<PACKAGE_NAME<<" : [ERROR] A file must be followed by a read type!"<<std::endl;
-            help();
-            exit(1);
-            
-        } 
-        else 
-        {
-            //check for the sequence type
-            if (strcmp(argv[opt_idx],"--454") == 0) 
-            {
-                seq_type_files.push_back(fourFiveFour);
-            }
-            else if(strcmp(argv[opt_idx],"--illumina") == 0)
-            {
-                seq_type_files.push_back(illumina);
-            }
-            else if(strcmp(argv[opt_idx],"--sanger") == 0)
-            {
-                seq_type_files.push_back(sanger);
-            }
-            else if(strcmp(argv[opt_idx],"--ionTorrent") == 0)
-            {
-                seq_type_files.push_back(fourFiveFour);
-            }
-            else
-            {
-                // throw error
-                std::cerr<<PACKAGE_NAME<<" : [ERROR] The sequence format you provided, "<<argv[opt_idx]<<", is not recognized!"<<std::endl;
-                help();
-                exit(1);
-            }
-        }
         opt_idx++;
     }
     logTimeStamp();

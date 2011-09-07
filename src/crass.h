@@ -43,7 +43,7 @@
 #include <iostream>
 
 // local includes
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "kseq.h"
 #include "CrisprNode.h"
 #include "WorkHorse.h"
@@ -69,6 +69,7 @@ static struct option long_options [] = {
     {"windowLength", required_argument, NULL, 'w'},
     {"minNumRepeats", required_argument, NULL, 'n'},
     {"logToScreen", no_argument, NULL, 0},
+    {"removeHomopolymers",no_argument,NULL,0},
     {NULL, no_argument, NULL, 0}
 };
 

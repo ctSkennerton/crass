@@ -44,7 +44,7 @@
 #include <vector>
 #include <map>
 // local includes
-#include "crass_defines.h"
+#include "crassDefines.h"
 
 // typedefs
 typedef std::vector<unsigned int> StartStopList;

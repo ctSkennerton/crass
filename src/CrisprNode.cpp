@@ -41,7 +41,7 @@
 // local includes
 #include "CrisprNode.h"
 #include "LoggerSimp.h"
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "GraphDrawingDefines.h"
 
 // boolean value to tell us whether the current node is the first or second in the partner pair
@@ -72,11 +72,11 @@ void CrisprNode::printEdges(void)
         // check to see who comes first and print accorndingly
         if (part_iter->CP_nodeFirst) 
         {
-            gvEdge(part_iter->CP_partnerNode->CN_id, this->CN_id)
+            gvEdge(std::cout,part_iter->CP_partnerNode->CN_id, this->CN_id)
         } 
         else 
         {
-            gvEdge(this->CN_id, part_iter->CP_partnerNode->CN_id)
+            gvEdge(std::cout,this->CN_id, part_iter->CP_partnerNode->CN_id)
         }        
         
         part_iter++;

@@ -46,7 +46,7 @@
 #include <map>
 
 // local includes
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "WuManber.h"
 #include "bm.h"
 #include "kseq.h"
@@ -80,11 +80,11 @@ enum side{rightSide, leftSide};
 
 READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength);
 
-void longReadSearch(const char *input_fastq, SequenceType seqType, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
+void longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
 
-void shortReadSearch(const char *input_fastq, SequenceType seqType, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
+void shortReadSearch(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
-void findSingletons(const char *input_fastq, SequenceType seqType, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
+void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
 
 //**************************************

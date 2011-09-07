@@ -48,7 +48,7 @@
 #include <sstream>
 #include "LoggerSimp.h"
 #include "Crispr.h"
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "Levensthein.h"
 
 

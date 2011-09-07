@@ -43,24 +43,32 @@
 #define CRASS_DEF_GV_NODE_SHAPE                 "circle"            // shape of nodes
 #define CRASS_DEF_GV_NODE_PREFIX                "node_"             // prefix used when naming nodes for the image
 #define CRASS_DEF_GV_NODE_FILL                  "filled"            // should our nodes be filled with colour
+#define CRASS_DEF_DEFAULT_GRAPH_TYPE            "digraph"           // the default type of graphviz graph to generate
 // --------------------------------------------------------------------
 // GRAPH DRAWING MACROS
 // --------------------------------------------------------------------
-#define gvEdge(id1,id2){\
-    std::cout<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" -> "<<CRASS_DEF_GV_NODE_PREFIX<<id2<< " [ len="<<CRASS_DEF_GV_EDGE_LENGTH<<" ];"<<std::endl;\
+#define gvEdge(stream,id1,id2){\
+    stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" -> "<<CRASS_DEF_GV_NODE_PREFIX<<id2<< " [ len="<<CRASS_DEF_GV_EDGE_LENGTH<<" ];"<<std::endl;\
 }
 
-#define gvCustomEdge(id1,id2, cUSTOMsTRING){\
-    std::cout<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" -> "<<CRASS_DEF_GV_NODE_PREFIX<<id2<< " [ "<<cUSTOMsTRING<<" ];"<<std::endl;\
+#define gvCustomEdge(stream,id1,id2, cUSTOMsTRING){\
+    stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" -> "<<CRASS_DEF_GV_NODE_PREFIX<<id2<< " [ "<<cUSTOMsTRING<<" ];"<<std::endl;\
 }
 
-#define gvNode(id1,color){\
-    std::cout<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" [ color = "<<color<<" style= "<<CRASS_DEF_GV_NODE_FILL<<\
+#define gvNode(stream,id1,color){\
+    stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" [ color = "<<color<<" style= "<<CRASS_DEF_GV_NODE_FILL<<\
                                                 " shape= "<<CRASS_DEF_GV_NODE_SHAPE<<" ];"<<std::endl;\
 }
 
-#define gvCustomNode(id1,cUSTOMsTRING){\
-    std::cout<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" [ "<<cUSTOMsTRING<<" ];"<<std::endl;\
+#define gvCustomNode(stream,id1,cUSTOMsTRING){\
+    stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" [ "<<cUSTOMsTRING<<" ];"<<std::endl;\
 }
 
+#define gvGraphHeader(stream,gRAPHtITLE){\
+    stream<<CRASS_DEF_DEFAULT_GRAPH_TYPE<<" "<<gRAPHtITLE<<" {"<<std::endl;\
+}
+
+#define gvGraphFooter(stream){ \
+    stream<<std::endl<<"}"<<std::endl;\
+}
 #endif

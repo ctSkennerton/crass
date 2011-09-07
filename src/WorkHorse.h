@@ -45,7 +45,7 @@
 #include <map>
 
 // local includes
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "libcrispr.h"
 #include "NodeManager.h"
 #include "ReadHolder.h"
@@ -77,7 +77,7 @@ class WorkHorse {
         ~WorkHorse();
         
         // do all the work!
-    int doWork(std::vector<std::string> seqFiles, std::vector<SequenceType> seqTypeOfFiles);
+    int doWork(std::vector<std::string> seqFiles);
 
         //**************************************
         // file IO

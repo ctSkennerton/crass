@@ -47,7 +47,7 @@
 #include "WorkHorse.h"
 #include "libcrispr.h"
 #include "LoggerSimp.h"
-#include "crass_defines.h"
+#include "crassDefines.h"
 #include "NodeManager.h"
 #include "ReadHolder.h"
 #include "SeqUtils.h"
@@ -135,25 +135,14 @@ int WorkHorse::numOfReads(void)
 }
 
 // do all the work!
-int WorkHorse::doWork(std::vector<std::string> seqFiles, std::vector<SequenceType> seqTypeOfFile)
+int WorkHorse::doWork(std::vector<std::string> seqFiles)
 {
     //-----
     // Taken from the old main function
     //
     
-    try {
-        if (seqTypeOfFile.size() != seqFiles.size()) 
-        {
-            logError("Problem with parsing the input files. Number of sequence files and the number of sequence types does not match");
-            throw "Problem with parsing the input files. Number of sequence files and the number of sequence types does not match";
-        }
-    } catch (char * c) 
-    {
-        std::cerr << c << std::endl;
-    }
     
     std::vector<std::string>::iterator seq_iter = seqFiles.begin();
-    std::vector<SequenceType>::iterator seq_type_iter = seqTypeOfFile.begin();
     while(seq_iter != seqFiles.end())
     {
         logInfo("Parsing file: " << *seq_iter, 1);
@@ -175,14 +164,14 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles, std::vector<SequenceTyp
         if(rt == LONG_READ)
         {
             logInfo("Long read algorithm selected", 2);
-            longReadSearch(input_fastq, *seq_type_iter, *mOpts, &mReads, &mStringCheck);
+            longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck);
             logInfo("number of reads found so far: "<<this->numOfReads(), 2);
 
         }
         else
         {
             logInfo("Short read algorithm selected", 2);
-            shortReadSearch(input_fastq, *seq_type_iter, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
             logInfo("number of reads found so far: "<<this->numOfReads(), 2);
 
         }
@@ -191,7 +180,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles, std::vector<SequenceTyp
         if(rt == SHORT_READ)
         {
             logInfo("Begining Second iteration through file to recruit singletons", 2);
-            findSingletons(input_fastq, *seq_type_iter, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
             logInfo("number of reads found so far: "<<this->numOfReads(), 2);
 
         }
@@ -206,7 +195,6 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles, std::vector<SequenceTyp
         
         logInfo("Finished file: " << *seq_iter, 1);
         seq_iter++;
-        seq_type_iter++;
     }
     
     logInfo("all done!", 1);
