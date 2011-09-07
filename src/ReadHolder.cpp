@@ -46,15 +46,7 @@
 #include "LoggerSimp.h"
 
 
-std::string ReadHolder::seq(void)
-{
-    return this->RH_Seq;
-}
 
-void ReadHolder::add(int i)
-{
-    this->RH_StartStops.push_back(i);
-}
 
 void ReadHolder::add(int i, int j)
 {
@@ -70,10 +62,6 @@ void ReadHolder::add(int i, int j)
     this->RH_StartStops.push_back(j);
 }
 
-int ReadHolder::at(int i)
-{
-    return this->RH_StartStops.at(i);
-}
 
 void ReadHolder::reverseComplementSeq(void)
 {

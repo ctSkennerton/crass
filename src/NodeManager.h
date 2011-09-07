@@ -62,16 +62,32 @@ typedef std::vector<SpacerInstance *>::iterator SpacerListIterator;
 
 class NodeManager {
     public:
-        NodeManager(std::string drSeq);
+        NodeManager(std::string drSeq, StringCheck * stringCheck);
         ~NodeManager(void);
+        bool addReadHolder(ReadHolder * RH);
         
-        bool addReadholder(ReadHolder * RH);
-
+        NodeListIterator nodeBegin(void)
+        {
+            return NM_Nodes.begin();
+        }
+        
+        NodeListIterator nodeEnd(void)
+        {
+            return NM_Nodes.end();
+        }
+    
+    
     private:
-        std::string mDirectRepeatSequence;  // the sequence of this managers direct repeat
-        NodeList mNodes;                    // list of CrisprNodes this manager manages
-        SpacerList mSpacers;                // list of all the spacers
-        ReadList mReadList;                 // list of readholders
+        void splitReadHolder(ReadHolder * RH);
+        void addCrisprNodes(CrisprNode ** prevNode, std::string& workingString);
+        void addSpacerInstance(SpacerInstance * newSpacer);
+    
+        // members
+        std::string NM_DirectRepeatSequence;  // the sequence of this managers direct repeat
+        NodeList NM_Nodes;                    // list of CrisprNodes this manager manages
+        SpacerList NM_Spacers;                // list of all the spacers
+        ReadList NM_ReadList;                 // list of readholders
+        StringCheck * NM_StringCheck;         // pointer to the string check object 
         
 };
 

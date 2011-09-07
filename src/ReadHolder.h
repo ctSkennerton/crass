@@ -88,9 +88,14 @@ class ReadHolder
             RH_Header.clear();
         }
         
-        // getters
-        std::string seq(void);
-
+        //----
+        // Getters
+        //
+        std::string seq(void)
+        {
+            return this->RH_Seq;
+        }
+    
         std::string header(void)
         {
             return this->RH_Header;
@@ -126,12 +131,14 @@ class ReadHolder
             return this->mLastSpacerEnd;
         }
         
-        // and setters
+        //----
+        //setters
+        // 
         void seq(std::string s)
         {
             this->RH_Seq = s;
         }
-        
+
         void header(std::string h)
         {
             this->RH_Header = h;
@@ -173,10 +180,14 @@ class ReadHolder
             return (int)this->RH_StartStops.size();
         }
         
-        // access to things in start stop list
-        void add(int);
+        //----
+        // Element access to the start stop list
+        //
+        int at(int i)
+        {
+            return this->RH_StartStops.at(i);
+        }        
         void add(int, int);
-        int at(int);
         
         int front(void)
         {
@@ -185,6 +196,16 @@ class ReadHolder
         int back(void)
         {
             return this->RH_StartStops.back();
+        }
+    
+        StartStopListIterator begin(void)
+        {
+            return this->RH_StartStops.begin();
+        }
+        
+        StartStopListIterator end(void)
+        {
+            return this->RH_StartStops.end();
         }
     
         unsigned int& operator[]( const unsigned int i)

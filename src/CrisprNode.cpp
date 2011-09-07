@@ -37,18 +37,20 @@
 // system includes
 #include <vector>
 #include <string>
-
+#include <sstream>
 // local includes
 #include "CrisprNode.h"
 #include "LoggerSimp.h"
 #include "crass_defines.h"
+#include "GraphDrawingDefines.h"
 
+// boolean value to tell us whether the current node is the first or second in the partner pair
+// that is to say when the reads are in lowlexi, which node was seen first in the read
 bool CrisprNode::addPartner(CrisprNode * partnerNode, bool nf)
 {
-    // boolean value to tell us whether the current node is the first or second in the partner pair
-    // that is to say when the reads are in lowlexi, which node was seen first in the read
-    partnerList::iterator part_iter = _partnerIDs.begin();
-    while (part_iter != _partnerIDs.end()) {
+    partnerList::iterator part_iter = CN_partnerIDs.begin();
+    while (part_iter != CN_partnerIDs.end())
+    {
         if (part_iter->CP_partnerNode == partnerNode)
         {
             return false;
@@ -57,6 +59,26 @@ bool CrisprNode::addPartner(CrisprNode * partnerNode, bool nf)
     }
     
     crisprPartner tmp_cp = { partnerNode, nf };
-    _partnerIDs.push_back(tmp_cp);
+    CN_partnerIDs.push_back(tmp_cp);
     return true;
+}
+
+// print the edges so that the first member of the pair is first
+void CrisprNode::printEdges(void)
+{
+    partnerList::iterator part_iter = CN_partnerIDs.begin();
+    while (part_iter != CN_partnerIDs.end())
+    {
+        // check to see who comes first and print accorndingly
+        if (part_iter->CP_nodeFirst) 
+        {
+            gvEdge(part_iter->CP_partnerNode->CN_id, this->CN_id)
+        } 
+        else 
+        {
+            gvEdge(this->CN_id, part_iter->CP_partnerNode->CN_id)
+        }        
+        
+        part_iter++;
+    }
 }

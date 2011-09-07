@@ -34,18 +34,32 @@
 //
 // system includes
 #include <iostream>
+#include <string>
 
 // local includes
 #include "SpacerInstance.h"
 #include "CrisprNode.h"
+#include "StringCheck.h"
 
-SpacerInstance::SpacerInstance(std::string spacerSeq) 
+SpacerInstance::SpacerInstance(StringToken spacerID) 
 {
     //-----
     // constructor
     //
-    mSpacerSeq = spacerSeq;
-    mLeadingNode = NULL;
-    mLastNode = NULL;
-    mInstanceCount = 0;
+    SI_SpacerSeqID = spacerID;
+    SI_LeadingNode = NULL;
+    SI_LastNode = NULL;
+    SI_InstanceCount = 0;
 }
+
+SpacerInstance::SpacerInstance(StringToken spacerID, CrisprNode * leadingNode, CrisprNode * lastNode)
+{
+    SI_SpacerSeqID = spacerID;
+    SI_LeadingNode = leadingNode;
+    SI_LastNode = lastNode;
+    SI_InstanceCount  = 1;
+}
+
+
+
+

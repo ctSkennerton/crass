@@ -45,17 +45,20 @@
 // local includes
 #include "crass_defines.h"
 #include "CrisprNode.h"
+#include "StringCheck.h"
 
 class SpacerInstance {
     public:
-        SpacerInstance (std::string spacerSeq);
+        SpacerInstance (StringToken spacerID);
+        SpacerInstance (StringToken spacerID, CrisprNode * leadingNode, CrisprNode * lastNode);
         ~SpacerInstance () {}
         
     private:
-        std::string mSpacerSeq;                 // the sequence of this spacer
-        CrisprNode * mLeadingNode;              // the first node of this spacer
-        CrisprNode * mLastNode;                 // the last node
-        unsigned int mInstanceCount;            // the number of times this exact instance has been seen
+        StringToken SI_SpacerSeqID;               // the StringToken of this spacer
+        CrisprNode * SI_LeadingNode;              // the first node of this spacer
+        CrisprNode * SI_LastNode;                 // the last node
+        unsigned int SI_InstanceCount;            // the number of times this exact instance has been seen
+
 };
 
 

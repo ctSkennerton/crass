@@ -46,6 +46,7 @@
 #include <sstream>
 #include <map>
 #include <time.h>
+
 // local includes
 #include <config.h>
 #include "crass.h"
@@ -53,6 +54,13 @@
 #include "LoggerSimp.h"
 #include "SeqUtils.h"
 #include "WorkHorse.h"
+
+// added for testing only
+#include "NodeManager.h"
+#include "SpacerInstance.h"
+#include "CrisprNode.h"
+#include "ReadHolder.h"
+#include "StringCheck.h"
 
 
 //**************************************
@@ -218,7 +226,6 @@ int main(int argc, char *argv[])
         CRASS_DEF_MAX_DR_SIZE,                  // maximum direct repeat size
         CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
         CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
-        //        CRASS_DEF_NUM_DR_ERRORS,                // maxiumum allowable errors in direct repeat
         "./",                                   // output file directory
         "\t",                                   // delimiter string for stats report
         NULL,                                   //  pattern file name
@@ -313,100 +320,33 @@ int main(int argc, char *argv[])
         opt_idx++;
     }
     logTimeStamp();
-
-    WorkHorse * mHorse = new WorkHorse(&opts);
-    mHorse->doWork(seq_files, seq_type_files);
-    delete mHorse;
+    
+    std::string test_read = "CCGTGCTACCCGCAGGACAATACGGCCCCATGGCCGCGTTCCCCGCAGGCGCGGGGATGAACCGCGGGCGCGGGTGCGGGAGGCTTTGCGACGCAGGCGTTCCCCGCAGGCGCGGGGATGAACCGAGCACGGTCAACGCAGGAGGCACCGAGTACCGGCGTTCCCCGCAGGCGCGGGGATGAACCGTCTTTATCGGTAGCTGAGGCTCTTGCGCAAAGGCGTTCCCCGCAGGCGCGGGGATGAACCGAGCATTCAGGCTAAACACTGAGCACTAATGATGCGTTCCCCGCAGGCGCGGGGATGAACCGCCGGAGTAGAGGCAGAAGACGAGACGCCACAAGCGTTCCCCGCAGGCGCGGGGATGAACCGGGTGATAGAGCTT";
+    std::string test_header = "test_1";
+    ReadHolder * rh = new ReadHolder(test_read,test_header);
+    rh->add(35, 63);
+    rh->add(96, 124);
+    rh->add(157, 185);
+    rh->add(218, 246);
+    rh->add(279, 307);
+    
+    StringCheck * sc = new StringCheck();
+    
+    NodeManager * nm = new NodeManager("GCGTTCCCCGCAGGCGCGGGGATGAACCG", sc);
+    
+    nm->addReadHolder(rh);
+    
+    NodeListIterator nm_iter = nm->nodeBegin();
+    while (nm_iter != nm->nodeEnd()) 
+    {
+        (*nm_iter)->printEdges();
+        nm_iter++;
+    }
+    
     return 0;
-}
-
-//int main(int argc, char *argv[]) 
-//{
-//    if(argc == 1) 
-//    {
-//        help();
-//        exit(1);
-//    }
-//    
-//    int index = 0;
-//    while (index < argc) 
-//    {
-//        std::cout<<index<<" : "<<argc<<std::endl;
-//
-//        /* application of default options */
-//        options opts = {
-//            0,                                      // count flag
-//            false,                                  // exit after first find
-//            CRASS_DEF_DEFAULT_LOGGING,              // logging minimum by default
-//            false,                                  // illumina reads
-//            false,                                  // 454 reads
-//            false,                                  // sanger reads
-//            false,                                  // output stats report
-//            CRASS_DEF_MIN_DR_SIZE,                  // minimum direct repeat size
-//            CRASS_DEF_MAX_DR_SIZE,                  // maximum direct repeat size
-//            CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
-//            CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
-//            //        CRASS_DEF_NUM_DR_ERRORS,                // maxiumum allowable errors in direct repeat
-//            "./",                                   // output file directory
-//            "\t",                                   // delimiter string for stats report
-//            NULL,                                   //  pattern file name
-//            CRASS_DEF_K_CLUST_MIN,                  // the number of the kmers that need to be shared for clustering
-//            CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH, // the search window length
-//            CRASS_DEF_DEFAULT_MIN_NUM_REPEATS,       // mininum number of repeats for long read algorithm 
-//            false
-//        };
-//        index = processOptions(argc, argv, &opts);
-//
-//            
-//        if (index >= argc) 
-//        {
-//            std::cerr<<PACKAGE_NAME<<" : [ERROR] specify sequence files to process!"<<std::endl;
-//            exit(1);
-//        }
-//        else
-//        {
-//
-//            
-//            // initialize the log file
-//            std::string logFileName;
-//            if (opts.logToScreen) {
-//                logFileName = "";
-//            } else {
-//                // create a time stamp for the log file
-//                time_t rawtime;
-//                struct tm * timeinfo;
-//                char buffer [80];
-//                
-//                time ( &rawtime );
-//                timeinfo = localtime ( &rawtime );
-//                
-//                strftime (buffer,80,"%d_%m_%Y_%H%M%S",timeinfo);
-//                std::string tmp(buffer);
-//                logFileName = opts.output_fastq+ "crass."+tmp+".log";
-//
-//            }
-//            
-//            intialiseGlobalLogger(logFileName, opts.logger_level);
-//            
-//            // The remaining command line arguments are FASTQ(s) to process
-//            // put them in a vector to pass to the workhorse
-//            std::vector<std::string> seq_files;
-//            while (index < argc && '-' != argv[index][0]) 
-//            {
-//                std::string seq_file(argv[index]);
-//                seq_files.push_back(seq_file);
-//                logTimeStamp();
-//                index++;
-//            }
-//            
-//            // do work
-//            WorkHorse * mHorse = new WorkHorse(&opts);
-//            mHorse->doWork(seq_files);
-//            delete mHorse;
-//        }
-//        //set the position for the next options call
-//        optind = index;
-//        std::cout<<index<<" : "<<argc<<std::endl;
-//    }
+    
+//    WorkHorse * mHorse = new WorkHorse(&opts);
+//    mHorse->doWork(seq_files, seq_type_files);
+//    delete mHorse;
 //    return 0;
-//}
+}

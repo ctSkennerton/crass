@@ -298,7 +298,7 @@ int WorkHorse::mungeDRs(void)
         {
             //std::cout << "Group: " << (drg_iter->first) << std::endl;
             
-            mDRs[true_DRs[drg_iter->first]] = new NodeManager(true_DRs[drg_iter->first]);
+            mDRs[true_DRs[drg_iter->first]] = new NodeManager(true_DRs[drg_iter->first], &mStringCheck);
             DR_ClusterIterator drc_iter = (drg_iter->second)->begin();
             while(drc_iter != (drg_iter->second)->end())
             {

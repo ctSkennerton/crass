@@ -87,6 +87,10 @@
 #define CRASS_DEF_DEF_PATTERN_LOOKUP_EXT        "crass_direct_repeats.txt"
 #define CRASS_DEF_DEF_SPACER_LOOKUP_EXT         "crass_spacers.txt"
 // --------------------------------------------------------------------
+// GRAPH BUILDING
+// --------------------------------------------------------------------
+#define CRASS_DEF_NODE_KMER_SIZE                9                   // size of the kmer that defines a crispr node
+// --------------------------------------------------------------------
  // USER OPTION STRUCTURE
 // --------------------------------------------------------------------
 #define CRASS_DEF_MAX_DELIM_LENGTH              10                  // delimiter used in stats report

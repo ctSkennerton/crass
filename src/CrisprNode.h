@@ -44,39 +44,47 @@
 
 // local includes
 #include "crass_defines.h"
+#include "StringCheck.h"
 
 class CrisprNode;
 
-typedef struct {
+// struct of edges
+// bool is true if the partner lies before the current node
+typedef struct 
+{
     CrisprNode * CP_partnerNode;
     bool CP_nodeFirst;
 } crisprPartner;
 
 typedef std::vector<crisprPartner> partnerList;
 
-class CrisprNode {
+class CrisprNode 
+{
     public:
         //constructor
-        CrisprNode(std::string kmer)
+        CrisprNode(StringToken id)
         {
-            _kmer = kmer;
+            CN_id = id;
         }
         //destructor
         ~CrisprNode(){}
         
         // return success if the partner has been added
+        // these are basically the edges of the graph
         bool addPartner(CrisprNode * parterNode, bool nf);
         
         partnerList * getPartners(void)
         {
-            return &_partnerIDs;
+            return &CN_partnerIDs;
         }    
         
+    void printEdges(void);
+    
     private:
-        // the ID of the current node in relation to the lookup table
-        std::string _kmer;
+        // id of the kmer of the cripsr node
+        StringToken CN_id;
         // the ID of the partner of the current node in the lookup table
-        partnerList _partnerIDs;
+        partnerList CN_partnerIDs;
 
         
 };
