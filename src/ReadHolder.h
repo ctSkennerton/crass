@@ -339,7 +339,7 @@ class ReadHolder
 #pragma mark String functions
         std::string substr(int i, int j)
         {
-            return RH_Seq.substr(i, j - i);
+            return RH_Seq.substr(i, j);
         }
         
         std::string substr(int i)
@@ -349,7 +349,7 @@ class ReadHolder
         
         std::string substr(unsigned int i, unsigned int j)
         {
-            return RH_Seq.substr(i, j - i);
+            return RH_Seq.substr(i, j );
         }
         
         std::string substr(unsigned int i)
@@ -359,7 +359,7 @@ class ReadHolder
         
         std::string substr(size_t i, size_t j)
         {
-            return RH_Seq.substr(i, j - i);
+            return RH_Seq.substr(i, j );
         }
         
         std::string substr(size_t i)

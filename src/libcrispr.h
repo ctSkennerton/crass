@@ -53,7 +53,6 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "StringCheck.h"
-#include "Crispr.h"
 
 typedef std::map<std::string, bool> lookupTable;
 
@@ -121,7 +120,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder);
 
 bool isRepeatLowComplexity(std::string& repeat);
 
-int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange, unsigned int sequenceLength);
+int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange);
 
 bool  patternMatches(std::string& pattern1, std::string& pattern2, double confidence);
 

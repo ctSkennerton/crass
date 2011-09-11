@@ -108,7 +108,8 @@ unsigned int ReadHolder::spacerLengthAt(unsigned int i)
 unsigned int ReadHolder::getAverageSpacerLength()
 {
     unsigned int sum = 0;
-    for (unsigned int i = 0; i < numSpacers(); i+=2)
+    unsigned int final_index = (getStartStopListSize()/2) + 1;
+    for (unsigned int i = 0; i < final_index; i+=2)
     {
         sum += spacerLengthAt(i);
     }
@@ -118,7 +119,8 @@ unsigned int ReadHolder::getAverageSpacerLength()
 std::vector<std::string> ReadHolder::getAllSpacerStrings(void)
 {
     std::vector<std::string> spacer_vec;
-    for (unsigned int i = 0; i < numSpacers(); i+=2)
+    unsigned int final_index = (getStartStopListSize()/2) + 1;
+    for (unsigned int i = 0; i <= final_index; i+=2)
     {
         spacer_vec.push_back(spacerStringAt(i));
     }
@@ -128,7 +130,8 @@ std::vector<std::string> ReadHolder::getAllSpacerStrings(void)
 std::vector<std::string> ReadHolder::getAllRepeatStrings(void)
 {
     std::vector<std::string> repeat_vec;
-    for (unsigned int i = 0; i < numRepeats(); i+=2)
+    unsigned int final_index = getStartStopListSize() - 2;
+    for (unsigned int i = 0; i < final_index; i+=2)
     {
         
         repeat_vec.push_back(repeatStringAt(i));
@@ -139,7 +142,8 @@ std::vector<std::string> ReadHolder::getAllRepeatStrings(void)
 int ReadHolder::averageRepeatLength()
 {
     int sum = 0;
-    for (unsigned int i = 0; i < numRepeats(); i+=2)
+    unsigned int final_index = getStartStopListSize() - 2;
+    for (unsigned int i = 0; i < final_index; i+=2)
     {
         sum += (int)repeatStringAt(i).length();
     }
@@ -151,10 +155,6 @@ int ReadHolder::averageRepeatLength()
 
 void ReadHolder::startStopsAdd(unsigned int i, unsigned int j)
 {
-    //    if(i < 0)
-    //    {
-    //        logError("Adding DR start index less than 0 ("<<i<<")");
-    //    }
     this->RH_StartStops.push_back(i);
     if(j > (unsigned int)getSeqLength())
     {
@@ -166,10 +166,10 @@ void ReadHolder::startStopsAdd(unsigned int i, unsigned int j)
 #pragma mark -
 #pragma mark StartStopList 
 
-// TODO -1?
+// TODO +1?
 void ReadHolder::removeRepeat(unsigned int val)
 {
-    RH_StartStops.erase(RH_StartStops.begin()+val);
+    RH_StartStops.erase(RH_StartStops.begin()+val, RH_StartStops.begin() +val + 2);
 }
 
 

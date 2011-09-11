@@ -128,10 +128,8 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
-
         // grab a readholder
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s,seq->name.s);
-     
         bool match_found = false;
 
         if (opts.removeHomopolymers)
@@ -157,7 +155,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
         unsigned int searchEnd = seq_length - opts.highDRsize - opts.highSpacerSize - opts.searchWindowLength - 1;
         for (unsigned int j = 0; j <= searchEnd; j = j + skips)
         {
-            
+                        
             unsigned int beginSearch = j + opts.lowDRsize + opts.lowSpacerSize;
             unsigned int endSearch = j + opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength;
             
@@ -173,6 +171,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
             
             std::string text = read.substr(beginSearch, (endSearch - beginSearch));
             std::string pattern = read.substr(j, opts.searchWindowLength);
+            
             //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
             int pattern_in_text_index = PatternMatcher::bmpSearch(text, pattern);
             if (pattern_in_text_index >= 0)
@@ -182,7 +181,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
                 
                 tmp_holder->startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength);
                 
-                scanRight(tmp_holder, pattern, opts.lowSpacerSize, 24, (seq_length - 1));
+                scanRight(tmp_holder, pattern, opts.lowSpacerSize, 24);
             }
 
             if ( (tmp_holder->numRepeats() > opts.minNumRepeats) ) //numRepeats is half the size of the StartStopList
@@ -221,11 +220,9 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
                     logInfo("\tFailed test 2. Repeat length: "<<tmp_holder->getRepeatLength() << " : " << match_found, 8); 
                 }
 //-DDEBUG#endif
-                //std::cout<<j<<std::endl;
                 j = tmp_holder->back() - 1;
             }
             tmp_holder->clearStartStops();
-            //break;
         }
         if (!match_found) 
         {
@@ -664,7 +661,6 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
     logInfo("Repeat positions:", 9);
     while (repeat_iter < tmp_holder->end()) 
     {
-        logInfo(*repeat_iter, 9);
         if(*repeat_iter < (unsigned int)left_extension_length)
         {
             *repeat_iter = 0;
@@ -714,9 +710,10 @@ bool qcFoundRepeats(ReadHolder * tmp_holder)
     if (2 <= tmp_holder->numSpacers()) 
     {
         std::vector<std::string> spacer_vec = tmp_holder->getAllSpacerStrings();
-
-        size_t sum_spacer_to_spacer_len_diff = 0;
-        size_t sum_repeat_to_spacer_len_diff = 0;
+        
+        int spacer_vec_size = (int)spacer_vec.size();
+        int sum_spacer_to_spacer_len_diff = 0;
+        int sum_repeat_to_spacer_len_diff = 0;
         
         float sum_spacer_to_spacer_difference = 0.0;
         float sum_repeat_to_spacer_difference = 0.0;
@@ -733,53 +730,52 @@ bool qcFoundRepeats(ReadHolder * tmp_holder)
             
             spacer_iter++;
         }
-        float diff_cutoff = (float)spacer_vec.size() * CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY;
+        float diff_cutoff = (spacer_vec_size * CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY);
         
         //float spacer_vec_size_as_float = (float)spacer_vec.size();
         if (sum_spacer_to_spacer_difference > diff_cutoff) 
         {
 //-DDEBUG#ifdef DEBUG
-            logInfo("\tFailed test 4a. Spacers are too similar: "<<sum_spacer_to_spacer_difference/spacer_vec.size()<<" > "<<diff_cutoff/spacer_vec.size(), 8);
+            logInfo("\tFailed test 4a. Spacers are too similar: "<<sum_spacer_to_spacer_difference/spacer_vec_size<<" > "<<diff_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif
             return false;
         }
 //-DDEBUG#ifdef DEBUG
-        logInfo("\tPassed test 4a. Spacers are not too similar: "<<sum_spacer_to_spacer_difference/spacer_vec.size()<<" < "<<diff_cutoff/spacer_vec.size(), 8);
+        logInfo("\tPassed test 4a. Spacers are not too similar: "<<sum_spacer_to_spacer_difference/spacer_vec_size<<" < "<<diff_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif    
         if (sum_repeat_to_spacer_difference > diff_cutoff)
         {
 //-DDEBUG#ifdef DEBUG
-            logInfo("\tFailed test 4b. Spacers are too similar to the repeat: "<<sum_repeat_to_spacer_difference/spacer_vec.size()<<" > "<<diff_cutoff/spacer_vec.size(), 8);
+            logInfo("\tFailed test 4b. Spacers are too similar to the repeat: "<<sum_repeat_to_spacer_difference/spacer_vec_size<<" > "<<diff_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif
             return false;
         }
 //-DDEBUG#ifdef DEBUG
-        logInfo("\tPassed test 4b. Spacers are not too similar to the repeat: "<<sum_repeat_to_spacer_difference/spacer_vec.size()<<" < "<<diff_cutoff/spacer_vec.size(), 8);
+        logInfo("\tPassed test 4b. Spacers are not too similar to the repeat: "<<sum_repeat_to_spacer_difference/spacer_vec_size<<" < "<<diff_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif    
         
-        size_t spacer_len_cutoff = spacer_vec.size() * CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF;
-        if (abs((int)sum_spacer_to_spacer_len_diff) > (int)spacer_len_cutoff) 
+        int spacer_len_cutoff = spacer_vec_size * CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF;
+        if (abs((int)sum_spacer_to_spacer_len_diff) > spacer_len_cutoff) 
         {
 //-DDEBUG#ifdef DEBUG 
-            //std::cout<<abs((int)sum_spacer_to_spacer_len_diff)<<" > "<<(int)spacer_len_cutoff<<std::endl;
-            logInfo("\tFailed test 5a. Spacer lengths differ too much: "<<(size_t)sum_spacer_to_spacer_len_diff/spacer_vec.size()<<" > "<<spacer_len_cutoff/spacer_vec.size(), 8);
+            logInfo("\tFailed test 5a. Spacer lengths differ too much: "<<abs(sum_spacer_to_spacer_len_diff)/spacer_vec_size<<" > "<<spacer_len_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif
             return false;
         }
 //-DDEBUG#ifdef DEBUG 
-        logInfo("\tPassed test 5a. Spacer lengths do not differ too much: "<<(size_t)sum_spacer_to_spacer_len_diff/spacer_vec.size()<<" < "<<spacer_len_cutoff/spacer_vec.size(), 8);
+        logInfo("\tPassed test 5a. Spacer lengths do not differ too much: "<<abs(sum_spacer_to_spacer_len_diff)/spacer_vec_size<<" < "<<spacer_len_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif    
-        size_t repeat_to_spacer_len_cutoff = spacer_vec.size() * CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF;
-        if (abs((int)sum_repeat_to_spacer_len_diff) > (int)repeat_to_spacer_len_cutoff) 
+        int repeat_to_spacer_len_cutoff = spacer_vec_size * CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF;
+
+        if (abs(sum_repeat_to_spacer_len_diff) > repeat_to_spacer_len_cutoff) 
         {
 //-DDEBUG#ifdef DEBUG
-            //std::cout<<abs((int)sum_repeat_to_spacer_len_diff)<<" > "<<(int)repeat_to_spacer_len_cutoff<<std::endl;
-            logInfo("\tFailed test 5b. Repeat to spacer lengths differ too much: "<<(size_t)sum_repeat_to_spacer_len_diff/spacer_vec.size()<<" > "<<repeat_to_spacer_len_cutoff/spacer_vec.size(), 8);
+            logInfo("\tFailed test 5b. Repeat to spacer lengths differ too much: "<<abs(sum_repeat_to_spacer_len_diff)/spacer_vec_size<<" > "<<repeat_to_spacer_len_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif
             return false;
         }
 //-DDEBUG#ifdef DEBUG
-        logInfo("\tPassed test 5b. Repeat to spacer lengths do not differ too much: "<<(size_t)sum_repeat_to_spacer_len_diff/spacer_vec.size()<<" < "<<repeat_to_spacer_len_cutoff/spacer_vec.size(), 8);
+        logInfo("\tPassed test 5b. Repeat to spacer lengths do not differ too much: "<<abs(sum_repeat_to_spacer_len_diff)/spacer_vec_size<<" < "<<repeat_to_spacer_len_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif
 
     }
@@ -813,17 +809,19 @@ bool qcFoundRepeats(ReadHolder * tmp_holder)
 
 }
 
-int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange, unsigned int sequenceLength)
+int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange)
 {
 //-DDEBUG#ifdef DEBUG
-    logInfo("Scanning Right for more repeats ", 9);
+    logInfo("Scanning Right for more repeats:", 9);
 //-DDEBUG#endif
     unsigned int start_stops_size = tmp_holder->getStartStopListSize();
     
     unsigned int pattern_length = (unsigned int)pattern.length();
     
+    // final start index
     unsigned int last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 2);
     
+    //second to final start index
     unsigned int second_last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 4);
     
     unsigned int repeat_spacing = last_repeat_index - second_last_repeat_index;
