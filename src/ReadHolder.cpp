@@ -1,5 +1,6 @@
 // File: ReadHolder.cpp
 // Original Author: Michael Imelfort 2011
+// Hacked and Extended: Connor Skennerton 2011
 // --------------------------------------------------------------------
 //
 // OVERVIEW:
@@ -46,32 +47,155 @@
 #include "LoggerSimp.h"
 
 
-
-
-void ReadHolder::add(int i, int j)
+#pragma mark -
+#pragma mark Getters
+// the input must be an even number which will be the start of the repeat
+unsigned int ReadHolder::getRepeatAt(unsigned int i)
 {
-    if(i < 0)
+    if (i % 2 != 0) 
     {
-        logError("Adding DR start index less than 0 ("<<i<<")");
+        logError("Attempting to get a repeat start index from a odd numbered index in RH_StartStops: "<<i);
     }
-    this->RH_StartStops.push_back(i);
-    if(j >= seqLength())
+    if (i > RH_StartStops.size()) 
     {
-        logError("Adding DR end index greater than "<<(seqLength()-1)<<" ("<<j<<")");
+        logError("Index is greater than the length of the Vector: "<<i);
+    }
+    return RH_StartStops[i];
+}
+std::string ReadHolder::repeatStringAt(unsigned int i)
+{
+    if (i % 2 != 0) 
+    {
+        logError("Attempting to cut a repeat sequence from a odd numbered index in RH_StartStops: "<<i)
+    }
+    if (i > RH_StartStops.size()) 
+    {
+        logError("Index is greater than the length of the Vector: "<<i);
+    }
+    return RH_Seq.substr(RH_StartStops[i], RH_StartStops[i + 1] - RH_StartStops[i]);
+}
+
+std::string ReadHolder::spacerStringAt(unsigned int i)
+{
+    if (i % 2 != 0) 
+    {
+        logError("Attempting to cut a spacer sequence from a odd numbered index in RH_StartStops: "<<i)
+    }
+    if (i > RH_StartStops.size()) 
+    {
+        logError("Index is greater than the length of the Vector: "<<i);
+    }
+    unsigned int curr_spacer_start_index = RH_StartStops[i + 1] + 1;
+    unsigned int curr_spacer_end_index = RH_StartStops[i + 2] - 1;
+    return RH_Seq.substr(curr_spacer_start_index, (curr_spacer_end_index - curr_spacer_start_index));
+}
+
+unsigned int ReadHolder::spacerLengthAt(unsigned int i)
+{
+    if (i % 2 != 0) 
+    {
+        logError("Attempting to cut a spacer sequence from a odd numbered index in RH_StartStops: "<<i)
+    }
+    if (i > RH_StartStops.size()) 
+    {
+        logError("Index is greater than the length of the Vector: "<<i);
+    }
+    unsigned int curr_spacer_start_index = RH_StartStops[i] + 1;
+    unsigned int curr_spacer_end_index = RH_StartStops[i + 1] - 1;
+    return curr_spacer_end_index - curr_spacer_start_index;
+}
+
+unsigned int ReadHolder::getAverageSpacerLength()
+{
+    unsigned int sum = 0;
+    for (unsigned int i = 0; i < numSpacers(); i+=2)
+    {
+        sum += spacerLengthAt(i);
+    }
+    return sum/numSpacers();
+}
+
+std::vector<std::string> ReadHolder::getAllSpacerStrings(void)
+{
+    std::vector<std::string> spacer_vec;
+    for (unsigned int i = 0; i < numSpacers(); i+=2)
+    {
+        spacer_vec.push_back(spacerStringAt(i));
+    }
+    return spacer_vec;
+}
+
+std::vector<std::string> ReadHolder::getAllRepeatStrings(void)
+{
+    std::vector<std::string> repeat_vec;
+    for (unsigned int i = 0; i < numRepeats(); i+=2)
+    {
+        
+        repeat_vec.push_back(repeatStringAt(i));
+    }
+    return repeat_vec;
+}
+
+int ReadHolder::averageRepeatLength()
+{
+    int sum = 0;
+    for (unsigned int i = 0; i < numRepeats(); i+=2)
+    {
+        sum += (int)repeatStringAt(i).length();
+    }
+    return sum/numRepeats();
+}
+
+#pragma mark -
+#pragma mark Element access
+
+void ReadHolder::startStopsAdd(unsigned int i, unsigned int j)
+{
+    //    if(i < 0)
+    //    {
+    //        logError("Adding DR start index less than 0 ("<<i<<")");
+    //    }
+    this->RH_StartStops.push_back(i);
+    if(j > (unsigned int)getSeqLength())
+    {
+        logError("Adding DR end index greater than "<<(getSeqLength())<<" ("<<j<<")");
     }
     this->RH_StartStops.push_back(j);
 }
 
+#pragma mark -
+#pragma mark StartStopList 
 
-void ReadHolder::reverseComplementSeq(void)
+// TODO -1?
+void ReadHolder::removeRepeat(unsigned int val)
+{
+    RH_StartStops.erase(RH_StartStops.begin()+val);
+}
+
+
+void ReadHolder::dropPartials(void)
 {
     //-----
-    // Reverse complement the read and fix the start stops
-    // 
-    RH_Seq = reverseComplement(RH_Seq);
-    reverseStartStops();
-    RH_WasLowLexi = !RH_WasLowLexi;
+    // Drop any partial DRs
+    //
+    StartStopListIterator r_iter = RH_StartStops.begin();
+    if(*r_iter == 0)
+    {
+        logInfo("Dropping front partial repeat", 8);
+        // this is a partial
+        RH_StartStops.erase(r_iter, r_iter+2);
+    }
+    
+    r_iter = RH_StartStops.end() - 1;
+    if(*r_iter > (unsigned int)RH_Seq.length() - RH_RepeatLength)
+    {
+        logInfo("Dropping end partial repeat", 8);
+        // this is a partial
+        // TODO This -2 may only need to be -1
+        RH_StartStops.erase(r_iter-1, RH_StartStops.end());
+    }
 }
+
 
 void ReadHolder::reverseStartStops(void)
 {
@@ -88,7 +212,7 @@ void ReadHolder::reverseStartStops(void)
     int true_start_offset = seq_len - RH_StartStops.back() - 1;
     
     StartStopListRIterator ss_iter = RH_StartStops.rbegin();
-
+    
     unsigned int prev_pos_fixed = true_start_offset;
     unsigned int prev_pos_orig = *ss_iter;
     
@@ -129,9 +253,9 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         }
         else
         {
-                *ss_iter -= frontOffset;
+            *ss_iter -= frontOffset;
         }
-            
+        
         // the second guy is the end of the DR
         ss_iter++;
         *ss_iter = *(ss_iter - 1) + usable_length;
@@ -148,12 +272,12 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
     // now we check to see if we can find one more DRs on the front or back of this mofo
     // front first
     ss_iter = RH_StartStops.begin();
-    if((int)(*ss_iter) > opts->lowSpacerSize)
+    if((*ss_iter) > opts->lowSpacerSize)
     {
         // we should look for a DR here
         int part_s, part_e;
         part_s = part_e = 0;
-//        std::cout << "Check start: " << *ss_iter << " : " << opts->lowSpacerSize << std::endl;
+        //        std::cout << "Check start: " << *ss_iter << " : " << opts->lowSpacerSize << std::endl;
         stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, 0, ((int)(*ss_iter) - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
         if(0 != part_e)
         {
@@ -175,7 +299,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         // we should look for a DR here
         int part_s, part_e;
         part_s = part_e = 0;
-//        std::cout << "Check end: " << end_dist << " : " << opts->lowSpacerSize << std::endl;
+        //        std::cout << "Check end: " << end_dist << " : " << opts->lowSpacerSize << std::endl;
         stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, (RH_StartStops.back() + opts->lowSpacerSize), (end_dist - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
         if(0 != part_e)
         {
@@ -189,314 +313,97 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
     }
 }
 
-// cut DRs and Specers
+#pragma mark -
+#pragma mark String functions
 
-bool ReadHolder::getFirstDR(std::string * retStr)
+std::string ReadHolder::DRLowLexi(void)
 {
     //-----
-    // cut the first DR or return false if it all stuffs up
+    // Orientate a READ based on low lexi of the interalised DR
     //
-    mLastDREnd = 0;
-    return getNextDR(retStr);
-}
-
-bool ReadHolder::getNextDR(std::string * retStr)
-{
-    //-----
-    // cut the next DR or return false if it all stuffs up
-    //
-    // make the iterator point to the start of the next DR
-    StartStopListIterator ss_iter = RH_StartStops.begin() + mLastDREnd;
     
-    // find out where to start and stop the cuts
-    int start_cut = -1;
-    int end_cut = -1;
-    if(ss_iter < RH_StartStops.end())
+    std::string tmp_dr;
+    std::string rev_comp;
+    
+    int num_repeats = numRepeats();
+    // make sure that tere is 4 elements in the array, if not you can only cut one
+    if (num_repeats == 1)
     {
-        start_cut = *ss_iter;
+        tmp_dr = repeatStringAt(0);
+        rev_comp = reverseComplement(tmp_dr);
     }
-    else
-        return false;
-    ss_iter++;
-    if(ss_iter < RH_StartStops.end())
+    else if (2 == num_repeats)
     {
-        end_cut = *ss_iter;
-    }
-    else
-    {
-        return false;
-    }
+        // choose the dr that is not a partial ( no start at 0 or end at length)
         
-    // check to see if we made any good of start and end cut
-    int dist = end_cut - start_cut;
-    if(0 != dist)
-    {
-        *retStr = RH_Seq.substr(start_cut, dist+1);
-        mLastDREnd+=2;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool ReadHolder::getFirstSpacer(std::string * retStr)
-{
-    //-----
-    // cut the first Spacer or return false if it all stuffs up
-    //
-    mLastSpacerEnd = 0;
-    return getNextSpacer(retStr);
-}
-
-bool ReadHolder::getNextSpacer(std::string * retStr)
-{
-    //-----
-    // cut the next Spacer or return false if it all stuffs up
-    //
-    StartStopListIterator ss_iter = RH_StartStops.begin();
-
-    // find out where to start and stop the cuts
-    int start_cut = -1;
-    int end_cut = -1;
-
-    if(mLastSpacerEnd == ((int)(RH_StartStops.size()) - 1))
-    {
-        ss_iter += mLastSpacerEnd;
-        if(RH_Seq.length() != ((*ss_iter) + 1))
+        // take the second
+        if (RH_StartStops.front() == 0)
         {
-            mLastSpacerEnd++;
-            *retStr = RH_Seq.substr(*ss_iter + 1);
-            return true;
+            tmp_dr = repeatStringAt(2);
+            rev_comp = reverseComplement(tmp_dr);
         }
-        return false;
-    }
-
-    // if the DR starts at 0, 
-    if(0 == mLastSpacerEnd)
-    {
-        // first run
-        if(0 != *ss_iter)
-        {
-            // cut the front before the first DR
-            start_cut = 0;
-            end_cut = *ss_iter;
-        }
-        mLastSpacerEnd = 1;
-    }
-    
-    if(-1 == start_cut)
-    {
-        // we didn't set it above
-        ss_iter = RH_StartStops.begin() + mLastSpacerEnd;
-    
-        if(ss_iter < RH_StartStops.end())
-        {
-            start_cut = *ss_iter;
-        }
-        else
-        {
-            return false;
-        }
-        ss_iter++;
-        if(ss_iter < RH_StartStops.end())
-        {
-            end_cut = *ss_iter;
-        }
-        else
-        {
-            return false;
-        }
-
-        mLastSpacerEnd += 2; 
-    }
         
-    // check to see if we made any good of start and end cut
-    if(0 != start_cut)
-    {
-        start_cut++;
-    }
-    if(end_cut == (int)(RH_Seq.length()) - 1)
-    {
-        *retStr = RH_Seq.substr(start_cut);
-    }
-    else
-    {
-        *retStr = RH_Seq.substr(start_cut, end_cut - start_cut);
-    }
-    return true;
-}
-
-std::string ReadHolder::splitApart(void)
-{
-    //-----
-    // produce a string of the read split into DR and spacers
-    //
-    stringstream ss;
-    std::string working_str;
-    std::string sep_str = " ";
-    StartStopListIterator ss_iter = RH_StartStops.begin();
-    if(0 == *ss_iter)
-    {
-        // start with a DR
-        if(getFirstDR(&working_str))
+        // take the first
+        else if (RH_StartStops.back() == (unsigned int)RH_Seq.length())
         {
-            ss << "DR: " << working_str;
+            tmp_dr = repeatStringAt(0);
+            rev_comp = reverseComplement(tmp_dr);
         }
+        // if they both are then just take whichever is longer
         else
         {
-            return "---";
-        }
-        ss << sep_str;
-
-        if(getFirstSpacer(&working_str))
-        {
-            ss << "SP: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-
-        while(1)
-        {
-            if(getNextDR(&working_str))
-            {
-                ss << "DR: " << working_str;  
-            }
-            else
-            {
-                break;
-            }
-            ss << sep_str;
-            if(getNextSpacer(&working_str))
-            {
-                ss  << "SP: "<< working_str;  
-            }
-            else
-            {
-                break;
-            }
-            ss << sep_str;
-        }
-    }
-    else
-    {
-        // start with a spacer
-        if(getFirstSpacer(&working_str))
-        {
-            ss << "SP: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-
-        if(getFirstDR(&working_str))
-        {
-            ss << "DR: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-        
-        // oooohh naughty
-        while(1)
-        {
-            if(getNextSpacer(&working_str))
-            {
-                ss << "SP: " << working_str;  
-            }
-            else
-            {
-                break;
-            }
-            ss << sep_str;
-            if(getNextDR(&working_str))
-            {
-                ss << "DR: " << working_str; 
-            }
-            else
-            {
-                break;
-            }
-            ss << sep_str;
-        }
-    }
-    
-    return ss.str();
-}
-
-std::string ReadHolder::splitApartSimple(void)
-{
-    //-----
-    // produce a string of the read split into DR and spacers
-    // without using the nextDR, nextSpacer functions.
-    //
-    stringstream ss;
-    std::string sep_str = " ";
-    unsigned int prev_end = 0;
-
-    StartStopListIterator ss_iter = RH_StartStops.begin();
-    while(ss_iter != RH_StartStops.end())
-    {
-        if(0 == *ss_iter)
-        {
-            // starts with a DR
-            ss_iter++;
-            ss << "DR: " << RH_Seq.substr(0, *ss_iter + 1) << sep_str;
-            prev_end = *ss_iter;
-        }
-        else
-        {
-            // starts with a spacer
-            int length = -1;
-            if(0 == prev_end)
-            {
-                length = *ss_iter;
-            }
-            else
-            {
-                length = *ss_iter - prev_end  - 1;
-                prev_end++;
-            }
-            ss << "SP: " << RH_Seq.substr(prev_end, length) << sep_str;
-            int start = *ss_iter;
-            ss_iter++;
-            ss << "DR: " << RH_Seq.substr(start, *ss_iter - start + 1) << sep_str;
-            prev_end = *ss_iter;
+            int lenA = RH_StartStops.at(1) - RH_StartStops.at(0);
+            int lenB = RH_StartStops.at(3) - RH_StartStops.at(2);
             
-        }
-        
-        if(RH_StartStops.end() == (ss_iter + 1))
-        {
-            // this is the last one.
-            if((RH_Seq.length() - 1) != *ss_iter)
+            if (lenA > lenB)
             {
-                // ends on spacer
-                ss << "SP: " << RH_Seq.substr(prev_end + 1);
+                tmp_dr = repeatStringAt(0);
+                rev_comp = reverseComplement(tmp_dr);
+            }
+            else
+            {
+                tmp_dr = repeatStringAt(2);
+                rev_comp = reverseComplement(tmp_dr);
             }
         }
-        ss_iter++;
+    }
+    // long read more than two repeats
+    else
+    {
+        // take the second
+        tmp_dr = repeatStringAt(2);
+        rev_comp = reverseComplement(tmp_dr);
+
     }
     
-    return ss.str();
+    if (tmp_dr < rev_comp)
+    {
+        // the direct repeat is in it lowest lexicographical form
+        RH_WasLowLexi = true;
+//-DDEBUG#ifdef DEBUG
+        logInfo("DR in low lexi"<<endl<<RH_Seq, 9);
+//-DDEBUG#endif
+        return tmp_dr;
+    }
+    else
+    {
+        reverseComplementSeq();
+        RH_WasLowLexi = false;
+//-DDEBUG#ifdef DEBUG
+        logInfo("DR not in low lexi"<<endl<<RH_Seq, 9);
+//-DDEBUG#endif
+        return rev_comp;
+    }
 }
 
-void ReadHolder::decode(void)
+void ReadHolder::reverseComplementSeq(void)
 {
     //-----
-    // Go from RLE to normal
-    // Call it anytime. Fixes start stops
-    //
-    std::string tmp = this->expand(true);
-    this->RH_isSqueezed = false;
-    this->RH_Seq = tmp;
+    // Reverse complement the read and fix the start stops
+    // 
+    RH_Seq = reverseComplement(RH_Seq);
+    reverseStartStops();
+    RH_WasLowLexi = !RH_WasLowLexi;
 }
 
 // simple run length encoding
@@ -542,6 +449,18 @@ void ReadHolder::encode(void)
     }
 }
 
+void ReadHolder::decode(void)
+{
+    //-----
+    // Go from RLE to normal
+    // Call it anytime. Fixes start stops
+    //
+    std::string tmp = this->expand(true);
+    this->RH_isSqueezed = false;
+    this->RH_Seq = tmp;
+}
+
+
 std::string ReadHolder::expand(void)
 {
     //----
@@ -555,7 +474,7 @@ std::string ReadHolder::expand(bool fixStopStarts)
     //----
     // Expand the string from RLE and fix stope starts as needed
     //
-
+    
     if (!this->RH_isSqueezed) 
     {
         return this->RH_Seq;
@@ -563,7 +482,7 @@ std::string ReadHolder::expand(bool fixStopStarts)
     else 
     {
         std::stringstream tmp;
-     
+        
         int main_index = 0;
         int new_index = 0;
         int old_index = 0;
@@ -614,6 +533,369 @@ std::string ReadHolder::expand(bool fixStopStarts)
         }
         return tmp.str();
     }
+}
+
+// cut DRs and Specers
+
+bool ReadHolder::getFirstDR(std::string * retStr)
+{
+    //-----
+    // cut the first DR or return false if it all stuffs up
+    //
+    RH_LastDREnd = 0;
+    return getNextDR(retStr);
+}
+
+bool ReadHolder::getNextDR(std::string * retStr)
+{
+    //-----
+    // cut the next DR or return false if it all stuffs up
+    //
+    // make the iterator point to the start of the next DR
+    StartStopListIterator ss_iter = RH_StartStops.begin() + RH_LastDREnd;
+    
+    // find out where to start and stop the cuts
+    int start_cut = -1;
+    int end_cut = -1;
+    if(ss_iter < RH_StartStops.end())
+    {
+        start_cut = *ss_iter;
+    }
+    else
+        return false;
+    ss_iter++;
+    if(ss_iter < RH_StartStops.end())
+    {
+        end_cut = *ss_iter;
+    }
+    else
+    {
+        return false;
+    }
+    
+    // check to see if we made any good of start and end cut
+    int dist = end_cut - start_cut;
+    if(0 != dist)
+    {
+        *retStr = RH_Seq.substr(start_cut, dist+1);
+        RH_LastDREnd+=2;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool ReadHolder::getFirstSpacer(std::string * retStr)
+{
+    //-----
+    // cut the first Spacer or return false if it all stuffs up
+    //
+    RH_LastSpacerEnd = 0;
+    return getNextSpacer(retStr);
+}
+
+bool ReadHolder::getNextSpacer(std::string * retStr)
+{
+    //-----
+    // cut the next Spacer or return false if it all stuffs up
+    //
+    StartStopListIterator ss_iter = RH_StartStops.begin();
+    
+    // find out where to start and stop the cuts
+    int start_cut = -1;
+    int end_cut = -1;
+    
+    if(RH_LastSpacerEnd == ((int)(RH_StartStops.size()) - 1))
+    {
+        ss_iter += RH_LastSpacerEnd;
+        if(RH_Seq.length() != ((*ss_iter) + 1))
+        {
+            RH_LastSpacerEnd++;
+            *retStr = RH_Seq.substr(*ss_iter + 1);
+            return true;
+        }
+        return false;
+    }
+    
+    // if the DR starts at 0, 
+    if(0 == RH_LastSpacerEnd)
+    {
+        // first run
+        if(0 != *ss_iter)
+        {
+            // cut the front before the first DR
+            start_cut = 0;
+            end_cut = *ss_iter;
+        }
+        RH_LastSpacerEnd = 1;
+    }
+    
+    if(-1 == start_cut)
+    {
+        // we didn't set it above
+        ss_iter = RH_StartStops.begin() + RH_LastSpacerEnd;
+        
+        if(ss_iter < RH_StartStops.end())
+        {
+            start_cut = *ss_iter;
+        }
+        else
+        {
+            return false;
+        }
+        ss_iter++;
+        if(ss_iter < RH_StartStops.end())
+        {
+            end_cut = *ss_iter;
+        }
+        else
+        {
+            return false;
+        }
+        
+        RH_LastSpacerEnd += 2; 
+    }
+    
+    // check to see if we made any good of start and end cut
+    if(0 != start_cut)
+    {
+        start_cut++;
+    }
+    if(end_cut == (int)(RH_Seq.length()) - 1)
+    {
+        *retStr = RH_Seq.substr(start_cut);
+    }
+    else
+    {
+        *retStr = RH_Seq.substr(start_cut, end_cut - start_cut);
+    }
+    return true;
+}
+
+#pragma mark -
+#pragma mark Printing
+std::string ReadHolder::toStringInColumns(void)
+{
+    //-----
+    // produce a string of the read split into DR and spacers
+    //
+
+    std::stringstream str;
+    
+    std::string repeat, spacer, prev_spacer;
+    repeat = spacer = prev_spacer = "";
+    
+    
+    str << "POSITION\tREPEAT\t\t\t\tSPACER"<<std::endl;
+    
+    str <<"--------\t";
+    
+    for (int y = 0; y <  RH_RepeatLength; y++) str <<"-";
+    str<<"\t";
+    
+    for (unsigned int z = 0; z < getAverageSpacerLength(); z++) str << "-";
+    str<<std::endl;
+    
+    
+    //add 1 to each position, to offset programming languagues that begin at 0 rather than 1
+    for (unsigned int m = 0; m < getStartStopListSize(); m+=2)
+    {   //repeat = getRepeat(m);
+        str << RH_StartStops[m] + 1 << "\t\t" << repeatStringAt((unsigned int)m) << "\t";
+        
+        // print spacer
+        // because there are no spacers after the last repeat, we stop early (m < crisprIndexVector.size() - 1)
+        if (m < numSpacers())
+        {   prev_spacer = spacer;
+            spacer = spacerStringAt(m);
+            str << spacer;
+            
+            str <<"\t[ " << repeatStringAt(m).length() << ", " << spacerStringAt(m).length() << " ]";
+            str <<std::endl;
+            
+        }
+    }
+    
+    
+    str <<std::endl<<"--------\t";
+    
+    for (int x = 0; x < RH_RepeatLength; x++)
+    {
+        str << "-";
+    }
+    str <<"\t";
+    
+    for (unsigned int z = 0; z <  getAverageSpacerLength(); z++)
+    {
+        str << "-";
+    }
+    str <<std::endl;
+    
+    
+    return str.str();
+    
+}
+
+
+std::string ReadHolder::splitApart(void)
+{
+    //-----
+    // produce a string of the read split into DR and spacers
+    //
+    stringstream ss;
+    std::string working_str;
+    std::string sep_str = " ";
+    StartStopListIterator ss_iter = RH_StartStops.begin();
+    if(0 == *ss_iter)
+    {
+        // start with a DR
+        if(getFirstDR(&working_str))
+        {
+            ss << "DR: " << working_str;
+        }
+        else
+        {
+            return "---";
+        }
+        ss << sep_str;
+        
+        if(getFirstSpacer(&working_str))
+        {
+            ss << "SP: " << working_str;
+        }
+        else
+        {
+            return "---";
+        }
+        ss << sep_str;
+        
+        while(1)
+        {
+            if(getNextDR(&working_str))
+            {
+                ss << "DR: " << working_str;  
+            }
+            else
+            {
+                break;
+            }
+            ss << sep_str;
+            if(getNextSpacer(&working_str))
+            {
+                ss  << "SP: "<< working_str;  
+            }
+            else
+            {
+                break;
+            }
+            ss << sep_str;
+        }
+    }
+    else
+    {
+        // start with a spacer
+        if(getFirstSpacer(&working_str))
+        {
+            ss << "SP: " << working_str;
+        }
+        else
+        {
+            return "---";
+        }
+        ss << sep_str;
+        
+        if(getFirstDR(&working_str))
+        {
+            ss << "DR: " << working_str;
+        }
+        else
+        {
+            return "---";
+        }
+        ss << sep_str;
+        
+        // oooohh naughty
+        while(1)
+        {
+            if(getNextSpacer(&working_str))
+            {
+                ss << "SP: " << working_str;  
+            }
+            else
+            {
+                break;
+            }
+            ss << sep_str;
+            if(getNextDR(&working_str))
+            {
+                ss << "DR: " << working_str; 
+            }
+            else
+            {
+                break;
+            }
+            ss << sep_str;
+        }
+    }
+    
+    return ss.str();
+}
+
+std::string ReadHolder::splitApartSimple(void)
+{
+    //-----
+    // produce a string of the read split into DR and spacers
+    // without using the nextDR, nextSpacer functions.
+    //
+    stringstream ss;
+    std::string sep_str = " ";
+    unsigned int prev_end = 0;
+    
+    StartStopListIterator ss_iter = RH_StartStops.begin();
+    while(ss_iter != RH_StartStops.end())
+    {
+        if(0 == *ss_iter)
+        {
+            // starts with a DR
+            ss_iter++;
+            ss << "DR: " << RH_Seq.substr(0, *ss_iter + 1) << sep_str;
+            prev_end = *ss_iter;
+        }
+        else
+        {
+            // starts with a spacer
+            int length = -1;
+            if(0 == prev_end)
+            {
+                length = *ss_iter;
+            }
+            else
+            {
+                length = *ss_iter - prev_end  - 1;
+                prev_end++;
+            }
+            ss << "SP: " << RH_Seq.substr(prev_end, length) << sep_str;
+            int start = *ss_iter;
+            ss_iter++;
+            ss << "DR: " << RH_Seq.substr(start, *ss_iter - start + 1) << sep_str;
+            prev_end = *ss_iter;
+            
+        }
+        
+        if(RH_StartStops.end() == (ss_iter + 1))
+        {
+            // this is the last one.
+            if((RH_Seq.length() - 1) != *ss_iter)
+            {
+                // ends on spacer
+                ss << "SP: " << RH_Seq.substr(prev_end + 1);
+            }
+        }
+        ss_iter++;
+    }
+    
+    return ss.str();
 }
 
 void ReadHolder::printContents(void)

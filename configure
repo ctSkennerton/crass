@@ -674,6 +674,10 @@ am__leading_dot
 AMTAR
 am__tar
 am__untar
+DEBUG_TRUE
+DEBUG_FALSE
+SLOGGING_TRUE
+SLOGGING_FALSE
 CXX
 CXXFLAGS
 LDFLAGS
@@ -1289,6 +1293,10 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-debug          Turn on debugging preprocessor flags
+  --enable-verbose_logging
+                          Change the verbosity of log file statments to
+                          include the function and line numbers
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
 
@@ -2242,6 +2250,57 @@ _ACEOF
 cat >>confdefs.h <<\_ACEOF
 #define PACKAGE_REVISION 1
 _ACEOF
+
+
+# extra configure options
+#
+#
+
+#DEBUG
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then
+  enableval=$enable_debug; case "${enableval}" in
+yes) debug=true ;;
+no)  debug=false ;;
+*) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-debug" >&5
+echo "$as_me: error: bad value ${enableval} for --enable-debug" >&2;}
+   { (exit 1); exit 1; }; } ;;
+esac
+else
+  debug=false
+fi
+
+ if test x$debug = xtrue; then
+  DEBUG_TRUE=
+  DEBUG_FALSE='#'
+else
+  DEBUG_TRUE='#'
+  DEBUG_FALSE=
+fi
+
+
+#SUPER_LOGGING
+# Check whether --enable-verbose_logging was given.
+if test "${enable_verbose_logging+set}" = set; then
+  enableval=$enable_verbose_logging; case "${enableval}" in
+yes) verbose_logging=true ;;
+no)  verbose_logging=false ;;
+*) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-verbose_logging" >&5
+echo "$as_me: error: bad value ${enableval} for --enable-verbose_logging" >&2;}
+   { (exit 1); exit 1; }; } ;;
+esac
+else
+  verbose_logging=false
+fi
+
+ if test x$verbose_logging = xtrue; then
+  SLOGGING_TRUE=
+  SLOGGING_FALSE='#'
+else
+  SLOGGING_TRUE='#'
+  SLOGGING_FALSE=
+fi
+
 
 
 # Checks for programs.
@@ -4527,7 +4586,8 @@ done
 
 
 
-for ac_header in fcntl.h limits.h stdlib.h string.h unistd.h
+
+for ac_header in fcntl.h limits.h stdlib.h string.h unistd.h getopt.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
@@ -5765,6 +5825,20 @@ LIBOBJS=$ac_libobjs
 LTLIBOBJS=$ac_ltlibobjs
 
 
+if test -z "${DEBUG_TRUE}" && test -z "${DEBUG_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"DEBUG\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"DEBUG\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${SLOGGING_TRUE}" && test -z "${SLOGGING_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"SLOGGING\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"SLOGGING\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${AMDEP_TRUE}" && test -z "${AMDEP_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"AMDEP\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -6379,6 +6453,10 @@ am__leading_dot!$am__leading_dot$ac_delim
 AMTAR!$AMTAR$ac_delim
 am__tar!$am__tar$ac_delim
 am__untar!$am__untar$ac_delim
+DEBUG_TRUE!$DEBUG_TRUE$ac_delim
+DEBUG_FALSE!$DEBUG_FALSE$ac_delim
+SLOGGING_TRUE!$SLOGGING_TRUE$ac_delim
+SLOGGING_FALSE!$SLOGGING_FALSE$ac_delim
 CXX!$CXX$ac_delim
 CXXFLAGS!$CXXFLAGS$ac_delim
 LDFLAGS!$LDFLAGS$ac_delim
@@ -6408,7 +6486,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 86; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 90; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

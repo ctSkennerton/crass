@@ -37,6 +37,13 @@
 // --------------------------------------------------------------------
 #include <sstream>
 #include <map>
+#include <algorithm>
+#include <iterator>
+#include <cmath>
+#include <vector>
+#include <iterator>
+#include <numeric>
+
 
 template <class T1, class T2>
 void addOrIncrement(std::map<T1, T2> &inMap, T1 &searchThing)

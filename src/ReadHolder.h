@@ -1,11 +1,12 @@
 // File: ReadHolder.h
 // Original Author: Michael Imelfort 2011
+// Hacked and Extended: Connor Skennerton 2011
 // --------------------------------------------------------------------
 //
 // OVERVIEW:
 //
-// Holder of reads. Identified by the various serach algorithms
-// Storage class, so stupidly public!
+//  Main class for all things read related.  Holds information about the
+//  sequence and the direct repeats contained in the read
 //
 // --------------------------------------------------------------------
 //  Copyright  2011 Michael Imelfort and Connor Skennerton
@@ -55,11 +56,12 @@ typedef std::vector<unsigned int>::reverse_iterator StartStopListRIterator;
 class ReadHolder 
 {
     public:
-        
+#pragma mark -
+#pragma mark Constructor/Destructor
         ReadHolder() 
         { 
-            mLastDREnd = 0; 
-            mLastSpacerEnd = 0; 
+            RH_LastDREnd = 0; 
+            RH_LastSpacerEnd = 0; 
             RH_isSqueezed = false;
         }  
         
@@ -67,8 +69,8 @@ class ReadHolder
         {
             RH_Seq = s; 
             RH_Header = h; 
-            mLastDREnd = 0; 
-            mLastSpacerEnd = 0; 
+            RH_LastDREnd = 0; 
+            RH_LastSpacerEnd = 0; 
             RH_isSqueezed = false;
         }
 
@@ -76,128 +78,248 @@ class ReadHolder
         {
             RH_Seq = s; 
             RH_Header = h;
-            mLastDREnd = 0; 
-            mLastSpacerEnd = 0; 
+            RH_LastDREnd = 0; 
+            RH_LastSpacerEnd = 0; 
             RH_isSqueezed = false;
         }
-        
+        ~ReadHolder(void)
+        {
+            clear();
+        }
         void clear(void)
         {
             RH_Seq.clear();
             RH_StartStops.clear();
             RH_Header.clear();
+            RH_Rle.clear();
         }
-        
+#pragma mark -
+#pragma mark Getters
+    
         //----
         // Getters
         //
-        std::string seq(void)
+        inline std::string getSeq(void)
         {
             return this->RH_Seq;
         }
     
-        std::string header(void)
+        inline std::string getHeader(void)
         {
             return this->RH_Header;
         }
         
-        std::string seqLiteral(void)
+        inline std::string getSeqRle(void)
         {
-            return this->RH_Seq;
+            return this->RH_Rle;
         }
     
-        bool isLowLexi(void)
+        inline bool getLowLexi(void)
         {
             return this->RH_WasLowLexi;
         }
         
-        bool isSqueezed(void)
+        inline bool getSqueezed(void)
         {
             return this->RH_isSqueezed;
         }
         
-        StartStopList drPos(void)
+        inline StartStopList getStartStopList(void)
         {
             return this->RH_StartStops;
         }
         
-        int lastDRPos(void)
+        inline int getLastDRPos(void)
         {
-            return this->mLastDREnd;
+            return this->RH_LastDREnd;
         }
         
-        int lastSpacerPos(void)
+        inline int getLastSpacerPos(void)
         {
-            return this->mLastSpacerEnd;
+            return this->RH_LastSpacerEnd;
+        }
+    
+        inline int start()
+        {
+            return this->front();
         }
         
+        inline int getFirstRepeatStart()
+        {
+            return this->front();
+        }
+        
+        // return the second last element in the start stop list
+        // which is equal to the start of the last repeat
+        inline int getLastRepeatStart()
+        {
+            StartStopListIterator iter = RH_StartStops.end() - 2;
+            return *iter;
+        }
+        
+        inline unsigned int numRepeats()
+        {
+            return (unsigned int)(RH_StartStops.size()/2);
+        }
+        
+        inline unsigned int numSpacers()
+        {
+            return numRepeats() - 1;
+        }
+        
+        unsigned int front(void)
+        {
+            return RH_StartStops.front();
+        }
+        unsigned int back(void)
+        {
+            return RH_StartStops.back();
+        }
+        
+        int getSeqLength(void)
+        {
+            return (int)RH_Seq.length();
+        }
+        
+        unsigned int getStartStopListSize(void)
+        {
+            return (int)RH_StartStops.size();
+        }
+    
+        inline unsigned int getRepeatLength()
+        {
+            return RH_RepeatLength;
+        }
+    
+        inline char getSeqCharAt(int i)
+        {
+            return RH_Seq[i];
+        }
+        
+        unsigned int getRepeatAt(unsigned int i);
+
+        std::string repeatStringAt(unsigned int i);
+        
+        std::string spacerStringAt(unsigned int i);
+    
+        unsigned int spacerLengthAt(unsigned int i);
+        
+        unsigned int getAverageSpacerLength(void);
+        
+        std::vector<std::string> getAllSpacerStrings(void);
+    
+        std::vector<std::string> getAllRepeatStrings(void);
+    
+        int averageRepeatLength(void);
+
+#pragma mark -
+#pragma mark Setters
         //----
         //setters
         // 
-        void seq(std::string s)
+        inline void setSequence(std::string _sequence)
         {
-            this->RH_Seq = s;
+            RH_RepeatLength = 0;
+            RH_Seq = _sequence;
         }
 
-        void header(std::string h)
+        inline void setStartStopList(StartStopList _repeats)
+        {
+            RH_StartStops.clear();
+            RH_StartStops = _repeats;
+        }
+        
+        inline void setRepeatLength(int length)
+        {
+            RH_RepeatLength = length;
+        }
+        
+        inline void incrementRepeatLength(void)
+        {
+            RH_RepeatLength++;
+        }
+    
+        inline void decrementRepeatLength(void)
+        {
+            RH_RepeatLength--;
+        }
+    
+        inline void setRepeatAt(unsigned int val, int pos)
+        {
+            RH_StartStops[pos] = val;
+        }
+
+        inline void setHeader(std::string h)
         {
             this->RH_Header = h;
         }
         
-        void isLowLexi(bool b)
+        inline void setDRLowLexi(bool b)
         {
             this->RH_WasLowLexi = b;
         }
         
-        void isSqueezed(bool b)
+        inline void setSqueezed(bool b)
         {
             this->RH_isSqueezed = b;
         }
         
-        void drPos(StartStopList& l)
+        void setLastDRPos(int i)
         {
-            this->RH_StartStops.clear();
-            this->RH_StartStops = l;
+            this->RH_LastDREnd = i;
         }
         
-        void lastDRPos(int i)
+        void setLastSpacerPos(int i)
         {
-            this->mLastDREnd = i;
+            this->RH_LastSpacerEnd = i;
         }
-        
-        void lastSpacerPos(int i)
-        {
-            this->mLastSpacerEnd = i;
-        }
-        
-        int seqLength(void)
-        {
-            return (int)this->RH_Seq.length();
-        }
-        
-        int drListSize(void)
-        {
-            return (int)this->RH_StartStops.size();
-        }
+
         
         //----
         // Element access to the start stop list
         //
-        int at(int i)
+#pragma mark -
+#pragma mark Element access
+        int startStopsAt(int i)
         {
             return this->RH_StartStops.at(i);
         }        
-        void add(int, int);
-        
-        int front(void)
-        {
-            return this->RH_StartStops.front();
-        }
-        int back(void)
-        {
-            return this->RH_StartStops.back();
-        }
+        void startStopsAdd(unsigned int, unsigned int);
+#pragma mark -
+#pragma mark StartStopList 
+    void clearStartStops(void)
+    {
+        RH_StartStops.clear();
+    }
     
+    void removeRepeat(unsigned int val);
+    
+    void dropPartials(void);
+
+    void reverseStartStops(void);           // fix start stops what got corrupted during revcomping
+
+    // update the DR after finding the TRUE DR
+    void updateStartStops(int frontOffset, std::string * DR, const options * opts);
+    
+    // the positions are the start positions of the direct repeats
+    // 
+    inline int repeatSpacing(unsigned int pos1, unsigned int pos2)
+    {
+        return (getRepeatAt(pos2) - getRepeatAt(pos1));
+    }
+    
+    inline void addRepeat(unsigned int val)
+    {
+        RH_StartStops.push_back(val);
+    }
+    
+    inline void insertRepeatAt(unsigned int val, int pos)
+    {
+        StartStopListIterator iter = RH_StartStops.begin() + pos;
+        RH_StartStops.insert(iter, val);
+    }
+#pragma mark -
+#pragma mark Iterators
         StartStopListIterator begin(void)
         {
             return this->RH_StartStops.begin();
@@ -207,34 +329,76 @@ class ReadHolder
         {
             return this->RH_StartStops.end();
         }
-    
+#pragma mark -
+#pragma mark Operators
         unsigned int& operator[]( const unsigned int i)
         {
             return this->RH_StartStops[i];
         }
+#pragma mark -
+#pragma mark String functions
+        std::string substr(int i, int j)
+        {
+            return RH_Seq.substr(i, j - i);
+        }
+        
+        std::string substr(int i)
+        {
+            return RH_Seq.substr(i);
+        }
+        
+        std::string substr(unsigned int i, unsigned int j)
+        {
+            return RH_Seq.substr(i, j - i);
+        }
+        
+        std::string substr(unsigned int i)
+        {
+            return RH_Seq.substr(i);
+        }
+        
+        std::string substr(size_t i, size_t j)
+        {
+            return RH_Seq.substr(i, j - i);
+        }
+        
+        std::string substr(size_t i)
+        {
+            return RH_Seq.substr(i);
+        }
+    
+        std::string DRLowLexi(void);            // Put the sequence in the form that makes the DR in it's laurenized form
     
         void reverseComplementSeq(void);        // reverse complement the sequence and fix the start stops
-        void reverseStartStops(void);           // fix start stops what got corrupted during revcomping
-        
         
         void encode(void);                      // transforms a sequence to a run length encoding form
+        
         void decode (void);                     // transforms a sequence back to its original state
-        std::string squeeze(void);              //returns a copy of the string without homopolymers
+                
         std::string expand(void);               // returns a copy of the string with homopolymers
+        
         std::string expand(bool fixStopStarts); // returns a copy of the string with homopolymers (fixes stop starts)
         
-        // update the DR after finding the TRUE DR
-        void updateStartStops(int frontOffset, std::string * DR, const options * opts);
-
         // cut DRs and Specers
         bool getFirstDR(std::string * retStr);
+        
         bool getNextDR(std::string * retStr);
+        
         bool getFirstSpacer(std::string * retStr);
+        
         bool getNextSpacer(std::string * retStr);        
+        
+#pragma mark -
+#pragma mark Printing
+    
+        std::string toStringInColumns(void);    
+    
         std::string splitApart(void);
+        
         std::string splitApartSimple(void);
         
         void printContents(void);
+        
         void logContents(int logLevel);
     private:
         // members
@@ -244,8 +408,9 @@ class ReadHolder
         bool RH_WasLowLexi;                     // was the sequence DR_low lexi in the file?
         StartStopList RH_StartStops;            // start stops for DRs, (must be even in length!)
         bool RH_isSqueezed;                     // Bool to tell whether the read has homopolymers removed
-        int mLastDREnd;                         // the end of the last DR cut (offset of the iterator)
-        int mLastSpacerEnd;                     // the end of the last spacer cut (offset of the iterator)
+        int RH_LastDREnd;                         // the end of the last DR cut (offset of the iterator)
+        int RH_LastSpacerEnd;                     // the end of the last spacer cut (offset of the iterator)
+        int RH_RepeatLength;
 };
 
 #endif //ReadHolder_h

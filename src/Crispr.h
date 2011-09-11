@@ -144,7 +144,7 @@ public:
         mRepeats[pos] = val;
     }
     
-    inline int repeatAt(int i)
+    inline int repeatAt(unsigned int i)
     {
         return mRepeats[i];
     }

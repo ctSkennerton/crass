@@ -251,32 +251,32 @@ int main(int argc, char *argv[])
     }
     logTimeStamp();
     
-    std::string test_read = "CCGTGCTACCCGCAGGACAATACGGCCCCATGGCCGCGTTCCCCGCAGGCGCGGGGATGAACCGCGGGCGCGGGTGCGGGAGGCTTTGCGACGCAGGCGTTCCCCGCAGGCGCGGGGATGAACCGAGCACGGTCAACGCAGGAGGCACCGAGTACCGGCGTTCCCCGCAGGCGCGGGGATGAACCGTCTTTATCGGTAGCTGAGGCTCTTGCGCAAAGGCGTTCCCCGCAGGCGCGGGGATGAACCGAGCATTCAGGCTAAACACTGAGCACTAATGATGCGTTCCCCGCAGGCGCGGGGATGAACCGCCGGAGTAGAGGCAGAAGACGAGACGCCACAAGCGTTCCCCGCAGGCGCGGGGATGAACCGGGTGATAGAGCTT";
-    std::string test_header = "test_1";
-    ReadHolder * rh = new ReadHolder(test_read,test_header);
-    rh->add(35, 63);
-    rh->add(96, 124);
-    rh->add(157, 185);
-    rh->add(218, 246);
-    rh->add(279, 307);
-    
-    StringCheck * sc = new StringCheck();
-    
-    NodeManager * nm = new NodeManager("GCGTTCCCCGCAGGCGCGGGGATGAACCG", sc);
-    
-    nm->addReadHolder(rh);
-    
-    NodeListIterator nm_iter = nm->nodeBegin();
-    while (nm_iter != nm->nodeEnd()) 
-    {
-        (*nm_iter)->printEdges();
-        nm_iter++;
-    }
-    
-    return 0;
-    
-//    WorkHorse * mHorse = new WorkHorse(&opts);
-//    mHorse->doWork(seq_files, seq_type_files);
-//    delete mHorse;
+//    std::string test_read = "CCGTGCTACCCGCAGGACAATACGGCCCCATGGCCGCGTTCCCCGCAGGCGCGGGGATGAACCGCGGGCGCGGGTGCGGGAGGCTTTGCGACGCAGGCGTTCCCCGCAGGCGCGGGGATGAACCGAGCACGGTCAACGCAGGAGGCACCGAGTACCGGCGTTCCCCGCAGGCGCGGGGATGAACCGTCTTTATCGGTAGCTGAGGCTCTTGCGCAAAGGCGTTCCCCGCAGGCGCGGGGATGAACCGAGCATTCAGGCTAAACACTGAGCACTAATGATGCGTTCCCCGCAGGCGCGGGGATGAACCGCCGGAGTAGAGGCAGAAGACGAGACGCCACAAGCGTTCCCCGCAGGCGCGGGGATGAACCGGGTGATAGAGCTT";
+//    std::string test_header = "test_1";
+//    ReadHolder * rh = new ReadHolder(test_read,test_header);
+//    rh->startStopsAdd(35, 63);
+//    rh->startStopsAdd(96, 124);
+//    rh->startStopsAdd(157, 185);
+//    rh->startStopsAdd(218, 246);
+//    rh->startStopsAdd(279, 307);
+//    
+//    StringCheck * sc = new StringCheck();
+//    
+//    NodeManager * nm = new NodeManager("GCGTTCCCCGCAGGCGCGGGGATGAACCG", sc);
+//    
+//    nm->addReadHolder(rh);
+//    
+//    NodeListIterator nm_iter = nm->nodeBegin();
+//    while (nm_iter != nm->nodeEnd()) 
+//    {
+//        (*nm_iter)->printEdges();
+//        nm_iter++;
+//    }
+//    
 //    return 0;
+    
+    WorkHorse * mHorse = new WorkHorse(&opts);
+    mHorse->doWork(seq_files);
+    delete mHorse;
+    return 0;
 }

@@ -93,7 +93,7 @@ void findSingletons(const char *input_fastq, const options &opts, lookupTable &p
 
 std::string DRLowLexi( ReadHolder * tmp_holder, std::string& read);
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder, std::string& read);
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder);
 
 //**************************************
 // lookup table shite
@@ -101,7 +101,7 @@ void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tm
 
 void addToLookup(const string &dr ,lookupTable &patternsLookup);
 
-
+float getStringSimilarity(std::string& s1, std::string& s2);
 
 //**************************************
 // STL extensions
@@ -114,22 +114,16 @@ void map2Vector(lookupTable &patterns_hash, std::vector<std::string> &patterns);
 //*************************************
 // Ported CRT code
 //*************************************
-void printGenomeCrispr(std::vector<Crispr*>& CRISPRVector, options& opts, std::string& mHeader, std::string& mSequence, bool repeatsFound);
 
-bool  findRepeats(void);
+unsigned int extendPreRepeat(ReadHolder* tmp_holder, int searchWindowLength, int minSpacerLength);
 
-void  trim(Crispr * candidateCRISPR, int minRepeatLength);
+bool qcFoundRepeats(ReadHolder * tmp_holder);
 
-void  checkFlank(side sT, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double spacerToSpacerMaxSimilarity, double confidence,int sequenceLength, std::string& read);
+bool isRepeatLowComplexity(std::string& repeat);
 
-int scan(side sT, Crispr * candidateCRISPR, int minSpacerLength, int scanRange, double confidence, int sequenceLength, std::string& sequence);
-
-int scanRight(Crispr * candidateCRISPR, std::string& pattern, int minSpacerLength, int scanRange, int sequenceLength, std::string& sequence);
+int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange, unsigned int sequenceLength);
 
 bool  patternMatches(std::string& pattern1, std::string& pattern2, double confidence);
 
-int   min (int * array);
-
-int   getHammingDistance(std::string& seq1, std::string& seq2);
 
 #endif //libcrispr_h

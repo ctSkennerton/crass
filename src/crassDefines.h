@@ -104,20 +104,20 @@
 #define CRASS_DEF_DEFAULT_LOGGING               1
 
 typedef struct {
-    bool        detect;                                             // print reads and exit after find
-    int         logLevel;                                           // level of verbosity allowed in the log file
-    bool        reportStats;                                        // print a starts report currently not used
-    int         lowDRsize;                                          // the lower size limit for a direct repeat
-    int         highDRsize;                                         // the upper size limit for a direct repeat
-    int         lowSpacerSize;                                      // the lower limit for a spacer
-    int         highSpacerSize;                                     // the upper size limit for a spacer
-    std::string output_fastq;                                       // the output directory for the output files
-    std::string delim;                                              // delimiter used in stats report currently not used
-    int         kmer_size;                                          // number of kmers needed to be shared to add to a cluser
-    int         searchWindowLength;                                 // option 'w'used in long read search only
-    int         minNumRepeats;                                      // option 'n'used in long read search only
-    bool        logToScreen;
-    bool        removeHomopolymers;
+    bool                detect;                                             // print reads and exit after find
+    int                 logLevel;                                           // level of verbosity allowed in the log file
+    bool                reportStats;                                        // print a starts report currently not used
+    unsigned int        lowDRsize;                                          // the lower size limit for a direct repeat
+    unsigned int        highDRsize;                                         // the upper size limit for a direct repeat
+    unsigned int        lowSpacerSize;                                      // the lower limit for a spacer
+    unsigned int        highSpacerSize;                                     // the upper size limit for a spacer
+    std::string         output_fastq;                                       // the output directory for the output files
+    std::string         delim;                                              // delimiter used in stats report currently not used
+    int                 kmer_size;                                          // number of kmers needed to be shared to add to a cluser
+    unsigned int        searchWindowLength;                                 // option 'w'used in long read search only
+    unsigned int        minNumRepeats;                                      // option 'n'used in long read search only
+    bool                logToScreen;
+    bool                removeHomopolymers;
 } options;
 
 //enum SequenceType {

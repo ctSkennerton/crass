@@ -83,8 +83,6 @@ std::string Crispr::toString()
             str << spacer;
             
             str <<"\t[ " << this->repeatStringAt(m).length() << ", " << this->spacerStringAt(m).length() << " ]";
-            //str +="--[" + DNASequence.getSimilarity(repeatStringAt(m), spacerStringAt(m)) + "]";
-            //str +="--[" + DNASequence.getSimilarity(spacer, prevSpacer) + "]";
             str <<std::endl;
             
         }
@@ -333,83 +331,7 @@ void Crispr::dropPartials(void)
     }
 }
 
-void Crispr::trim( int minRepeatLength)
-{
-    float num_repeats = this->numRepeats();
-    std::string curr_repeat;
-    float char_count_A, char_count_C, char_count_T, char_count_G;
-    char_count_A = char_count_C = char_count_T = char_count_G = 0;
-    bool done = false;
-    //trim from right
-    while (!done && (this->repeatLength() > minRepeatLength) )
-    {
-        for (int k = 0; k < this->numRepeats(); k++ )
-        {
-            curr_repeat = this->repeatStringAt(k);
-            char lastChar = curr_repeat[curr_repeat.length()-1];
-            if (lastChar == 'A')   char_count_A++;
-            if (lastChar == 'C')   char_count_C++;
-            if (lastChar == 'T')   char_count_T++;
-            if (lastChar == 'G')   char_count_G++;
-        }
-        float percentA = char_count_A/num_repeats;
-        float percentC = char_count_C/num_repeats;
-        float percentT = char_count_T/num_repeats;
-        float percentG = char_count_G/num_repeats;
-        
-        
-        if ( (percentA < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentC < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentT < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentG < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
-        {
-            this->setRepeatLength(this->repeatLength() - 1);
-            char_count_A = char_count_C = char_count_T = char_count_G = 0;
-        }
-        else
-        {
-            done = true;
-        }
-    }
-    
-    
-    
-    char_count_A = char_count_C = char_count_T = char_count_G = 0;
-    done = false;
-    
-    //trim from left
-    while (!done && (this->repeatLength() > minRepeatLength) )
-    {
-        for (int k = 0; k < this->numRepeats(); k++ )
-        {
-            curr_repeat = this->repeatStringAt(k);
-            char firstChar = curr_repeat.at(0);
-            
-            if (firstChar == 'A')   char_count_A++;
-            if (firstChar == 'C')   char_count_C++;
-            if (firstChar == 'T')   char_count_T++;
-            if (firstChar == 'G')   char_count_G++;
-        }
-    
-        
-        float percentA = char_count_A/num_repeats;
-        float percentC = char_count_C/num_repeats;
-        float percentT = char_count_T/num_repeats;
-        float percentG = char_count_G/num_repeats;
-        
-        if ( (percentA < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentC < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentT < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) && (percentG < CRASS_DEF_TRIM_EXTEND_CONFIDENCE) )
-        {
-            for (int m = 0; m < num_repeats; m++ )
-            {
-                int new_value = this->repeatAt(m) + 1;
-                this->setRepeatAt(new_value, m);
-            }
-            this->setRepeatLength(this->repeatLength() - 1);
-            char_count_A = char_count_C = char_count_T = char_count_G = 0;
-        }
-        else
-        {
-            done = true;
-        }
-    }
-}
+
 
 bool Crispr::hasSimilarlySizedSpacers(void)
 {

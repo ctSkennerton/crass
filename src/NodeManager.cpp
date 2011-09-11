@@ -110,7 +110,7 @@ void NodeManager::splitReadHolder(ReadHolder * RH)
     std::string working_str;
     CrisprNode * prev_node = NULL;
     
-    int size_of_RH_startStops = RH->drListSize();
+    int size_of_RH_startStops = RH->getStartStopListSize();
     if(0 == RH->front())
     {
         if(RH->getFirstSpacer(&working_str))
@@ -139,7 +139,7 @@ void NodeManager::splitReadHolder(ReadHolder * RH)
         
         // do the last spacer if required
         // TODO  -1?
-        if (RH->back() <= RH->seqLength() - CRASS_DEF_NODE_KMER_SIZE) 
+        if (RH->back() <= (unsigned int)RH->getSeqLength() - CRASS_DEF_NODE_KMER_SIZE) 
         {
             RH->getNextSpacer(&working_str);
             
@@ -199,7 +199,7 @@ void NodeManager::splitReadHolder(ReadHolder * RH)
         
         // do the last spacer if required
         // TODO  -1?
-        if (RH->back() <= RH->seqLength() - CRASS_DEF_NODE_KMER_SIZE) 
+        if (RH->back() <= (unsigned int)RH->getSeqLength() - CRASS_DEF_NODE_KMER_SIZE) 
         {
             RH->getNextSpacer(&working_str);
             

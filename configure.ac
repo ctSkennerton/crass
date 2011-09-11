@@ -13,6 +13,33 @@ AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
 AC_DEFINE([PACKAGE_MINOR_VERSION],[0],[Define the minor version of the package])
 AC_DEFINE([PACKAGE_REVISION],[1],[Define the revision of the package])
 
+# extra configure options
+#
+#
+
+#DEBUG
+AC_ARG_ENABLE([debug],
+[AS_HELP_STRING([--enable-debug],
+[Turn on debugging preprocessor flags])],
+[case "${enableval}" in
+yes) debug=true ;;
+no)  debug=false ;;
+*) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
+esac],[debug=false])
+AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
+
+#SUPER_LOGGING
+AC_ARG_ENABLE([verbose_logging],
+[AS_HELP_STRING([--enable-verbose_logging],
+[Change the verbosity of log file statments to include the function and line numbers])],
+[case "${enableval}" in
+yes) verbose_logging=true ;;
+no)  verbose_logging=false ;;
+*) AC_MSG_ERROR([bad value ${enableval} for --enable-verbose_logging]) ;;
+esac],[verbose_logging=false])
+AM_CONDITIONAL([SLOGGING], [test x$verbose_logging = xtrue])
+
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -22,7 +49,7 @@ AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found in $LD_PATH])])
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h unistd.h getopt.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

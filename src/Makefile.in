@@ -30,6 +30,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
+@DEBUG_TRUE@am__append_1 = $(DEBUGFLAGS)
+@SLOGGING_TRUE@am__append_2 = $(SLOGGINGFLAGS)
 bin_PROGRAMS = crass$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -48,7 +50,7 @@ am_crass_OBJECTS = bm.$(OBJEXT) Levensthein.$(OBJEXT) crass.$(OBJEXT) \
 	CrisprNode.$(OBJEXT) NodeManager.$(OBJEXT) libcrispr.$(OBJEXT) \
 	WorkHorse.$(OBJEXT) SpacerInstance.$(OBJEXT) \
 	ReadHolder.$(OBJEXT) SmithWaterman.$(OBJEXT) \
-	StringCheck.$(OBJEXT) Crispr.$(OBJEXT)
+	StringCheck.$(OBJEXT)
 crass_OBJECTS = $(am_crass_OBJECTS)
 crass_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)@am__isrc@
@@ -77,7 +79,7 @@ CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
 CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = -Werror -pedantic -Wall -O2 -ggdb
+CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -152,7 +154,11 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-crass_SOURCES = bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp Crispr.cpp 
+AM_CXXFLAGS = -Werror -pedantic -Wall -O2 -ggdb
+AM_CPPFLAGS = $(am__append_1) $(am__append_2)
+@DEBUG_TRUE@DEBUGFLAGS = -DDEBUG
+@SLOGGING_TRUE@SLOGGINGFLAGS = -DSUPER_LOGGING
+crass_SOURCES = bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp 
 all: all-am
 
 .SUFFIXES:
@@ -219,7 +225,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Crispr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CrisprNode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Levensthein.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LoggerSimp.Po@am__quote@
