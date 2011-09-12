@@ -37,8 +37,172 @@
 // system includes
 #include <iostream>
 #include <sstream>
+#include <math.h>
+#include <stdio.h>
 
 // local includes
 #include "Rainbow.h"
 
+// vertical scalers
+#define RB_lower_offset (0.5)
+#define RB_divisor (0.6666666666)
+#define getValue(vAL) ((cos(vAL) + RB_lower_offset) * RB_divisor)
+
+// crude rounding function
+
+// setting initial limits
+void Rainbow::setLimits(double lb, double ub, int res)
+{
+    //-----
+    // set the limits
+    //
+    mLowerBound = lb;
+    mUpperBound = ub;
+    mResolution = res;
+    
+    // set the shortcut constants
+    mScaleMultiplier = (mUpperScale - mLowerScale)/(mUpperBound - mLowerBound);
+    mTickSize = (mUpperBound - mLowerBound)/(mResolution - 1);
+}
+
+void Rainbow::setType(RB_TYPE type)
+{
+    //-----
+    // set the offsets based on type
+    //
+    mType = type;
+    
+    switch(type)
+    {
+        case RED_BLUE:
+        {
+            mRedOffset = 0;
+            mGreenOffset = RB_divisor * PI * 2;
+            mBlueOffset = RB_divisor * PI;
+            
+            mIgnoreRed = false;
+            mIgnoreGreen = true;
+            mIgnoreBlue = false;
+            
+            mLowerScale = 0;
+            mUpperScale = (RB_divisor * PI);
+            break;    
+        }
+        case RED_BLUE_GREEN:
+        {
+            mRedOffset = 0;
+            mGreenOffset = RB_divisor * PI * 2;
+            mBlueOffset = RB_divisor * PI;
+            
+            mIgnoreRed = false;
+            mIgnoreGreen = false;
+            mIgnoreBlue = false;
+            
+            mLowerScale = 0;
+            mUpperScale = (RB_divisor * PI * 2);
+            break;
+        }
+        case GREEN_BLUE_RED:
+        {
+            mRedOffset = RB_divisor * PI * 2;
+            mGreenOffset = 0;
+            mBlueOffset = RB_divisor * PI;
+
+            mIgnoreRed = false;
+            mIgnoreGreen = false;
+            mIgnoreBlue = false;
+            
+            mLowerScale = 0;
+            mUpperScale = (RB_divisor * PI * 2);
+            break;    
+        }
+        case BLUE_RED:
+        default:
+        {
+            // BLUE_RED,
+            mRedOffset = RB_divisor * PI;
+            mGreenOffset = RB_divisor * PI * 2;
+            mBlueOffset = 0;
+            
+            mIgnoreRed = false;
+            mIgnoreGreen = true;
+            mIgnoreBlue = false;
+
+            mLowerScale = 0;
+            mUpperScale = (RB_divisor * PI);
+        }
+    }
+    
+    // reset this
+    mScaleMultiplier = (mUpperScale - mLowerScale)/(mUpperBound - mLowerBound);
+}
+
+void Rainbow::setDefaults(void)
+{
+    //-----
+    // Just waht it says
+    //
+    setType(RB_DEFAULT_TYPE);
+    setLimits(RB_LB, RB_UB, RB_TICKS);
+} 
+
+// get a colour!;
+std::string Rainbow::getColour(double value)
+{
+    //-----
+    // Return a colour for the given value.
+    // If nothing makes sense. return black
+    //
+
+    // check to see that everything makes sense    
+    if(-1 == mResolution)
+        return RB_ERROR_COLOUR;
+    if(value > mUpperBound || value < mLowerBound)
+        return RB_ERROR_COLOUR;
+    
+    // normalise the value to suit the ticks
+    double normalised_value = round(value/mTickSize) * mTickSize;
+
+    // map the normalised value onto the horizontal scale
+    double scaled_value = (normalised_value - mLowerBound) * mScaleMultiplier + mLowerScale;
+        
+    // now construct the colour    
+    std::stringstream ss;
+    if(mIgnoreRed)    
+        ss << "00";
+    else
+        ss << int2RGB(round(getValue(scaled_value - mRedOffset) * 255));
+
+    if(mIgnoreGreen)    
+        ss << "00";
+    else
+        ss << int2RGB(round(getValue(scaled_value - mGreenOffset) * 255));
+
+    if(mIgnoreBlue)    
+        ss << "00";
+    else
+        ss << int2RGB(round(getValue(scaled_value - mBlueOffset) * 255));
+
+    return ss.str();
+}
+
+std::string Rainbow::int2RGB(int rgb)
+{
+    //----
+    // convert an int between 0 and 255 to a hex RGB value
+    //
+    if(0 >= rgb)
+    {
+        return "00";
+    }
+    else
+    {
+        std::stringstream ss;
+        if (16 > rgb)
+            ss << "0" << std::hex << rgb;
+        else
+            ss << std::hex << rgb;
+        return ss.str();
+    }
+}
 

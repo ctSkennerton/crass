@@ -43,7 +43,9 @@
 // system includes
 #include <iostream>
 #include <vector>
+#include <map>
 #include <string>
+#include <fstream>
 
 // local includes
 #include "NodeManager.h"
@@ -53,17 +55,20 @@
 #include "libcrispr.h"
 #include "StringCheck.h"
 #include "ReadHolder.h"
+#include "GraphDrawingDefines.h"
+#include "Rainbow.h"
 
 // typedefs
-typedef std::vector<CrisprNode *> NodeList;
-typedef std::vector<CrisprNode *>::iterator NodeListIterator;
-typedef std::vector<SpacerInstance *> SpacerList;
-typedef std::vector<SpacerInstance *>::iterator SpacerListIterator;
+typedef std::map<StringToken, CrisprNode *> NodeList;
+typedef std::map<StringToken, CrisprNode *>::iterator NodeListIterator;
+typedef std::map<SpacerKey, SpacerInstance *> SpacerList;
+typedef std::map<SpacerKey, SpacerInstance *>::iterator SpacerListIterator;
 
 class NodeManager {
     public:
         NodeManager(std::string drSeq, StringCheck * stringCheck);
         ~NodeManager(void);
+        
         bool addReadHolder(ReadHolder * RH);
         
         NodeListIterator nodeBegin(void)
@@ -76,11 +81,22 @@ class NodeManager {
             return NM_Nodes.end();
         }
     
+    // Walking
+    
+    
+    // Cleaning
+        void cleanGraph(void);
+        
+    // Making purdy colours
+        void makeColours(void);
+    
+    // Printing / IO
+        void printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges);         // Print a graphviz style graph of the DRs and spacers
+    
     
     private:
         void splitReadHolder(ReadHolder * RH);
         void addCrisprNodes(CrisprNode ** prevNode, std::string& workingString);
-        void addSpacerInstance(SpacerInstance * newSpacer);
     
         // members
         std::string NM_DirectRepeatSequence;  // the sequence of this managers direct repeat
@@ -88,7 +104,7 @@ class NodeManager {
         SpacerList NM_Spacers;                // list of all the spacers
         ReadList NM_ReadList;                 // list of readholders
         StringCheck * NM_StringCheck;         // pointer to the string check object 
-        
+        Rainbow NM_Rainbow;
 };
 
 #endif // NodeManager_h

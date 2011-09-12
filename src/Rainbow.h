@@ -4,7 +4,7 @@
 //
 // OVERVIEW:
 //
-// Simple heat map generator
+// Simple heat map generator. Returns hex-RGB colours based on limits set by user
 // 
 // --------------------------------------------------------------------
 //  Copyright  2011 Michael Imelfort and Connor Skennerton
@@ -40,19 +40,75 @@
 
 // system includes
 #include <iostream>
+#include <math.h>
 
 // local includes
 
-// typedefs
+// defaults
+#define RB_ERROR_COLOUR "000000"    // error colour. return this whenever you want to panic
+#define RB_DEFAULT_TYPE BLUE_RED    // default type of heatmap
+#define RB_LB 0                     // default upper bound
+#define RB_UB 1                     // default lowe bound
+#define RB_TICKS 10                 // default ticks
+
+// some math constants we need (I know!)
+#define PI (3.1415927)
+
+// we can have anumber of different types of heatmaps
+enum RB_TYPE
+{
+    RED_BLUE,
+    BLUE_RED,
+    RED_BLUE_GREEN,
+    GREEN_BLUE_RED
+};
 
 class Rainbow 
 {
     public:
-        Rainbow() {}  
+        Rainbow() { setDefaults(); } 
         ~Rainbow() {}  
+        void setDefaults(void);
+        
+        // set the limits we need!
+        void setLimits(double lb, double ub, int res);
+        void setLimits(double lb, double ub) { setLimits(lb, ub, (int)(ub-lb)+1); }
+        void setType(RB_TYPE type);
+        
+        // get a colour!
+        std::string getColour(double value);
+        std::string int2RGB(int rgb);
         
     private:
         // members
+        double mLowerBound;        // lowest number we'll colour`
+        double mUpperBound;        // highest
+        int mResolution;           // number of steps between low and high (inclusive)
+        
+        RB_TYPE mType;          // type of the heatmap 
+        
+        // We need offsets for the start of each cos graph
+        double mRedOffset;
+        double mGreenOffset;
+        double mBlueOffset;
+        
+        // should we ignore any colour
+        bool mIgnoreRed;
+        bool mIgnoreGreen;
+        bool mIgnoreBlue;
+        
+        // horizontal scaling
+        double mLowerScale;
+        double mUpperScale;
+        
+        // shortcut
+        //
+        // Given value X between mLowerBound and mUpperBound we need to find a value 
+        // Z between mLowerScale and mUpperScale. This involves a constant multiplicaation
+        // by (mUpperScale - mLowerScale)/(mUpperBound - mLowerBound). So we work this out once.
+        //
+        double mScaleMultiplier;
+        double mTickSize;          // size of a tick
 };
 
 #endif //Rainbow_h
