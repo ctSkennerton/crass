@@ -44,6 +44,7 @@
 #define CRASS_DEF_GV_NODE_PREFIX                "node_"             // prefix used when naming nodes for the image
 #define CRASS_DEF_GV_NODE_FILL                  "filled"            // should our nodes be filled with colour
 #define CRASS_DEF_DEFAULT_GRAPH_TYPE            "digraph"           // the default type of graphviz graph to generate
+
 // --------------------------------------------------------------------
 // GRAPH DRAWING MACROS
 // --------------------------------------------------------------------
@@ -51,13 +52,22 @@
     stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" -> "<<CRASS_DEF_GV_NODE_PREFIX<<id2<< " [ len="<<CRASS_DEF_GV_EDGE_LENGTH<<" ];"<<std::endl;\
 }
 
+#define gvJumpingEdge(stream,id1,id2){\
+    stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" -> "<<CRASS_DEF_GV_NODE_PREFIX<<id2<< " [ len="<<CRASS_DEF_GV_EDGE_LENGTH<<", style=dashed ];"<<std::endl;\
+}
+
 #define gvCustomEdge(stream,id1,id2, cUSTOMsTRING){\
     stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" -> "<<CRASS_DEF_GV_NODE_PREFIX<<id2<< " [ "<<cUSTOMsTRING<<" ];"<<std::endl;\
 }
 
-#define gvNode(stream,id1,color){\
-    stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" [ color = "<<color<<" style= "<<CRASS_DEF_GV_NODE_FILL<<\
-                                                " shape= "<<CRASS_DEF_GV_NODE_SHAPE<<" ];"<<std::endl;\
+#define gvNodeF(stream,id1,color){\
+    stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" [ color = "<<color<<", fillcolor="<<color<<", style= "<<CRASS_DEF_GV_NODE_FILL<<\
+                                                " shape= sdl_output_to_right, peripheries=0];"<<std::endl;\
+}
+
+#define gvNodeB(stream,id1,color){\
+    stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" [ color = "<<color<<", fillcolor="<<color<<", style= "<<CRASS_DEF_GV_NODE_FILL<<\
+                                                " shape= sdl_output_to_left, peripheries=0];"<<std::endl;\
 }
 
 #define gvCustomNode(stream,id1,cUSTOMsTRING){\
