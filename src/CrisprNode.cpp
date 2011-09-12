@@ -45,6 +45,7 @@
 #include "LoggerSimp.h"
 #include "crassDefines.h"
 #include "GraphDrawingDefines.h"
+#include "Rainbow.h"
 
 
 //
@@ -91,6 +92,9 @@ edgeList * CrisprNode::getEdges(EDGE_TYPE type)
             return &CN_JumpingForwardEdges;
         case CN_EDGE_JUMPING_B:
             return &CN_JumpingBackwardEdges;
+        default:
+            logError("Edge type not known! Returning NULL...");
+            return NULL;
     }
 }
 
@@ -171,13 +175,18 @@ int CrisprNode::getRank(EDGE_TYPE type)
             return CN_JumpingRank_F;
         case CN_EDGE_JUMPING_B:
             return CN_JumpingRank_B;
+        default:
+            logError("Edge type not know! Returning -1...")
+            return -1;
     }
 }
 
 //
 // File IO / printing
 //
-void CrisprNode::printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges)
+
+
+void CrisprNode::printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges, std::string colourCode)
 {
     //-----
     // print the edges so that the first member of the pair is first
@@ -186,11 +195,11 @@ void CrisprNode::printEdges(std::ostream &dataOut, bool showDetached, bool print
     // print the node declaration
     if(CN_IsForward)
     {
-        gvNodeF(dataOut,CN_id,"red");
+        gvNodeF(dataOut,CN_id,colourCode);
     }
     else
     {
-        gvNodeB(dataOut,CN_id,"blue");
+        gvNodeB(dataOut,CN_id,colourCode);
     }
     
     // now print the edges
@@ -243,6 +252,9 @@ std::string CrisprNode::sayEdgeTypeLikeAHuman(EDGE_TYPE type)
             return "JumpingForward";
         case CN_EDGE_JUMPING_B:
             return "JumpingBackward";
+        default:
+            logError("Edge type not known! Returning '---'...");
+            return "---";
     }
 }
 

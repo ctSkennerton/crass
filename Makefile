@@ -89,7 +89,6 @@ ECHO_C = \c
 ECHO_N = 
 ECHO_T = 
 EGREP = /usr/bin/grep -E
-ENABLE_NEATO = 1
 EXEEXT = 
 GREP = /usr/bin/grep
 INSTALL = /usr/bin/install -c

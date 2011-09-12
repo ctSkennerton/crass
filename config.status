@@ -560,7 +560,6 @@ s,@DEBUG_TRUE@,|#_!!_#|#,g
 s,@DEBUG_FALSE@,|#_!!_#|,g
 s,@SLOGGING_TRUE@,|#_!!_#|#,g
 s,@SLOGGING_FALSE@,|#_!!_#|,g
-s,@ENABLE_NEATO@,|#_!!_#|1,g
 s,@CXX@,|#_!!_#|g++,g
 s,@CXXFLAGS@,|#_!!_#|-g -O2,g
 s,@LDFLAGS@,|#_!!_#|,g

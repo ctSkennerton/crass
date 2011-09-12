@@ -46,6 +46,8 @@
 #include <sstream>
 #include <map>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 // local includes
 #include <config.h>
@@ -121,14 +123,16 @@ int processOptions(int argc, char *argv[], options *opts)
     int c;
     int index;
     
-    while( (c = getopt_long(argc, argv, "w:hVrl:k:n:o:b:cd:D:s:S:", long_options, &index)) != -1 ) {
-        switch(c) {
+    while( (c = getopt_long(argc, argv, "w:hVrl:k:n:o:b:cd:D:s:S:", long_options, &index)) != -1 ) 
+    {
+        switch(c) 
+        {
             case 'n': opts->minNumRepeats = atoi(optarg); break;
             case 'w': 
                 opts->searchWindowLength = atoi(optarg); 
                 if ((opts->searchWindowLength < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (opts->searchWindowLength > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
                 {
-                    std::cerr<<"WARNING: Specified window length higher than max. Changing window length to " << CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH << " instead of " << opts->searchWindowLength<<std::endl;
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified window length higher than max. Changing window length to " << CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH << " instead of " << opts->searchWindowLength<<std::endl;
                     // Change window length
                     opts->searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH;
                 }
@@ -138,17 +142,42 @@ int processOptions(int argc, char *argv[], options *opts)
             case 'o': opts->output_fastq = optarg; break;
             case 'b': opts->delim = optarg; break;
             case 'r': opts->reportStats = true; break;
-            case 'd': opts->lowDRsize = atoi(optarg); break;
-            case 'D': opts->highDRsize = atoi(optarg); break;
-            case 's': opts->lowSpacerSize = atoi(optarg); break;
-            case 'S': opts->highSpacerSize = atoi(optarg); break;
-            case 'k': opts->kmer_size = atoi(optarg); break;
+            case 'd': 
+                opts->lowDRsize = atoi(optarg); 
+                if (opts->lowDRsize < 8) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for direct repeat sizes cannot be "<<opts->lowDRsize<<" changing to "<<CRASS_DEF_MIN_DR_SIZE<<std::endl;
+                    opts->lowDRsize = CRASS_DEF_MIN_DR_SIZE;
+                }
+                break;
+            case 'D': 
+                opts->highDRsize = atoi(optarg); 
+                break;
+            case 's': 
+                opts->lowSpacerSize = atoi(optarg); 
+                if (opts->lowSpacerSize < 8) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for spacer sizes cannot be "<<opts->lowSpacerSize<<" changing to "<<CRASS_DEF_MIN_SPACER_SIZE<<std::endl;
+                    opts->lowSpacerSize = CRASS_DEF_MIN_SPACER_SIZE;
+                }
+                break;
+            case 'S': 
+                opts->highSpacerSize = atoi(optarg); 
+                break;
+            case 'k': 
+                opts->kmer_size = atoi(optarg);
+                if (opts->kmer_size < 6) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for kmer clustering cannot be "<<opts->kmer_size<<" changing to "<<CRASS_DEF_K_CLUST_MIN<<std::endl;
+                    opts->kmer_size = CRASS_DEF_K_CLUST_MIN;
+                }
+                break;
             case 'l': 
                 opts->logLevel =  atoi(optarg);
 //#ifdef DEBUG
                 if (opts->logLevel > CRASS_DEF_MAX_DEBUG_LOGGING)
                 {
-                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
                     opts->logLevel = CRASS_DEF_MAX_DEBUG_LOGGING;
                 }
 
@@ -169,6 +198,30 @@ int processOptions(int argc, char *argv[], options *opts)
             default: versionInfo(); help(); exit(1); break;
         }
     }
+    // Sanity checks for the high and low dr size
+    if (opts->lowDRsize >= opts->highDRsize) 
+    {
+        std::cerr<<PACKAGE_NAME<<" [ERROR]: The lower direct repeat bound is bigger than the higher bound ("<<opts->lowDRsize<<" >= "<<opts->highDRsize<<")"<<std::endl;
+        usage();
+        exit(1);
+    }
+    // Sanity checks for the high and low spacer size
+    if (opts->lowSpacerSize >= opts->highSpacerSize) 
+    {
+        std::cerr<<PACKAGE_NAME<<"[ERROR]: The lower spacer bound is bigger than the higher bound ("<<opts->lowSpacerSize<<" >= "<<opts->highSpacerSize<<")"<<std::endl;
+        usage();
+        exit(1);
+    }
+    
+    // check if our output folder exists
+    struct stat file_stats;
+    if (stat(opts->output_fastq.c_str(),&file_stats)) 
+    {
+        std::cerr<<PACKAGE_NAME<<" [ERROR]: The Directory "<<opts->output_fastq<<" does not exist"<<std::endl;
+        usage();
+        exit(1);
+    }
+    
     return optind;
 }
 

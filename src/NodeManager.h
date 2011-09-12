@@ -66,11 +66,22 @@ typedef std::map<SpacerKey, SpacerInstance *>::iterator SpacerListIterator;
 
 class NodeManager {
     public:
+#pragma mark Constructor/Destructor
         NodeManager(std::string drSeq, StringCheck * stringCheck);
         ~NodeManager(void);
-        
+
+#pragma mark -
+#pragma mark Getters/Setters
+    inline int getMaxCoverage(void){ return NM_MaxCoverage;}
+    inline int getMinCoverage(void){ return NM_MinCoverage;}
+    inline void setMaxCoverage(int i){ NM_MaxCoverage = i;}
+    inline void setMinCoverage(int i){ NM_MinCoverage = i;}
+
+#pragma mark -
+#pragma mark ReadHolder Interface
         bool addReadHolder(ReadHolder * RH);
-        
+#pragma mark -
+#pragma mark Iterators
         NodeListIterator nodeBegin(void)
         {
             return NM_Nodes.begin();
@@ -82,29 +93,36 @@ class NodeManager {
         }
     
     // Walking
-    
+#pragma mark -
+#pragma mark Walking
     
     // Cleaning
+#pragma mark -
+#pragma mark Cleaning
         void cleanGraph(void);
-        
+#pragma mark -
+#pragma mark Colouring
     // Making purdy colours
-        void makeColours(void);
-    
+        void setColourLimits(void);
+#pragma mark -
+#pragma mark Printing
     // Printing / IO
         void printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges);         // Print a graphviz style graph of the DRs and spacers
     
     
     private:
-        void splitReadHolder(ReadHolder * RH);
+        bool splitReadHolder(ReadHolder * RH);
         void addCrisprNodes(CrisprNode ** prevNode, std::string& workingString);
-    
+        void setUpperAndLowerCoverage(void);
         // members
         std::string NM_DirectRepeatSequence;  // the sequence of this managers direct repeat
         NodeList NM_Nodes;                    // list of CrisprNodes this manager manages
         SpacerList NM_Spacers;                // list of all the spacers
         ReadList NM_ReadList;                 // list of readholders
         StringCheck * NM_StringCheck;         // pointer to the string check object 
-        Rainbow NM_Rainbow;
+        Rainbow NM_Rainbow;                   // the Rainbow class for making colours
+        int NM_MaxCoverage;                   // The maximum coverage of any of the CrisprNodes managed 
+        int NM_MinCoverage;                   // The minimum coverage of any of the CrisprNodes managed
 };
 
 #endif // NodeManager_h

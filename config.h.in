@@ -25,9 +25,6 @@
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
 
-/* Defined if neato is in PATH */
-#undef HAVE_NEATO
-
 /* Define to 1 if you have the `pow' function. */
 #undef HAVE_POW
 

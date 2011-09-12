@@ -149,8 +149,21 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
             skips = 1;
         }
 
-        unsigned int searchEnd = seq_length - opts.highDRsize - opts.highSpacerSize - opts.searchWindowLength - 1;
-        for (unsigned int j = 0; j <= searchEnd; j = j + skips)
+        int searchEnd = seq_length - opts.highDRsize - opts.highSpacerSize - opts.searchWindowLength - 1;
+        
+        if (searchEnd < 0) 
+        {
+            logWarn("Read: "<<tmp_holder->getHeader()<<" length is less than "<<opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength + 1<<"bp",4);
+//-DDEBUG#ifdef DEBUG 
+            logWarn("This may be due to the input file containing a proportion of reads less than "<<CRASS_DEF_READ_LENGTH_CUTOFF, 4);
+            logWarn(PACKAGE_NAME<<" chooses a search algorithm baised on an average length of reads",4);
+            logWarn("in the beginning of the input file, not on a per read basis.", 4);
+            logWarn("This read will be skipped!", 4);
+//-DDEBUG#endif 
+            continue;
+        }
+        
+        for (unsigned int j = 0; j <= (unsigned int)searchEnd; j = j + skips)
         {
                         
             unsigned int beginSearch = j + opts.lowDRsize + opts.lowSpacerSize;

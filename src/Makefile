@@ -45,12 +45,12 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_crass_OBJECTS = PatternMatcher.$(OBJEXT) crass.$(OBJEXT) \
-	WuManber.$(OBJEXT) LoggerSimp.$(OBJEXT) SeqUtils.$(OBJEXT) \
-	CrisprNode.$(OBJEXT) NodeManager.$(OBJEXT) libcrispr.$(OBJEXT) \
-	WorkHorse.$(OBJEXT) SpacerInstance.$(OBJEXT) \
-	ReadHolder.$(OBJEXT) SmithWaterman.$(OBJEXT) \
-	StringCheck.$(OBJEXT)
+am_crass_OBJECTS = PatternMatcher.$(OBJEXT) Rainbow.$(OBJEXT) \
+	crass.$(OBJEXT) WuManber.$(OBJEXT) LoggerSimp.$(OBJEXT) \
+	SeqUtils.$(OBJEXT) CrisprNode.$(OBJEXT) NodeManager.$(OBJEXT) \
+	libcrispr.$(OBJEXT) WorkHorse.$(OBJEXT) \
+	SpacerInstance.$(OBJEXT) ReadHolder.$(OBJEXT) \
+	SmithWaterman.$(OBJEXT) StringCheck.$(OBJEXT)
 crass_OBJECTS = $(am_crass_OBJECTS)
 crass_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
@@ -87,7 +87,6 @@ ECHO_C = \c
 ECHO_N = 
 ECHO_T = 
 EGREP = /usr/bin/grep -E
-ENABLE_NEATO = 1
 EXEEXT = 
 GREP = /usr/bin/grep
 INSTALL = /usr/bin/install -c
@@ -159,7 +158,7 @@ AM_CXXFLAGS = -Werror -pedantic -Wall -O2 -ggdb
 AM_CPPFLAGS = $(am__append_1) $(am__append_2)
 #DEBUGFLAGS = -DDEBUG
 #SLOGGINGFLAGS = -DSUPER_LOGGING
-crass_SOURCES = PatternMatcher.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp 
+crass_SOURCES = PatternMatcher.cpp Rainbow.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp 
 all: all-am
 
 .SUFFIXES:
@@ -230,6 +229,7 @@ include ./$(DEPDIR)/CrisprNode.Po
 include ./$(DEPDIR)/LoggerSimp.Po
 include ./$(DEPDIR)/NodeManager.Po
 include ./$(DEPDIR)/PatternMatcher.Po
+include ./$(DEPDIR)/Rainbow.Po
 include ./$(DEPDIR)/ReadHolder.Po
 include ./$(DEPDIR)/SeqUtils.Po
 include ./$(DEPDIR)/SmithWaterman.Po

@@ -101,15 +101,22 @@ bool NodeManager::addReadHolder(ReadHolder * RH)
     //-----
     // add a readholder to this mofo
     //
-    splitReadHolder(RH);
-    NM_ReadList.push_back(RH);
-    return true;
+    if (splitReadHolder(RH))
+    {
+        NM_ReadList.push_back(RH);
+        return true;
+    }
+    else
+    {
+        logError("Unable to split ReadHolder");
+        return false;
+    }
 }
 
 //----
 // private function called from addReadHolder to split the read into spacers and pass it through to others
 //
-void NodeManager::splitReadHolder(ReadHolder * RH)
+bool NodeManager::splitReadHolder(ReadHolder * RH)
 {
     //-----
     // Split down a read holder and make some nodes
@@ -126,7 +133,9 @@ void NodeManager::splitReadHolder(ReadHolder * RH)
     else
     {
         logError("Could not get a spacer for the read");
+        return false;
     }
+    return true;
 }
 
 
@@ -167,6 +176,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         // we already have a node for this guy
         first_kmer_node = NM_Nodes[st1];
         (NM_Nodes[st1])->incrementCount();
+        
         seen_first = true;
     }
     if(0 == st2)
@@ -180,6 +190,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     {
         second_kmer_node = NM_Nodes[st2];
         (NM_Nodes[st2])->incrementCount();
+
         seen_second = true;
     }
     
@@ -239,18 +250,33 @@ void NodeManager::cleanGraph(void)
 }
 
 // Making purdy colours
-void NodeManager::makeColours(void)
+void NodeManager::setUpperAndLowerCoverage(void)
+{
+    // loop through all of the nodes and determine the upper and lower dounds for our graph
+    NodeListIterator nl_iter = nodeBegin();
+    while (nl_iter != nodeEnd()) 
+    {
+        int coverage = (nl_iter->second)->getCoverage();
+        if (coverage > NM_MaxCoverage) 
+        {
+            NM_MaxCoverage = coverage;
+        }
+        else if(coverage < NM_MinCoverage)
+        {
+            NM_MinCoverage = coverage;
+        }
+        nl_iter++;
+    }
+}
+
+
+void NodeManager::setColourLimits(void)
 {
     //-----
     // Make the colurs needed for printing the graphviz stuff
     //
-    std::cout << "<html><table>\n";
-    NM_Rainbow.setLimits(0,100);
-    for(int i = 0; i <= 101; i++)
-    {
-        std::cout << "<tr><td style=\"background:#"<< NM_Rainbow.getColour(i) <<";\">" << i << "</td></tr>" << std::endl;
-    }
-    std::cout << "</table></html>\n";
+    setUpperAndLowerCoverage();
+    NM_Rainbow.setLimits(NM_MinCoverage,NM_MaxCoverage);
 }
 
 // Printing / IO
@@ -266,7 +292,7 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
         // check whether we should print
         if((nl_iter->second)->isAttached() || showDetached)
         {
-            (nl_iter->second)->printEdges(dataOut, showDetached, printBackEdges);
+            (nl_iter->second)->printEdges(dataOut, showDetached, printBackEdges, NM_Rainbow.getColour((nl_iter->second)->getCoverage()));
         }
         nl_iter++;
     }

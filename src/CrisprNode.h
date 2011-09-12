@@ -46,6 +46,7 @@
 // local includes
 #include "crassDefines.h"
 #include "StringCheck.h"
+#include "Rainbow.h"
 
 class CrisprNode;
 
@@ -99,6 +100,7 @@ class CrisprNode
         inline StringToken getID(void) { return CN_id; }
         inline bool isForward(void) { return CN_IsForward; }
         inline void setForward(bool forward) { CN_IsForward = forward; }
+        inline int getCoverage() {return CN_Coverage;}
         
         //
         // Edge level functions
@@ -118,7 +120,12 @@ class CrisprNode
         //
         // File IO / printing
         //
-        void printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges);
+
+        void printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges, std::string colourCode);    
+        void printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges)
+        {
+            return printEdges(dataOut, showDetached, printBackEdges, RB_ERROR_COLOUR);
+        }
         std::string sayEdgeTypeLikeAHuman(EDGE_TYPE type);
     
     private:
