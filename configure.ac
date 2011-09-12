@@ -4,7 +4,7 @@
 AC_PREREQ(2.61)
 AC_INIT(crass, 0.0.1, c.skennerton@gmail.com)
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([src/bm.cpp])
+AC_CONFIG_SRCDIR([src/crass.cpp])
 AC_CONFIG_HEADER([config.h])
 
 # custom defines for config.h
@@ -40,9 +40,12 @@ esac],[verbose_logging=false])
 AM_CONDITIONAL([SLOGGING], [test x$verbose_logging = xtrue])
 
 
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+
+
 
 # Checks for libraries.
 AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found in $LD_PATH])])

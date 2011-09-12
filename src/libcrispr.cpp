@@ -53,7 +53,7 @@
 #include "LoggerSimp.h"
 #include "crassDefines.h"
 #include "WuManber.h"
-#include "bm.h"
+#include "PatternMatcher.h"
 #include "SeqUtils.h"
 #include "Levensthein.h"
 #include "kseq.h"
@@ -70,10 +70,7 @@ THIS JUST DEFINES A BUNCH OF **templated** structs
 */
     KSEQ_INIT(gzFile, gzread)
 
-//**************************************
-// search functions
-//**************************************
-
+#pragma mark Search Functions
 READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
 {
     //-----
@@ -369,7 +366,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
 {
     std::vector<std::string> patterns;
     int old_number = (int)mReads->size();
-    map2Vector(patternsHash, patterns);
+    mapToVector(patternsHash, patterns);
     try {
         if (patterns.empty())
         {
@@ -378,6 +375,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         }
     } catch (char * c) {
         std::cerr<<c<<std::endl;
+        return;
     }   
 
     
@@ -430,39 +428,99 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 
+#pragma mark -
+#pragma mark Repeat QC
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder)
+int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange)
 {
-
-    //add the header for the matched readFOG
+    //-DDEBUG#ifdef DEBUG
+    logInfo("Scanning Right for more repeats:", 9);
+    //-DDEBUG#endif
+    unsigned int start_stops_size = tmp_holder->getStartStopListSize();
     
-    //logInfo(tmpReadholder->repeatStringAt(2), 8);
-    std::string dr_lowlexi = tmpReadholder->DRLowLexi();
-    //logInfo(dr_lowlexi, 8);
-    StringToken st = mStringCheck->getToken(dr_lowlexi);
-    if(0 == st)
-    {
-        // new guy
-        st = mStringCheck->addString(dr_lowlexi);
-        (*mReads)[st] = new ReadList();
-    }
-    (*mReads)[st]->push_back(tmpReadholder);
-}
-
-//**************************************
-// STL extensions
-//**************************************
-
-// turn our map into a vector using just the keys
-void map2Vector(lookupTable& patternsHash, std::vector<std::string>& patterns)
-{
+    unsigned int pattern_length = (unsigned int)pattern.length();
     
-    lookupTable::iterator iter = patternsHash.begin();
-    while (iter != patternsHash.end()) 
+    // final start index
+    unsigned int last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 2);
+    
+    //second to final start index
+    unsigned int second_last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 4);
+    
+    unsigned int repeat_spacing = last_repeat_index - second_last_repeat_index;
+    
+    //-DDEBUG#ifdef DEBUG
+    logInfo(start_stops_size<<" : "<<pattern_length<<" : "<<last_repeat_index<<" : "<<second_last_repeat_index<<" : "<<repeat_spacing, 9);
+    //-DDEBUG#endif
+    
+    int candidate_repeat_index, position;
+    
+    unsigned int begin_search, end_search;
+    
+    unsigned int read_length = (unsigned int)tmp_holder->getSeqLength();
+    bool more_to_search = true;
+    while (more_to_search)
     {
-        patterns.push_back(iter->first);
-        iter++;
+        candidate_repeat_index = last_repeat_index + repeat_spacing;
+        begin_search = candidate_repeat_index - scanRange;
+        end_search = candidate_repeat_index + pattern_length + scanRange;
+        //-DDEBUG#ifdef DEBUG
+        logInfo(candidate_repeat_index<<" : "<<begin_search<<" : "<<end_search, 9);
+        //-DDEBUG#endif
+        /******************** range checks ********************/
+        //check that we do not search too far within an existing repeat when scanning right
+        unsigned int scanRightMinBegin = last_repeat_index + pattern_length + minSpacerLength;
+        
+        if (begin_search < scanRightMinBegin)
+        {
+            begin_search = scanRightMinBegin;
+        }
+        if (begin_search > read_length - 1)
+        {
+            //-DDEBUG#ifdef DEBUG
+            logInfo("returning... "<<begin_search<<" > "<<read_length - 1, 9);
+            //-DDEBUG#endif
+            return read_length - 1;
+        }
+        if (end_search > read_length)
+        {
+            end_search = read_length;
+        }
+        
+        if ( begin_search >= end_search)
+        {
+            //-DDEBUG#ifdef DEBUG
+            logInfo("Returning... "<<begin_search<<" >= "<<end_search, 9);
+            //-DDEBUG#endif
+            return end_search;
+        }
+        /******************** end range checks ********************/
+        
+        std::string text = tmp_holder->substr(begin_search, (end_search - begin_search));
+        
+        //-DDEBUG#ifdef DEBUG
+        logInfo(pattern<<" : "<<text, 9);
+        //-DDEBUG#endif
+        position = PatternMatcher::bmpSearch(text, pattern);
+        
+        
+        if (position >= 0)
+        {
+            tmp_holder->startStopsAdd(begin_search + position, begin_search + position + pattern_length);
+            second_last_repeat_index = last_repeat_index;
+            last_repeat_index = begin_search + position;
+            repeat_spacing = last_repeat_index - second_last_repeat_index;
+            if (repeat_spacing < (minSpacerLength + pattern_length))
+            {
+                more_to_search = false;
+            }
+        }
+        else
+        {
+            more_to_search = false;
+        }
     }
+    
+    return begin_search + position;
 }
 
 
@@ -482,15 +540,15 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
     unsigned int num_repeats = tmp_holder->numRepeats();
     tmp_holder->setRepeatLength(searchWindowLength);
     int cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * num_repeats);
-
+    
     // make sure that we don't go below 2
     if (2 > cut_off) 
     {
         cut_off = 2;
     }
-    //-DDEBUG#ifdef DEBUG
+//-DDEBUG#ifdef DEBUG
     logInfo("cutoff: "<<cut_off, 9);
-    //-DDEBUG#endif
+//-DDEBUG#endif
     
     
     // the index in the read of the first DR kmer
@@ -506,13 +564,13 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
     
     for (unsigned int i = 4; i < end_index; i+=2)
     {
-
+        
         // get the repeat spacing of this pair of DR kmers
         unsigned int curr_repeat_spacing = tmp_holder->startStopsAt(i) - tmp_holder->startStopsAt(i - 2);
 //-DDEBUG#ifdef DEBUG
         logInfo(i<<" : "<<curr_repeat_spacing, 10);
 //-DDEBUG#endif
-
+        
         // if it is shorter than what we already have, make it the shortest
         if (curr_repeat_spacing < shortest_repeat_spacing)
         {
@@ -644,7 +702,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
 //-DDEBUG#ifdef DEBUG
         logInfo("L:" << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << tmp_holder->getRepeatLength() << " : " << left_extension_length, 9);
 //-DDEBUG#endif
-
+        
         if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
         {
             tmp_holder->incrementRepeatLength();
@@ -656,9 +714,10 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
             break;
         }
     }
-    
     StartStopListIterator repeat_iter = tmp_holder->begin();
+//-DDEBUG#ifdef DEBUG    
     logInfo("Repeat positions:", 9);
+//-DDEBUG#endif
     while (repeat_iter < tmp_holder->end()) 
     {
         if(*repeat_iter < (unsigned int)left_extension_length)
@@ -671,10 +730,12 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
             *repeat_iter -= left_extension_length;
             *(repeat_iter+1) += right_extension_length;
         }
+//-DDEBUG#ifdef DEBUG    
         logInfo(*repeat_iter<<","<<*(repeat_iter+1), 9);
+//-DDEBUG#endif
         repeat_iter += 2;
     }
-
+    
     return (unsigned int)tmp_holder->getRepeatLength();
     
 }
@@ -692,7 +753,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder)
     } catch (char * c) {
         std::cerr<<c<<std::endl;
     }
-
+    
     std::string repeat = tmp_holder->repeatStringAt(0);
     
     if (isRepeatLowComplexity(repeat)) 
@@ -722,8 +783,8 @@ bool qcFoundRepeats(ReadHolder * tmp_holder)
         while (spacer_iter != spacer_vec.end() - 1) 
         {
             
-            sum_repeat_to_spacer_difference += getStringSimilarity(repeat, *spacer_iter);
-            sum_spacer_to_spacer_difference += getStringSimilarity(*spacer_iter, *(spacer_iter + 1));
+            sum_repeat_to_spacer_difference += PatternMatcher::getStringSimilarity(repeat, *spacer_iter);
+            sum_spacer_to_spacer_difference += PatternMatcher::getStringSimilarity(*spacer_iter, *(spacer_iter + 1));
             
             sum_spacer_to_spacer_len_diff += spacer_iter->size() - (spacer_iter + 1)->size();
             sum_repeat_to_spacer_len_diff += repeat.size() - spacer_iter->size();
@@ -766,7 +827,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder)
         logInfo("\tPassed test 5a. Spacer lengths do not differ too much: "<<abs(sum_spacer_to_spacer_len_diff)/spacer_vec_size<<" < "<<spacer_len_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif    
         int repeat_to_spacer_len_cutoff = spacer_vec_size * CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF;
-
+        
         if (abs(sum_repeat_to_spacer_len_diff) > repeat_to_spacer_len_cutoff) 
         {
 //-DDEBUG#ifdef DEBUG
@@ -777,13 +838,13 @@ bool qcFoundRepeats(ReadHolder * tmp_holder)
 //-DDEBUG#ifdef DEBUG
         logInfo("\tPassed test 5b. Repeat to spacer lengths do not differ too much: "<<abs(sum_repeat_to_spacer_len_diff)/spacer_vec_size<<" < "<<repeat_to_spacer_len_cutoff/spacer_vec_size, 8);
 //-DDEBUG#endif
-
+        
     }
     // short read only one spacer
     else
     {
         std::string spacer = tmp_holder->spacerStringAt(0);
-        float similarity = getStringSimilarity(repeat, spacer);
+        float similarity = PatternMatcher::getStringSimilarity(repeat, spacer);
         if (similarity > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY) 
         {
 //-DDEBUG#ifdef DEBUG
@@ -806,107 +867,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder)
 //-DDEBUG#endif
     }
     return true;
-
-}
-
-int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange)
-{
-//-DDEBUG#ifdef DEBUG
-    logInfo("Scanning Right for more repeats:", 9);
-//-DDEBUG#endif
-    unsigned int start_stops_size = tmp_holder->getStartStopListSize();
     
-    unsigned int pattern_length = (unsigned int)pattern.length();
-    
-    // final start index
-    unsigned int last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 2);
-    
-    //second to final start index
-    unsigned int second_last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 4);
-    
-    unsigned int repeat_spacing = last_repeat_index - second_last_repeat_index;
-    
-//-DDEBUG#ifdef DEBUG
-    logInfo(start_stops_size<<" : "<<pattern_length<<" : "<<last_repeat_index<<" : "<<second_last_repeat_index<<" : "<<repeat_spacing, 9);
-//-DDEBUG#endif
-
-    int candidate_repeat_index, position;
-    
-    unsigned int begin_search, end_search;
-    
-    unsigned int read_length = (unsigned int)tmp_holder->getSeqLength();
-    bool more_to_search = true;
-    while (more_to_search)
-    {
-        candidate_repeat_index = last_repeat_index + repeat_spacing;
-        begin_search = candidate_repeat_index - scanRange;
-        end_search = candidate_repeat_index + pattern_length + scanRange;
-//-DDEBUG#ifdef DEBUG
-        logInfo(candidate_repeat_index<<" : "<<begin_search<<" : "<<end_search, 9);
-//-DDEBUG#endif
-        /******************** range checks ********************/
-        //check that we do not search too far within an existing repeat when scanning right
-        unsigned int scanRightMinBegin = last_repeat_index + pattern_length + minSpacerLength;
-        
-        if (begin_search < scanRightMinBegin)
-        {
-            begin_search = scanRightMinBegin;
-        }
-        if (begin_search > read_length - 1)
-        {
-//-DDEBUG#ifdef DEBUG
-            logInfo("returning... "<<begin_search<<" > "<<read_length - 1, 9);
-//-DDEBUG#endif
-            return read_length - 1;
-        }
-        if (end_search > read_length)
-        {
-            end_search = read_length;
-        }
-        
-        if ( begin_search >= end_search)
-        {
-//-DDEBUG#ifdef DEBUG
-            logInfo("Returning... "<<begin_search<<" >= "<<end_search, 9);
-//-DDEBUG#endif
-            return end_search;
-        }
-        /******************** end range checks ********************/
-        
-        std::string text = tmp_holder->substr(begin_search, (end_search - begin_search));
-        
-//-DDEBUG#ifdef DEBUG
-        logInfo(pattern<<" : "<<text, 9);
-//-DDEBUG#endif
-        position = PatternMatcher::bmpSearch(text, pattern);
-        
-        
-        if (position >= 0)
-        {
-            tmp_holder->startStopsAdd(begin_search + position, begin_search + position + pattern_length);
-            second_last_repeat_index = last_repeat_index;
-            last_repeat_index = begin_search + position;
-            repeat_spacing = last_repeat_index - second_last_repeat_index;
-            if (repeat_spacing < (minSpacerLength + pattern_length))
-            {
-                more_to_search = false;
-            }
-        }
-        else
-        {
-            more_to_search = false;
-        }
-    }
-    
-    return begin_search + position;
-}
-
-
-float getStringSimilarity(std::string& s1, std::string& s2)
-{
-    float max_length = std::max(s1.length(), s2.length());
-    float edit_distance =  LevenstheinDistance(s1 ,  s2);
-    return 1.0 - (edit_distance/max_length);
 }
 
 bool isRepeatLowComplexity(std::string& repeat)
@@ -950,4 +911,41 @@ bool isRepeatLowComplexity(std::string& repeat)
     else if (n_count > cut_off) return true;   
     return false;
 }
+
+#pragma mark -
+#pragma mark ReadHolder Interface
+
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder)
+{
+
+    //add the header for the matched readFOG
+    
+    //logInfo(tmpReadholder->repeatStringAt(2), 8);
+    std::string dr_lowlexi = tmpReadholder->DRLowLexi();
+    //logInfo(dr_lowlexi, 8);
+    StringToken st = mStringCheck->getToken(dr_lowlexi);
+    if(0 == st)
+    {
+        // new guy
+        st = mStringCheck->addString(dr_lowlexi);
+        (*mReads)[st] = new ReadList();
+    }
+    (*mReads)[st]->push_back(tmpReadholder);
+}
+
+//#pragma mark -
+//#pragma mark Utilities
+//// turn our map into a vector using just the keys
+//void map2Vector(lookupTable& patternsHash, std::vector<std::string>& patterns)
+//{
+//    
+//    lookupTable::iterator iter = patternsHash.begin();
+//    while (iter != patternsHash.end()) 
+//    {
+//        patterns.push_back(iter->first);
+//        iter++;
+//    }
+//}
+
+
 

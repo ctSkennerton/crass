@@ -15,5 +15,5 @@ endif
 # the previous manual Makefile
 bin_PROGRAMS = crass
 
-crass_SOURCES = bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp 
+crass_SOURCES = PatternMatcher.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp 
 

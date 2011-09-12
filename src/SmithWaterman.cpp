@@ -63,6 +63,7 @@
 #include "SeqUtils.h"
 #include "LoggerSimp.h"
 #include "Levensthein.h"
+#include "PatternMatcher.h"
 
 double findMax(double a, double b, double c, double d, int * index)
 {
@@ -267,7 +268,7 @@ stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign
     if(0 != similarity)
     {
         // a_ret is always shorter than or equal to seqB
-        double similarity_ld = 1 - ((double)(LevenstheinDistance(a_ret, seqB) - (seqB.length() - a_ret.length()))/(double)a_ret.length());
+        double similarity_ld = 1 - ((double)(PatternMatcher::levenstheinDistance(a_ret, seqB) - (seqB.length() - a_ret.length()))/(double)a_ret.length());
         if(similarity_ld >= similarity)
         {
             return std::pair<std::string, std::string>(a_ret, b_ret); 

@@ -66,3 +66,15 @@ inline std::string to_string (const T& t)
     ss << t;
     return ss.str();
 }
+
+template <class T1, class T2, class T3>
+void mapToVector(std::map<T1, T2>& map, std::vector<T3>& vector) 
+{
+    
+    typename std::map<T1, T2>::iterator iter = map.begin();
+    while (iter != map.end()) 
+    {
+        vector.push_back(iter->first);
+        iter++;
+    }
+}

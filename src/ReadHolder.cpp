@@ -181,7 +181,7 @@ void ReadHolder::dropPartials(void)
     StartStopListIterator r_iter = RH_StartStops.begin();
     if(*r_iter == 0)
     {
-        logInfo("Dropping front partial repeat", 8);
+        logInfo("\tDropping front partial repeat", 8);
         // this is a partial
         RH_StartStops.erase(r_iter, r_iter+2);
     }
@@ -189,7 +189,7 @@ void ReadHolder::dropPartials(void)
     r_iter = RH_StartStops.end() - 1;
     if(*r_iter > (unsigned int)RH_Seq.length() - RH_RepeatLength)
     {
-        logInfo("Dropping end partial repeat", 8);
+        logInfo("\tDropping end partial repeat", 8);
         // this is a partial
         // TODO This -2 may only need to be -1
         RH_StartStops.erase(r_iter-1, RH_StartStops.end());

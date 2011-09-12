@@ -45,7 +45,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_crass_OBJECTS = bm.$(OBJEXT) Levensthein.$(OBJEXT) crass.$(OBJEXT) \
+am_crass_OBJECTS = PatternMatcher.$(OBJEXT) crass.$(OBJEXT) \
 	WuManber.$(OBJEXT) LoggerSimp.$(OBJEXT) SeqUtils.$(OBJEXT) \
 	CrisprNode.$(OBJEXT) NodeManager.$(OBJEXT) libcrispr.$(OBJEXT) \
 	WorkHorse.$(OBJEXT) SpacerInstance.$(OBJEXT) \
@@ -87,6 +87,7 @@ ECHO_C = \c
 ECHO_N = 
 ECHO_T = 
 EGREP = /usr/bin/grep -E
+ENABLE_NEATO = 1
 EXEEXT = 
 GREP = /usr/bin/grep
 INSTALL = /usr/bin/install -c
@@ -158,7 +159,7 @@ AM_CXXFLAGS = -Werror -pedantic -Wall -O2 -ggdb
 AM_CPPFLAGS = $(am__append_1) $(am__append_2)
 #DEBUGFLAGS = -DDEBUG
 #SLOGGINGFLAGS = -DSUPER_LOGGING
-crass_SOURCES = bm.cpp Levensthein.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp 
+crass_SOURCES = PatternMatcher.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp 
 all: all-am
 
 .SUFFIXES:
@@ -226,9 +227,9 @@ distclean-compile:
 	-rm -f *.tab.c
 
 include ./$(DEPDIR)/CrisprNode.Po
-include ./$(DEPDIR)/Levensthein.Po
 include ./$(DEPDIR)/LoggerSimp.Po
 include ./$(DEPDIR)/NodeManager.Po
+include ./$(DEPDIR)/PatternMatcher.Po
 include ./$(DEPDIR)/ReadHolder.Po
 include ./$(DEPDIR)/SeqUtils.Po
 include ./$(DEPDIR)/SmithWaterman.Po
@@ -236,7 +237,6 @@ include ./$(DEPDIR)/SpacerInstance.Po
 include ./$(DEPDIR)/StringCheck.Po
 include ./$(DEPDIR)/WorkHorse.Po
 include ./$(DEPDIR)/WuManber.Po
-include ./$(DEPDIR)/bm.Po
 include ./$(DEPDIR)/crass.Po
 include ./$(DEPDIR)/libcrispr.Po
 

@@ -48,7 +48,7 @@
 // local includes
 #include "crassDefines.h"
 #include "WuManber.h"
-#include "bm.h"
+#include "PatternMatcher.h"
 #include "kseq.h"
 #include "ReadHolder.h"
 #include "SeqUtils.h"
@@ -76,7 +76,7 @@ enum side{rightSide, leftSide};
 //**************************************
 // search functions
 //**************************************
-
+#pragma mark Search Functions
 READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength);
 
 void longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
@@ -86,33 +86,9 @@ void shortReadSearch(const char *input_fastq, const options &opts, lookupTable &
 void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
 
-//**************************************
-// Read Holder
-//**************************************
-
-std::string DRLowLexi( ReadHolder * tmp_holder, std::string& read);
-
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder);
-
-//**************************************
-// lookup table shite
-//**************************************
-
-void addToLookup(const string &dr ,lookupTable &patternsLookup);
-
-float getStringSimilarity(std::string& s1, std::string& s2);
-
-//**************************************
-// STL extensions
-//**************************************
-
-bool inline keyExists(lookupTable &patterns_hash, std::string &direct_repeat);
-
-void map2Vector(lookupTable &patterns_hash, std::vector<std::string> &patterns);
-
-//*************************************
-// Ported CRT code
-//*************************************
+#pragma mark -
+#pragma mark Repeat QC
+int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange);
 
 unsigned int extendPreRepeat(ReadHolder* tmp_holder, int searchWindowLength, int minSpacerLength);
 
@@ -120,9 +96,15 @@ bool qcFoundRepeats(ReadHolder * tmp_holder);
 
 bool isRepeatLowComplexity(std::string& repeat);
 
-int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange);
 
-bool  patternMatches(std::string& pattern1, std::string& pattern2, double confidence);
+#pragma mark -
+#pragma mark ReadHolder Interface
 
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder);
+
+//#pragma mark -
+//#pragma mark Utilities
+//
+//void map2Vector(lookupTable &patterns_hash, std::vector<std::string> &patterns);
 
 #endif //libcrispr_h
