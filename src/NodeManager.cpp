@@ -37,8 +37,11 @@
 // system includes
 #include <iostream>
 #include <vector>
+#include <map>
 #include <string>
 #include <sstream>
+#include <fstream>
+
 // local includes
 #include "NodeManager.h"
 #include "LoggerSimp.h"
@@ -49,6 +52,8 @@
 #include "StringCheck.h"
 #include "ReadHolder.h"
 #include "StringCheck.h"
+#include "GraphDrawingDefines.h"
+#include "Rainbow.h"
 
 NodeManager::NodeManager(std::string drSeq, StringCheck * strCheck)
 {
@@ -65,14 +70,14 @@ NodeManager::~NodeManager(void)
     // destructor
     //
     
-    // clean up al lthe cripsr nodes
+    // clean up all the cripsr nodes
     NodeListIterator node_iter = NM_Nodes.begin();
     while(node_iter != NM_Nodes.end())
     {
-        if(NULL != *node_iter)
+        if(NULL != node_iter->second)
         {
-            delete *node_iter;
-            *node_iter = NULL;
+            delete node_iter->second;
+            node_iter->second = NULL;
         }
         node_iter++;
     }
@@ -81,10 +86,10 @@ NodeManager::~NodeManager(void)
     SpacerListIterator spacer_iter = NM_Spacers.begin();
     while(spacer_iter != NM_Spacers.end())
     {
-        if(NULL != *spacer_iter)
+        if(NULL != spacer_iter->second)
         {
-            delete *spacer_iter;
-            *spacer_iter = NULL;
+            delete spacer_iter->second;
+            spacer_iter->second = NULL;
         }
         spacer_iter++;
     }
@@ -96,7 +101,7 @@ bool NodeManager::addReadHolder(ReadHolder * RH)
     //-----
     // add a readholder to this mofo
     //
-    this->splitReadHolder(RH);
+    splitReadHolder(RH);
     NM_ReadList.push_back(RH);
     return true;
 }
@@ -106,113 +111,22 @@ bool NodeManager::addReadHolder(ReadHolder * RH)
 //
 void NodeManager::splitReadHolder(ReadHolder * RH)
 {
-
+    //-----
+    // Split down a read holder and make some nodes
+    //
     std::string working_str;
     CrisprNode * prev_node = NULL;
-    
-    int size_of_RH_startStops = RH->getStartStopListSize();
-    if(0 == RH->front())
-    {
-        if(RH->getFirstSpacer(&working_str))
-        {
-            addCrisprNodes(&prev_node, working_str);
-            size_of_RH_startStops--;
-        }
-        else
-        {
-            logError("could't get the first spacer");
-        }
-        
-        while(size_of_RH_startStops > 0)
-        {
 
-            if(RH->getNextSpacer(&working_str))
-            {
-                addCrisprNodes(&prev_node, working_str);
-                size_of_RH_startStops -= 2;
-            }
-            else
-            {
-                break;
-            }
-        }
-        
-        // do the last spacer if required
-        // TODO  -1?
-        if (RH->back() <= (unsigned int)RH->getSeqLength() - CRASS_DEF_NODE_KMER_SIZE) 
-        {
-            RH->getNextSpacer(&working_str);
-            
-            std::string first_kmer = working_str.substr(0, CRASS_DEF_NODE_KMER_SIZE);
-            StringToken st = NM_StringCheck->addString(first_kmer);
-            std::cout << "SP: " << working_str<<" : "<<first_kmer<<"("<<st<<")"<<std::endl;
-            
-            CrisprNode * first_node = new CrisprNode(st);
-            
-            first_node->addPartner(prev_node, true);
-            NM_Nodes.push_back(first_node);
-        }
+    if(RH->getFirstSpacer(&working_str))
+    {
+        do {
+           addCrisprNodes(&prev_node, working_str);
+        } while(RH->getNextSpacer(&working_str));
     }
     else
     {
-        // start with a spacer
-        
-        // for the first spacer, cut only the second kmer ( if starting with a spacer )
-        // as there is not a direct repeat to anchor the other side
-        if(RH->getFirstSpacer(&working_str))
-        {
-            // make sure that we can cut a kmer and add the node
-            if (CRASS_DEF_NODE_KMER_SIZE < working_str.length()) 
-            {
-                std::string second_kmer = working_str.substr(working_str.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE);
-                StringToken st = NM_StringCheck->addString(second_kmer);
-                std::cout << "SP: " << working_str<<" : "<<second_kmer<<"("<<st<<")"<<std::endl;
-                
-                CrisprNode * first_node = new CrisprNode(st);
-                
-                NM_Nodes.push_back(first_node);
-                
-                prev_node = first_node;
-            }
-
-            size_of_RH_startStops -= 2;
-        }
-        else
-        {
-            logError("could't get the first spacer");
-        }
-        
-        while(size_of_RH_startStops > 0)
-        {
-
-            if(RH->getNextSpacer(&working_str))
-            {
-                addCrisprNodes(&prev_node, working_str);
-                size_of_RH_startStops -= 2;
-
-            }
-            else
-            {
-                break;
-            }
-        }
-        
-        // do the last spacer if required
-        // TODO  -1?
-        if (RH->back() <= (unsigned int)RH->getSeqLength() - CRASS_DEF_NODE_KMER_SIZE) 
-        {
-            RH->getNextSpacer(&working_str);
-            
-            std::string first_kmer = working_str.substr(0, CRASS_DEF_NODE_KMER_SIZE);
-            StringToken st = NM_StringCheck->addString(first_kmer);
-            std::cout << "SP: " << working_str<<" : "<<first_kmer<<"("<<st<<")"<<std::endl;
-            
-            CrisprNode * first_node = new CrisprNode(st);
-            first_node->addPartner(prev_node, true);
-
-            NM_Nodes.push_back(first_node);
-        }
-    }    
+        logError("Could not get a spacer for the read");
+    }
 }
 
 
@@ -221,54 +135,144 @@ void NodeManager::splitReadHolder(ReadHolder * RH)
 //
 void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingString)
 {
+    //-----
+    // Given a spacer string, cut kmers from each end and make crispr nodes
+    //
     // now cut kmers on either side and add the pair into the node manager 
     std::string first_kmer = workingString.substr(0,CRASS_DEF_NODE_KMER_SIZE);
     std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
+    CrisprNode * first_kmer_node;
+    CrisprNode * second_kmer_node;
     
-    
-    StringToken st1 = NM_StringCheck->addString(first_kmer);
-    StringToken st2 = NM_StringCheck->addString(second_kmer);
-    
-    std::cout << "SP: " << workingString<<" : "<<first_kmer<<"("<<st1<<") : "<<second_kmer<<"("<<st2<<")"<<std::endl;
+    // we need to know if we've seen both of the guys before
+    bool seen_first = false;
+    bool seen_second = false;
 
-    CrisprNode * first_kmer_node = new CrisprNode(st1);
-    CrisprNode * second_kmer_node = new CrisprNode(st2);
-    
-    
+    // check to see if these kmers are already stored
+    StringToken st1 = NM_StringCheck->getToken(first_kmer);
+    StringToken st2 = NM_StringCheck->getToken(second_kmer);
+
+    // if they have been added previously then token != 0
+    if(0 == st1)
+    {
+        // first time we've seen this guy. Make some new objects
+        st1 = NM_StringCheck->addString(first_kmer);
+        first_kmer_node = new CrisprNode(st1);
+        
+        // add them to the pile
+        NM_Nodes[st1] = first_kmer_node;
+    }
+    else
+    {
+        // we already have a node for this guy
+        first_kmer_node = NM_Nodes[st1];
+        (NM_Nodes[st1])->incrementCount();
+        seen_first = true;
+    }
+    if(0 == st2)
+    {
+        st2 = NM_StringCheck->addString(second_kmer);
+        second_kmer_node = new CrisprNode(st2);
+        second_kmer_node->setForward(false);
+        NM_Nodes[st2] = second_kmer_node;
+    }
+    else
+    {
+        second_kmer_node = NM_Nodes[st2];
+        (NM_Nodes[st2])->incrementCount();
+        seen_second = true;
+    }
     
     // the first kmers pair is the previous node which lay before it therefore bool is true
     // make sure prevNode is not NULL
-    if (*prevNode != NULL) 
+    if (*prevNode != NULL && !seen_first) 
     {
-        first_kmer_node->addPartner(*prevNode, true);
+        (*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
+        first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
+    }
+
+    if(!(seen_first & seen_second))
+    {
+        first_kmer_node->addEdge(second_kmer_node, CN_EDGE_FORWARD);
+        second_kmer_node->addEdge(first_kmer_node, CN_EDGE_BACKWARD);
     }
     
-    second_kmer_node->addPartner(first_kmer_node, true);
-    
-    NM_Nodes.push_back(first_kmer_node);
-    NM_Nodes.push_back(second_kmer_node);
+    // now it's time to add the spacer
+    SpacerInstance * curr_spacer;
 
-    StringToken sp_str_token = NM_StringCheck->addString(workingString);
-    
-    // create a spacer instance from these two nodes
-    SpacerInstance * curr_spacer = new SpacerInstance(sp_str_token, first_kmer_node, second_kmer_node); 
-    
-    NM_Spacers.push_back(curr_spacer);
-    
+    // check to see if we already have it here
+    SpacerKey this_sp_key = makeSpacerKey(st1, st2);
+
+    if(NM_Spacers.find(this_sp_key) == NM_Spacers.end())
+    {
+        // new instance
+        StringToken sp_str_token = NM_StringCheck->addString(workingString);
+        curr_spacer = new SpacerInstance(sp_str_token, first_kmer_node, second_kmer_node);
+        NM_Spacers[this_sp_key] = curr_spacer;
+    }
+    else
+    {
+        // increment the number of times we've seen this guy
+        (NM_Spacers[this_sp_key])->incrementCount();
+    }
+
     *prevNode = second_kmer_node;
 }
 
+// Walking
 
-//----
-// Private function called from addCrisprNodes: adds in a spacer instance
-//
-void NodeManager::addSpacerInstance(SpacerInstance * newSpacer)
+
+// Cleaning
+void NodeManager::cleanGraph(void)
 {
-    NM_Spacers.push_back(newSpacer);
+    //-----
+    // Clean all the bits off the graph mofo!
+    //
+    NodeListIterator bob = nodeBegin();
+    bob++;
+    bob++;
+    bob++;
+    bob++;
+    bob++;
+    bob++;
+    (bob->second)->detachNode();
 }
 
+// Making purdy colours
+void NodeManager::makeColours(void)
+{
+    //-----
+    // Make the colurs needed for printing the graphviz stuff
+    //
+    std::cout << "<html><table>\n";
+    NM_Rainbow.setLimits(0,100);
+    for(int i = 0; i <= 101; i++)
+    {
+        std::cout << "<tr><td style=\"background:#"<< NM_Rainbow.getColour(i) <<";\">" << i << "</td></tr>" << std::endl;
+    }
+    std::cout << "</table></html>\n";
+}
 
-
+// Printing / IO
+void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges)
+{
+    //-----
+    // Print a graphviz style graph of the DRs and spacers
+    //
+    gvGraphHeader(dataOut, title);
+    NodeListIterator nl_iter = nodeBegin();
+    while (nl_iter != nodeEnd()) 
+    {
+        // check whether we should print
+        if((nl_iter->second)->isAttached() || showDetached)
+        {
+            (nl_iter->second)->printEdges(dataOut, showDetached, printBackEdges);
+        }
+        nl_iter++;
+    }
+    gvGraphFooter(dataOut)
+}
+  
 
 
 

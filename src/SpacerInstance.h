@@ -47,11 +47,31 @@
 #include "CrisprNode.h"
 #include "StringCheck.h"
 
+// we hash together string tokens to make a unique key for each spacer
+typedef unsigned int SpacerKey;
+
+inline SpacerKey makeSpacerKey(StringToken backST, StringToken frontST)
+{
+    //-----
+    // make a spacer key from two string tokens
+    //
+    return (backST * 10000000) + frontST;
+}
+
 class SpacerInstance {
     public:
+        SpacerInstance (void) {
+            SI_SpacerSeqID = 0;
+            SI_LeadingNode = NULL;
+            SI_LastNode = NULL;
+            SI_InstanceCount = 0;
+        }
+        
         SpacerInstance (StringToken spacerID);
         SpacerInstance (StringToken spacerID, CrisprNode * leadingNode, CrisprNode * lastNode);
         ~SpacerInstance () {}
+        
+        inline void incrementCount(void) { SI_InstanceCount++; }
         
     private:
         StringToken SI_SpacerSeqID;               // the StringToken of this spacer

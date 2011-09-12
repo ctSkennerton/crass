@@ -38,47 +38,212 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <fstream>
+
 // local includes
 #include "CrisprNode.h"
 #include "LoggerSimp.h"
 #include "crassDefines.h"
 #include "GraphDrawingDefines.h"
 
-// boolean value to tell us whether the current node is the first or second in the partner pair
-// that is to say when the reads are in lowlexi, which node was seen first in the read
-bool CrisprNode::addPartner(CrisprNode * partnerNode, bool nf)
+
+//
+// Edge level functions
+//
+bool CrisprNode::addEdge(CrisprNode * parterNode, EDGE_TYPE type)
 {
-    partnerList::iterator part_iter = CN_partnerIDs.begin();
-    while (part_iter != CN_partnerIDs.end())
-    {
-        if (part_iter->CP_partnerNode == partnerNode)
-        {
-            return false;
-        }
-        part_iter++;
-    }
+    //-----
+    // Add a new edge return success if the partner has been added
+    // 
     
-    crisprPartner tmp_cp = { partnerNode, nf };
-    CN_partnerIDs.push_back(tmp_cp);
-    return true;
+    //logInfo("Adding "<<sayEdgeTypeLikeAHuman(type)<<" edge from "<<getID()<<" to "<<parterNode->getID(), 1);
+
+    // get the right edge list
+    edgeList * add_list = getEdges(type);
+    
+    // now see we haven't added it before
+    if(add_list->find(parterNode) == add_list->end())
+    {
+        // new guy
+        (*add_list)[parterNode] = true;
+        return true;
+    }
+    else
+    {
+        // already got this guy
+        logError("Adding edge ("<<parterNode->getID()<<") twice to CN ("<<getID()<<")");
+    }
+    return false;
 }
 
-// print the edges so that the first member of the pair is first
-void CrisprNode::printEdges(void)
+edgeList * CrisprNode::getEdges(EDGE_TYPE type)
 {
-    partnerList::iterator part_iter = CN_partnerIDs.begin();
-    while (part_iter != CN_partnerIDs.end())
+    //-----
+    // get edges of a particular type
+    //
+    switch(type)
     {
-        // check to see who comes first and print accorndingly
-        if (part_iter->CP_nodeFirst) 
-        {
-            gvEdge(std::cout,part_iter->CP_partnerNode->CN_id, this->CN_id)
-        } 
-        else 
-        {
-            gvEdge(std::cout,this->CN_id, part_iter->CP_partnerNode->CN_id)
-        }        
-        
-        part_iter++;
+        case CN_EDGE_FORWARD:
+            return &CN_ForwardEdges;
+        case CN_EDGE_BACKWARD:
+            return &CN_BackwardEdges;
+        case CN_EDGE_JUMPING_F:
+            return &CN_JumpingForwardEdges;
+        case CN_EDGE_JUMPING_B:
+            return &CN_JumpingBackwardEdges;
     }
 }
+
+//
+// Node level functions
+//
+void CrisprNode::setAttach(bool attachState)
+{
+    //-----
+    // detach or re-attach this node
+    //
+    
+    // find and attached nodes and set the edges to attachState
+    edgeListIterator eli = CN_ForwardEdges.begin();
+    while(eli != CN_ForwardEdges.end())
+    {
+        // go through each edge, check if it's not the right state
+        if((eli->second ^ attachState) && (eli->first)->isAttached())
+        {
+            // this edge is not the right state and the corresponding node is actually attached
+            edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_BACKWARD);
+            (*other_eli)[this] = attachState;
+            eli->second = attachState;
+        }
+        eli++;
+    }
+    eli = CN_BackwardEdges.begin();
+    while(eli != CN_BackwardEdges.end())
+    {
+        if((eli->second ^ attachState) && (eli->first)->isAttached())
+        {
+            edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_FORWARD);
+            (*other_eli)[this] = attachState;
+            eli->second = attachState;
+        }
+        eli++;
+    }
+    eli = CN_JumpingForwardEdges.begin();
+    while(eli != CN_JumpingForwardEdges.end())
+    {
+        if((eli->second ^ attachState) && (eli->first)->isAttached())
+        {
+            edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_JUMPING_B);
+            (*other_eli)[this] = attachState;
+            eli->second = attachState;
+        }
+        eli++;
+    }
+    eli = CN_JumpingBackwardEdges.begin();
+    while(eli != CN_JumpingBackwardEdges.end())
+    {
+        std::cout<<(eli->first)->isAttached()<<" : "<<eli->second<< " : "<< attachState<<std::endl;
+        if((eli->second ^ attachState) && (eli->first)->isAttached())
+        {
+            edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_JUMPING_F);
+            (*other_eli)[this] = attachState;
+            eli->second = attachState;
+        }
+        eli++;
+    }
+    
+    // set our state
+    CN_Attached =  attachState;       
+}
+
+int CrisprNode::getRank(EDGE_TYPE type)
+{
+    //-----
+    // return the rank of the node
+    //
+    switch(type)
+    {
+        case CN_EDGE_FORWARD:
+            return CN_InnerRank_F;
+        case CN_EDGE_BACKWARD:
+            return CN_InnerRank_B;
+        case CN_EDGE_JUMPING_F:
+            return CN_JumpingRank_F;
+        case CN_EDGE_JUMPING_B:
+            return CN_JumpingRank_B;
+    }
+}
+
+//
+// File IO / printing
+//
+void CrisprNode::printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges)
+{
+    //-----
+    // print the edges so that the first member of the pair is first
+    //
+    
+    // print the node declaration
+    if(CN_IsForward)
+    {
+        gvNodeF(dataOut,CN_id,"red");
+    }
+    else
+    {
+        gvNodeB(dataOut,CN_id,"blue");
+    }
+    
+    // now print the edges
+    edgeListIterator eli = CN_ForwardEdges.begin();
+    while(eli != CN_ForwardEdges.end())
+    {
+        // check if the edge is active
+        if((eli->second) || showDetached)
+            gvEdge(dataOut,CN_id,(eli->first)->getID());
+        eli++;
+    }
+    eli = CN_JumpingForwardEdges.begin();
+    while(eli != CN_JumpingForwardEdges.end())
+    {
+         if((eli->second) || showDetached)
+            gvJumpingEdge(dataOut,CN_id,(eli->first)->getID());
+        eli++;
+    }
+    if(printBackEdges)
+    {
+        eli = CN_BackwardEdges.begin();
+        while(eli != CN_BackwardEdges.end())
+        {
+            if((eli->second) || showDetached)
+                gvEdge(dataOut,CN_id,(eli->first)->getID());
+            eli++;
+        }
+        eli = CN_JumpingBackwardEdges.begin();
+        while(eli != CN_JumpingBackwardEdges.end())
+        {
+            if((eli->second) || showDetached)
+                gvJumpingEdge(dataOut,CN_id,(eli->first)->getID());
+            eli++;
+        }
+    }
+}
+
+std::string CrisprNode::sayEdgeTypeLikeAHuman(EDGE_TYPE type)
+{
+    //-----
+    // get edges of a particular type
+    //
+    switch(type)
+    {
+        case CN_EDGE_FORWARD:
+            return "Forward";
+        case CN_EDGE_BACKWARD:
+            return "Backward";
+        case CN_EDGE_JUMPING_F:
+            return "JumpingForward";
+        case CN_EDGE_JUMPING_B:
+            return "JumpingBackward";
+    }
+}
+
+
