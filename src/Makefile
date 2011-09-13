@@ -104,14 +104,14 @@ OBJEXT = o
 PACKAGE = crass
 PACKAGE_BUGREPORT = c.skennerton@gmail.com
 PACKAGE_NAME = crass
-PACKAGE_STRING = crass 0.0.1
+PACKAGE_STRING = crass 0.0.2
 PACKAGE_TARNAME = crass
-PACKAGE_VERSION = 0.0.1
+PACKAGE_VERSION = 0.0.2
 PATH_SEPARATOR = :
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = 
-VERSION = 0.0.1
+VERSION = 0.0.2
 abs_builddir = /Users/uqcskenn/Documents/Projects/crass/src
 abs_srcdir = /Users/uqcskenn/Documents/Projects/crass/src
 abs_top_builddir = /Users/uqcskenn/Documents/Projects/crass
@@ -172,9 +172,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

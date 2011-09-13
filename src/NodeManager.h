@@ -67,7 +67,7 @@ typedef std::map<SpacerKey, SpacerInstance *>::iterator SpacerListIterator;
 class NodeManager {
     public:
 #pragma mark Constructor/Destructor
-        NodeManager(std::string drSeq, StringCheck * stringCheck);
+        NodeManager(std::string drSeq, StringCheck * stringCheck, const options * userOpts);
         ~NodeManager(void);
 
 #pragma mark -
@@ -108,7 +108,8 @@ class NodeManager {
 #pragma mark Printing
     // Printing / IO
         void printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges);         // Print a graphviz style graph of the DRs and spacers
-    
+    void printNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode);
+    void printEdgeAttributes(std::ostream& dataOut);
     
     private:
         bool splitReadHolder(ReadHolder * RH);
@@ -123,6 +124,7 @@ class NodeManager {
         Rainbow NM_Rainbow;                   // the Rainbow class for making colours
         int NM_MaxCoverage;                   // The maximum coverage of any of the CrisprNodes managed 
         int NM_MinCoverage;                   // The minimum coverage of any of the CrisprNodes managed
+        const options * NM_opts;                    // pointer to the user options structure
 };
 
 #endif // NodeManager_h

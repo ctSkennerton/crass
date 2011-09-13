@@ -70,6 +70,8 @@ static struct option long_options [] = {
     {"minNumRepeats", required_argument, NULL, 'n'},
     {"logToScreen", no_argument, NULL, 0},
     {"removeHomopolymers",no_argument,NULL,0},
+    {"numBins",required_argument,NULL,'b'},
+    {"graphColour",required_argument,NULL,'c'},
     {NULL, no_argument, NULL, 0}
 };
 

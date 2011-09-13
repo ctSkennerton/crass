@@ -85,22 +85,22 @@
 #define PACKAGE_NAME "crass"
 
 /* Define the revision of the package */
-#define PACKAGE_REVISION 1
+#define PACKAGE_REVISION 2
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "crass 0.0.1"
+#define PACKAGE_STRING "crass 0.0.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "crass"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.0.1"
+#define PACKAGE_VERSION "0.0.2"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.0.1"
+#define VERSION "0.0.2"
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

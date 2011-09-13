@@ -56,13 +56,7 @@
 #include "LoggerSimp.h"
 #include "SeqUtils.h"
 #include "WorkHorse.h"
-
-// added for testing only
-#include "NodeManager.h"
-#include "SpacerInstance.h"
-#include "CrisprNode.h"
-#include "ReadHolder.h"
-#include "StringCheck.h"
+#include "Rainbow.h"
 
 
 //**************************************
@@ -81,30 +75,42 @@ void help(void)
 void usage(void) 
 {
     std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { inputFile ...}"<<std::endl<<std::endl;
-    std::cout<<"Options:"<<std::endl;
-    std::cout<< "\t-d --minDR <INT>           Minimim length of the direct repeat"<<std::endl; 
-    std::cout<< "\t                           to search for [Default: 23]"<<std::endl;
-    std::cout<< "\t-D --maxDR <INT>           Maximim length of the direct repeat"<<std::endl; 
-    std::cout<< "\t                            to search for [Default: 47]"<<std::endl;
-    std::cout<< "\t-h --help                  This help message"<<std::endl;
-    std::cout<< "\t-k --kmerCount <INT>       The number of the kmers that need to be"<<std::endl; 
-    std::cout<< "\t                           shared for clustering [Default: 8]"<<std::endl;
-//#ifdef DEBUG
-    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 10]"<<std::endl;
-//#else
-//    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 4]"<<std::endl;
-//#endif
-    std::cout<< "\t-n --minNumRepeats <INT>   Total number of direct repeats in a CRISPR for"<<std::endl;
-    std::cout<< "\t                           it to be considered real [Default: 3]"<<std::endl;
-    std::cout<< "\t-o --outDir <DIRECTORY>    Output directory [default: .]"<<std::endl;
-    std::cout<< "\t-s --minSpacer <INT>       Minimim length of the spacer to search for [Default: 26]"<<std::endl;
-    std::cout<< "\t-S --maxSpacer <INT>       Maximim length of the spacer to search for [Default: 50]"<<std::endl;
-    std::cout<< "\t-V --version               Program and version information"<<std::endl;
-    std::cout<< "\t-w --windowLength <INT>    The length of the search window. Can only be"<<std::endl; 
-    std::cout<< "\t                           a number between 6 - 9 [Default: 8]"<<std::endl;
-    std::cout<< "\t--dumpReads                Print reads containing CRISPR to file after the find stage"<<std::endl;
-    std::cout<< "\t--logToScreen              Print the logging information to screen rather than a file"<<std::endl;
-    std::cout<< "\t--removeHomopolymers       Correct for homopolymer errors [default: no correction]"<<std::endl;
+    std::cout<<"General Options:"<<std::endl;
+    std::cout<< "-h --help                    This help message"<<std::endl;
+//-DDEBUG#ifdef DEBUG
+    std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - 10]"<<std::endl;
+//-DDEBUG#else
+//-DDEBUG    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 4]"<<std::endl;
+//-DDEBUG#endif
+    std::cout<< "-o --outDir          <DIR>   Output directory [default: .]"<<std::endl;
+    std::cout<< "-V --version                 Program and version information"<<std::endl;
+    std::cout<< "--logToScreen                Print the logging information to screen rather than a file"<<std::endl;
+    std::cout<<std::endl;
+    std::cout<<"CRISPR Identification Options:"<<std::endl;
+    std::cout<< "-d --minDR           <INT>   Minimim length of the direct repeat"<<std::endl; 
+    std::cout<< "                             to search for [Default: 23]"<<std::endl;
+    std::cout<< "-D --maxDR           <INT>   Maximim length of the direct repeat"<<std::endl; 
+    std::cout<< "                             to search for [Default: 47]"<<std::endl;
+    std::cout<< "-n --minNumRepeats   <INT>   Total number of direct repeats in a CRISPR for"<<std::endl;
+    std::cout<< "                             it to be considered real [Default: 3]"<<std::endl;
+    std::cout<< "-s --minSpacer       <INT>   Minimim length of the spacer to search for [Default: 26]"<<std::endl;
+    std::cout<< "-S --maxSpacer       <INT>   Maximim length of the spacer to search for [Default: 50]"<<std::endl;
+    std::cout<< "-w --windowLength    <INT>   The length of the search window. Can only be"<<std::endl; 
+    std::cout<< "                             a number between 6 - 9 [Default: 8]"<<std::endl;
+    std::cout<< "--dumpReads                  Print reads containing CRISPR to file after the find stage"<<std::endl;
+    std::cout<< "--removeHomopolymers         Correct for homopolymer errors [default: no correction]"<<std::endl;
+    std::cout<<std::endl;
+    std::cout<<"CRISPR Assembly Options:"<<std::endl;
+    std::cout<< "-k --kmerCount       <INT>   The number of the kmers that need to be"<<std::endl; 
+    std::cout<< "                             shared for clustering [Default: 8]"<<std::endl;
+    std::cout<<std::endl;
+    std::cout<<"Graph Output Options: "<<std::endl;
+    std::cout<<"-b --numBins          <INT>   The number of colour bins for the output graph."<<std::endl;
+    std::cout<<"                              Default is to have as many colours as there are"<<std::endl;
+    std::cout<<"                              different values for the coverage of Nodes in the graph"<<std::endl;
+    std::cout<<"-c --graphColour     <TYPE>   Defines the range of colours to use for the output graph"<<std::endl;
+    std::cout<<"                              the different types available are:"<<std::endl;
+    std::cout<<"                              read-blue, blue-red, green-red-blue, red-blue-green"<<std::endl;
 }
 
 void versionInfo(void) 
@@ -123,11 +129,19 @@ int processOptions(int argc, char *argv[], options *opts)
     int c;
     int index;
     
-    while( (c = getopt_long(argc, argv, "w:hVrl:k:n:o:b:cd:D:s:S:", long_options, &index)) != -1 ) 
+    while( (c = getopt_long(argc, argv, "w:hVrl:k:n:o:b:c:d:D:s:S:", long_options, &index)) != -1 ) 
     {
         switch(c) 
         {
-            case 'n': opts->minNumRepeats = atoi(optarg); break;
+            case 'n':
+                if (atoi(optarg) < 2) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [ERROR]: The mininum number of repeats cannot be less than 2"<<std::endl;
+                    usage();
+                    exit(1);
+                }
+                opts->minNumRepeats = atoi(optarg); 
+                break;
             case 'w': 
                 opts->searchWindowLength = atoi(optarg); 
                 if ((opts->searchWindowLength < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (opts->searchWindowLength > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
@@ -137,11 +151,67 @@ int processOptions(int argc, char *argv[], options *opts)
                     opts->searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH;
                 }
                 break;        
-            case 'h': versionInfo(); usage();exit(0); break;
-            case 'V': versionInfo(); exit(0); break;
-            case 'o': opts->output_fastq = optarg; break;
-            case 'b': opts->delim = optarg; break;
-            case 'r': opts->reportStats = true; break;
+            case 'h': 
+                versionInfo(); 
+                usage();
+                exit(0); 
+                break;
+            case 'V': 
+                versionInfo(); 
+                exit(0); 
+                break;
+            case 'o': 
+                opts->output_fastq = optarg; 
+                // just in case the user put '.' or '..' or '~' as the output directory
+                if (opts->output_fastq[opts->output_fastq.length() - 1] != '/')
+                {
+                    opts->output_fastq += '/';
+                }
+                
+                // check if our output folder exists
+                struct stat file_stats;
+                if (stat(opts->output_fastq.c_str(),&file_stats)) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [ERROR]: The Directory "<<opts->output_fastq<<" does not exist"<<std::endl;
+                    usage();
+                    exit(1);
+                }
+                break;
+            case 'b': 
+                if (atoi(optarg) < 1) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [ERROR]: The number of bins for coverage cannot be less than 1"<<std::endl;
+                    usage();
+                    exit(1);
+                }
+                opts->coverageBins = atoi(optarg); 
+                break;
+            case 'c': 
+                if (strcmp(optarg, "red-blue") == 0) 
+                {
+                    opts->graphColourType = RED_BLUE;
+                } 
+                else if(strcmp(optarg, "read-blue-green") == 0)
+                {
+                    opts->graphColourType = RED_BLUE_GREEN;
+                }
+                else if(strcmp(optarg, "blue-red") == 0)
+                {
+                    opts->graphColourType = BLUE_RED; 
+                }
+                else if(strcmp(optarg, "green-blue-red") == 0)
+                {
+                    opts->graphColourType = GREEN_BLUE_RED;
+                }
+                else
+                {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Unknown graph colour type "<<optarg<<" changing to default colour type (red-blue)"<<std::endl;
+                    opts->graphColourType = RED_BLUE;
+                }
+                break;
+            case 'r': 
+                opts->reportStats = true; 
+                break;
             case 'd': 
                 opts->lowDRsize = atoi(optarg); 
                 if (opts->lowDRsize < 8) 
@@ -195,7 +265,11 @@ int processOptions(int argc, char *argv[], options *opts)
                 else if ( strcmp( "logToScreen", long_options[index].name ) == 0 ) opts->logToScreen = true;
 
                 break;
-            default: versionInfo(); help(); exit(1); break;
+            default: 
+                versionInfo(); 
+                help(); 
+                exit(1); 
+                break;
         }
     }
     // Sanity checks for the high and low dr size
@@ -209,15 +283,6 @@ int processOptions(int argc, char *argv[], options *opts)
     if (opts->lowSpacerSize >= opts->highSpacerSize) 
     {
         std::cerr<<PACKAGE_NAME<<"[ERROR]: The lower spacer bound is bigger than the higher bound ("<<opts->lowSpacerSize<<" >= "<<opts->highSpacerSize<<")"<<std::endl;
-        usage();
-        exit(1);
-    }
-    
-    // check if our output folder exists
-    struct stat file_stats;
-    if (stat(opts->output_fastq.c_str(),&file_stats)) 
-    {
-        std::cerr<<PACKAGE_NAME<<" [ERROR]: The Directory "<<opts->output_fastq<<" does not exist"<<std::endl;
         usage();
         exit(1);
     }
@@ -253,7 +318,9 @@ int main(int argc, char *argv[])
         CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH, // the search window length
         CRASS_DEF_DEFAULT_MIN_NUM_REPEATS,      // mininum number of repeats for long read algorithm 
         false,                                  // should we log to screen
-        false                                   // should we remove homopolymers in reads
+        false,                                  // should we remove homopolymers in reads
+        -1,                                     // default for the number of bins of colours to create
+        RED_BLUE                                // default colour type of the graph
     };
 
     int opt_idx = processOptions(argc, argv, &opts);

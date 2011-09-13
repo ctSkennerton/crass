@@ -55,13 +55,16 @@
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
 
-NodeManager::NodeManager(std::string drSeq, StringCheck * strCheck)
+NodeManager::NodeManager(std::string drSeq, StringCheck * strCheck, const options * userOpts)
 {
     //-----
     // constructor
     //
     NM_DirectRepeatSequence = drSeq;
     NM_StringCheck = strCheck;
+    NM_MinCoverage = 1000000;
+    NM_MaxCoverage = 0;
+    NM_opts = userOpts;
 }
 
 NodeManager::~NodeManager(void)
@@ -148,8 +151,12 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     // Given a spacer string, cut kmers from each end and make crispr nodes
     //
     // now cut kmers on either side and add the pair into the node manager 
-    std::string first_kmer = workingString.substr(0,CRASS_DEF_NODE_KMER_SIZE);
-    std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
+    if (workingString.length() <= CRASS_DEF_NODE_KMER_SIZE) {
+        logError("working string length is less than the kmer size");
+        return;
+    }
+    std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
+    std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE - 1, CRASS_DEF_NODE_KMER_SIZE );
     CrisprNode * first_kmer_node;
     CrisprNode * second_kmer_node;
     
@@ -267,6 +274,9 @@ void NodeManager::setUpperAndLowerCoverage(void)
         }
         nl_iter++;
     }
+//-DDEBUG#ifdef DEBUG
+    logInfo("Max Node Coverage: "<<NM_MaxCoverage<<" Min Node Coverage: "<<NM_MinCoverage<<std::endl,5);
+//-DDEBUG#endif
 }
 
 
@@ -276,7 +286,15 @@ void NodeManager::setColourLimits(void)
     // Make the colurs needed for printing the graphviz stuff
     //
     setUpperAndLowerCoverage();
+    NM_Rainbow.setType(NM_opts->graphColourType);
+    if (NM_opts->coverageBins != -1) 
+    {
+        NM_Rainbow.setLimits(NM_MinCoverage, NM_MaxCoverage, NM_opts->coverageBins);
+    } 
+    else 
+    {
     NM_Rainbow.setLimits(NM_MinCoverage,NM_MaxCoverage);
+    }
 }
 
 // Printing / IO
@@ -285,20 +303,47 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
     //-----
     // Print a graphviz style graph of the DRs and spacers
     //
+    setColourLimits();
+    
     gvGraphHeader(dataOut, title);
     NodeListIterator nl_iter = nodeBegin();
+    // first loop to print out the nodes
     while (nl_iter != nodeEnd()) 
     {
         // check whether we should print
         if((nl_iter->second)->isAttached() || showDetached)
         {
-            (nl_iter->second)->printEdges(dataOut, showDetached, printBackEdges, NM_Rainbow.getColour((nl_iter->second)->getCoverage()));
+            printNodeAttributes(dataOut, nl_iter->second ,NM_Rainbow.getColour((nl_iter->second)->getCoverage()));
+        }
+        nl_iter++;
+    }
+    nl_iter = nodeBegin();
+    
+    // and go through again to print the edges
+    while (nl_iter != nodeEnd()) 
+    {
+        // check whether we should print
+        if((nl_iter->second)->isAttached() || showDetached)
+        {
+            (nl_iter->second)->printEdges(dataOut, showDetached, printBackEdges );
         }
         nl_iter++;
     }
     gvGraphFooter(dataOut)
 }
-  
+
+void NodeManager::printNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode)
+{
+    // print the node declaration
+    if(currCrisprNode->isForward())
+    {
+        gvNodeF(dataOut,currCrisprNode->getID(),colourCode);
+    }
+    else
+    {
+        gvNodeB(dataOut,currCrisprNode->getID(),colourCode);
+    }
+}
 
 
 

@@ -121,11 +121,8 @@ class CrisprNode
         // File IO / printing
         //
 
-        void printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges, std::string colourCode);    
-        void printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges)
-        {
-            return printEdges(dataOut, showDetached, printBackEdges, RB_ERROR_COLOUR);
-        }
+        void printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges);    
+
         std::string sayEdgeTypeLikeAHuman(EDGE_TYPE type);
     
     private:

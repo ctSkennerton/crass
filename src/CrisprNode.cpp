@@ -186,22 +186,12 @@ int CrisprNode::getRank(EDGE_TYPE type)
 //
 
 
-void CrisprNode::printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges, std::string colourCode)
+void CrisprNode::printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges)
 {
     //-----
     // print the edges so that the first member of the pair is first
     //
-    
-    // print the node declaration
-    if(CN_IsForward)
-    {
-        gvNodeF(dataOut,CN_id,colourCode);
-    }
-    else
-    {
-        gvNodeB(dataOut,CN_id,colourCode);
-    }
-    
+        
     // now print the edges
     edgeListIterator eli = CN_ForwardEdges.begin();
     while(eli != CN_ForwardEdges.end())

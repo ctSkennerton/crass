@@ -262,6 +262,7 @@ int WorkHorse::mungeDRs(void)
         {
             // it's real, so parse this group
             // get the five top kmers
+
             std::vector<std::string> n_top_kmers = getNMostAbundantKmers(CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second);
             
             // a return value of false indicates that this function has deleted clustered_DRs
@@ -286,15 +287,22 @@ int WorkHorse::mungeDRs(void)
         {
             //std::cout << "Group: " << (drg_iter->first) << std::endl;
             
-            mDRs[true_DRs[drg_iter->first]] = new NodeManager(true_DRs[drg_iter->first], &mStringCheck);
+            mDRs[true_DRs[drg_iter->first]] = new NodeManager(true_DRs[drg_iter->first], &mStringCheck, mOpts);
             DR_ClusterIterator drc_iter = (drg_iter->second)->begin();
             while(drc_iter != (drg_iter->second)->end())
             {
                 //std::cout << *drc_iter << std::endl;
                 // go through each read
+                ReadListIterator read_iter = mReads[*drc_iter]->begin();
+                while (read_iter != mReads[*drc_iter]->end()) 
+                {
+                    mDRs[true_DRs[drg_iter->first]]->addReadHolder(*read_iter);
+                    read_iter++;
+                }
                 
                 drc_iter++;
             }
+            mDRs[true_DRs[drg_iter->first]]->printGraph(std::cout, true_DRs[drg_iter->first], true, false);
             //std::cout << "===================================" << std::endl;
         }
         drg_iter++;
@@ -332,8 +340,38 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         std::vector<std::string>::iterator n_top_iter = nTopKmers->begin();
         while(n_top_iter != nTopKmers->end())
         {
+//            std::cout<<"Testing kmer: "<<*n_top_iter<<" on "<<tmp_DR<<std::endl;
+//            // added in here for testing
+//            size_t pos = tmp_DR.find(*n_top_iter);
+//            if(pos == string::npos)
+//            {
+//                // try the reverse complement
+//                // rev compt the kmer, it's shorter!
+//                std::string tmp_kmer = reverseComplement(*n_top_iter);
+//                pos = tmp_DR.find(tmp_kmer);
+//                if(pos != string::npos)
+//                {
+//                    // found the kmer!
+//                    disp_rc = true;
+//                    disp_pos = (int)pos;           
+//                }
+//                else
+//                {
+//                    std::cout<<"Not found Breaking loop"<<std::endl;
+//                    got_all_mode_mers = false;
+//                    break;
+//                }
+//            }
+//            else
+//            {
+//                // found the kmer!
+//                disp_rc = true;
+//                disp_pos = (int)pos;
+//            }
+            // end testing 
             if(!isKmerPresent(&disp_rc, &disp_pos, &(*n_top_iter), &tmp_DR))
             {
+                std::cout<<"not found"<<std::endl;
                 got_all_mode_mers = false;
                 break;
             }
@@ -459,19 +497,20 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     DR_offset_map[master_DR_token] = (kmer_positions_ARRAY[0] - kmer_positions_DR[0]);
     
     ReadListIterator read_iter = mReads[master_DR_token]->begin();
-
     while (read_iter != mReads[master_DR_token]->end()) 
     {
         // don't care about partials
         int dr_start_index = 0;
         int dr_end_index = 1;
-        while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != (int)(master_DR_sequence.length() - 1))
+        // If you -1 from the master_DR_sequence.length() this loop will through an error as it will never be true
+        while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != (int)(master_DR_sequence.length()))
         {
             dr_start_index += 2;
             dr_end_index += 2;
         }
         // this should be OK
-        if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (int)(master_DR_sequence.length() - 1))
+        // If you -1 from the master_DR_sequence.length() this loop will through an error as it will never be true
+        if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (int)(master_DR_sequence.length()))
         {
             // the start of the read is 
             int this_read_start_pos = kmer_positions_ARRAY[0] - (*read_iter)->startStopsAt(dr_start_index) - kmer_positions_DR[0] ;
@@ -668,12 +707,12 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                                 // don't care about partials
                                 int dr_start_index = 0;
                                 int dr_end_index = 1;
-                                while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != (int)(tmp_DR.length() - 1))
+                                while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != (int)(tmp_DR.length()))
                                 {
                                     dr_start_index += 2;
                                     dr_end_index += 2;
                                 }                                
-                                if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == ((int)(tmp_DR.length()) - 1))
+                                if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == ((int)(tmp_DR.length())))
                                 {
                                     // we need to find the first kmer which matches the mode.
                                     int this_read_start_pos = positional_offset - (*read_iter)->startStopsAt(dr_start_index) - kmer_positions_DR[0] ;
@@ -1220,6 +1259,7 @@ std::vector<std::string> WorkHorse::getNMostAbundantKmers(int num2Get, std::map<
     std::map<std::string, bool>::iterator tkm_iter = top_kmer_map.begin();
     while(tkm_iter != top_kmer_map.end())
     {
+        //std::cout<<tkm_iter->first<<std::endl;
         top_kmers.push_back(tkm_iter->first);
         tkm_iter++;
     }
@@ -1347,15 +1387,20 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     for(int i = 0; i < num_mers; ++i)
     {
         // make it a string!
-        kmers[i][CRASS_DEF_KMER_SIZE+1]='\0';
+        kmers[i][CRASS_DEF_KMER_SIZE] = '\0';
+
         std::string tmp_str(kmers[i]);
         tmp_str = laurenize(tmp_str);
         
         // see if this guy has been counted!
         if(local_kmer_CountMap.find(tmp_str) == local_kmer_CountMap.end())
+        {
             local_kmer_CountMap[tmp_str] = 1;
+        }
         else
+        {
             local_kmer_CountMap[tmp_str]++;
+        }
         
         // see if we've seen this kmer before
         std::map<std::string, int>::iterator k2g_iter = k2GIDMap->find(tmp_str);

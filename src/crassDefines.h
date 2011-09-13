@@ -42,6 +42,7 @@
 
 #include <string>
 #include <getopt.h>
+#include "Rainbow.h"
 // --------------------------------------------------------------------
  // STRING LENGTH / MISMATCH / CLUSTER SIZE PARAMETERS
 // --------------------------------------------------------------------
@@ -118,6 +119,8 @@ typedef struct {
     unsigned int        minNumRepeats;                                      // option 'n'used in long read search only
     bool                logToScreen;
     bool                removeHomopolymers;
+    int                 coverageBins;                                       // The number of bins of colours
+    RB_TYPE             graphColourType;                                    // the colour type of the graph
 } options;
 
 //enum SequenceType {
