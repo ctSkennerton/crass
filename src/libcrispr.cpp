@@ -109,7 +109,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
 
 // CRT search
 
-void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck)
+void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patternsHash, lookupTable &readsFound)
 {
     //-----
     // Code lifted from CRT, ported by connor and hacked by Mike.
@@ -121,12 +121,14 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
     unsigned int total_base = 0;
     // initialize seq
     seq = kseq_init(fp);
-    
+    //ReadHolder * tmp_holder = new ReadHolder();
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         // grab a readholder
-        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s,seq->name.s);
+        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+        //tmp_holder->setSequence(seq->seq.s);
+        //tmp_holder->setHeader(seq->name.s);
         bool match_found = false;
 
         if (opts.removeHomopolymers)
@@ -219,9 +221,13 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
                         logInfo(tmp_holder->getSeq(), 9);
                         logInfo("-------------------", 7)
 //-DDEBUG#endif                            
-                            match_found = true;
-                            addReadHolder(mReads, mStringCheck, tmp_holder);
-                            break;
+                        match_found = true;
+                        //ReadHolder * candidate_read = new ReadHolder();
+                        //candidate_read = tmp_holder;
+                        addReadHolder(mReads, mStringCheck, tmp_holder);
+                        patternsHash[tmp_holder->repeatStringAt(0)] = true;
+                        readsFound[tmp_holder->getHeader()] = true;
+                        break;
                     }
                 }
 //-DDEBUG#ifdef DEBUG                
@@ -242,13 +248,12 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
     }
     kseq_destroy(seq); // destroy seq  
     gzclose(fp);       // close the file handler  
-    
+    //delete tmp_holder;
     logInfo("finished processing file:"<<inputFastq, 1);    
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
 
 }
 
-// boyer moore functions
 void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
     gzFile fp = getFileHandle(inputFastq);
@@ -293,8 +298,8 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
             if (second_start > -1) 
             {
                 second_start += search_begin;
-                unsigned int second_end = (unsigned int)second_start + opts.lowDRsize;
-                unsigned int first_end = first_start + opts.lowDRsize;
+                unsigned int second_end = (unsigned int)second_start + opts.lowDRsize - 1;
+                unsigned int first_end = first_start + opts.lowDRsize - 1;
                 
 
                 unsigned int next_index = second_end + 1;
@@ -306,19 +311,26 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
                     unsigned int extenstion_length = 0;
                     while (read.at(first_end + extenstion_length) == read.at(second_end + extenstion_length)) 
                     {
+//-DDEBUG#ifdef DEBUG
                         logInfo(read.at(first_end + extenstion_length)<<" == "<<read.at(second_end + extenstion_length),8);
+//-DDEBUG#endif
                         extenstion_length++;
                         next_index++;
                         if (next_index > seq_length) break;
 
                     }
-                    logInfo(second_end << " : "<<second_start<<" : "<<extenstion_length, 8);
+//-DDEBUG#ifdef DEBUG
+                    logInfo(first_start<< " : "<<first_end<<" : "<< second_start<< " : "<<second_end<<" : "<<extenstion_length, 8);
+//-DDEBUG#endif
                     tmp_holder->startStopsAdd(first_start, first_end + extenstion_length);
                     tmp_holder->startStopsAdd(second_start, second_end + extenstion_length);
                     tmp_holder->setRepeatLength(second_end - second_start + extenstion_length);
                 }
                 else
                 {
+//-DDEBUG#ifdef DEBUG
+                    logInfo(first_start<< " : "<<first_end<<" : "<< second_start<< " : "<<second_end, 8);
+//-DDEBUG#endif
                     tmp_holder->startStopsAdd(first_start, first_end);
                     tmp_holder->startStopsAdd(second_start, second_end);
                     tmp_holder->setRepeatLength(second_end - second_start);

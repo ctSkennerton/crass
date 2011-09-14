@@ -210,7 +210,10 @@ void ReadHolder::reverseStartStops(void)
     
     int seq_len = (int)RH_Seq.length();
     int true_start_offset = seq_len - RH_StartStops.back() - 1;
-    
+    if (true_start_offset < 0) 
+    {
+        logError("The first direct repeat position is a negative number");
+    }
     StartStopListRIterator ss_iter = RH_StartStops.rbegin();
     
     unsigned int prev_pos_fixed = true_start_offset;
@@ -557,6 +560,7 @@ bool ReadHolder::getNextDR(std::string * retStr)
     // find out where to start and stop the cuts
     int start_cut = -1;
     int end_cut = -1;
+    
     if(ss_iter < RH_StartStops.end())
     {
         start_cut = *ss_iter;

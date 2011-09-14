@@ -65,7 +65,7 @@ class ReadHolder
             RH_isSqueezed = false;
         }  
         
-        ReadHolder(std::string& s, std::string& h) 
+        ReadHolder(std::string s, std::string h) 
         {
             RH_Seq = s; 
             RH_Header = h; 

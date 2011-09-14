@@ -164,8 +164,8 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         if(rt == LONG_READ)
         {
             logInfo("Long read algorithm selected", 2);
-            longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck);
-            logInfo("number of reads found so far: "<<this->numOfReads(), 2);
+            longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found);
+            logInfo("Number of reads found: "<<this->numOfReads(), 2);
 
         }
         else
@@ -175,25 +175,27 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
             logInfo("number of reads found so far: "<<this->numOfReads(), 2);
 
         }
-        
-        // only nessessary in instances where there are short reads
-        if(rt == SHORT_READ)
+        // Check to see if we found anything, should return if we haven't
+        if (patterns_lookup.empty()) 
+        {
+            logInfo("No direct repeat sequences were identified", 1);
+            return 0;
+        } 
+        else 
         {
             logInfo("Begining Second iteration through file to recruit singletons", 2);
+            
             findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            
+            logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
             logInfo("number of reads found so far: "<<this->numOfReads(), 2);
 
+            // There will be an abundance of forms for each direct repeat.
+            // We needs to do somes clustering! Then trim and concatenate the direct repeats
+            mungeDRs();
         }
-        logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
-
-        // There will be an abundance of forms for each direct repeat.
-        // We needs to do somes clustering! Then trim and concatenate the direct repeats
-        mungeDRs();
-        
-        // we don't use these tables any more so why print them
-        //printFileLookups(*seq_iter, kmerLookup, patternsLookup, spacerLookup);
-        
         logInfo("Finished file: " << *seq_iter, 1);
+        
         seq_iter++;
     }
     
@@ -229,20 +231,24 @@ int WorkHorse::mungeDRs(void)
     }
     
     logInfo("Created: " << DR2GID_map.size() << " clusters", 2);
-    logInfo("-------------", 4);
-    DR_Cluster_MapIterator dcg_iter = DR2GID_map.begin();
-    while(dcg_iter != DR2GID_map.end())
+    if (isLogging(4)) 
     {
-        DR_ClusterIterator dc_iter = (dcg_iter->second)->begin();
-        logInfo("Group: " << dcg_iter->first, 4);
-        while(dc_iter != (dcg_iter->second)->end())
-        {
-            logInfo(mStringCheck.getString(*dc_iter), 4);
-            dc_iter++;
-        }
-        dcg_iter++;
         logInfo("-------------", 4);
+        DR_Cluster_MapIterator dcg_iter = DR2GID_map.begin();
+        while(dcg_iter != DR2GID_map.end())
+        {
+            DR_ClusterIterator dc_iter = (dcg_iter->second)->begin();
+            logInfo("Group: " << dcg_iter->first, 4);
+            while(dc_iter != (dcg_iter->second)->end())
+            {
+                logInfo(mStringCheck.getString(*dc_iter), 4);
+                dc_iter++;
+            }
+            dcg_iter++;
+            logInfo("-------------", 4);
+        }
     }
+
     
     // print the reads to a file if requested
     if (mOpts->detect)
@@ -302,7 +308,17 @@ int WorkHorse::mungeDRs(void)
                 
                 drc_iter++;
             }
-            mDRs[true_DRs[drg_iter->first]]->printGraph(std::cout, true_DRs[drg_iter->first], true, false);
+            std::ofstream graph_file;
+            std::string graph_file_name = mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + true_DRs[drg_iter->first] + ".gv";
+            graph_file.open(graph_file_name.c_str());
+            if (graph_file.good()) 
+            {
+                mDRs[true_DRs[drg_iter->first]]->printGraph(graph_file, true_DRs[drg_iter->first], true, false);
+            } 
+            else 
+            {
+                logError("Unable to create graph output file "<<graph_file_name);
+            }
             //std::cout << "===================================" << std::endl;
         }
         drg_iter++;
@@ -340,35 +356,6 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         std::vector<std::string>::iterator n_top_iter = nTopKmers->begin();
         while(n_top_iter != nTopKmers->end())
         {
-//            std::cout<<"Testing kmer: "<<*n_top_iter<<" on "<<tmp_DR<<std::endl;
-//            // added in here for testing
-//            size_t pos = tmp_DR.find(*n_top_iter);
-//            if(pos == string::npos)
-//            {
-//                // try the reverse complement
-//                // rev compt the kmer, it's shorter!
-//                std::string tmp_kmer = reverseComplement(*n_top_iter);
-//                pos = tmp_DR.find(tmp_kmer);
-//                if(pos != string::npos)
-//                {
-//                    // found the kmer!
-//                    disp_rc = true;
-//                    disp_pos = (int)pos;           
-//                }
-//                else
-//                {
-//                    std::cout<<"Not found Breaking loop"<<std::endl;
-//                    got_all_mode_mers = false;
-//                    break;
-//                }
-//            }
-//            else
-//            {
-//                // found the kmer!
-//                disp_rc = true;
-//                disp_pos = (int)pos;
-//            }
-            // end testing 
             if(!isKmerPresent(&disp_rc, &disp_pos, &(*n_top_iter), &tmp_DR))
             {
                 std::cout<<"not found"<<std::endl;

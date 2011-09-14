@@ -79,7 +79,7 @@ enum side{rightSide, leftSide};
 #pragma mark Search Functions
 READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength);
 
-void longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck);
+void longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
 
 void shortReadSearch(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
