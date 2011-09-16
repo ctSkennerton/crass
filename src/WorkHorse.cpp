@@ -179,7 +179,6 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         if (patterns_lookup.empty()) 
         {
             logInfo("No direct repeat sequences were identified", 1);
-            return 0;
         } 
         else 
         {
@@ -308,6 +307,7 @@ int WorkHorse::mungeDRs(void)
                 
                 drc_iter++;
             }
+            mDRs[true_DRs[drg_iter->first]]->walk();
             std::ofstream graph_file;
             std::string graph_file_name = mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + true_DRs[drg_iter->first] + ".gv";
             graph_file.open(graph_file_name.c_str());

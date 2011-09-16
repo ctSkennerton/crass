@@ -64,6 +64,49 @@ typedef std::map<StringToken, CrisprNode *>::iterator NodeListIterator;
 typedef std::map<SpacerKey, SpacerInstance *> SpacerList;
 typedef std::map<SpacerKey, SpacerInstance *>::iterator SpacerListIterator;
 
+typedef std::vector<CrisprNode *> NodeVector;
+
+#pragma mark Class WalkingManager
+class WalkingManager {
+    CrisprNode * WM_Curr_Node;
+    bool WM_Direction;
+    EDGE_TYPE WM_Wanted_Edge_Type;
+    
+public:
+#pragma mark Constructor/Destructor
+    WalkingManager(CrisprNode * currNode, EDGE_TYPE incommingEdge)
+    {
+        WM_Curr_Node = currNode;
+        WM_Wanted_Edge_Type = incommingEdge;
+    }
+    WalkingManager(void){}
+    ~WalkingManager(void){}
+#pragma mark -
+#pragma mark Getters/Setters    
+    CrisprNode * getCurrentNode(void)
+    {
+        return WM_Curr_Node;
+    }
+    
+    EDGE_TYPE getEdgeType(void)
+    {
+        return WM_Wanted_Edge_Type;
+    }
+    
+    void setCurrNode(CrisprNode * c)
+    {
+        WM_Curr_Node = c;
+    }
+    
+    void setWantedEdge(EDGE_TYPE e)
+    {
+        WM_Wanted_Edge_Type = e;
+    }
+    
+};
+
+#pragma mark -
+#pragma mark Class NodeManager
 class NodeManager {
     public:
 #pragma mark Constructor/Destructor
@@ -95,7 +138,10 @@ class NodeManager {
     // Walking
 #pragma mark -
 #pragma mark Walking
-    
+    void walk(void);
+    bool getEdge(WalkingManager * walkElem, CrisprNode * node, EDGE_TYPE * et);
+    bool stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprNode ** detatchDelay);
+    void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
     // Cleaning
 #pragma mark -
 #pragma mark Cleaning
@@ -124,7 +170,8 @@ class NodeManager {
         Rainbow NM_Rainbow;                   // the Rainbow class for making colours
         int NM_MaxCoverage;                   // The maximum coverage of any of the CrisprNodes managed 
         int NM_MinCoverage;                   // The minimum coverage of any of the CrisprNodes managed
-        const options * NM_opts;                    // pointer to the user options structure
+        const options * NM_opts;              // pointer to the user options structure
 };
+
 
 #endif // NodeManager_h

@@ -99,6 +99,8 @@ NodeManager::~NodeManager(void)
     NM_Spacers.clear();
 }
 
+#pragma mark -
+#pragma mark Adding read holders & creating crispr nodes
 bool NodeManager::addReadHolder(ReadHolder * RH)
 {
     //-----
@@ -238,9 +240,192 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
 }
 
 // Walking
+#pragma mark -
+#pragma mark Walking
+void NodeManager::walk(void)
+{
+    // get the cap nodes
+    NodeVector cap_nodes;
+    findCapNodes(&cap_nodes);
+    
+    CrisprNode * detatch_delay = NULL;
+    NodeVector detatch_list;
+    
+    WalkingManager * walk_elem = new WalkingManager();
+    
+    for (int max_step_cutoff = 1; max_step_cutoff <= CRASS_DEF_MAX_CLEANING; max_step_cutoff++) 
+    {
+        std::cout<<"min step cutoff: "<<max_step_cutoff<<std::endl;
+        NodeVector::iterator cap_node_iter = cap_nodes.begin();
+
+        while (cap_node_iter != cap_nodes.end()) 
+        {
+            int walk_steps = 0;
+            EDGE_TYPE wanted_edge;
+            if (getEdge(walk_elem, *cap_node_iter, &wanted_edge)) 
+            {
+                do {                    
+                    if (detatch_delay != NULL) 
+                    {
+                        detatch_list.push_back(detatch_delay);
+                    }
+                    if (walk_steps > max_step_cutoff) 
+                    {
+                        break;
+                    }
+                    std::cout<<"Current node: "<<(walk_elem->getCurrentNode())->getID()<<std::endl;
+                    walk_steps++;
+
+                } while (stepForType(walk_elem, &wanted_edge, &detatch_delay));
+                std::cout<<"Nodes traversed in this walk: "<<walk_steps<<std::endl;
+                
+                if (walk_steps <= max_step_cutoff) 
+                {
+                    std::cout<<"Detatching nodes: ";
+                    // detach nodes
+                    NodeVector::iterator detach_vec_iter = detatch_list.begin();
+                    while (detach_vec_iter != detatch_list.end()) 
+                    {
+                        std::cout<<(*detach_vec_iter)->getID()<<",";
+                        (*detach_vec_iter)->detachNode();
+                        detach_vec_iter++;
+                    }
+                    std::cout<<std::endl;
+                } 
+                // clear node vector
+                detatch_list.clear();
+            }
+            cap_node_iter++;
+        }
+    }
 
 
+}
+
+bool NodeManager::getEdge(WalkingManager * walkElem, CrisprNode * currNode, EDGE_TYPE * et)
+{
+    // initaliser for the walking element 
+    // from the cap node get the only edge and set that in the walking element
+    if (((currNode)->getEdges(CN_EDGE_JUMPING_F))->size() == 1)
+    {
+        walkElem->setWantedEdge(CN_EDGE_JUMPING_F);
+        *et = CN_EDGE_JUMPING_F;
+    }
+    
+    else if((currNode->getEdges(CN_EDGE_FORWARD)->size()) == 1)
+    {
+        walkElem->setWantedEdge(CN_EDGE_FORWARD);
+        *et = CN_EDGE_FORWARD;
+    }
+    
+    else if((currNode->getEdges(CN_EDGE_JUMPING_B)->size()) == 1)
+    {
+        walkElem->setWantedEdge(CN_EDGE_JUMPING_B);
+        *et = CN_EDGE_JUMPING_B;
+    }
+    
+    else if((currNode->getEdges(CN_EDGE_BACKWARD)->size()) == 1)
+    {
+        walkElem->setWantedEdge(CN_EDGE_BACKWARD);
+        *et = CN_EDGE_BACKWARD;
+    }
+    else
+    {
+        logError("Trying to initialize a walking element using a node that is not a cap");
+        return false;
+    }    
+    walkElem->setCurrNode(currNode);
+    
+    
+    //
+    return true;
+}
+
+bool NodeManager::stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprNode ** detatchDelay)
+{
+    edgeList * edge = (walkElem->getCurrentNode())->getEdges(*et);
+    if (edge->size() == 1) 
+    {
+        edgeListIterator edge_iter = edge->begin();
+        // if the node is attached
+        if (edge_iter->second) 
+        {
+            // add out current node to the detach delay pointer
+            *detatchDelay = walkElem->getCurrentNode();
+            
+            // add the new node to the walking element
+            walkElem->setCurrNode(edge_iter->first);
+            // want opposite of what cam in
+            switch (*et) 
+            {
+                case CN_EDGE_BACKWARD:
+                    walkElem->setWantedEdge(CN_EDGE_JUMPING_B);
+                    *et = CN_EDGE_JUMPING_B;
+                    return true;
+                    break;
+                 case CN_EDGE_FORWARD:
+                    walkElem->setWantedEdge(CN_EDGE_JUMPING_F);
+                    *et = CN_EDGE_JUMPING_F;
+                    return true;
+                    break;
+                case CN_EDGE_JUMPING_B:
+                    walkElem->setWantedEdge(CN_EDGE_BACKWARD);
+                    *et = CN_EDGE_BACKWARD;
+                    return true;
+                    break;
+                case CN_EDGE_JUMPING_F:
+                    walkElem->setWantedEdge(CN_EDGE_FORWARD);
+                    *et = CN_EDGE_FORWARD;
+                    return true;
+                    break;
+                default:
+                    logError("Could not set a new wanted edge for the walking element");
+                    return false;
+                    break;
+            }
+        } 
+        else 
+        {
+            // pointing to an unattached node what do i do?
+            return false;
+        }
+    } 
+    else 
+    {
+        // cross node should break?
+        return false;
+    }
+}
+
+void NodeManager::findCapNodes(NodeVector * capNodes)
+{    
+    NodeListIterator all_node_iter = NM_Nodes.begin();
+    std::cout<<"finding cap nodes:"<<std::endl;
+    while (all_node_iter != NM_Nodes.end()) 
+    {
+        int count = 0;
+        
+        count += ((all_node_iter->second)->getEdges(CN_EDGE_JUMPING_F))->size();
+
+        count += ((all_node_iter->second)->getEdges(CN_EDGE_FORWARD)->size());
+
+        count += ((all_node_iter->second)->getEdges(CN_EDGE_JUMPING_B)->size());
+
+        count += ((all_node_iter->second)->getEdges(CN_EDGE_BACKWARD)->size());
+        
+        if (count == 1) 
+        {
+            std::cout<<(all_node_iter->second)->getID()<<",";
+            capNodes->push_back(all_node_iter->second);
+        }
+        
+        all_node_iter++;
+    }
+    std::cout<<std::endl;
+}
 // Cleaning
+#pragma mark -
+#pragma mark Cleaning
 void NodeManager::cleanGraph(void)
 {
     //-----
@@ -257,6 +442,8 @@ void NodeManager::cleanGraph(void)
 }
 
 // Making purdy colours
+#pragma mark -
+#pragma mark Colouring
 void NodeManager::setUpperAndLowerCoverage(void)
 {
     // loop through all of the nodes and determine the upper and lower dounds for our graph
@@ -298,6 +485,8 @@ void NodeManager::setColourLimits(void)
 }
 
 // Printing / IO
+#pragma mark -
+#pragma mark Printing & IO
 void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges)
 {
     //-----
