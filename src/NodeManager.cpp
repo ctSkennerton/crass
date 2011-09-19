@@ -128,12 +128,50 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
     //
     std::string working_str;
     CrisprNode * prev_node = NULL;
-
     if(RH->getFirstSpacer(&working_str))
     {
-        do {
-           addCrisprNodes(&prev_node, working_str);
-        } while(RH->getNextSpacer(&working_str));
+        // do we have a direct repeat from the very beginning
+        if (RH->startStopsAt(0) == 0) 
+        {
+            addCrisprNodes(&prev_node, working_str);
+        } 
+        else 
+        {
+            // we only want to add the second kmer, since it is anchored by the direct repeat
+            addSecondCrisprNode(&prev_node, working_str);
+        }
+        // get all the spacers in the middle
+        while (RH->getLastSpacerPos() < (int)RH->getStartStopListSize() - 3) 
+        {
+            if(RH->getNextSpacer(&working_str))
+            {
+                addCrisprNodes(&prev_node, working_str);
+            } 
+            else 
+            {
+                logError("Unable to get spacer");
+                return false;
+            }
+        }        
+        // get the last spacer
+        if (RH->getNextSpacer(&working_str)) 
+        {
+            if (RH->getSeqLength() == (int)RH->back() + 1) 
+            {
+                // direct repeat goes right to the end of the read take both
+                addCrisprNodes(&prev_node, working_str);
+            } 
+            else 
+            {
+                // there is a bit over the end only take the first kmer
+                addFirstCrisprNode(&prev_node, working_str);
+            }
+        } 
+        else 
+        {
+            logError("Failed to get the last spacer");
+            return false;
+        } 
     }
     else
     {
@@ -237,6 +275,87 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     }
 
     *prevNode = second_kmer_node;
+}
+
+void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString)
+{
+    if (workingString.length() <= CRASS_DEF_NODE_KMER_SIZE) {
+        logError("working string length is less than the kmer size");
+        return;
+    }
+    std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE - 1, CRASS_DEF_NODE_KMER_SIZE );
+    CrisprNode * second_kmer_node;
+    
+    // we need to know if we've seen both of the guys before
+    bool seen_second = false;
+    
+    // check to see if these kmers are already stored
+    StringToken st1 = NM_StringCheck->getToken(second_kmer);
+    
+    // if they have been added previously then token != 0
+    if(0 == st1)
+    {
+        // first time we've seen this guy. Make some new objects
+        st1 = NM_StringCheck->addString(second_kmer);
+        second_kmer_node = new CrisprNode(st1);
+        
+        // add them to the pile
+        NM_Nodes[st1] = second_kmer_node;
+    }
+    else
+    {
+        // we already have a node for this guy
+        second_kmer_node = NM_Nodes[st1];
+        (NM_Nodes[st1])->incrementCount();
+        
+        seen_second = true;
+    }
+    // add this guy in as the previous node for the next iteration
+    *prevNode = second_kmer_node;
+
+}
+void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString)
+{
+    if (workingString.length() <= CRASS_DEF_NODE_KMER_SIZE) {
+        logError("working string length is less than the kmer size");
+        return;
+    }
+    std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
+    CrisprNode * first_kmer_node;
+    
+    // we need to know if we've seen both of the guys before
+    bool seen_first = false;
+    
+    // check to see if these kmers are already stored
+    StringToken st1 = NM_StringCheck->getToken(first_kmer);
+    
+    // if they have been added previously then token != 0
+    if(0 == st1)
+    {
+        // first time we've seen this guy. Make some new objects
+        st1 = NM_StringCheck->addString(first_kmer);
+        first_kmer_node = new CrisprNode(st1);
+        
+        // add them to the pile
+        NM_Nodes[st1] = first_kmer_node;
+    }
+    else
+    {
+        // we already have a node for this guy
+        first_kmer_node = NM_Nodes[st1];
+        (NM_Nodes[st1])->incrementCount();
+        
+        seen_first = true;
+    }
+    
+    // the first kmers pair is the previous node which lay before it therefore bool is true
+    // make sure prevNode is not NULL
+    if (*prevNode != NULL && !seen_first) 
+    {
+        (*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
+        first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
+    }
+   
 }
 
 // Walking
@@ -514,6 +633,7 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
         // check whether we should print
         if((nl_iter->second)->isAttached() || showDetached)
         {
+            std::cout<<(nl_iter->second)->getID()<<" : "<<NM_StringCheck->getString( (nl_iter->second)->getID() )<<std::endl;
             (nl_iter->second)->printEdges(dataOut, showDetached, printBackEdges );
         }
         nl_iter++;

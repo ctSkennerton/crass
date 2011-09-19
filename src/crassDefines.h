@@ -90,7 +90,7 @@
 // --------------------------------------------------------------------
 // GRAPH BUILDING
 // --------------------------------------------------------------------
-#define CRASS_DEF_NODE_KMER_SIZE                9                   // size of the kmer that defines a crispr node
+#define CRASS_DEF_NODE_KMER_SIZE                13                   // size of the kmer that defines a crispr node
 #define CRASS_DEF_MAX_CLEANING                  2                   // the maximum length that a branch can be befor it's cleaned
 // --------------------------------------------------------------------
  // USER OPTION STRUCTURE

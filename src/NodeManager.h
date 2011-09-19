@@ -160,6 +160,8 @@ class NodeManager {
     private:
         bool splitReadHolder(ReadHolder * RH);
         void addCrisprNodes(CrisprNode ** prevNode, std::string& workingString);
+        void addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString);
+        void addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString);
         void setUpperAndLowerCoverage(void);
         // members
         std::string NM_DirectRepeatSequence;  // the sequence of this managers direct repeat
