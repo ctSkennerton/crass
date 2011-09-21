@@ -271,7 +271,7 @@ stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign
         // the line below seems wrong replaced with simpler comparison that appears to have fixed a bug
         //double similarity_ld = 1 - ((double)(PatternMatcher::levenstheinDistance(a_ret, seqB) - (seqB.length() - a_ret.length()))/(double)a_ret.length());
         
-        double similarity_ld = 1.0 - (PatternMatcher::levenstheinDistance(a_ret, b_ret)/(double)a_ret.length()); 
+        double similarity_ld = 1.0 - (PatternMatcher::levenstheinDistance(a_ret, b_ret) /(double)a_ret.length()); 
         if(similarity_ld >= similarity)
         {
             return std::pair<std::string, std::string>(a_ret, b_ret); 

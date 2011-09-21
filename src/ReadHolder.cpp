@@ -290,7 +290,10 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
             {
                 if(((DR->rfind(sp.second) + (sp.second).length()) == DR->length()) && (0 == part_s))
                 {
-                    //std::cout << sp.first << " : " << sp.second << " : " << part_s << " : " << part_e << std::endl;
+//-DDEBUG#ifdef DEBUG
+                    logInfo("adding direct repeat to start",10);
+                    logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
+//-DDEBUG#endif
                     std::reverse(RH_StartStops.begin(), RH_StartStops.end());
                     RH_StartStops.push_back(part_e);
                     RH_StartStops.push_back(0);
@@ -314,7 +317,14 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
             {
                 if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
                 {
-                    RH_StartStops.push_back(part_s);
+//-DDEBUG#ifdef DEBUG
+                    logInfo("adding partial direct repeat to end",10);
+                    logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
+                    logInfo((int)sp.first.length() - (int)sp.second.length(),10);
+//-DDEBUG#endif
+                    // in most cases the right index is returned however 
+                    // if the length of the smith waterman alignment differ the indix needs to be corrected 
+                    RH_StartStops.push_back(part_s + abs((int)sp.first.length() - (int)sp.second.length()));
                     RH_StartStops.push_back(part_e);
                 }
             }

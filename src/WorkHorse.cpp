@@ -301,14 +301,6 @@ int WorkHorse::mungeDRs(void)
                 ReadListIterator read_iter = mReads[*drc_iter]->begin();
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
-                    if ((*read_iter)->getHeader() == "NODE_1614_joined_NODE_35659_extraction_2_240-640") {
-                        StartStopListIterator ss_iter = (*read_iter)->begin();
-                        std::cout<<"STARTSTOPPOS: "<<std::endl;
-                        while (ss_iter != (*read_iter)->end()) {
-                            std::cout<<*ss_iter<<std::endl;
-                            ss_iter++;
-                        }
-                    }
                     
                     mDRs[true_DRs[drg_iter->first]]->addReadHolder(*read_iter);
                     read_iter++;
@@ -316,7 +308,7 @@ int WorkHorse::mungeDRs(void)
                 
                 drc_iter++;
             }
-            mDRs[true_DRs[drg_iter->first]]->walk();
+            //mDRs[true_DRs[drg_iter->first]]->walk();
             std::ofstream graph_file;
             std::string graph_file_name = mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + true_DRs[drg_iter->first] + ".gv";
             graph_file.open(graph_file_name.c_str());
