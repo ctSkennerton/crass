@@ -56,6 +56,8 @@
 #define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD     (0.75)
 #define CRASS_DEF_KMER_SIZE                     7
 #define CRASS_DEF_K_CLUST_MIN                   12
+#define CRASS_DEF_READ_COUNTER_LOGGER           10001
+#define CRASS_DEF_MAX_READS_FOR_DECISION        1000
 // --------------------------------------------------------------------
 // HARD CODED PARAMS FOR FINDING TRUE DRs
 // --------------------------------------------------------------------
@@ -67,6 +69,7 @@
 #define CRASS_DEF_COLLAPSED_THRESHOLD           (0.30)              // in the event that clustering has collapsed two DRs into one, this number is used to plait them apart
 #define CRASS_DEF_PARTIAL_SIM_CUT_OFF           (0.85)              // The similarity needed to exted into partial matches
 #define CRASS_DEF_DR_ZONE_TRIM_AMOUNT           (3)                 // trim this many bases off the start and end of the DR
+#define CRASS_DEF_MIN_PARTIAL_LENGTH            (4)                 // The mininum length allowed for a partial direct repeat at the beginning or end of a read 
 // --------------------------------------------------------------------
 // GENOME ALGORITHM DEFINES
 // --------------------------------------------------------------------

@@ -128,6 +128,17 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
     //
     std::string working_str;
     CrisprNode * prev_node = NULL;
+
+    std::cout<<"--------------------------------------------------"<<std::endl;
+    std::cout<<RH->getHeader()<<std::endl;
+    StartStopListIterator ss_iter_test = RH->begin();
+    while (ss_iter_test != RH->end()) {
+        std::cout<<*ss_iter_test<<',';
+        ss_iter_test++;
+    }
+    std::cout<<std::endl;
+    std::cout<<RH->splitApart()<<std::endl;
+
     if(RH->getFirstSpacer(&working_str))
     {
         // do we have a direct repeat from the very beginning
@@ -141,37 +152,38 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
             addSecondCrisprNode(&prev_node, working_str);
         }
         // get all the spacers in the middle
-        while (RH->getLastSpacerPos() < (int)RH->getStartStopListSize() - 3) 
+        std::cout<<RH->getSeqLength()<<" == "<<(int)RH->back() + 1<<std::endl;
+        //check to see if we end with a direct repeat or a spacer
+        if (RH->getSeqLength() == (int)RH->back() + 1) 
         {
-            if(RH->getNextSpacer(&working_str))
+            // direct repeat goes right to the end of the read take both
+            while (RH->getNextSpacer(&working_str)) 
             {
                 addCrisprNodes(&prev_node, working_str);
             } 
-            else 
-            {
-                logError("Unable to get spacer");
-                return false;
-            }
-        }        
-        // get the last spacer
-        if (RH->getNextSpacer(&working_str)) 
-        {
-            if (RH->getSeqLength() == (int)RH->back() + 1) 
-            {
-                // direct repeat goes right to the end of the read take both
-                addCrisprNodes(&prev_node, working_str);
-            } 
-            else 
-            {
-                // there is a bit over the end only take the first kmer
-                addFirstCrisprNode(&prev_node, working_str);
-            }
         } 
         else 
         {
-            logError("Failed to get the last spacer");
-            return false;
-        } 
+            // we end with an overhanging spacer so we want to break from the loop early
+            // so that on the final time we only cut the first kmer            
+            while (RH->getLastSpacerPos() < (int)RH->getStartStopListSize() - 1) 
+            {
+                std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
+                RH->getNextSpacer(&working_str);
+                addCrisprNodes(&prev_node, working_str);
+            } 
+            
+            // get our last spacer
+            if (RH->getNextSpacer(&working_str)) 
+            {
+                std::cout<<working_str<<std::endl;
+                addFirstCrisprNode(&prev_node, working_str);
+            } 
+            else 
+            {
+                logError("Unable to get last spacer");
+            }            
+        }
     }
     else
     {
@@ -196,7 +208,9 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         return;
     }
     std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
-    std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE - 1, CRASS_DEF_NODE_KMER_SIZE );
+    std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
+    std::cout<<"B: "<<first_kmer<<" : "<<second_kmer<<std::endl;
+    
     CrisprNode * first_kmer_node;
     CrisprNode * second_kmer_node;
     
@@ -283,9 +297,9 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
         logError("working string length is less than the kmer size");
         return;
     }
-    std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE - 1, CRASS_DEF_NODE_KMER_SIZE );
+    std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
     CrisprNode * second_kmer_node;
-    
+    std::cout<<"S: "<<second_kmer<<std::endl;
     // we need to know if we've seen both of the guys before
     bool seen_second = false;
     
@@ -322,7 +336,7 @@ void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workin
     }
     std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
     CrisprNode * first_kmer_node;
-    
+    std::cout<<"F: "<<first_kmer<<std::endl;
     // we need to know if we've seen both of the guys before
     bool seen_first = false;
     

@@ -92,13 +92,13 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
         int seq_length = (int)strlen(seq->seq.s);
         total_base += seq_length;
         read_counter++;
-        if(read_counter > 100)
+        if(read_counter > CRASS_DEF_MAX_READS_FOR_DECISION)
             break;
     }
     gzclose(fp);
     
     *aveReadLength = total_base / read_counter;
-    logInfo("Average read length (of the first 100 reads): "<< *aveReadLength, 2);
+    logInfo("Average read length (of the first"<< CRASS_DEF_MAX_READS_FOR_DECISION<<" reads): "<< *aveReadLength, 2);
     if((total_base / read_counter) > CRASS_DEF_READ_LENGTH_CUTOFF)
     {
         return LONG_READ;
@@ -112,7 +112,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
 void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patternsHash, lookupTable &readsFound)
 {
     //-----
-    // Code lifted from CRT, ported by connor and hacked by Mike.
+    // Code lifted from CRT, ported by Connor and hacked by Mike.
     // Should do well at finding crisprs in long reads
     //
     gzFile fp = getFileHandle(inputFastq);
@@ -125,6 +125,12 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
+        
+        if (read_counter % CRASS_DEF_READ_COUNTER_LOGGER == 0) 
+        {
+            std::cout<<"Processed "<<read_counter<<std::endl;
+        }
+        
         // grab a readholder
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
         //tmp_holder->setSequence(seq->seq.s);
@@ -156,12 +162,6 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
         if (searchEnd < 0) 
         {
             logWarn("Read: "<<tmp_holder->getHeader()<<" length is less than "<<opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength + 1<<"bp",4);
-//-DDEBUG#ifdef DEBUG 
-            logWarn("This may be due to the input file containing a proportion of reads less than "<<CRASS_DEF_READ_LENGTH_CUTOFF, 4);
-            logWarn(PACKAGE_NAME<<" chooses a search algorithm baised on an average length of reads",4);
-            logWarn("in the beginning of the input file, not on a per read basis.", 4);
-            logWarn("This read will be skipped!", 4);
-//-DDEBUG#endif 
             continue;
         }
         
@@ -266,6 +266,11 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
+        if (read_counter % CRASS_DEF_READ_COUNTER_LOGGER == 0) 
+        {
+            logInfo("Processed "<<read_counter, 4);
+        }
+        
         bool match_found = false;
 
         // create the read holder

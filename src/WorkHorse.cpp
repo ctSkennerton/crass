@@ -301,6 +301,15 @@ int WorkHorse::mungeDRs(void)
                 ReadListIterator read_iter = mReads[*drc_iter]->begin();
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
+                    if ((*read_iter)->getHeader() == "NODE_1614_joined_NODE_35659_extraction_2_240-640") {
+                        StartStopListIterator ss_iter = (*read_iter)->begin();
+                        std::cout<<"STARTSTOPPOS: "<<std::endl;
+                        while (ss_iter != (*read_iter)->end()) {
+                            std::cout<<*ss_iter<<std::endl;
+                            ss_iter++;
+                        }
+                    }
+                    
                     mDRs[true_DRs[drg_iter->first]]->addReadHolder(*read_iter);
                     read_iter++;
                 }
@@ -590,6 +599,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                         ReadListIterator read_iter = mReads[*dr_iter]->begin();
                         while (read_iter != mReads[*dr_iter]->end()) 
                         {
+
                             (*read_iter)->reverseComplementSeq();
                             read_iter++;
                         }
@@ -1176,9 +1186,11 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                 std::cout << "Group_"<<GID<<" " << (*read_iter)->getHeader() << std::endl << true_DR << std::endl;
                 std::cout << (*read_iter)->getSeq() << std::endl;
                 std::cout << (*read_iter)->splitApart() << std::endl;
+
                 (*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
                 std::cout << (*read_iter)->splitApart() << std::endl;
                 std::cout << ".............." << std::endl;
+
                 read_iter++;
             }
             drc_iter++;

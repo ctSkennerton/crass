@@ -239,11 +239,13 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
     //
     // Take this opportunity to look for partials at either end of the read
     //
+    
     int DR_length = (int)DR->length();
     
     StartStopListIterator ss_iter = RH_StartStops.begin();
     while(ss_iter != RH_StartStops.end())
     {
+
         int usable_length = DR_length - 1;
         
         // the first guy is the start of the DR
@@ -271,7 +273,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         ss_iter++;
         
     }
-    
+
     // now we check to see if we can find one more DRs on the front or back of this mofo
     // front first
     ss_iter = RH_StartStops.begin();
@@ -284,17 +286,20 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, 0, ((int)(*ss_iter) - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
         if(0 != part_e)
         {
-            if(((DR->rfind(sp.second) + (sp.second).length()) == DR->length()) && (0 == part_s))
+            if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
             {
-                //std::cout << sp.first << " : " << sp.second << " : " << part_s << " : " << part_e << std::endl;
-                std::reverse(RH_StartStops.begin(), RH_StartStops.end());
-                RH_StartStops.push_back(part_e);
-                RH_StartStops.push_back(0);
-                std::reverse(RH_StartStops.begin(), RH_StartStops.end());
+                if(((DR->rfind(sp.second) + (sp.second).length()) == DR->length()) && (0 == part_s))
+                {
+                    //std::cout << sp.first << " : " << sp.second << " : " << part_s << " : " << part_e << std::endl;
+                    std::reverse(RH_StartStops.begin(), RH_StartStops.end());
+                    RH_StartStops.push_back(part_e);
+                    RH_StartStops.push_back(0);
+                    std::reverse(RH_StartStops.begin(), RH_StartStops.end());
+                }
             }
+
         }
     }
-    
     // then the back
     unsigned int end_dist = (unsigned int)RH_Seq.length() - RH_StartStops.back();
     if(end_dist > (unsigned int)(opts->lowSpacerSize))
@@ -302,15 +307,16 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         // we should look for a DR here
         int part_s, part_e;
         part_s = part_e = 0;
-        //        std::cout << "Check end: " << end_dist << " : " << opts->lowSpacerSize << std::endl;
         stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, (RH_StartStops.back() + opts->lowSpacerSize), (end_dist - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
         if(0 != part_e)
         {
-            if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
+            if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
             {
-                //std::cout << sp.first << " : " << sp.second << " : " << part_s << " : " << part_e << std::endl;
-                RH_StartStops.push_back(part_s);
-                RH_StartStops.push_back(part_e);
+                if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
+                {
+                    RH_StartStops.push_back(part_s);
+                    RH_StartStops.push_back(part_e);
+                }
             }
         }
     }
