@@ -505,7 +505,7 @@ std::string ReadHolder::expand(bool fixStopStarts)
         int main_index = 0;
         int new_index = 0;
         int old_index = 0;
-        int stop_index = (int)RH_Seq.length();
+        int stop_index = (int)RH_Rle.length();
         int next_ss_index = -1;
         StartStopListIterator ss_iter = RH_StartStops.begin();
         

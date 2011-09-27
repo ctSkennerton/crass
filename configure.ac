@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(crass, 0.0.2, c.skennerton@gmail.com)
+AC_INIT(crass, 0.0.3, c.skennerton@gmail.com)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/crass.cpp])
 AC_CONFIG_HEADER([config.h])
@@ -11,7 +11,7 @@ AC_CONFIG_HEADER([config.h])
 AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
 AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
 AC_DEFINE([PACKAGE_MINOR_VERSION],[0],[Define the minor version of the package])
-AC_DEFINE([PACKAGE_REVISION],[2],[Define the revision of the package])
+AC_DEFINE([PACKAGE_REVISION],[3],[Define the revision of the package])
 
 # extra configure options
 #
@@ -48,7 +48,7 @@ AC_PROG_CC
 
 
 # Checks for libraries.
-AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found in $LD_PATH])])
+AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found])])
 
 # Checks for header files.
 AC_HEADER_STDC

@@ -227,6 +227,8 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     {
         // first time we've seen this guy. Make some new objects
         st1 = NM_StringCheck->addString(first_kmer);
+        std::cout<<"New node "<<st1<<std::endl;
+
         first_kmer_node = new CrisprNode(st1);
         
         // add them to the pile
@@ -234,31 +236,44 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     }
     else
     {
+        std::cout<<"known node "<<st1<<std::endl;
+
         // we already have a node for this guy
         first_kmer_node = NM_Nodes[st1];
         (NM_Nodes[st1])->incrementCount();
         
         seen_first = true;
     }
+    
     if(0 == st2)
     {
+
         st2 = NM_StringCheck->addString(second_kmer);
+        std::cout<<"New node "<<st2<<std::endl;
+
         second_kmer_node = new CrisprNode(st2);
         second_kmer_node->setForward(false);
         NM_Nodes[st2] = second_kmer_node;
     }
     else
     {
+        std::cout<<"known node "<<st2<<std::endl;
+
         second_kmer_node = NM_Nodes[st2];
         (NM_Nodes[st2])->incrementCount();
 
         seen_second = true;
     }
     
+    if (*prevNode == NULL) {
+        std::cout<<"previous node is NULL"<<std::endl;
+    }
+    
     // the first kmers pair is the previous node which lay before it therefore bool is true
     // make sure prevNode is not NULL
-    if (*prevNode != NULL && !seen_first) 
+    if (*prevNode != NULL/* && !seen_first*/) 
     {
+        std::cout<<"creating jumping node"<<std::endl;
         (*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
         first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
     }

@@ -1175,13 +1175,13 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             ReadListIterator read_iter = mReads[*drc_iter]->begin();
             while (read_iter != mReads[*drc_iter]->end()) 
             {
-                std::cout << "Group_"<<GID<<" " << (*read_iter)->getHeader() << std::endl << true_DR << std::endl;
-                std::cout << (*read_iter)->getSeq() << std::endl;
-                std::cout << (*read_iter)->splitApart() << std::endl;
+                //std::cout << "Group_"<<GID<<" " << (*read_iter)->getHeader() << std::endl << true_DR << std::endl;
+                //std::cout << (*read_iter)->getSeq() << std::endl;
+                //std::cout << (*read_iter)->splitApart() << std::endl;
 
                 (*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
-                std::cout << (*read_iter)->splitApart() << std::endl;
-                std::cout << ".............." << std::endl;
+                //std::cout << (*read_iter)->splitApart() << std::endl;
+                //std::cout << ".............." << std::endl;
 
                 read_iter++;
             }
