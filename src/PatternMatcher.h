@@ -1,7 +1,9 @@
 /*
- *  bm.h is part of the CRisprASSembler project
+ *  PatternMatcher.h is part of the CRisprASSembler project
+ *  Levensthein code was downloaded from http://www.merriampark.com/ldcpp.htm
+ *  Copyright (c) Merriam Park Software 2009
  *  
- *  This code was downloaded from http://dev-faqs.blogspot.com/2010/05/boyer-moore-algorithm.html
+ *  Boyer-Moore code was downloaded from http://dev-faqs.blogspot.com/2010/05/boyer-moore-algorithm.html
  *  Copyright (c) 2010 dev-faqs.blogspot.com
  *
  *                     A B R A K A D A B R A

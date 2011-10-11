@@ -62,12 +62,12 @@
 
 #define gvNodeF(stream,id1,color){\
     stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" [ color = \"#"<<color<<"\", fillcolor=\"#"<<color<<"\", style= "<<CRASS_DEF_GV_NODE_FILL<<\
-                                                ", shape= sdl_output_to_right, peripheries=0];"<<std::endl;\
+                                                ", shape="<< CRASS_DEF_GV_NODE_SHAPE<<"];"<<std::endl;\
 }
 
 #define gvNodeB(stream,id1,color){\
     stream<<CRASS_DEF_GV_NODE_PREFIX<<id1<<" [ color = \"#"<<color<<"\", fillcolor=\"#"<<color<<"\", style= "<<CRASS_DEF_GV_NODE_FILL<<\
-                                                ", shape= sdl_output_to_left, peripheries=0];"<<std::endl;\
+                                                ", shape="<< CRASS_DEF_GV_NODE_SHAPE<<"];"<<std::endl;\
 }
 
 #define gvCustomNode(stream,id1,cUSTOMsTRING){\

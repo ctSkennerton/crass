@@ -30,8 +30,6 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-#am__append_1 = $(DEBUGFLAGS)
-#am__append_2 = $(SLOGGINGFLAGS)
 bin_PROGRAMS = crass$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -100,18 +98,19 @@ LIBS = -lz
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /Users/uqcskenn/Documents/Projects/crass/missing --run makeinfo
 MKDIR_P = .././install-sh -c -d
+NEATO = yes
 OBJEXT = o
 PACKAGE = crass
 PACKAGE_BUGREPORT = c.skennerton@gmail.com
 PACKAGE_NAME = crass
-PACKAGE_STRING = crass 0.0.2
+PACKAGE_STRING = crass 0.0.3
 PACKAGE_TARNAME = crass
-PACKAGE_VERSION = 0.0.2
+PACKAGE_VERSION = 0.0.3
 PATH_SEPARATOR = :
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = 
-VERSION = 0.0.2
+VERSION = 0.0.3
 abs_builddir = /Users/uqcskenn/Documents/Projects/crass/src
 abs_srcdir = /Users/uqcskenn/Documents/Projects/crass/src
 abs_top_builddir = /Users/uqcskenn/Documents/Projects/crass
@@ -155,9 +154,6 @@ target_alias =
 top_builddir = ..
 top_srcdir = ..
 AM_CXXFLAGS = -Werror -pedantic -Wall -O2 -ggdb
-AM_CPPFLAGS = $(am__append_1) $(am__append_2)
-#DEBUGFLAGS = -DDEBUG
-#SLOGGINGFLAGS = -DSUPER_LOGGING
 crass_SOURCES = PatternMatcher.cpp Rainbow.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp 
 all: all-am
 
@@ -172,9 +168,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  src/Makefile
+	  $(AUTOMAKE) --gnu  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

@@ -11,21 +11,11 @@
 .Nd the CRISPR Assembler.
 .Sh SYNOPSIS             
 .Nm
-\fBgenome
-.Op Fl dhwlnosDSV
+.Op Fl bcdhklnoswxyDSV
+.Op Fl "-dumpReads"
+.Op Fl "-removeHomopolymers"
+.Op Fl "-logToScreen"
 .Ao Em sequence_files Ac
-.Nm 
-\fBreads
-.Op Fl dhklmorsDSV
-.Op Fl "-dumpReads" 
-.Em "READTYPE"  
-.Ao Em sequence_files Ac
-.Pp 
-where READTYPE is one of the following:
-
-.Op Fl "-illumina" 
-.Op Fl "-454" 
-.Op Fl "-sanger"
 
 .Sh DESCRIPTION         
 .Nm
@@ -41,82 +31,45 @@ is a tool for finding and assembling reads from genomic and metagenomic datasets
 searches through the dataset and identifies reads which contain repeated K-mers that are of a specific length and are 
 separated by a spacer sequence.  These possible direct repeats are then curated internally to remove bad matches and 
 then reads containing direct repeats are then outputed for further analysis.  
-.Pp
-The
-.Nm
-assembler uses the direct informtion to determine the linkages between the spacer units and outputs a .contigs file 
-which contains all of the possible variations of the CRISPR based on the forking of the spacer linkages.
 
 .Pp
-.Sh COMMANDS AND OPTIONS
+.Sh OPTIONS
 
 .Bl -tag -width -indent
-.It \fBgenome 
+.It  
 .Nm
-\fBgenome
 .Op Fl hV
+.Op Fl b Ar INT
+.Op Fl c Ar COLOUR_TYPE
 .Op Fl d Ar INT 
-.Op Fl w Ar INT
+.Op Fl k Ar INT
 .Op Fl l Ar INT
 .Op Fl n Ar INT
 .Op Fl o Ar LOCATION
 .Op Fl s Ar INT
-.Op Fl D Ar INT
-.Op Fl S Ar INT
-.Pp
-Use 
-.Nm
-to search a genome or set of contigs for CRISPR elements.
-The algorithm is based on the one described by 
- 
-.Bl -tag -width -indent 
-.It Fl d Ar INT Fl "\^\-minDR" Ar INT             
-The minimim length of the direct repeat to search for [Default: 23] 
-.It Fl D Ar INT Fl "\^\-maxDR" Ar INT             
-The Maximum length of the direct repeat to search for [Default: 47] 
-.It Fl h Ar ""  Fl "\^\-help" Ar ""           
-Output basic usage informtion to screen
-.It Fl w Ar INT Fl "\^\-windowLength" Ar INT            
-The length of the window size for searching a genome.  Must be between 6 - 9 [Default: 8]
-.It Fl l Ar INT Fl "\^\-logLevel" Ar INT
-The level of verbosity to ouput in the
-.Nm 
-log file 
-.It Fl n Ar INT Fl "\^\-minNumRepeats" Ar INT            
-The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real' [Default: 3]
-.It Fl o Ar LOCATION  Fl "\^\-outDir" Ar LOCATION          
-The name of the ouput directory for the output files [Default: .]
-.It Fl s Ar INT Fl "\^\-minSpacer" Ar INT            
-The minimim length of the spacer to search for [Default: 26]
-.It Fl S Ar INT Fl "\^\-maxSpacer" Ar INT          
-The maximim length of the spacer to search for [Default: 50]
-.It Fl V   Ar ""  Fl "\^\-version" Ar ""        
-Print version and copy right information
-.El
-.El
-.Pp
-
-
-.Bl -tag -width -indent
-.It \fBreads
-.Nm 
-\fBreads
-.Op Fl hrV
-.Op Fl d Ar INT 
-.Op Fl k Ar INT
-.Op Fl l Ar INT
-.Op Fl m Ar INT
-.Op Fl o Ar LOCATION
-.Op Fl s Ar INT
+.Op Fl w Ar INT
+.Op Fl x Ar REAL
+.Op Fl y Ar REAL
 .Op Fl D Ar INT
 .Op Fl S Ar INT
 .Op Fl "-dumpReads"
-.Op Fl "-454"
-.Op Fl "-illumina"
-.Op Fl "sanger"
-.Bl -tag -width -indent 
-.It Fl "-454" Ar ""
-Specify that the input files have been sourced from 454 sequencing
+.Op Fl "-removeHomopolymers"
+.Op Fl "-logToScreen"
+ 
+.It Fl b Ar INT Fl "\^\-numBins" Ar INT
+The number of colour bins for the output graph. Default is to have as many colours as there are different values for the coverage of Nodes in the graph.
+.It Fl c Ar COLOUR_TYPE Fl "\^\-graphColour" Ar COLOUR_TYPE
+The colour scheme for the output graph based on the coverage of each spacer in the CRISPR, can be one from:
+.Bl -tag -width -indent
+.It red-blue
+Low coverage spacers are coloured in red and high coverage spaceres are coloured blue. Intermediates are coloured in shades of purple. 
+.It blue-red
+Low coverage spacers are coloured in blue and high coverage spaceres are coloured red. Intermediates are coloured in shades of purple.
+.It green-red-blue 
+Three tone colouring with low coverage spacers in green and high coverage spacers in blue.
+.It red-blue-green
+Three tone colouring with low coverage spacers in blue and high coverage spacers in green.
+.El
 .It Fl d Ar INT Fl "\^\-minDR" Ar INT             
 The minimim length of the direct repeat to search for [Default: 23] 
 .It Fl D Ar INT Fl "\^\-maxDR" Ar INT             
@@ -125,31 +78,35 @@ The Maximum length of the direct repeat to search for [Default: 47]
 Prints all of the reads to file after the search is completed
 .It Fl h Ar ""  Fl "\^\-help" Ar ""           
 Output basic usage informtion to screen
-.It Fl "-illumina" Ar ""
-Specify that the input files have been sourced from illumina sequencing
-.It Fl k Ar INT Fl "\^\-kmerCount" Ar INT            
-The number of kmers at two direct repeats must share to be considered part of the same cluster [Default: 8]
 .It Fl l Ar INT Fl "\^\-logLevel" Ar INT
 The level of verbosity to ouput in the
 .Nm 
 log file 
-.It Fl m Ar INT Fl "\^\-maxMismatches" Ar INT            
-The maximum number of mismatches to allow in the initial search for direct repeats [Default: 0]
+.It Fl "-logToScreen" Ar ""
+Print all logging information to stdout rather than a file
+.It Fl k Ar INT Fl "\^\-kmerCount" Ar INT            
+The number of kmers at two direct repeats must share to be considered part of the same cluster [Default: 12]
+.It Fl n Ar INT Fl "\^\-minNumRepeats" Ar INT            
+The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real' [Default: 3]
+.It Fl "-noScalling" Ar ""
+Use the given spacer and direct repeat ranges when --removeHomopolymers is set.  The default is to use the scale these values based on the values of -x and -y. 
 .It Fl o Ar LOCATION  Fl "\^\-outDir" Ar LOCATION          
 The name of the ouput directory for the output files [Default: .]
-.It Fl r Ar ""  Fl "\^\-reportStats" Ar ""          
-Output a statistics report on the CRISPR found by
-.Nm
 .It Fl s Ar INT Fl "\^\-minSpacer" Ar INT            
 The minimim length of the spacer to search for [Default: 26]
 .It Fl S Ar INT Fl "\^\-maxSpacer" Ar INT          
 The maximim length of the spacer to search for [Default: 50]
-.It Fl "-sanger" Ar ""
-Specify that the input files have been sourced from sanger sequencing
 .It Fl V   Ar ""  Fl "\^\-version" Ar ""        
 Print version and copy right information
+.It Fl w Ar INT Fl "\^\-windowLength" Ar INT            
+The length of the window size for searching a genome.  Must be between 6 - 9 [Default: 8]
+.It Fl x Ar REAL Fl "\^\-spacerScalling" Ar REAL
+A decimal number that represents the reduction in size of the spacer when the --removeHomopolymers option is set [Default: 0.7]
+.It Fl y Ar REAL Fl "\^\-repeatScalling" Ar REAL
+A decimal number that represents the reduction in size of the direct repeat when the --removeHomopolymers option is set [Default: 0.7]
 .El
-.El
+
+
 .Pp
 .\" .Sh ENVIRONMENT      \" May not be needed
 .\" .Bl -tag -width "ENV_VAR_1" -indent \" ENV_VAR_1 is width of the string ENV_VAR_1
@@ -165,12 +122,6 @@ Log file containing information about the last execution of
 .Nm
 .It Pa Cluster_[INT].fa
 Fasta file of all reads from a cluster created when the --dumpReads option is set.  
-.It Pa crass.contigs
-Fasta file containing the assembled CRISPR regions
-.It Pa crass.stats
-Delimited text file containing statistics on the CRISPR found by 
-.Nm "." 
-By default the delimiter is set to "\\t" however this can be changed with -b 
 .El                      
 .Sh DIAGNOSTICS       \" May not be needed
 .Ex -std 

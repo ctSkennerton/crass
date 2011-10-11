@@ -44,6 +44,10 @@
 #include <getopt.h>
 #include "Rainbow.h"
 // --------------------------------------------------------------------
+// General Macros
+// --------------------------------------------------------------------
+#define isNotDecimal(number) (number > 1.0 || number < 0.0)
+// --------------------------------------------------------------------
  // STRING LENGTH / MISMATCH / CLUSTER SIZE PARAMETERS
 // --------------------------------------------------------------------
 #define CRASS_DEF_READ_LENGTH_CUTOFF            (200.0)             // The length of read where the multipattern matcher would become insignificant. 
@@ -56,7 +60,7 @@
 #define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD     (0.75)
 #define CRASS_DEF_KMER_SIZE                     7
 #define CRASS_DEF_K_CLUST_MIN                   12
-#define CRASS_DEF_READ_COUNTER_LOGGER           10001
+#define CRASS_DEF_READ_COUNTER_LOGGER           100000
 #define CRASS_DEF_MAX_READS_FOR_DECISION        1000
 // --------------------------------------------------------------------
 // HARD CODED PARAMS FOR FINDING TRUE DRs
@@ -107,6 +111,8 @@
 #define CRASS_DEF_MAX_DEBUG_LOGGING             10
 #define CRASS_DEF_MAX_LOGGING                   4
 #define CRASS_DEF_DEFAULT_LOGGING               1
+#define CRASS_DEF_HOMOPOLYMER_SCALLING          (0.70)              // the scalling for the spacers and direct repeats when remove homopolymers is set
+
 
 typedef struct {
     bool                detect;                                             // print reads and exit after find
@@ -121,19 +127,14 @@ typedef struct {
     int                 kmer_size;                                          // number of kmers needed to be shared to add to a cluser
     unsigned int        searchWindowLength;                                 // option 'w'used in long read search only
     unsigned int        minNumRepeats;                                      // option 'n'used in long read search only
-    bool                logToScreen;
-    bool                removeHomopolymers;
+    bool                logToScreen;                                        // log to std::cout rather than to the log file
+    bool                removeHomopolymers;                                 // correct for homopolymer errors
     int                 coverageBins;                                       // The number of bins of colours
     RB_TYPE             graphColourType;                                    // the colour type of the graph
+    double              averageSpacerScalling;                              // decimal for reduction in the spacer size
+    double              averageDrScalling;                                  // decimal for the reduction in the direct repeat size
+    bool                dontPerformScalling;                                // turn all scalling off for the user to define variables
 } options;
-
-//enum SequenceType {
-//    sanger,
-//    fourFiveFour,
-//    illumina
-//    };
-
-
 
 // --------------------------------------------------------------------
 #endif // __CRASSDEFINES_H

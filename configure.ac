@@ -19,32 +19,61 @@ AC_DEFINE([PACKAGE_REVISION],[3],[Define the revision of the package])
 
 #DEBUG
 AC_ARG_ENABLE([debug],
-[AS_HELP_STRING([--enable-debug],
-[Turn on debugging preprocessor flags])],
-[case "${enableval}" in
-yes) debug=true ;;
-no)  debug=false ;;
-*) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
-esac],[debug=false])
-AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
+    [AS_HELP_STRING([--enable-debug],
+    [Turn on debugging preprocessor flags])],
+    [case "${enableval}" in
+        yes) debug=true ;;
+        no)  debug=false ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
+    esac],[debug=false])
+
+if test x$debug = xtrue; then
+    AC_DEFINE([DEBUG],[1],[define to 1 for debug statments])
+fi
 
 #SUPER_LOGGING
 AC_ARG_ENABLE([verbose_logging],
-[AS_HELP_STRING([--enable-verbose_logging],
-[Change the verbosity of log file statments to include the function and line numbers])],
-[case "${enableval}" in
-yes) verbose_logging=true ;;
-no)  verbose_logging=false ;;
-*) AC_MSG_ERROR([bad value ${enableval} for --enable-verbose_logging]) ;;
-esac],[verbose_logging=false])
-AM_CONDITIONAL([SLOGGING], [test x$verbose_logging = xtrue])
+    [AS_HELP_STRING([--enable-verbose_logging],
+    [Change the verbosity of log file statments to include the function and line numbers])],
+    [case "${enableval}" in
+        yes) verbose_logging=true ;;
+        no)  verbose_logging=false ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --enable-verbose_logging]) ;;
+    esac],[verbose_logging=false])
+
+if test x$verbose_logging = xtrue; then
+    AC_DEFINE([SUPER_LOGGING],[1],[define to 1 for verbose logging statments])
+fi
+
+# stop image drawing even with graphviz installed 
+AC_ARG_ENABLE([rendering],
+    [AS_HELP_STRING([--disable-rendering],
+    [Prevents images being drawn in the output files])],
+    [case "${enableval}" in
+        yes) rendering=true ;;
+        no)  rendering=false ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --disable-rendering]) ;;
+    esac],[rendering=false])
+
+if test x$rendering = xtrue; then
+    AC_DEFINE([RENDERING],[1],[Defines to 1 if image rendering is to be performed])
+fi
 
 
 
-# Checks for programs.
+# Checks for different libs, headers, functions & programs
+#
+#
+
+# Checks for compilers.
 AC_PROG_CXX
 AC_PROG_CC
 
+# Checks for Graphviz program neato
+AC_CHECK_PROG([NEATO],[neato],[yes],[no])
+if test x$NEATO = xyes; then
+    AC_DEFINE([HAVE_NEATO],[1],[Defines to 1 if the program 'neato' is found in PATH])
+fi 
 
 
 # Checks for libraries.

@@ -1,7 +1,7 @@
 ==============================================================================
 ==============================================================================
 
-    crass -- CRisprASSembler -- revison 0 version 0 subversion 1 (0.0.1)
+    crass -- CRisprASSembler -- version 0 subversion 0 revision 3 (0.0.3)
 
 ==============================================================================
 
@@ -35,14 +35,8 @@ http://dev-faqs.blogspot.com/2010/05/boyer-moore-algorithm.html
 Wu-Manber Search Algorithm:
 http://www.oneunified.net/blog/2008/03/23/
 
-Bitap Search Algorithm:
-http://rational.co.za/libbitap/
-
 Levensthein String Comparison Algorithm:
 http://www.merriampark.com/ldcpp.htm
-
-fqgrep source sode:
-https://github.com/indraniel/fqgrep
 
 CRISPR Recognition Tool (CRT)
 
@@ -62,64 +56,40 @@ make install
 
 
 SYNOPSIS
-crass genome [-dhwlnosDSV] <sequence_files>
-crass reads [-dhklmorsDSV] [--dumpReads] READTYPE <sequence_files>
-
-where READTYPE is one of the following:
-
-[--illumina] [--454] [--sanger] [--genome]
+crass [-bcdhklnoswxyDSV] [--dumpReads] [--removeHomopolymers] [--logToScreen] <sequence_files>
 
 DESCRIPTION
-crass is a tool for finding and assembling reads from genomic and metagenomic datasets that contain Clustered
-Regularly Interspersed Short Palindromic Repeats (CRISPR).  crass searches through the dataset and identifies reads
-which contain repeated K-mers that are of a specific length and are separated by a spacer sequence.  These possible
-direct repeats are then curated internally to remove bad matches and then reads containing direct repeats are then
-outputed for further analysis.
+crass is a tool for finding and assembling reads from genomic and metagenomic datasets that contain
+Clustered Regularly Interspersed Short Palindromic Repeats (CRISPR).  crass searches through the dataset and
+identifies reads which contain repeated K-mers that are of a specific length and are separated by a spacer
+sequence.  These possible direct repeats are then curated internally to remove bad matches and then reads
+containing direct repeats are then outputed for further analysis.
 
-The crass assembler uses the direct informtion to determine the linkages between the spacer units and outputs a .con-
-tigs file which contains all of the possible variations of the CRISPR based on the forking of the spacer linkages.
+OPTIONS
+crass [-hV] [-b INT] [-c COLOUR_TYPE] [-d INT] [-k INT] [-l INT] [-n INT] [-o LOCATION] [-s INT] [-w INT]
+[-x REAL] [-y REAL] [-D INT] [-S INT] [--dumpReads] [--removeHomopolymers] [--logToScreen]
 
-COMMANDS AND OPTIONS
-crass genome [-hV] [-d INT] [-w INT] [-l INT] [-n INT] [-o LOCATION] [-s INT] [-D INT] [-S INT]
+-b INT --numBins INT
+The number of colour bins for the output graph. Default is to have as many colours as there are
+different values for the coverage of Nodes in the graph.
 
-Use crass to search a genome or set of contigs for CRISPR elements.  The algorithm is based on the one
-described by
+-c COLOUR_TYPE --graphColour COLOUR_TYPE
+The colour scheme for the output graph based on the coverage of each spacer in the CRISPR, can be
+one from:
 
--d INT --minDR INT
-The minimim length of the direct repeat to search for [Default: 23]
+    red-blue
+    Low coverage spacers are coloured in red and high coverage spaceres are coloured blue.
+    Intermediates are coloured in shades of purple.
 
--D INT --maxDR INT
-The Maximum length of the direct repeat to search for [Default: 47]
+    blue-red
+    Low coverage spacers are coloured in blue and high coverage spaceres are coloured red.
+    Intermediates are coloured in shades of purple.
 
--h  --help
-Output basic usage informtion to screen
+    green-red-blue
+    Three tone colouring with low coverage spacers in green and high coverage spacers in blue.
 
--w INT --windowLength INT
-The length of the window size for searching a genome.  Must be between 6 - 9 [Default: 8]
-
--l INT --logLevel INT
-The level of verbosity to ouput in the crass log file
-
--n INT --minNumRepeats INT
-The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real'
-[Default: 3]
-
--o LOCATION --outDir LOCATION
-The name of the ouput directory for the output files [Default: .]
-
--s INT --minSpacer INT
-The minimim length of the spacer to search for [Default: 26]
-
--S INT --maxSpacer INT
-The maximim length of the spacer to search for [Default: 50]
-
--V  --version
-Print version and copy right information
-
-crass reads [-hrV] [-d INT] [-k INT] [-l INT] [-m INT] [-o LOCATION] [-s INT] [-D INT] [-S INT] [--dumpReads]
-[--454] [--illumina] [-sanger]
-
---454    Specify that the input files have been sourced from 454 sequencing
+    red-blue-green
+    Three tone colouring with low coverage spacers in blue and high coverage spacers in green.
 
 -d INT --minDR INT
 The minimim length of the direct repeat to search for [Default: 23]
@@ -132,24 +102,27 @@ Prints all of the reads to file after the search is completed
 
 -h  --help
 Output basic usage informtion to screen
---illumina
-Specify that the input files have been sourced from illumina sequencing
-
--k INT --kmerCount INT
-The number of kmers at two direct repeats must share to be considered part of the same cluster
-[Default: 8]
 
 -l INT --logLevel INT
 The level of verbosity to ouput in the crass log file
 
--m INT --maxMismatches INT
-The maximum number of mismatches to allow in the initial search for direct repeats [Default: 0]
+--logToScreen
+Print all logging information to stdout rather than a file
+
+-k INT --kmerCount INT
+The number of kmers at two direct repeats must share to be considered part of the same cluster
+[Default: 12]
+
+-n INT --minNumRepeats INT
+The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real'
+[Default: 3]
+
+--noScalling
+Use the given spacer and direct repeat ranges when --removeHomopolymers is set.  The default is to
+use the scale these values based on the values of -x and -y.
 
 -o LOCATION --outDir LOCATION
 The name of the ouput directory for the output files [Default: .]
-
--r  --reportStats
-Output a statistics report on the CRISPR found by crass
 
 -s INT --minSpacer INT
 The minimim length of the spacer to search for [Default: 26]
@@ -157,11 +130,19 @@ The minimim length of the spacer to search for [Default: 26]
 -S INT --maxSpacer INT
 The maximim length of the spacer to search for [Default: 50]
 
---sanger
-Specify that the input files have been sourced from sanger sequencing
-
 -V  --version
 Print version and copy right information
+
+-w INT --windowLength INT
+The length of the window size for searching a genome.  Must be between 6 - 9 [Default: 8]
+
+-x REAL --spacerScalling REAL
+A decimal number that represents the reduction in size of the spacer when the --removeHomopolymers
+option is set [Default: 0.7]
+
+-y REAL --repeatScalling REAL
+A decimal number that represents the reduction in size of the direct repeat when the --removeHo-
+mopolymers option is set [Default: 0.7]
 
 FILES
 crass.log
@@ -169,13 +150,6 @@ Log file containing information about the last execution of crass
 
 Cluster_[INT].fa
 Fasta file of all reads from a cluster created when the --dumpReads option is set.
-
-crass.contigs
-Fasta file containing the assembled CRISPR regions
-
-crass.stats
-Delimited text file containing statistics on the CRISPR found by crass.  By default the delimiter is set to
-"\t" however this can be changed with -b
 
 DIAGNOSTICS
 The crass utility exits 0 on success, and >0 if an error occurs.

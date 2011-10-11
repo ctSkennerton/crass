@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* define to 1 for debug statments */
+#undef DEBUG
+
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
@@ -24,6 +27,9 @@
 
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
+
+/* Defines to 1 if the program 'neato' is found in PATH */
+#undef HAVE_NEATO
 
 /* Define to 1 if you have the `pow' function. */
 #undef HAVE_POW
@@ -95,8 +101,14 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Defines to 1 if image rendering is to be performed */
+#undef RENDERING
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* define to 1 for verbose logging statments */
+#undef SUPER_LOGGING
 
 /* Version number of package */
 #undef VERSION

@@ -63,24 +63,15 @@
 // user input + system
 //**************************************
 
-void help(void)
-{
-    std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { inputFile ...}"<<std::endl<<std::endl;
-    std::cout<<"for further information try:"<<std::endl;
-    std::cout<<PACKAGE_NAME<<" -h"<<std::endl;
-}
-
-
-
 void usage(void) 
 {
     std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { inputFile ...}"<<std::endl<<std::endl;
     std::cout<<"General Options:"<<std::endl;
     std::cout<< "-h --help                    This help message"<<std::endl;
 //-DDEBUG#ifdef DEBUG
-    std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - 10]"<<std::endl;
+    std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_DEBUG_LOGGING<<"]"<<std::endl;
 //-DDEBUG#else
-//-DDEBUG    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - 4]"<<std::endl;
+//-DDEBUG    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_LOGGING<<"]"<<std::endl;
 //-DDEBUG#endif
     std::cout<< "-o --outDir          <DIR>   Output directory [default: .]"<<std::endl;
     std::cout<< "-V --version                 Program and version information"<<std::endl;
@@ -88,21 +79,27 @@ void usage(void)
     std::cout<<std::endl;
     std::cout<<"CRISPR Identification Options:"<<std::endl;
     std::cout<< "-d --minDR           <INT>   Minimim length of the direct repeat"<<std::endl; 
-    std::cout<< "                             to search for [Default: 23]"<<std::endl;
+    std::cout<< "                             to search for [Default: "<<CRASS_DEF_MIN_DR_SIZE<<"]"<<std::endl;
     std::cout<< "-D --maxDR           <INT>   Maximim length of the direct repeat"<<std::endl; 
-    std::cout<< "                             to search for [Default: 47]"<<std::endl;
+    std::cout<< "                             to search for [Default: "<<CRASS_DEF_MAX_DR_SIZE<<"]"<<std::endl;
     std::cout<< "-n --minNumRepeats   <INT>   Total number of direct repeats in a CRISPR for"<<std::endl;
-    std::cout<< "                             it to be considered real [Default: 3]"<<std::endl;
-    std::cout<< "-s --minSpacer       <INT>   Minimim length of the spacer to search for [Default: 26]"<<std::endl;
-    std::cout<< "-S --maxSpacer       <INT>   Maximim length of the spacer to search for [Default: 50]"<<std::endl;
+    std::cout<< "                             it to be considered real [Default: "<<CRASS_DEF_DEFAULT_MIN_NUM_REPEATS<<"]"<<std::endl;
+    std::cout<< "-s --minSpacer       <INT>   Minimim length of the spacer to search for [Default: "<<CRASS_DEF_MIN_SPACER_SIZE<<"]"<<std::endl;
+    std::cout<< "-S --maxSpacer       <INT>   Maximim length of the spacer to search for [Default: "<<CRASS_DEF_MAX_SPACER_SIZE<<"]"<<std::endl;
     std::cout<< "-w --windowLength    <INT>   The length of the search window. Can only be"<<std::endl; 
-    std::cout<< "                             a number between 6 - 9 [Default: 8]"<<std::endl;
+    std::cout<< "                             a number between "<<CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH<<" - "<<CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH<<" [Default: "<<CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH<<"]"<<std::endl;
+    std::cout<< "-x --spacerScalling  <REAL>  A decimal number that represents the reduction in size of the spacer"<<std::endl;
+    std::cout<< "                             when the --removeHomopolymers option is set [Default: "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<"]"<<std::endl;
+    std::cout<< "-y --repeatScalling  <REAL>  A decimal number that represents the reduction in size of the direct repeat"<<std::endl;
+    std::cout<< "                             when the --removeHomopolymers option is set [Default: "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<"]"<<std::endl;
+    std::cout<< "--noScalling                 Use the given spacer and direct repeat ranges when --removeHomopolymers is set. "<<std::endl;
+    std::cout<< "                             The default is to scale the numbers by "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" or by values set using -x or -y"<<std::endl;
     std::cout<< "--dumpReads                  Print reads containing CRISPR to file after the find stage"<<std::endl;
     std::cout<< "--removeHomopolymers         Correct for homopolymer errors [default: no correction]"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"CRISPR Assembly Options:"<<std::endl;
     std::cout<< "-k --kmerCount       <INT>   The number of the kmers that need to be"<<std::endl; 
-    std::cout<< "                             shared for clustering [Default: 8]"<<std::endl;
+    std::cout<< "                             shared for clustering [Default: "<<CRASS_DEF_K_CLUST_MIN<<"]"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"Graph Output Options: "<<std::endl;
     std::cout<<"-b --numBins          <INT>   The number of colour bins for the output graph."<<std::endl;
@@ -110,7 +107,7 @@ void usage(void)
     std::cout<<"                              different values for the coverage of Nodes in the graph"<<std::endl;
     std::cout<<"-c --graphColour     <TYPE>   Defines the range of colours to use for the output graph"<<std::endl;
     std::cout<<"                              the different types available are:"<<std::endl;
-    std::cout<<"                              read-blue, blue-red, green-red-blue, red-blue-green"<<std::endl;
+    std::cout<<"                              red-blue, blue-red, green-red-blue, red-blue-green"<<std::endl;
 }
 
 void versionInfo(void) 
@@ -128,8 +125,8 @@ int processOptions(int argc, char *argv[], options *opts)
 {
     int c;
     int index;
-    
-    while( (c = getopt_long(argc, argv, "w:hVrl:k:n:o:b:c:d:D:s:S:", long_options, &index)) != -1 ) 
+    bool scalling = false;
+    while( (c = getopt_long(argc, argv, "w:hVrl:k:n:o:b:c:d:D:s:S:x:y:", long_options, &index)) != -1 ) 
     {
         switch(c) 
         {
@@ -244,30 +241,48 @@ int processOptions(int argc, char *argv[], options *opts)
                 break;
             case 'l': 
                 opts->logLevel =  atoi(optarg);
-//#ifdef DEBUG
+//-DDEBUG#ifdef DEBUG
                 if (opts->logLevel > CRASS_DEF_MAX_DEBUG_LOGGING)
                 {
                     std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
                     opts->logLevel = CRASS_DEF_MAX_DEBUG_LOGGING;
                 }
 
-//#else
-//                if(opts->logLevel > CRASS_DEF_MAX_LOGGING)
-//                {
-//                    std::cerr<<"WARNING: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
-//                    opts->logLevel = CRASS_DEF_MAX_LOGGING;
-//                }
-//#endif
+//-DDEBUG#else
+//-DDEBUG                if(opts->logLevel > CRASS_DEF_MAX_LOGGING)
+//-DDEBUG                {
+//-DDEBUG                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
+//-DDEBUG                    opts->logLevel = CRASS_DEF_MAX_LOGGING;
+//-DDEBUG                }
+//-DDEBUG#endif
+                break;
+            case 'x':
+                opts->averageSpacerScalling = atof(optarg);
+                if (isNotDecimal(opts->averageSpacerScalling)) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The average spacer scalling must be a decimal number. Changing to "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" instead of "<<opts->averageSpacerScalling<<std::endl;
+                    opts->averageSpacerScalling = CRASS_DEF_HOMOPOLYMER_SCALLING;
+                }
+                scalling = true;
+                break;
+            case 'y':
+                opts->averageDrScalling = atof(optarg);
+                if (isNotDecimal(opts->averageDrScalling)) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The average spacer scalling must be a decimal number. Changing to "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" instead of "<<opts->averageDrScalling<<std::endl;
+                    opts->averageDrScalling = CRASS_DEF_HOMOPOLYMER_SCALLING;
+                }
+                scalling = true;
                 break;
             case 0:
                 if( strcmp( "dumpReads", long_options[index].name ) == 0 ) opts->detect = true;
                 else if ( strcmp( "removeHomopolymers", long_options[index].name ) == 0 ) opts->removeHomopolymers = true;
                 else if ( strcmp( "logToScreen", long_options[index].name ) == 0 ) opts->logToScreen = true;
-
+                else if ( strcmp( "noScalling", long_options[index].name ) == 0 ) opts->dontPerformScalling = true;
                 break;
             default: 
                 versionInfo(); 
-                help(); 
+                usage(); 
                 exit(1); 
                 break;
         }
@@ -282,9 +297,33 @@ int processOptions(int argc, char *argv[], options *opts)
     // Sanity checks for the high and low spacer size
     if (opts->lowSpacerSize >= opts->highSpacerSize) 
     {
-        std::cerr<<PACKAGE_NAME<<"[ERROR]: The lower spacer bound is bigger than the higher bound ("<<opts->lowSpacerSize<<" >= "<<opts->highSpacerSize<<")"<<std::endl;
+        std::cerr<<PACKAGE_NAME<<" [ERROR]: The lower spacer bound is bigger than the higher bound ("<<opts->lowSpacerSize<<" >= "<<opts->highSpacerSize<<")"<<std::endl;
         usage();
         exit(1);
+    }
+    
+    // sanity check so that the user doesn't specify scalling and no scalling simultaneously
+    if (scalling & opts->dontPerformScalling) {
+        std::cerr<<PACKAGE_NAME<<" [ERROR]: Cannot use scalling (-x -y) in conjunction with --noScalling"<<std::endl;
+        usage();
+        exit(1);
+    }
+    
+    // warn them if they try to scale without specifying to remove homopolymers
+    if (scalling && !opts->removeHomopolymers) 
+    {
+        std::cerr<<PACKAGE_NAME<<" [ERROR]: scalling (-x -y) can only be used in conjunction with --removeHomopolymers"<<std::endl;
+        usage();
+        exit(1);
+    }
+    
+    // scale the direct repeat and spacer lengths if we should
+    if (opts->removeHomopolymers && !opts->dontPerformScalling) 
+    {
+        opts->lowDRsize *= opts->averageDrScalling;
+        opts->highDRsize *= opts->averageDrScalling;
+        opts->lowSpacerSize *= opts->averageSpacerScalling;
+        opts->highSpacerSize *= opts->averageSpacerScalling;
     }
     
     return optind;
@@ -300,7 +339,7 @@ int main(int argc, char *argv[])
     
     if(argc == 1) 
     {
-        help();
+        usage();
         exit(1);
     }
     /* application of default options */
@@ -320,15 +359,18 @@ int main(int argc, char *argv[])
         false,                                  // should we log to screen
         false,                                  // should we remove homopolymers in reads
         -1,                                     // default for the number of bins of colours to create
-        RED_BLUE                                // default colour type of the graph
+        RED_BLUE,                               // default colour type of the graph
+        CRASS_DEF_HOMOPOLYMER_SCALLING,         // average spacer scalling
+        CRASS_DEF_HOMOPOLYMER_SCALLING,         // average direct repeat scalling
+        false                                   // perform scalling by default
     };
 
     int opt_idx = processOptions(argc, argv, &opts);
 
     if (opt_idx >= argc) 
     {
-        std::cerr<<PACKAGE_NAME<<" : [ERROR] Specify sequence files to process!"<<std::endl;
-        help();
+        std::cerr<<PACKAGE_NAME<<" [ERROR]: Specify sequence files to process!"<<std::endl;
+        usage();
         exit(1);
     }
     
@@ -370,30 +412,6 @@ int main(int argc, char *argv[])
         opt_idx++;
     }
     logTimeStamp();
-    
-//    std::string test_read = "CCGTGCTACCCGCAGGACAATACGGCCCCATGGCCGCGTTCCCCGCAGGCGCGGGGATGAACCGCGGGCGCGGGTGCGGGAGGCTTTGCGACGCAGGCGTTCCCCGCAGGCGCGGGGATGAACCGAGCACGGTCAACGCAGGAGGCACCGAGTACCGGCGTTCCCCGCAGGCGCGGGGATGAACCGTCTTTATCGGTAGCTGAGGCTCTTGCGCAAAGGCGTTCCCCGCAGGCGCGGGGATGAACCGAGCATTCAGGCTAAACACTGAGCACTAATGATGCGTTCCCCGCAGGCGCGGGGATGAACCGCCGGAGTAGAGGCAGAAGACGAGACGCCACAAGCGTTCCCCGCAGGCGCGGGGATGAACCGGGTGATAGAGCTT";
-//    std::string test_header = "test_1";
-//    ReadHolder * rh = new ReadHolder(test_read,test_header);
-//    rh->startStopsAdd(35, 63);
-//    rh->startStopsAdd(96, 124);
-//    rh->startStopsAdd(157, 185);
-//    rh->startStopsAdd(218, 246);
-//    rh->startStopsAdd(279, 307);
-//    
-//    StringCheck * sc = new StringCheck();
-//    
-//    NodeManager * nm = new NodeManager("GCGTTCCCCGCAGGCGCGGGGATGAACCG", sc);
-//    
-//    nm->addReadHolder(rh);
-//    
-//    NodeListIterator nm_iter = nm->nodeBegin();
-//    while (nm_iter != nm->nodeEnd()) 
-//    {
-//        (*nm_iter)->printEdges();
-//        nm_iter++;
-//    }
-//    
-//    return 0;
     
     WorkHorse * mHorse = new WorkHorse(&opts);
     mHorse->doWork(seq_files);

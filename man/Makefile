@@ -79,18 +79,19 @@ LIBS = -lz
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /Users/uqcskenn/Documents/Projects/crass/missing --run makeinfo
 MKDIR_P = .././install-sh -c -d
+NEATO = yes
 OBJEXT = o
 PACKAGE = crass
 PACKAGE_BUGREPORT = c.skennerton@gmail.com
 PACKAGE_NAME = crass
-PACKAGE_STRING = crass 0.0.2
+PACKAGE_STRING = crass 0.0.3
 PACKAGE_TARNAME = crass
-PACKAGE_VERSION = 0.0.2
+PACKAGE_VERSION = 0.0.3
 PATH_SEPARATOR = :
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = 
-VERSION = 0.0.2
+VERSION = 0.0.3
 abs_builddir = /Users/uqcskenn/Documents/Projects/crass/man
 abs_srcdir = /Users/uqcskenn/Documents/Projects/crass/man
 abs_top_builddir = /Users/uqcskenn/Documents/Projects/crass
@@ -146,9 +147,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  man/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  man/Makefile
+	  $(AUTOMAKE) --gnu  man/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

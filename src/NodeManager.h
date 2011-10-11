@@ -65,44 +65,57 @@ typedef std::map<SpacerKey, SpacerInstance *> SpacerList;
 typedef std::map<SpacerKey, SpacerInstance *>::iterator SpacerListIterator;
 
 typedef std::vector<CrisprNode *> NodeVector;
-
+typedef std::pair<CrisprNode * , CrisprNode *> CrisprNodePair;
 #pragma mark Class WalkingManager
 class WalkingManager {
-    CrisprNode * WM_Curr_Node;
+    CrisprNodePair WM_WalkingElem;
     bool WM_Direction;
     EDGE_TYPE WM_Wanted_Edge_Type;
     
 public:
 #pragma mark Constructor/Destructor
-    WalkingManager(CrisprNode * currNode, EDGE_TYPE incommingEdge)
+    WalkingManager(CrisprNode * firstNode, CrisprNode * secondNode, EDGE_TYPE incommingEdge)
     {
-        WM_Curr_Node = currNode;
+        WM_WalkingElem.first = firstNode;
+        WM_WalkingElem.second = secondNode;
         WM_Wanted_Edge_Type = incommingEdge;
     }
     WalkingManager(void){}
     ~WalkingManager(void){}
 #pragma mark -
 #pragma mark Getters/Setters    
-    CrisprNode * getCurrentNode(void)
+    CrisprNode * getFirstNode(void)
     {
-        return WM_Curr_Node;
+        return WM_WalkingElem.first;
     }
-    
+    CrisprNode * getSecondNode(void)
+    {
+        return WM_WalkingElem.second;
+    }
+    CrisprNodePair getWalkingElem(void)
+    {
+        return WM_WalkingElem;
+    }
     EDGE_TYPE getEdgeType(void)
     {
         return WM_Wanted_Edge_Type;
     }
-    
-    void setCurrNode(CrisprNode * c)
+    void setFirstNode(CrisprNode * fn)
     {
-        WM_Curr_Node = c;
+        WM_WalkingElem.first = fn;
     }
-    
+    void setSecontNode(CrisprNode * sn)
+    {
+        WM_WalkingElem.second = sn;
+    }
+    void setWalkingElem(CrisprNodePair np)
+    {
+        WM_WalkingElem = np;
+    }
     void setWantedEdge(EDGE_TYPE e)
     {
         WM_Wanted_Edge_Type = e;
     }
-    
 };
 
 #pragma mark -
@@ -110,7 +123,7 @@ public:
 class NodeManager {
     public:
 #pragma mark Constructor/Destructor
-        NodeManager(std::string drSeq, StringCheck * stringCheck, const options * userOpts);
+        NodeManager(std::string drSeq, const options * userOpts);
         ~NodeManager(void);
 
 #pragma mark -
@@ -142,6 +155,7 @@ class NodeManager {
     bool getEdge(WalkingManager * walkElem, CrisprNode * node, EDGE_TYPE * et);
     bool stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprNode ** detatchDelay);
     void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
+    void countEdgesForType(int * count, CrisprNode * currNode, EDGE_TYPE edgeType);
     // Cleaning
 #pragma mark -
 #pragma mark Cleaning
@@ -168,7 +182,7 @@ class NodeManager {
         NodeList NM_Nodes;                    // list of CrisprNodes this manager manages
         SpacerList NM_Spacers;                // list of all the spacers
         ReadList NM_ReadList;                 // list of readholders
-        StringCheck * NM_StringCheck;         // pointer to the string check object 
+        StringCheck NM_StringCheck;           // string check object for unique strings 
         Rainbow NM_Rainbow;                   // the Rainbow class for making colours
         int NM_MaxCoverage;                   // The maximum coverage of any of the CrisprNodes managed 
         int NM_MinCoverage;                   // The minimum coverage of any of the CrisprNodes managed

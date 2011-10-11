@@ -100,7 +100,7 @@ bool isRepeatLowComplexity(std::string& repeat);
 #pragma mark -
 #pragma mark ReadHolder Interface
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder);
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder, const options& opts);
 
 //#pragma mark -
 //#pragma mark Utilities

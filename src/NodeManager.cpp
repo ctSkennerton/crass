@@ -43,6 +43,7 @@
 #include <fstream>
 
 // local includes
+#include <config.h>
 #include "NodeManager.h"
 #include "LoggerSimp.h"
 #include "crassDefines.h"
@@ -55,13 +56,12 @@
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
 
-NodeManager::NodeManager(std::string drSeq, StringCheck * strCheck, const options * userOpts)
+NodeManager::NodeManager(std::string drSeq, const options * userOpts)
 {
     //-----
     // constructor
     //
     NM_DirectRepeatSequence = drSeq;
-    NM_StringCheck = strCheck;
     NM_MinCoverage = 1000000;
     NM_MaxCoverage = 0;
     NM_opts = userOpts;
@@ -97,6 +97,7 @@ NodeManager::~NodeManager(void)
         spacer_iter++;
     }
     NM_Spacers.clear();
+
 }
 
 #pragma mark -
@@ -129,15 +130,15 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
     std::string working_str;
     CrisprNode * prev_node = NULL;
 
-    std::cout<<"--------------------------------------------------"<<std::endl;
-    std::cout<<RH->getHeader()<<std::endl;
-    StartStopListIterator ss_iter_test = RH->begin();
-    while (ss_iter_test != RH->end()) {
-        std::cout<<*ss_iter_test<<',';
-        ss_iter_test++;
-    }
-    std::cout<<std::endl;
-    std::cout<<RH->splitApart()<<std::endl;
+    //std::cout<<"--------------------------------------------------"<<std::endl;
+    //std::cout<<RH->getHeader()<<std::endl;
+//    StartStopListIterator ss_iter_test = RH->begin();
+//    while (ss_iter_test != RH->end()) {
+//        std::cout<<*ss_iter_test<<',';
+//        ss_iter_test++;
+//    }
+//    std::cout<<std::endl;
+//    std::cout<<RH->splitApart()<<std::endl;
 
     if(RH->getFirstSpacer(&working_str))
     {
@@ -152,7 +153,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
             addSecondCrisprNode(&prev_node, working_str);
         }
         // get all the spacers in the middle
-        std::cout<<RH->getSeqLength()<<" == "<<(int)RH->back() + 1<<std::endl;
+        //std::cout<<RH->getSeqLength()<<" == "<<(int)RH->back() + 1<<std::endl;
         //check to see if we end with a direct repeat or a spacer
         if (RH->getSeqLength() == (int)RH->back() + 1) 
         {
@@ -168,7 +169,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
             // so that on the final time we only cut the first kmer            
             while (RH->getLastSpacerPos() < (int)RH->getStartStopListSize() - 1) 
             {
-                std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
+                //std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
                 RH->getNextSpacer(&working_str);
                 addCrisprNodes(&prev_node, working_str);
             } 
@@ -176,7 +177,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
             // get our last spacer
             if (RH->getNextSpacer(&working_str)) 
             {
-                std::cout<<working_str<<std::endl;
+                //std::cout<<working_str<<std::endl;
                 addFirstCrisprNode(&prev_node, working_str);
             } 
             else 
@@ -209,7 +210,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     }
     std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
     std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
-    std::cout<<"B: "<<first_kmer<<" : "<<second_kmer<<std::endl;
+    //std::cout<<"B: "<<first_kmer<<" : "<<second_kmer<<std::endl;
     
     CrisprNode * first_kmer_node;
     CrisprNode * second_kmer_node;
@@ -219,15 +220,15 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     bool seen_second = false;
 
     // check to see if these kmers are already stored
-    StringToken st1 = NM_StringCheck->getToken(first_kmer);
-    StringToken st2 = NM_StringCheck->getToken(second_kmer);
+    StringToken st1 = NM_StringCheck.getToken(first_kmer);
+    StringToken st2 = NM_StringCheck.getToken(second_kmer);
 
     // if they have been added previously then token != 0
     if(0 == st1)
     {
         // first time we've seen this guy. Make some new objects
-        st1 = NM_StringCheck->addString(first_kmer);
-        std::cout<<"New node "<<st1<<std::endl;
+        st1 = NM_StringCheck.addString(first_kmer);
+        //std::cout<<"New node "<<st1<<std::endl;
 
         first_kmer_node = new CrisprNode(st1);
         
@@ -236,7 +237,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     }
     else
     {
-        std::cout<<"known node "<<st1<<std::endl;
+        //std::cout<<"known node "<<st1<<std::endl;
 
         // we already have a node for this guy
         first_kmer_node = NM_Nodes[st1];
@@ -248,8 +249,8 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     if(0 == st2)
     {
 
-        st2 = NM_StringCheck->addString(second_kmer);
-        std::cout<<"New node "<<st2<<std::endl;
+        st2 = NM_StringCheck.addString(second_kmer);
+        //std::cout<<"New node "<<st2<<std::endl;
 
         second_kmer_node = new CrisprNode(st2);
         second_kmer_node->setForward(false);
@@ -257,7 +258,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     }
     else
     {
-        std::cout<<"known node "<<st2<<std::endl;
+        //std::cout<<"known node "<<st2<<std::endl;
 
         second_kmer_node = NM_Nodes[st2];
         (NM_Nodes[st2])->incrementCount();
@@ -266,14 +267,14 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     }
     
     if (*prevNode == NULL) {
-        std::cout<<"previous node is NULL"<<std::endl;
+        //std::cout<<"previous node is NULL"<<std::endl;
     }
     
     // the first kmers pair is the previous node which lay before it therefore bool is true
     // make sure prevNode is not NULL
     if (*prevNode != NULL/* && !seen_first*/) 
     {
-        std::cout<<"creating jumping node"<<std::endl;
+        //std::cout<<"creating jumping node"<<std::endl;
         (*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
         first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
     }
@@ -293,7 +294,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     if(NM_Spacers.find(this_sp_key) == NM_Spacers.end())
     {
         // new instance
-        StringToken sp_str_token = NM_StringCheck->addString(workingString);
+        StringToken sp_str_token = NM_StringCheck.addString(workingString);
         curr_spacer = new SpacerInstance(sp_str_token, first_kmer_node, second_kmer_node);
         NM_Spacers[this_sp_key] = curr_spacer;
     }
@@ -314,18 +315,18 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
     }
     std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
     CrisprNode * second_kmer_node;
-    std::cout<<"S: "<<second_kmer<<std::endl;
+    //std::cout<<"S: "<<second_kmer<<std::endl;
     // we need to know if we've seen both of the guys before
     bool seen_second = false;
     
     // check to see if these kmers are already stored
-    StringToken st1 = NM_StringCheck->getToken(second_kmer);
+    StringToken st1 = NM_StringCheck.getToken(second_kmer);
     
     // if they have been added previously then token != 0
     if(0 == st1)
     {
         // first time we've seen this guy. Make some new objects
-        st1 = NM_StringCheck->addString(second_kmer);
+        st1 = NM_StringCheck.addString(second_kmer);
         second_kmer_node = new CrisprNode(st1);
         
         // add them to the pile
@@ -351,18 +352,18 @@ void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workin
     }
     std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
     CrisprNode * first_kmer_node;
-    std::cout<<"F: "<<first_kmer<<std::endl;
+    //std::cout<<"F: "<<first_kmer<<std::endl;
     // we need to know if we've seen both of the guys before
     bool seen_first = false;
     
     // check to see if these kmers are already stored
-    StringToken st1 = NM_StringCheck->getToken(first_kmer);
+    StringToken st1 = NM_StringCheck.getToken(first_kmer);
     
     // if they have been added previously then token != 0
     if(0 == st1)
     {
         // first time we've seen this guy. Make some new objects
-        st1 = NM_StringCheck->addString(first_kmer);
+        st1 = NM_StringCheck.addString(first_kmer);
         first_kmer_node = new CrisprNode(st1);
         
         // add them to the pile
@@ -421,7 +422,7 @@ void NodeManager::walk(void)
                     {
                         break;
                     }
-                    std::cout<<"Current node: "<<(walk_elem->getCurrentNode())->getID()<<std::endl;
+                    std::cout<<"Current node: "<<(walk_elem->getFirstNode())->getID()<<" -- "<< (walk_elem->getSecondNode())->getID()<<std::endl;
                     walk_steps++;
 
                 } while (stepForType(walk_elem, &wanted_edge, &detatch_delay));
@@ -454,27 +455,33 @@ bool NodeManager::getEdge(WalkingManager * walkElem, CrisprNode * currNode, EDGE
 {
     // initaliser for the walking element 
     // from the cap node get the only edge and set that in the walking element
+    
+    
+    // if there is a single forward jumping edge or single backward
+    // jumping edge the node is a dead branch and needs to be cleaned
     if (((currNode)->getEdges(CN_EDGE_JUMPING_F))->size() == 1)
     {
-        walkElem->setWantedEdge(CN_EDGE_JUMPING_F);
-        *et = CN_EDGE_JUMPING_F;
-    }
-    
-    else if((currNode->getEdges(CN_EDGE_FORWARD)->size()) == 1)
-    {
-        walkElem->setWantedEdge(CN_EDGE_FORWARD);
-        *et = CN_EDGE_FORWARD;
+        currNode->detachNode();
+        return false;
     }
     
     else if((currNode->getEdges(CN_EDGE_JUMPING_B)->size()) == 1)
     {
-        walkElem->setWantedEdge(CN_EDGE_JUMPING_B);
-        *et = CN_EDGE_JUMPING_B;
+        currNode->detachNode();
+        return false;
     }
     
+    // so if there is a single inner edge we've got our walking 
+    // element but now we need to get the jumping edge equivelent
+    else if((currNode->getEdges(CN_EDGE_FORWARD)->size()) == 1)
+    {
+        walkElem->setWantedEdge(CN_EDGE_JUMPING_F);
+        *et = CN_EDGE_FORWARD;
+    }
+
     else if((currNode->getEdges(CN_EDGE_BACKWARD)->size()) == 1)
     {
-        walkElem->setWantedEdge(CN_EDGE_BACKWARD);
+        walkElem->setWantedEdge(CN_EDGE_JUMPING_B);
         *et = CN_EDGE_BACKWARD;
     }
     else
@@ -482,7 +489,11 @@ bool NodeManager::getEdge(WalkingManager * walkElem, CrisprNode * currNode, EDGE
         logError("Trying to initialize a walking element using a node that is not a cap");
         return false;
     }    
-    walkElem->setCurrNode(currNode);
+
+    // get the second node for the walking element
+    edgeListIterator edge_iter = (currNode->getEdges(*et))->begin();
+    walkElem->setFirstNode(currNode);
+    walkElem->setSecontNode(edge_iter->first);
     
     
     //
@@ -491,19 +502,31 @@ bool NodeManager::getEdge(WalkingManager * walkElem, CrisprNode * currNode, EDGE
 
 bool NodeManager::stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprNode ** detatchDelay)
 {
-    edgeList * edge = (walkElem->getCurrentNode())->getEdges(*et);
+    // get all of the edges for our wanted edge type from the second node in the walking element
+    edgeList * edge = (walkElem->getSecondNode())->getEdges(walkElem->getEdgeType());
+    
+    switch (edge->size()) {
+        case 1:
+            // there is only a single edge for the wanted type so we have a linear length
+            break;
+            
+        default:
+            // there is more than a single edge therefore we have a cross node
+            break;
+    }
+    
     if (edge->size() == 1) 
     {
         edgeListIterator edge_iter = edge->begin();
         // if the node is attached
         if (edge_iter->second) 
         {
-            // add out current node to the detach delay pointer
-            *detatchDelay = walkElem->getCurrentNode();
+            // add the first node of the current walking element to the detach delay pointer
+            *detatchDelay = walkElem->getFirstNode();
             
             // add the new node to the walking element
-            walkElem->setCurrNode(edge_iter->first);
-            // want opposite of what cam in
+            walkElem->setFirstNode(edge_iter->first);
+            // want opposite of what came in
             switch (*et) 
             {
                 case CN_EDGE_BACKWARD:
@@ -553,13 +576,11 @@ void NodeManager::findCapNodes(NodeVector * capNodes)
     {
         int count = 0;
         
-        count += ((all_node_iter->second)->getEdges(CN_EDGE_JUMPING_F))->size();
-
-        count += ((all_node_iter->second)->getEdges(CN_EDGE_FORWARD)->size());
-
-        count += ((all_node_iter->second)->getEdges(CN_EDGE_JUMPING_B)->size());
-
-        count += ((all_node_iter->second)->getEdges(CN_EDGE_BACKWARD)->size());
+        // get the count of all attached nodes
+        countEdgesForType(&count, all_node_iter->second, CN_EDGE_FORWARD);
+        countEdgesForType(&count, all_node_iter->second, CN_EDGE_BACKWARD);
+        countEdgesForType(&count, all_node_iter->second, CN_EDGE_JUMPING_B);
+        countEdgesForType(&count, all_node_iter->second, CN_EDGE_JUMPING_F);
         
         if (count == 1) 
         {
@@ -571,6 +592,20 @@ void NodeManager::findCapNodes(NodeVector * capNodes)
     }
     std::cout<<std::endl;
 }
+
+void NodeManager::countEdgesForType(int * count, CrisprNode * currNode, EDGE_TYPE edgeType)
+{
+    edgeList * curr_list = currNode->getEdges(edgeType);
+    edgeListIterator edge_iter = curr_list->begin();
+    while (edge_iter != curr_list->end()) 
+    {
+        if(edge_iter->second)
+        {
+            (*count)++;
+        }
+    }
+}
+
 // Cleaning
 #pragma mark -
 #pragma mark Cleaning
@@ -648,7 +683,7 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
     while (nl_iter != nodeEnd()) 
     {
         // check whether we should print
-        if((nl_iter->second)->isAttached() || showDetached)
+        if((nl_iter->second)->isAttached() | showDetached)
         {
             printNodeAttributes(dataOut, nl_iter->second ,NM_Rainbow.getColour((nl_iter->second)->getCoverage()));
         }
@@ -660,9 +695,9 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
     while (nl_iter != nodeEnd()) 
     {
         // check whether we should print
-        if((nl_iter->second)->isAttached() || showDetached)
+        if((nl_iter->second)->isAttached() | showDetached)
         {
-            std::cout<<(nl_iter->second)->getID()<<" : "<<NM_StringCheck->getString( (nl_iter->second)->getID() )<<std::endl;
+            std::cout<<(nl_iter->second)->getID()<<" : "<<NM_StringCheck.getString( (nl_iter->second)->getID() )<<std::endl;
             (nl_iter->second)->printEdges(dataOut, showDetached, printBackEdges );
         }
         nl_iter++;

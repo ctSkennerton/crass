@@ -57,7 +57,7 @@ bool CrisprNode::addEdge(CrisprNode * parterNode, EDGE_TYPE type)
     // Add a new edge return success if the partner has been added
     // 
     
-    logInfo("Adding "<<sayEdgeTypeLikeAHuman(type)<<" edge from "<<getID()<<" to "<<parterNode->getID(), 1);
+    //logInfo("Adding "<<sayEdgeTypeLikeAHuman(type)<<" edge from "<<getID()<<" to "<<parterNode->getID(), 1);
 
     // get the right edge list
     edgeList * add_list = getEdges(type);
@@ -69,11 +69,11 @@ bool CrisprNode::addEdge(CrisprNode * parterNode, EDGE_TYPE type)
         (*add_list)[parterNode] = true;
         return true;
     }
-    else
-    {
-        // already got this guy
-        logError("Adding edge ("<<parterNode->getID()<<") twice to CN ("<<getID()<<")");
-    }
+//    else
+//    {
+//        // already got this guy
+//        logError("Adding edge ("<<parterNode->getID()<<") twice to CN ("<<getID()<<")");
+//    }
     return false;
 }
 

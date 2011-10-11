@@ -597,7 +597,7 @@ bool ReadHolder::getNextDR(std::string * retStr)
     int dist = end_cut - start_cut;
     if(0 != dist)
     {
-        *retStr = RH_Seq.substr(start_cut, dist+1);
+        *retStr = RH_Seq.substr(start_cut, dist + 1);
         RH_LastDREnd+=2;
         return true;
     }

@@ -1,6 +1,9 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* define to 1 for debug statments */
+/* #undef DEBUG */
+
 /* Define to 1 if you have the <fcntl.h> header file. */
 #define HAVE_FCNTL_H 1
 
@@ -25,6 +28,9 @@
 
 /* Define to 1 if you have the `memset' function. */
 #define HAVE_MEMSET 1
+
+/* Defines to 1 if the program 'neato' is found in PATH */
+#define HAVE_NEATO 1
 
 /* Define to 1 if you have the `pow' function. */
 #define HAVE_POW 1
@@ -85,22 +91,28 @@
 #define PACKAGE_NAME "crass"
 
 /* Define the revision of the package */
-#define PACKAGE_REVISION 2
+#define PACKAGE_REVISION 3
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "crass 0.0.2"
+#define PACKAGE_STRING "crass 0.0.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "crass"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.0.2"
+#define PACKAGE_VERSION "0.0.3"
+
+/* Defines to 1 if image rendering is to be performed */
+/* #undef RENDERING */
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
+/* define to 1 for verbose logging statments */
+/* #undef SUPER_LOGGING */
+
 /* Version number of package */
-#define VERSION "0.0.2"
+#define VERSION "0.0.3"
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

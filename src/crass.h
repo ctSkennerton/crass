@@ -52,6 +52,8 @@
 // user input + system
 //**************************************
 
+
+
 static struct option long_options [] = {
 
     {"minDR", required_argument, NULL, 'd'},
@@ -72,13 +74,14 @@ static struct option long_options [] = {
     {"removeHomopolymers",no_argument,NULL,0},
     {"numBins",required_argument,NULL,'b'},
     {"graphColour",required_argument,NULL,'c'},
+    {"spacerScalling",required_argument,NULL,'x'},
+    {"repeatScalling",required_argument,NULL,'y'},
+    {"noScalling",required_argument,NULL,'0'},
     {NULL, no_argument, NULL, 0}
 };
 
 
 void  usage(void);
-
-void  help(void);
 
 void  versionInfo(void);
 

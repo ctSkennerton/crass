@@ -98,7 +98,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
     gzclose(fp);
     
     *aveReadLength = total_base / read_counter;
-    logInfo("Average read length (of the first"<< CRASS_DEF_MAX_READS_FOR_DECISION<<" reads): "<< *aveReadLength, 2);
+    logInfo("Average read length (of the first "<< CRASS_DEF_MAX_READS_FOR_DECISION<<" reads): "<< *aveReadLength, 2);
     if((total_base / read_counter) > CRASS_DEF_READ_LENGTH_CUTOFF)
     {
         return LONG_READ;
@@ -109,7 +109,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
 
 // CRT search
 
-void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patternsHash, lookupTable &readsFound)
+void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound)
 {
     //-----
     // Code lifted from CRT, ported by Connor and hacked by Mike.
@@ -128,13 +128,15 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
         
         if (read_counter % CRASS_DEF_READ_COUNTER_LOGGER == 0) 
         {
-            std::cout<<"Processed "<<read_counter<<std::endl;
+            std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<std::endl;
         }
         
         // grab a readholder
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
-        //tmp_holder->setSequence(seq->seq.s);
         //tmp_holder->setHeader(seq->name.s);
+        //tmp_holder->setSequence(seq->seq.s);
+        
+        
         bool match_found = false;
 
         if (opts.removeHomopolymers)
@@ -192,7 +194,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
                 unsigned int found_pattern_start_index = beginSearch + (unsigned int)pattern_in_text_index;
                 
                 tmp_holder->startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength);
-                
+                //std::cout<<pattern<<std::endl;
                 scanRight(tmp_holder, pattern, opts.lowSpacerSize, 24);
             }
 
@@ -221,10 +223,12 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
                         logInfo(tmp_holder->getSeq(), 9);
                         logInfo("-------------------", 7)
 //-DDEBUG#endif                            
-                        match_found = true;
+
                         //ReadHolder * candidate_read = new ReadHolder();
-                        //candidate_read = tmp_holder;
-                        addReadHolder(mReads, mStringCheck, tmp_holder);
+                        //*candidate_read = *tmp_holder;
+                        //addReadHolder(mReads, mStringCheck, candidate_read);
+                        addReadHolder(mReads, mStringCheck, tmp_holder, opts);
+                        match_found = true;
                         patternsHash[tmp_holder->repeatStringAt(0)] = true;
                         readsFound[tmp_holder->getHeader()] = true;
                         break;
@@ -254,7 +258,7 @@ void longReadSearch(const char *inputFastq, const options& opts, ReadMap * mRead
 
 }
 
-void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& patternsHash, lookupTable& readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
@@ -268,7 +272,7 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
     {
         if (read_counter % CRASS_DEF_READ_COUNTER_LOGGER == 0) 
         {
-            logInfo("Processed "<<read_counter, 4);
+            std::cout<<"["<<PACKAGE_NAME<<"_shortReadFinder]: "<<"Processed "<<read_counter<<std::endl;
         }
         
         bool match_found = false;
@@ -358,7 +362,7 @@ void shortReadSearch(const char *inputFastq, const options &opts, lookupTable &p
 //-DDEBUG#endif
                             patternsHash[tmp_holder->repeatStringAt(0)] = true;
                             readsFound[tmp_holder->getHeader()] = true;
-                            addReadHolder(mReads, mStringCheck, tmp_holder);
+                            addReadHolder(mReads, mStringCheck, tmp_holder, opts);
                             break;
                         }
                     }
@@ -447,7 +451,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
                     DR_end = (unsigned int)read.length() - 1;
                 }
                 tmp_holder->startStopsAdd(start_pos, DR_end);
-                addReadHolder(mReads, mStringCheck, tmp_holder);
+                addReadHolder(mReads, mStringCheck, tmp_holder, opts);
             }
         }
         else
@@ -945,12 +949,12 @@ bool isRepeatLowComplexity(std::string& repeat)
 #pragma mark -
 #pragma mark ReadHolder Interface
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder)
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder, const options& opts)
 {
 
-    //add the header for the matched readFOG
-    
-    //logInfo(tmpReadholder->repeatStringAt(2), 8);
+    if (opts.removeHomopolymers) {
+        tmpReadholder->decode();
+    }
     std::string dr_lowlexi = tmpReadholder->DRLowLexi();
     //logInfo(dr_lowlexi, 8);
     StringToken st = mStringCheck->getToken(dr_lowlexi);
