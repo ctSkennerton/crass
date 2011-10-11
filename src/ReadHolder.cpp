@@ -47,8 +47,8 @@
 #include "LoggerSimp.h"
 
 
-#pragma mark -
-#pragma mark Getters
+
+
 // the input must be an even number which will be the start of the repeat
 unsigned int ReadHolder::getRepeatAt(unsigned int i)
 {
@@ -150,8 +150,8 @@ int ReadHolder::averageRepeatLength()
     return sum/numRepeats();
 }
 
-#pragma mark -
-#pragma mark Element access
+
+
 
 void ReadHolder::startStopsAdd(unsigned int i, unsigned int j)
 {
@@ -163,8 +163,8 @@ void ReadHolder::startStopsAdd(unsigned int i, unsigned int j)
     this->RH_StartStops.push_back(j);
 }
 
-#pragma mark -
-#pragma mark StartStopList 
+
+
 
 // TODO +1?
 void ReadHolder::removeRepeat(unsigned int val)
@@ -332,8 +332,8 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
     }
 }
 
-#pragma mark -
-#pragma mark String functions
+
+
 
 std::string ReadHolder::DRLowLexi(void)
 {
@@ -694,8 +694,8 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     return true;
 }
 
-#pragma mark -
-#pragma mark Printing
+
+
 std::string ReadHolder::toStringInColumns(void)
 {
     //-----

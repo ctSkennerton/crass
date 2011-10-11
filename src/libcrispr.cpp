@@ -70,7 +70,7 @@ THIS JUST DEFINES A BUNCH OF **templated** structs
 */
     KSEQ_INIT(gzFile, gzread)
 
-#pragma mark Search Functions
+
 READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
 {
     //-----
@@ -462,8 +462,8 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 
-#pragma mark -
-#pragma mark Repeat QC
+
+
 
 int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange)
 {
@@ -946,8 +946,8 @@ bool isRepeatLowComplexity(std::string& repeat)
     return false;
 }
 
-#pragma mark -
-#pragma mark ReadHolder Interface
+
+
 
 void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder, const options& opts)
 {
@@ -967,8 +967,8 @@ void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tm
     (*mReads)[st]->push_back(tmpReadholder);
 }
 
-//#pragma mark -
-//#pragma mark Utilities
+//
+//
 //// turn our map into a vector using just the keys
 //void map2Vector(lookupTable& patternsHash, std::vector<std::string>& patterns)
 //{

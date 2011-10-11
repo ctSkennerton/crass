@@ -100,8 +100,8 @@ NodeManager::~NodeManager(void)
 
 }
 
-#pragma mark -
-#pragma mark Adding read holders & creating crispr nodes
+
+
 bool NodeManager::addReadHolder(ReadHolder * RH)
 {
     //-----
@@ -389,8 +389,8 @@ void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workin
 }
 
 // Walking
-#pragma mark -
-#pragma mark Walking
+
+
 void NodeManager::walk(void)
 {
     // get the cap nodes
@@ -607,8 +607,8 @@ void NodeManager::countEdgesForType(int * count, CrisprNode * currNode, EDGE_TYP
 }
 
 // Cleaning
-#pragma mark -
-#pragma mark Cleaning
+
+
 void NodeManager::cleanGraph(void)
 {
     //-----
@@ -625,8 +625,8 @@ void NodeManager::cleanGraph(void)
 }
 
 // Making purdy colours
-#pragma mark -
-#pragma mark Colouring
+
+
 void NodeManager::setUpperAndLowerCoverage(void)
 {
     // loop through all of the nodes and determine the upper and lower dounds for our graph
@@ -668,8 +668,8 @@ void NodeManager::setColourLimits(void)
 }
 
 // Printing / IO
-#pragma mark -
-#pragma mark Printing & IO
+
+
 void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges)
 {
     //-----
