@@ -76,7 +76,7 @@ enum side{rightSide, leftSide};
 //**************************************
 // search functions
 //**************************************
-#pragma mark Search Functions
+
 READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength);
 
 void longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
@@ -86,8 +86,8 @@ void shortReadSearch(const char *input_fastq, const options &opts, lookupTable &
 void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 
 
-#pragma mark -
-#pragma mark Repeat QC
+
+
 int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange);
 
 unsigned int extendPreRepeat(ReadHolder* tmp_holder, int searchWindowLength, int minSpacerLength);
@@ -97,13 +97,13 @@ bool qcFoundRepeats(ReadHolder * tmp_holder);
 bool isRepeatLowComplexity(std::string& repeat);
 
 
-#pragma mark -
-#pragma mark ReadHolder Interface
+
+
 
 void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder, const options& opts);
 
-//#pragma mark -
-//#pragma mark Utilities
+//
+//
 //
 //void map2Vector(lookupTable &patterns_hash, std::vector<std::string> &patterns);
 

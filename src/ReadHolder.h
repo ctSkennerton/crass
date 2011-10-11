@@ -56,8 +56,8 @@ typedef std::vector<unsigned int>::reverse_iterator StartStopListRIterator;
 class ReadHolder 
 {
     public:
-#pragma mark -
-#pragma mark Constructor/Destructor
+
+
         ReadHolder() 
         { 
             RH_LastDREnd = 0; 
@@ -93,8 +93,8 @@ class ReadHolder
             RH_Header.clear();
             RH_Rle.clear();
         }
-#pragma mark -
-#pragma mark Getters
+
+
     
         //----
         // Getters
@@ -212,8 +212,8 @@ class ReadHolder
     
         int averageRepeatLength(void);
 
-#pragma mark -
-#pragma mark Setters
+
+
         //----
         //setters
         // 
@@ -278,15 +278,15 @@ class ReadHolder
         //----
         // Element access to the start stop list
         //
-#pragma mark -
-#pragma mark Element access
+
+
         int startStopsAt(int i)
         {
             return this->RH_StartStops.at(i);
         }        
         void startStopsAdd(unsigned int, unsigned int);
-#pragma mark -
-#pragma mark StartStopList 
+
+
     void clearStartStops(void)
     {
         RH_StartStops.clear();
@@ -318,8 +318,8 @@ class ReadHolder
         StartStopListIterator iter = RH_StartStops.begin() + pos;
         RH_StartStops.insert(iter, val);
     }
-#pragma mark -
-#pragma mark Iterators
+
+
         StartStopListIterator begin(void)
         {
             return this->RH_StartStops.begin();
@@ -329,14 +329,14 @@ class ReadHolder
         {
             return this->RH_StartStops.end();
         }
-#pragma mark -
-#pragma mark Operators
+
+
         unsigned int& operator[]( const unsigned int i)
         {
             return this->RH_StartStops[i];
         }
-#pragma mark -
-#pragma mark String functions
+
+
         std::string substr(int i, int j)
         {
             return RH_Seq.substr(i, j);
@@ -388,8 +388,8 @@ class ReadHolder
         
         bool getNextSpacer(std::string * retStr);        
         
-#pragma mark -
-#pragma mark Printing
+
+
     
         std::string toStringInColumns(void);    
     
