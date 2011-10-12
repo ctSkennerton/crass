@@ -47,8 +47,6 @@
 #include "LoggerSimp.h"
 
 
-
-
 // the input must be an even number which will be the start of the repeat
 unsigned int ReadHolder::getRepeatAt(unsigned int i)
 {
@@ -150,28 +148,22 @@ int ReadHolder::averageRepeatLength()
     return sum/numRepeats();
 }
 
-
-
-
 void ReadHolder::startStopsAdd(unsigned int i, unsigned int j)
 {
     this->RH_StartStops.push_back(i);
-    if(j > (unsigned int)getSeqLength())
+    if(j >= (unsigned int)getSeqLength())
     {
-        logError("Adding DR end index greater than "<<(getSeqLength())<<" ("<<j<<")");
+        //logError("Adding DR end index greater than "<<(getSeqLength())<<" ("<<j<<")");
+    	j = (unsigned int)getSeqLength() - 1;
     }
     this->RH_StartStops.push_back(j);
 }
-
-
-
 
 // TODO +1?
 void ReadHolder::removeRepeat(unsigned int val)
 {
     RH_StartStops.erase(RH_StartStops.begin()+val, RH_StartStops.begin() +val + 2);
 }
-
 
 void ReadHolder::dropPartials(void)
 {
@@ -195,7 +187,6 @@ void ReadHolder::dropPartials(void)
         RH_StartStops.erase(r_iter-1, RH_StartStops.end());
     }
 }
-
 
 void ReadHolder::reverseStartStops(void)
 {
@@ -290,10 +281,10 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
             {
                 if(((DR->rfind(sp.second) + (sp.second).length()) == DR->length()) && (0 == part_s))
                 {
-//-DDEBUG#ifdef DEBUG
+#ifdef DEBUG
                     logInfo("adding direct repeat to start",10);
                     logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
-//-DDEBUG#endif
+#endif
                     std::reverse(RH_StartStops.begin(), RH_StartStops.end());
                     RH_StartStops.push_back(part_e);
                     RH_StartStops.push_back(0);
@@ -317,11 +308,11 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
             {
                 if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
                 {
-//-DDEBUG#ifdef DEBUG
+#ifdef DEBUG
                     logInfo("adding partial direct repeat to end",10);
                     logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
                     logInfo((int)sp.first.length() - (int)sp.second.length(),10);
-//-DDEBUG#endif
+#endif
                     // in most cases the right index is returned however 
                     // if the length of the smith waterman alignment differ the indix needs to be corrected 
                     RH_StartStops.push_back(part_s + abs((int)sp.first.length() - (int)sp.second.length()));
@@ -399,18 +390,18 @@ std::string ReadHolder::DRLowLexi(void)
     {
         // the direct repeat is in it lowest lexicographical form
         RH_WasLowLexi = true;
-//-DDEBUG#ifdef DEBUG
+#ifdef DEBUG
         logInfo("DR in low lexi"<<endl<<RH_Seq, 9);
-//-DDEBUG#endif
+#endif
         return tmp_dr;
     }
     else
     {
         reverseComplementSeq();
         RH_WasLowLexi = false;
-//-DDEBUG#ifdef DEBUG
+#ifdef DEBUG
         logInfo("DR not in low lexi"<<endl<<RH_Seq, 9);
-//-DDEBUG#endif
+#endif
         return rev_comp;
     }
 }
@@ -612,7 +603,7 @@ bool ReadHolder::getFirstSpacer(std::string * retStr)
     //-----
     // cut the first Spacer or return false if it all stuffs up
     //
-    RH_LastSpacerEnd = 0;
+    RH_NextSpacerStart = 0;
     return getNextSpacer(retStr);
 }
 
@@ -621,77 +612,77 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     //-----
     // cut the next Spacer or return false if it all stuffs up
     //
+	
+	// first check to see if our index offset makes any sense at all
+	if(RH_NextSpacerStart > ((int)(RH_StartStops.size()) - 1))
+	{
+		return false;
+	}
+	
+	// get an iterator into the ss list
     StartStopListIterator ss_iter = RH_StartStops.begin();
     
-    // find out where to start and stop the cuts
-    int start_cut = -1;
-    int end_cut = -1;
-    
-    if(RH_LastSpacerEnd == ((int)(RH_StartStops.size()) - 1))
+    if(0 == RH_NextSpacerStart)
     {
-        ss_iter += RH_LastSpacerEnd;
-        if(RH_Seq.length() != ((*ss_iter) + 1))
-        {
-            RH_LastSpacerEnd++;
-            *retStr = RH_Seq.substr(*ss_iter + 1);
+    	// first run
+    	if(0 != *ss_iter)
+    	{
+    		// read starts with a spacer
+    		// the next spacer starts after the first DR
+    		RH_NextSpacerStart = 1;
+            *retStr = RH_Seq.substr(0, *ss_iter);
             return true;
-        }
-        return false;
-    }
-    
-    // if the DR starts at 0, 
-    if(0 == RH_LastSpacerEnd)
-    {
-        // first run
-        if(0 != *ss_iter)
-        {
-            // cut the front before the first DR
-            start_cut = 0;
-            end_cut = *ss_iter;
-        }
-        RH_LastSpacerEnd = 1;
-    }
-    
-    if(-1 == start_cut)
-    {
-        // we didn't set it above
-        ss_iter = RH_StartStops.begin() + RH_LastSpacerEnd;
-        
-        if(ss_iter < RH_StartStops.end())
-        {
-            start_cut = *ss_iter;
-        }
-        else
-        {
-            return false;
-        }
-        ss_iter++;
-        if(ss_iter < RH_StartStops.end())
-        {
-            end_cut = *ss_iter;
-        }
-        else
-        {
-            return false;
-        }
-        
-        RH_LastSpacerEnd += 2; 
-    }
-    
-    // check to see if we made any good of start and end cut
-    if(0 != start_cut)
-    {
-        start_cut++;
-    }
-    if(end_cut == (int)(RH_Seq.length()) - 1)
-    {
-        *retStr = RH_Seq.substr(start_cut);
+    	}
+    	else
+    	{
+    		// read starts with a DR
+    		ss_iter++;
+    		int start_cut = (*ss_iter) + 1;
+    		ss_iter++;
+    		int length = *ss_iter - start_cut;
+    		RH_NextSpacerStart = 3;
+            *retStr = RH_Seq.substr(start_cut, length);
+            return true;
+    	}
     }
     else
     {
-        *retStr = RH_Seq.substr(start_cut, end_cut - start_cut);
-    }
-    return true;
+    	// we've been here before
+    	if(RH_NextSpacerStart == ((int)(RH_StartStops.size()) - 1))
+    	{
+    		// last one
+            ss_iter += RH_NextSpacerStart;
+            if(*ss_iter < (RH_Seq.length() - 1))
+            {
+            	// read ends with a spacer
+                RH_NextSpacerStart+=2;
+                *retStr = RH_Seq.substr(*ss_iter + 1);
+                return true;
+            }
+            else
+            {
+            	// read ends with a DR. No more spacers to get
+            	if(*ss_iter > (RH_Seq.length() - 1))
+            	{
+            		logError("ss list out of range");
+            	}
+                return false;    		
+            }
+    	}
+    	else
+    	{
+    		// middle one
+    		int start_cut = (*ss_iter) + 1;
+    		ss_iter++;
+    		int length = *ss_iter - start_cut;
+    		RH_NextSpacerStart += 2;
+            *retStr = RH_Seq.substr(start_cut, length);
+            return true;
+    	}
+    }    
+    // should we get here?
+	logError("SP WTF");
+    return false;
 }
 
 

@@ -140,8 +140,6 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     //-----
     // Taken from the old main function
     //
-    
-    
     std::vector<std::string>::iterator seq_iter = seqFiles.begin();
     while(seq_iter != seqFiles.end())
     {
@@ -316,7 +314,6 @@ int WorkHorse::mungeDRs(void)
                 ReadListIterator read_iter = mReads[*drc_iter]->begin();
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
-                    
                     mDRs[true_DRs[drg_iter->first]]->addReadHolder(*read_iter);
                     read_iter++;
                 }
@@ -386,7 +383,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             n_top_iter++;
         }
         
-        // did this guy have all 5?
+        // did this guy have all n?
         if(got_all_mode_mers)
         {
             int tmp_count = (int)(mReads[*dr_iter])->size();
@@ -415,7 +412,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     
     logInfo("Identified: " << master_DR_sequence << " as a master potential DR", 4);
 
-    // now we have the 5 most abundant kmers and one DR which contains them all
+    // now we have the n most abundant kmers and one DR which contains them all
     // time to rock and rrrroll!
 
 //++++++++++++++++++++++++++++++++++++++++++++++++
@@ -522,6 +519,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (int)(master_DR_sequence.length()))
         {
             // the start of the read is 
+        	logInfo(dr_start_index << " : "  << kmer_positions_ARRAY[0] << " : " << (*read_iter)->getSeq() << " : " << (*read_iter)->getSeqCharAt((*read_iter)->startStopsAt(dr_start_index))<< " : " << (*read_iter)->startStopsAt(dr_start_index) << " : " << kmer_positions_DR[0], 1);
             int this_read_start_pos = kmer_positions_ARRAY[0] - (*read_iter)->startStopsAt(dr_start_index) - kmer_positions_DR[0] ;
             if(first_run)
             {
@@ -603,7 +601,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                     else
                         num_disagree++;
                 }
+                
                 // if they are equal, do nothing
+                // there's not too much we can do
                 if(num_agree != num_disagree)
                 {
                     if(num_agree < num_disagree)
@@ -612,7 +612,6 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                         ReadListIterator read_iter = mReads[*dr_iter]->begin();
                         while (read_iter != mReads[*dr_iter]->end()) 
                         {
-
                             (*read_iter)->reverseComplementSeq();
                             read_iter++;
                         }

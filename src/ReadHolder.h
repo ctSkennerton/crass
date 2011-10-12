@@ -61,7 +61,7 @@ class ReadHolder
         ReadHolder() 
         { 
             RH_LastDREnd = 0; 
-            RH_LastSpacerEnd = 0; 
+            RH_NextSpacerStart = 0; 
             RH_isSqueezed = false;
         }  
         
@@ -70,7 +70,7 @@ class ReadHolder
             RH_Seq = s; 
             RH_Header = h; 
             RH_LastDREnd = 0; 
-            RH_LastSpacerEnd = 0; 
+            RH_NextSpacerStart = 0; 
             RH_isSqueezed = false;
         }
 
@@ -79,7 +79,7 @@ class ReadHolder
             RH_Seq = s; 
             RH_Header = h;
             RH_LastDREnd = 0; 
-            RH_LastSpacerEnd = 0; 
+            RH_NextSpacerStart = 0; 
             RH_isSqueezed = false;
         }
         ~ReadHolder(void)
@@ -136,7 +136,7 @@ class ReadHolder
         
         inline int getLastSpacerPos(void)
         {
-            return this->RH_LastSpacerEnd;
+            return this->RH_NextSpacerStart;
         }
     
         inline int start()
@@ -271,7 +271,7 @@ class ReadHolder
         
         void setLastSpacerPos(int i)
         {
-            this->RH_LastSpacerEnd = i;
+            this->RH_NextSpacerStart = i;
         }
 
         
@@ -409,7 +409,7 @@ class ReadHolder
         StartStopList RH_StartStops;            // start stops for DRs, (must be even in length!)
         bool RH_isSqueezed;                     // Bool to tell whether the read has homopolymers removed
         int RH_LastDREnd;                         // the end of the last DR cut (offset of the iterator)
-        int RH_LastSpacerEnd;                     // the end of the last spacer cut (offset of the iterator)
+        int RH_NextSpacerStart;                     // the end of the last spacer cut (offset of the iterator)
         int RH_RepeatLength;
 };
 

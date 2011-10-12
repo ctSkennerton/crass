@@ -180,10 +180,6 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
                 //std::cout<<working_str<<std::endl;
                 addFirstCrisprNode(&prev_node, working_str);
             } 
-            else 
-            {
-                logError("Unable to get last spacer");
-            }            
         }
     }
     else
@@ -310,7 +306,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
 void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString)
 {
     if (workingString.length() <= CRASS_DEF_NODE_KMER_SIZE) {
-        logError("working string length is less than the kmer size");
+        //logError("working string length is less than the kmer size");
         return;
     }
     std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
@@ -344,10 +340,11 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
     *prevNode = second_kmer_node;
 
 }
+
 void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString)
 {
     if (workingString.length() <= CRASS_DEF_NODE_KMER_SIZE) {
-        logError("working string length is less than the kmer size");
+        //logError("working string length is less than the kmer size");
         return;
     }
     std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
