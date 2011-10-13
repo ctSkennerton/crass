@@ -70,7 +70,7 @@ std::string ReadHolder::repeatStringAt(unsigned int i)
     {
         logError("Index is greater than the length of the Vector: "<<i);
     }
-    return RH_Seq.substr(RH_StartStops[i], RH_StartStops[i + 1] - RH_StartStops[i]);
+    return RH_Seq.substr(RH_StartStops[i], RH_StartStops[i + 1] - RH_StartStops[i] + 1);
 }
 
 std::string ReadHolder::spacerStringAt(unsigned int i)
