@@ -130,15 +130,17 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
     std::string working_str;
     CrisprNode * prev_node = NULL;
 
-    //std::cout<<"--------------------------------------------------"<<std::endl;
-    //std::cout<<RH->getHeader()<<std::endl;
-//    StartStopListIterator ss_iter_test = RH->begin();
-//    while (ss_iter_test != RH->end()) {
-//        std::cout<<*ss_iter_test<<',';
-//        ss_iter_test++;
-//    }
-//    std::cout<<std::endl;
-//    std::cout<<RH->splitApart()<<std::endl;
+    std::cout<<"--------------------------------------------------"<<std::endl;
+    std::cout<<RH->getHeader()<<std::endl;
+    std::cout<<RH->getSeq()<<std::endl;
+    StartStopListIterator ss_iter_test = RH->begin();
+    while (ss_iter_test != RH->end()) {
+        std::cout<<*ss_iter_test<<',';
+        ss_iter_test++;
+    }
+    std::cout<<std::endl;
+    std::cout<<RH->splitApart()<<std::endl;
+    std::cout<<RH->splitApartSimple()<<std::endl;
 
     if(RH->getFirstSpacer(&working_str))
     {

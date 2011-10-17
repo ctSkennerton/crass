@@ -287,38 +287,37 @@ class ReadHolder
         void startStopsAdd(unsigned int, unsigned int);
 
 
-    void clearStartStops(void)
-    {
-        RH_StartStops.clear();
-    }
-    
-    void removeRepeat(unsigned int val);
-    
-    void dropPartials(void);
-
-    void reverseStartStops(void);           // fix start stops what got corrupted during revcomping
-
-    // update the DR after finding the TRUE DR
-    void updateStartStops(int frontOffset, std::string * DR, const options * opts);
-    
-    // the positions are the start positions of the direct repeats
-    // 
-    inline int repeatSpacing(unsigned int pos1, unsigned int pos2)
-    {
-        return (getRepeatAt(pos2) - getRepeatAt(pos1));
-    }
-    
-    inline void addRepeat(unsigned int val)
-    {
-        RH_StartStops.push_back(val);
-    }
-    
-    inline void insertRepeatAt(unsigned int val, int pos)
-    {
-        StartStopListIterator iter = RH_StartStops.begin() + pos;
-        RH_StartStops.insert(iter, val);
-    }
-
+		void clearStartStops(void)
+		{
+			RH_StartStops.clear();
+		}
+		
+		void removeRepeat(unsigned int val);
+		
+		void dropPartials(void);
+	
+		void reverseStartStops(void);           // fix start stops what got corrupted during revcomping
+	
+		// update the DR after finding the TRUE DR
+		void updateStartStops(int frontOffset, std::string * DR, const options * opts);
+		
+		// the positions are the start positions of the direct repeats
+		// 
+		inline int repeatSpacing(unsigned int pos1, unsigned int pos2)
+		{
+			return (getRepeatAt(pos2) - getRepeatAt(pos1));
+		}
+		
+		inline void addRepeat(unsigned int val)
+		{
+			RH_StartStops.push_back(val);
+		}
+		
+		inline void insertRepeatAt(unsigned int val, int pos)
+		{
+			StartStopListIterator iter = RH_StartStops.begin() + pos;
+			RH_StartStops.insert(iter, val);
+		}
 
         StartStopListIterator begin(void)
         {

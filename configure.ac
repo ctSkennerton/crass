@@ -47,8 +47,8 @@ fi
 
 # stop image drawing even with graphviz installed 
 AC_ARG_ENABLE([rendering],
-    [AS_HELP_STRING([--disable-rendering],
-    [Prevents images being drawn in the output files])],
+    [AS_HELP_STRING([--enable-rendering],
+    [Enables images being drawn in the output files])],
     [case "${enableval}" in
         yes) rendering=true ;;
         no)  rendering=false ;;
