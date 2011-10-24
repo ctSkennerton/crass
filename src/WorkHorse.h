@@ -72,11 +72,12 @@ class WorkHorse {
         { 
             mOpts = opts; 
             mAveReadLength = 0;
+            mStringCheck.setName("WH");
         }
         ~WorkHorse();
         
         // do all the work!
-    int doWork(std::vector<std::string> seqFiles);
+        int doWork(std::vector<std::string> seqFiles);
 
         //**************************************
         // file IO
@@ -85,6 +86,8 @@ class WorkHorse {
         //void write_direct_repeatID(direct_repeat &dr_match, kseq_t *seq);
         void writeLookupToFile(string &outFileName, lookupTable &outLookup);
         int numOfReads(void);
+        int renderDebugGraphs(void);							// render debug graphs
+        int renderDebugGraphs(std::string namePrefix);
         
     private:
         
@@ -94,17 +97,20 @@ class WorkHorse {
         //**************************************
         // functions used to cluster DRs into groups and identify the "true" DR
         //**************************************
-        int mungeDRs(void);                         // cluster potential DRs and make node managers
-        bool clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, DR_Cluster_Map * DR2GIDMap, std::map<int, bool> * groups, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
+        int parseSeqFiles(std::vector<std::string> seqFiles);	// parse the raw read files
+        int buildGraph(void);									// build the basic graph structue
+        int mungeDRs(void);                         			// cluster potential DRs and make node managers
+        bool clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
+        bool parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int * nextFreeGID);
+
         bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string * kmer, const std::string * DR);
         std::vector<std::string> getNMostAbundantKmers(int num2Get, std::map<std::string, int> * kmer_CountMap);
-        bool parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, DR_Cluster_Map * DR2GID_map, int * nextFreeGID, std::map<int, std::string> * trueDRs);
         
         //**************************************
         // file IO
         //**************************************
-        void printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup);
-        void dumpReads(DR_Cluster_Map * DR2GID_map);
+        void printFileLookups(std::string fileName, lookupTable &kmerLookup, lookupTable &patternsLookup, lookupTable &spacerLookup);
+        void dumpReads(DR_Cluster_Map * DR2GID_map, bool split);
         
     // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
@@ -113,6 +119,11 @@ class WorkHorse {
         std::string mOutFileDir;                    // where to spew text to
         float mAveReadLength;                       // the average seen read length
         StringCheck mStringCheck;                   // Place to swap strings for tokens
+        
+        // global variables used to cluster and munge DRs
+        std::map<int, bool> mGroupMap;				// list of valid group IDs
+        DR_Cluster_Map mDR2GIDMap;					// map a DR (StringToken) to a GID
+        std::map<int, std::string> mTrueDRs;		// map GId to true DR strings
 };
 
 #endif //WorkHorse_h

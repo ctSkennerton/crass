@@ -69,7 +69,7 @@
 #define CRASS_DEF_NUM_KMERS_4_MODE              (5)                 // find the top XX occuring in the DR
 #define CRASS_DEF_NUM_KMERS_4_MODE_HALF         (CRASS_DEF_NUM_KMERS_4_MODE - (CRASS_DEF_NUM_KMERS_4_MODE/2)) // Ceil of 50% of CRASS_DEF_NUM_KMERS_4_MODE
 #define CRASS_DEF_MIN_READ_DEPTH                2                   // read depth used for consensus building
-#define CRASS_DEF_ZONE_EXT_CONS_CUT_OFF         (0.50)              // minimum identity to extend a DR from the "zone" outwards
+#define CRASS_DEF_ZONE_EXT_CONS_CUT_OFF         (0.55)              // minimum identity to extend a DR from the "zone" outwards
 #define CRASS_DEF_COLLAPSED_CONS_CUT_OFF        (0.75)              // minimum identity to identify a potential collapsed cluster
 #define CRASS_DEF_COLLAPSED_THRESHOLD           (0.30)              // in the event that clustering has collapsed two DRs into one, this number is used to plait them apart
 #define CRASS_DEF_PARTIAL_SIM_CUT_OFF           (0.85)              // The similarity needed to exted into partial matches
@@ -98,7 +98,7 @@
 // --------------------------------------------------------------------
 // GRAPH BUILDING
 // --------------------------------------------------------------------
-#define CRASS_DEF_NODE_KMER_SIZE                13                   // size of the kmer that defines a crispr node
+#define CRASS_DEF_NODE_KMER_SIZE                7                  // size of the kmer that defines a crispr node
 #define CRASS_DEF_MAX_CLEANING                  2                   // the maximum length that a branch can be befor it's cleaned
 // --------------------------------------------------------------------
  // USER OPTION STRUCTURE

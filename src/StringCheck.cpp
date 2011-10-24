@@ -75,7 +75,7 @@ std::string StringCheck::getString(StringToken token)
 StringToken StringCheck::getToken(std::string queryStr)
 {
     //-----
-    // returnt he token or 0
+    // return the token or 0
     //
     if(mS2T_map.end() == mS2T_map.find(queryStr))
         return 0;

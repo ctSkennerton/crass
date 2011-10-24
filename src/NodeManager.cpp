@@ -61,10 +61,11 @@ NodeManager::NodeManager(std::string drSeq, const options * userOpts)
     //-----
     // constructor
     //
-    NM_DirectRepeatSequence = drSeq;
-    NM_MinCoverage = 1000000;
-    NM_MaxCoverage = 0;
-    NM_opts = userOpts;
+    mDirectRepeatSequence = drSeq;
+    mMinCoverage = 1000000;
+    mMaxCoverage = 0;
+    mOpts = userOpts;
+    mStringCheck.setName("NM_" + drSeq);
 }
 
 NodeManager::~NodeManager(void)
@@ -74,8 +75,8 @@ NodeManager::~NodeManager(void)
     //
     
     // clean up all the cripsr nodes
-    NodeListIterator node_iter = NM_Nodes.begin();
-    while(node_iter != NM_Nodes.end())
+    NodeListIterator node_iter = mNodes.begin();
+    while(node_iter != mNodes.end())
     {
         if(NULL != node_iter->second)
         {
@@ -84,10 +85,10 @@ NodeManager::~NodeManager(void)
         }
         node_iter++;
     }
-    NM_Nodes.clear();
+    mNodes.clear();
     
-    SpacerListIterator spacer_iter = NM_Spacers.begin();
-    while(spacer_iter != NM_Spacers.end())
+    SpacerListIterator spacer_iter = mSpacers.begin();
+    while(spacer_iter != mSpacers.end())
     {
         if(NULL != spacer_iter->second)
         {
@@ -96,11 +97,9 @@ NodeManager::~NodeManager(void)
         }
         spacer_iter++;
     }
-    NM_Spacers.clear();
+    mSpacers.clear();
 
 }
-
-
 
 bool NodeManager::addReadHolder(ReadHolder * RH)
 {
@@ -109,7 +108,7 @@ bool NodeManager::addReadHolder(ReadHolder * RH)
     //
     if (splitReadHolder(RH))
     {
-        NM_ReadList.push_back(RH);
+        mReadList.push_back(RH);
         return true;
     }
     else
@@ -129,41 +128,34 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
     //
     std::string working_str;
     CrisprNode * prev_node = NULL;
-
-    std::cout<<"--------------------------------------------------"<<std::endl;
-    std::cout<<RH->getHeader()<<std::endl;
-    std::cout<<RH->getSeq()<<std::endl;
-    StartStopListIterator ss_iter_test = RH->begin();
-    while (ss_iter_test != RH->end()) {
-        std::cout<<*ss_iter_test<<',';
-        ss_iter_test++;
-    }
-    std::cout<<std::endl;
-    std::cout<<RH->splitApart()<<std::endl;
-    std::cout<<RH->splitApartSimple()<<std::endl;
+    
+//    logInfo("Adding: " << RH->getHeader(),1);
+    
+    // add the header of this read to our stringcheck
+    StringToken header_st = mStringCheck.addString(RH->getHeader());
 
     if(RH->getFirstSpacer(&working_str))
     {
         // do we have a direct repeat from the very beginning
         if (RH->startStopsAt(0) == 0) 
         {
-            addCrisprNodes(&prev_node, working_str);
+            addCrisprNodes(&prev_node, working_str, header_st);
         } 
         else 
         {
             // we only want to add the second kmer, since it is anchored by the direct repeat
-            addSecondCrisprNode(&prev_node, working_str);
+            addSecondCrisprNode(&prev_node, working_str, header_st);
         }
+        
         // get all the spacers in the middle
-        //std::cout<<RH->getSeqLength()<<" == "<<(int)RH->back() + 1<<std::endl;
         //check to see if we end with a direct repeat or a spacer
         if (RH->getSeqLength() == (int)RH->back() + 1) 
         {
             // direct repeat goes right to the end of the read take both
             while (RH->getNextSpacer(&working_str)) 
             {
-                addCrisprNodes(&prev_node, working_str);
-            } 
+                addCrisprNodes(&prev_node, working_str, header_st);
+            }
         } 
         else 
         {
@@ -173,14 +165,14 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
             {
                 //std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
                 RH->getNextSpacer(&working_str);
-                addCrisprNodes(&prev_node, working_str);
+                addCrisprNodes(&prev_node, working_str, header_st);
             } 
             
             // get our last spacer
             if (RH->getNextSpacer(&working_str)) 
             {
                 //std::cout<<working_str<<std::endl;
-                addFirstCrisprNode(&prev_node, working_str);
+                addFirstCrisprNode(&prev_node, working_str, header_st);
             } 
         }
     }
@@ -192,20 +184,18 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
     return true;
 }
 
-
 //----
 // Private function called from splitReadHolder to cut the kmers and make the nodes
 //
-void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingString)
+void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
 {
     //-----
     // Given a spacer string, cut kmers from each end and make crispr nodes
     //
     // now cut kmers on either side and add the pair into the node manager 
-    if (workingString.length() <= CRASS_DEF_NODE_KMER_SIZE) {
-        logError("working string length is less than the kmer size");
+    if (workingString.length() < CRASS_DEF_NODE_KMER_SIZE)
         return;
-    }
+    
     std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
     std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
     //std::cout<<"B: "<<first_kmer<<" : "<<second_kmer<<std::endl;
@@ -213,182 +203,160 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     CrisprNode * first_kmer_node;
     CrisprNode * second_kmer_node;
     
-    // we need to know if we've seen both of the guys before
-    bool seen_first = false;
-    bool seen_second = false;
-
     // check to see if these kmers are already stored
-    StringToken st1 = NM_StringCheck.getToken(first_kmer);
-    StringToken st2 = NM_StringCheck.getToken(second_kmer);
+    StringToken st1 = mStringCheck.getToken(first_kmer);
+    StringToken st2 = mStringCheck.getToken(second_kmer);
 
     // if they have been added previously then token != 0
     if(0 == st1)
     {
         // first time we've seen this guy. Make some new objects
-        st1 = NM_StringCheck.addString(first_kmer);
-        //std::cout<<"New node "<<st1<<std::endl;
-
+        st1 = mStringCheck.addString(first_kmer);
         first_kmer_node = new CrisprNode(st1);
         
         // add them to the pile
-        NM_Nodes[st1] = first_kmer_node;
+        mNodes[st1] = first_kmer_node;
     }
     else
     {
-        //std::cout<<"known node "<<st1<<std::endl;
-
         // we already have a node for this guy
-        first_kmer_node = NM_Nodes[st1];
-        (NM_Nodes[st1])->incrementCount();
-        
-        seen_first = true;
+        first_kmer_node = mNodes[st1];
+        (mNodes[st1])->incrementCount();
     }
     
     if(0 == st2)
     {
-
-        st2 = NM_StringCheck.addString(second_kmer);
-        //std::cout<<"New node "<<st2<<std::endl;
+        st2 = mStringCheck.addString(second_kmer);
 
         second_kmer_node = new CrisprNode(st2);
         second_kmer_node->setForward(false);
-        NM_Nodes[st2] = second_kmer_node;
+        mNodes[st2] = second_kmer_node;
     }
     else
     {
-        //std::cout<<"known node "<<st2<<std::endl;
-
-        second_kmer_node = NM_Nodes[st2];
-        (NM_Nodes[st2])->incrementCount();
-
-        seen_second = true;
+        second_kmer_node = mNodes[st2];
+        (mNodes[st2])->incrementCount();
     }
     
-    if (*prevNode == NULL) {
-        //std::cout<<"previous node is NULL"<<std::endl;
-    }
-    
+    // add in the read headers for the two CrisprNodes
+    first_kmer_node->addReadHeader(headerSt);
+    second_kmer_node->addReadHeader(headerSt);
+
     // the first kmers pair is the previous node which lay before it therefore bool is true
     // make sure prevNode is not NULL
     if (*prevNode != NULL/* && !seen_first*/) 
     {
-        //std::cout<<"creating jumping node"<<std::endl;
         (*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
         first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
     }
 
-    if(!(seen_first & seen_second))
-    {
-        first_kmer_node->addEdge(second_kmer_node, CN_EDGE_FORWARD);
-        second_kmer_node->addEdge(first_kmer_node, CN_EDGE_BACKWARD);
-    }
-    
     // now it's time to add the spacer
     SpacerInstance * curr_spacer;
 
     // check to see if we already have it here
     SpacerKey this_sp_key = makeSpacerKey(st1, st2);
 
-    if(NM_Spacers.find(this_sp_key) == NM_Spacers.end())
+    if(mSpacers.find(this_sp_key) == mSpacers.end())
     {
         // new instance
-        StringToken sp_str_token = NM_StringCheck.addString(workingString);
+        StringToken sp_str_token = mStringCheck.addString(workingString);
         curr_spacer = new SpacerInstance(sp_str_token, first_kmer_node, second_kmer_node);
-        NM_Spacers[this_sp_key] = curr_spacer;
+        mSpacers[this_sp_key] = curr_spacer;
+
+        // make the inner edge
+        first_kmer_node->addEdge(second_kmer_node, CN_EDGE_FORWARD);
+        second_kmer_node->addEdge(first_kmer_node, CN_EDGE_BACKWARD);
     }
     else
     {
         // increment the number of times we've seen this guy
-        (NM_Spacers[this_sp_key])->incrementCount();
+        (mSpacers[this_sp_key])->incrementCount();
     }
 
     *prevNode = second_kmer_node;
 }
 
-void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString)
+void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
 {
-    if (workingString.length() <= CRASS_DEF_NODE_KMER_SIZE) {
-        //logError("working string length is less than the kmer size");
+    if (workingString.length() < CRASS_DEF_NODE_KMER_SIZE)
         return;
-    }
+
     std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
     CrisprNode * second_kmer_node;
-    //std::cout<<"S: "<<second_kmer<<std::endl;
-    // we need to know if we've seen both of the guys before
-    bool seen_second = false;
     
     // check to see if these kmers are already stored
-    StringToken st1 = NM_StringCheck.getToken(second_kmer);
+    StringToken st1 = mStringCheck.getToken(second_kmer);
     
     // if they have been added previously then token != 0
     if(0 == st1)
     {
         // first time we've seen this guy. Make some new objects
-        st1 = NM_StringCheck.addString(second_kmer);
+        st1 = mStringCheck.addString(second_kmer);
         second_kmer_node = new CrisprNode(st1);
         
         // add them to the pile
-        NM_Nodes[st1] = second_kmer_node;
+        mNodes[st1] = second_kmer_node;
     }
     else
     {
         // we already have a node for this guy
-        second_kmer_node = NM_Nodes[st1];
-        (NM_Nodes[st1])->incrementCount();
-        
-        seen_second = true;
+        second_kmer_node = mNodes[st1];
+        (mNodes[st1])->incrementCount();
     }
+    
+    // add in the read headers for the this CrisprNode
+    second_kmer_node->addReadHeader(headerSt);
+    
     // add this guy in as the previous node for the next iteration
     *prevNode = second_kmer_node;
 
 }
 
-void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString)
+void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
 {
-    if (workingString.length() <= CRASS_DEF_NODE_KMER_SIZE) {
-        //logError("working string length is less than the kmer size");
+    if (workingString.length() < CRASS_DEF_NODE_KMER_SIZE)
         return;
-    }
+
     std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
     CrisprNode * first_kmer_node;
     //std::cout<<"F: "<<first_kmer<<std::endl;
-    // we need to know if we've seen both of the guys before
-    bool seen_first = false;
     
     // check to see if these kmers are already stored
-    StringToken st1 = NM_StringCheck.getToken(first_kmer);
+    StringToken st1 = mStringCheck.getToken(first_kmer);
     
     // if they have been added previously then token != 0
     if(0 == st1)
     {
         // first time we've seen this guy. Make some new objects
-        st1 = NM_StringCheck.addString(first_kmer);
+        st1 = mStringCheck.addString(first_kmer);
         first_kmer_node = new CrisprNode(st1);
         
         // add them to the pile
-        NM_Nodes[st1] = first_kmer_node;
+        mNodes[st1] = first_kmer_node;
     }
     else
     {
         // we already have a node for this guy
-        first_kmer_node = NM_Nodes[st1];
-        (NM_Nodes[st1])->incrementCount();
-        
-        seen_first = true;
+        first_kmer_node = mNodes[st1];
+        (mNodes[st1])->incrementCount();
     }
     
-    // the first kmers pair is the previous node which lay before it therefore bool is true
-    // make sure prevNode is not NULL
-    if (*prevNode != NULL && !seen_first) 
+    // add in the read headers for the this CrisprNode
+    first_kmer_node->addReadHeader(headerSt);
+
+    // check to see if we already have it here
+    if(NULL != *prevNode)
     {
-        (*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
-        first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
+		SpacerKey this_sp_key = makeSpacerKey(st1, (*prevNode)->getID());
+		if(mSpacers.find(this_sp_key) == mSpacers.end())
+		{
+			(*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
+			first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
+		}
     }
-   
 }
 
 // Walking
-
 
 void NodeManager::walk(void)
 {
@@ -569,9 +537,9 @@ bool NodeManager::stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprN
 
 void NodeManager::findCapNodes(NodeVector * capNodes)
 {    
-    NodeListIterator all_node_iter = NM_Nodes.begin();
-    std::cout<<"finding cap nodes:"<<std::endl;
-    while (all_node_iter != NM_Nodes.end()) 
+    NodeListIterator all_node_iter = mNodes.begin();
+    //std::cout<<"finding cap nodes:"<<std::endl;
+    while (all_node_iter != mNodes.end()) 
     {
         int count = 0;
         
@@ -583,13 +551,13 @@ void NodeManager::findCapNodes(NodeVector * capNodes)
         
         if (count == 1) 
         {
-            std::cout<<(all_node_iter->second)->getID()<<",";
+            //std::cout<<(all_node_iter->second)->getID()<<",";
             capNodes->push_back(all_node_iter->second);
         }
         
         all_node_iter++;
     }
-    std::cout<<std::endl;
+    //std::cout<<std::endl;
 }
 
 void NodeManager::countEdgesForType(int * count, CrisprNode * currNode, EDGE_TYPE edgeType)
@@ -602,30 +570,101 @@ void NodeManager::countEdgesForType(int * count, CrisprNode * currNode, EDGE_TYP
         {
             (*count)++;
         }
+        edge_iter++;
     }
 }
 
+void NodeManager::findAllNodes(NodeVector * allNodes)
+{
+	//-----
+	// make a nodevector of all of the nodes!
+	//
+	NodeListIterator all_node_iter = mNodes.begin();
+	while (all_node_iter != mNodes.end()) 
+	{
+		allNodes->push_back(all_node_iter->second);
+		all_node_iter++;
+	}
+}
 // Cleaning
 
 
-void NodeManager::cleanGraph(void)
+int NodeManager::cleanGraph(void)
 {
     //-----
     // Clean all the bits off the graph mofo!
     //
-    NodeListIterator bob = nodeBegin();
-    bob++;
-    bob++;
-    bob++;
-    bob++;
-    bob++;
-    bob++;
-    (bob->second)->detachNode();
+	std::multimap<std::string, StringToken> seen_map;
+	NodeVector nv;
+	
+	// get the cap nodes
+	findAllNodes(&nv);
+	
+	// go through once and build the multimap
+	NodeVectorIterator nv_iter = nv.begin();
+	while(nv_iter != nv.end())
+	{
+		StringToken ST =  (*nv_iter)->getID();
+		std::vector<std::string> read_headers = (*nv_iter)->getReadHeaders(&mStringCheck);
+		std::vector<std::string>::iterator rh_iter = read_headers.begin();
+		while(rh_iter != read_headers.end())
+		{
+			seen_map.insert(std::pair<std::string, StringToken>(*rh_iter, ST));
+			rh_iter++;
+		}
+		nv_iter++;
+	}
+	// now print
+	nv_iter = nv.begin();
+	while(nv_iter != nv.end())
+	{
+		std::cout << (*nv_iter)->getID() << " : " << mStringCheck.getString((*nv_iter)->getID()) << std::endl;
+		std::vector<std::string> read_headers = (*nv_iter)->getReadHeaders(&mStringCheck);
+		std::vector<std::string>::iterator rh_iter = read_headers.begin();
+		while(rh_iter != read_headers.end())
+		{
+			std::pair<std::multimap<std::string, StringToken>::iterator, std::multimap<std::string, StringToken>::iterator> m_str_iter = seen_map.equal_range(*rh_iter);
+			std::multimap<std::string, StringToken>::iterator it2 = m_str_iter.first;
+			while(it2 != m_str_iter.second)
+			{
+				std::cout << "  [" << (*it2).first << ", " << (*it2).second << "]" << std::endl;
+				it2++;
+			}
+			rh_iter++;
+		}
+		nv_iter++;
+		std::cout << "-------------" << std::endl;
+	}
+	std::cout << "==============" << std::endl;
+	
+	return 0;
 }
 
+// Spacer dictionaries
+void NodeManager::dumpSpacerDict(std::string spacerFileName)
+{
+	//-----
+	// Dump a spacer dictionary to file
+	//
+	std::ofstream spacer_file;
+	spacer_file	.open(spacerFileName.c_str());
+    if (spacer_file.good()) 
+    {
+    	SpacerListIterator spacer_iter = mSpacers.begin();
+    	while(spacer_iter != mSpacers.end())
+    	{
+    		SpacerInstance * SI = spacer_iter->second;
+    		std::string spacer = mStringCheck.getString(SI->getID());
+        	spacer_file << spacer << " : " << SI->getCount() << " : " << (SI->getLeader())->getID() << " : " << (SI->getLast())->getID() << std::endl;
+    		spacer_iter++;
+    	}
+    	spacer_file.close();
+    }
+
+}
+
+
 // Making purdy colours
-
-
 void NodeManager::setUpperAndLowerCoverage(void)
 {
     // loop through all of the nodes and determine the upper and lower dounds for our graph
@@ -633,18 +672,18 @@ void NodeManager::setUpperAndLowerCoverage(void)
     while (nl_iter != nodeEnd()) 
     {
         int coverage = (nl_iter->second)->getCoverage();
-        if (coverage > NM_MaxCoverage) 
+        if (coverage > mMaxCoverage) 
         {
-            NM_MaxCoverage = coverage;
+            mMaxCoverage = coverage;
         }
-        else if(coverage < NM_MinCoverage)
+        else if(coverage < mMinCoverage)
         {
-            NM_MinCoverage = coverage;
+            mMinCoverage = coverage;
         }
         nl_iter++;
     }
 //-DDEBUG#ifdef DEBUG
-    logInfo("Max Node Coverage: "<<NM_MaxCoverage<<" Min Node Coverage: "<<NM_MinCoverage<<std::endl,5);
+    logInfo("Max Node Coverage: "<<mMaxCoverage<<" Min Node Coverage: "<<mMinCoverage<<std::endl,5);
 //-DDEBUG#endif
 }
 
@@ -655,14 +694,14 @@ void NodeManager::setColourLimits(void)
     // Make the colurs needed for printing the graphviz stuff
     //
     setUpperAndLowerCoverage();
-    NM_Rainbow.setType(NM_opts->graphColourType);
-    if (NM_opts->coverageBins != -1) 
+    mRainbow.setType(mOpts->graphColourType);
+    if (mOpts->coverageBins != -1) 
     {
-        NM_Rainbow.setLimits(NM_MinCoverage, NM_MaxCoverage, NM_opts->coverageBins);
+        mRainbow.setLimits(mMinCoverage, mMaxCoverage, mOpts->coverageBins);
     } 
     else 
     {
-    NM_Rainbow.setLimits(NM_MinCoverage,NM_MaxCoverage);
+    mRainbow.setLimits(mMinCoverage,mMaxCoverage);
     }
 }
 
@@ -684,7 +723,7 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
         // check whether we should print
         if((nl_iter->second)->isAttached() | showDetached)
         {
-            printNodeAttributes(dataOut, nl_iter->second ,NM_Rainbow.getColour((nl_iter->second)->getCoverage()));
+            printNodeAttributes(dataOut, nl_iter->second ,mRainbow.getColour((nl_iter->second)->getCoverage()));
         }
         nl_iter++;
     }
@@ -696,8 +735,11 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
         // check whether we should print
         if((nl_iter->second)->isAttached() | showDetached)
         {
-            std::cout<<(nl_iter->second)->getID()<<" : "<<NM_StringCheck.getString( (nl_iter->second)->getID() )<<std::endl;
-            (nl_iter->second)->printEdges(dataOut, showDetached, printBackEdges );
+        	std::stringstream ss;
+        	ss << (nl_iter->second)->getID() << "_" << mStringCheck.getString((nl_iter->second)->getID());
+        	std::string label = ss.str();
+            //std::cout<<(nl_iter->second)->getID()<<" : "<<mStringCheck.getString( (nl_iter->second)->getID() )<<std::endl;
+            (nl_iter->second)->printEdges(dataOut, &mStringCheck, label, showDetached, printBackEdges );
         }
         nl_iter++;
     }
@@ -707,13 +749,16 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
 void NodeManager::printNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode)
 {
     // print the node declaration
+	std::stringstream ss;
+	ss << currCrisprNode->getID() << "_" << mStringCheck.getString(currCrisprNode->getID());
+	std::string label = ss.str();
     if(currCrisprNode->isForward())
     {
-        gvNodeF(dataOut,currCrisprNode->getID(),colourCode);
+        gvNodeF(dataOut,label,colourCode);
     }
     else
     {
-        gvNodeB(dataOut,currCrisprNode->getID(),colourCode);
+        gvNodeB(dataOut,label,colourCode);
     }
 }
 

@@ -46,6 +46,7 @@
 #include "crassDefines.h"
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
+#include "StringCheck.h"
 
 
 //
@@ -85,13 +86,13 @@ edgeList * CrisprNode::getEdges(EDGE_TYPE type)
     switch(type)
     {
         case CN_EDGE_FORWARD:
-            return &CN_ForwardEdges;
+            return &mForwardEdges;
         case CN_EDGE_BACKWARD:
-            return &CN_BackwardEdges;
+            return &mBackwardEdges;
         case CN_EDGE_JUMPING_F:
-            return &CN_JumpingForwardEdges;
+            return &mJumpingForwardEdges;
         case CN_EDGE_JUMPING_B:
-            return &CN_JumpingBackwardEdges;
+            return &mJumpingBackwardEdges;
         default:
             logError("Edge type not known! Returning NULL...");
             return NULL;
@@ -108,8 +109,8 @@ void CrisprNode::setAttach(bool attachState)
     //
     
     // find and attached nodes and set the edges to attachState
-    edgeListIterator eli = CN_ForwardEdges.begin();
-    while(eli != CN_ForwardEdges.end())
+    edgeListIterator eli = mForwardEdges.begin();
+    while(eli != mForwardEdges.end())
     {
         // go through each edge, check if it's not the right state
         if((eli->second ^ attachState) && (eli->first)->isAttached())
@@ -121,8 +122,8 @@ void CrisprNode::setAttach(bool attachState)
         }
         eli++;
     }
-    eli = CN_BackwardEdges.begin();
-    while(eli != CN_BackwardEdges.end())
+    eli = mBackwardEdges.begin();
+    while(eli != mBackwardEdges.end())
     {
         if((eli->second ^ attachState) && (eli->first)->isAttached())
         {
@@ -132,8 +133,8 @@ void CrisprNode::setAttach(bool attachState)
         }
         eli++;
     }
-    eli = CN_JumpingForwardEdges.begin();
-    while(eli != CN_JumpingForwardEdges.end())
+    eli = mJumpingForwardEdges.begin();
+    while(eli != mJumpingForwardEdges.end())
     {
         if((eli->second ^ attachState) && (eli->first)->isAttached())
         {
@@ -143,8 +144,8 @@ void CrisprNode::setAttach(bool attachState)
         }
         eli++;
     }
-    eli = CN_JumpingBackwardEdges.begin();
-    while(eli != CN_JumpingBackwardEdges.end())
+    eli = mJumpingBackwardEdges.begin();
+    while(eli != mJumpingBackwardEdges.end())
     {
         std::cout<<(eli->first)->isAttached()<<" : "<<eli->second<< " : "<< attachState<<std::endl;
         if((eli->second ^ attachState) && (eli->first)->isAttached())
@@ -157,7 +158,7 @@ void CrisprNode::setAttach(bool attachState)
     }
     
     // set our state
-    CN_Attached =  attachState;       
+    mAttached =  attachState;       
 }
 
 int CrisprNode::getRank(EDGE_TYPE type)
@@ -168,13 +169,13 @@ int CrisprNode::getRank(EDGE_TYPE type)
     switch(type)
     {
         case CN_EDGE_FORWARD:
-            return CN_InnerRank_F;
+            return mInnerRank_F;
         case CN_EDGE_BACKWARD:
-            return CN_InnerRank_B;
+            return mInnerRank_B;
         case CN_EDGE_JUMPING_F:
-            return CN_JumpingRank_F;
+            return mJumpingRank_F;
         case CN_EDGE_JUMPING_B:
-            return CN_JumpingRank_B;
+            return mJumpingRank_B;
         default:
             logError("Edge type not know! Returning -1...")
             return -1;
@@ -186,45 +187,83 @@ int CrisprNode::getRank(EDGE_TYPE type)
 //
 
 
-void CrisprNode::printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges)
+void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string label, bool showDetached, bool printBackEdges)
 {
     //-----
     // print the edges so that the first member of the pair is first
     //
         
     // now print the edges
-    edgeListIterator eli = CN_ForwardEdges.begin();
-    while(eli != CN_ForwardEdges.end())
+    edgeListIterator eli = mForwardEdges.begin();
+    while(eli != mForwardEdges.end())
     {
         // check if the edge is active
         if((eli->second) || showDetached)
-            gvEdge(dataOut,CN_id,(eli->first)->getID());
+        {
+        	std::stringstream ss;
+        	ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
+        	std::string label2 = ss.str();
+            gvEdge(dataOut,label,label2);
+        }
         eli++;
     }
-    eli = CN_JumpingForwardEdges.begin();
-    while(eli != CN_JumpingForwardEdges.end())
+    eli = mJumpingForwardEdges.begin();
+    while(eli != mJumpingForwardEdges.end())
     {
          if((eli->second) || showDetached)
-            gvJumpingEdge(dataOut,CN_id,(eli->first)->getID());
+         {
+         	std::stringstream ss;
+         	ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
+         	std::string label2 = ss.str();
+            gvJumpingEdge(dataOut,label,label2);
+         }
         eli++;
     }
     if(printBackEdges)
     {
-        eli = CN_BackwardEdges.begin();
-        while(eli != CN_BackwardEdges.end())
+        eli = mBackwardEdges.begin();
+        while(eli != mBackwardEdges.end())
         {
             if((eli->second) || showDetached)
-                gvEdge(dataOut,CN_id,(eli->first)->getID());
+            {
+            	std::stringstream ss;
+            	ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
+            	std::string label2 = ss.str();
+                gvEdge(dataOut,label,label2);
+            }
             eli++;
         }
-        eli = CN_JumpingBackwardEdges.begin();
-        while(eli != CN_JumpingBackwardEdges.end())
+        eli = mJumpingBackwardEdges.begin();
+        while(eli != mJumpingBackwardEdges.end())
         {
             if((eli->second) || showDetached)
-                gvJumpingEdge(dataOut,CN_id,(eli->first)->getID());
+            {
+            	std::stringstream ss;
+            	ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
+            	std::string label2 = ss.str();
+                gvJumpingEdge(dataOut,label,label2);
+            }
             eli++;
         }
     }
+}
+
+std::vector<std::string> CrisprNode::getReadHeaders(StringCheck * ST)
+{
+	//-----
+	// Given a StringCheck return the read headers for this node
+	//
+	std::vector<std::string> ret_vector;
+	if(ST != NULL)
+	{
+		std::vector<StringToken>::iterator rh_iter = mReadHeaders.begin();
+		while(rh_iter != mReadHeaders.end())
+		{
+			ret_vector.push_back(ST->getString(*rh_iter));
+			rh_iter++;
+		}
+	}
+	return ret_vector;
 }
 
 std::string CrisprNode::sayEdgeTypeLikeAHuman(EDGE_TYPE type)

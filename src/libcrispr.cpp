@@ -280,7 +280,7 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
 
         // create the read holder
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
-            
+        
         if (opts.removeHomopolymers)
         {
             // RLE is necessary...
@@ -332,7 +332,7 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
 
                     }
 #ifdef DEBUG
-                    logInfo(first_start<< " : "<<first_end<<" : "<< second_start<< " : "<<second_end<<" : "<<extenstion_length, 8);
+                    logInfo("A: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end<<" EX: "<<extenstion_length, 8);
 #endif
                     tmp_holder->startStopsAdd(first_start, first_end + extenstion_length);
                     tmp_holder->startStopsAdd(second_start, second_end + extenstion_length);
@@ -341,7 +341,7 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
                 else
                 {
 #ifdef DEBUG
-                    logInfo(first_start<< " : "<<first_end<<" : "<< second_start<< " : "<<second_end, 8);
+                    logInfo("B: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end, 8);
 #endif
                     tmp_holder->startStopsAdd(first_start, first_end);
                     tmp_holder->startStopsAdd(second_start, second_end);

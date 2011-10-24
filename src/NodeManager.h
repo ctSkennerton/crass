@@ -65,7 +65,10 @@ typedef std::map<SpacerKey, SpacerInstance *> SpacerList;
 typedef std::map<SpacerKey, SpacerInstance *>::iterator SpacerListIterator;
 
 typedef std::vector<CrisprNode *> NodeVector;
-typedef std::pair<CrisprNode * , CrisprNode *> CrisprNodePair;
+typedef std::vector<CrisprNode *>::iterator NodeVectorIterator;
+
+typedef std::pair<CrisprNode *, CrisprNode *> CrisprNodePair;
+typedef std::pair<CrisprNode *, CrisprNode *> CrisprNodePairIterator;
 
 class WalkingManager {
     CrisprNodePair WM_WalkingElem;
@@ -118,75 +121,74 @@ public:
     }
 };
 
-
-
 class NodeManager {
     public:
 
         NodeManager(std::string drSeq, const options * userOpts);
         ~NodeManager(void);
 
+		inline int getMaxCoverage(void){ return mMaxCoverage;}
+		inline int getMinCoverage(void){ return mMinCoverage;}
+		inline void setMaxCoverage(int i){ mMaxCoverage = i;}
+		inline void setMinCoverage(int i){ mMinCoverage = i;}
 
-
-    inline int getMaxCoverage(void){ return NM_MaxCoverage;}
-    inline int getMinCoverage(void){ return NM_MinCoverage;}
-    inline void setMaxCoverage(int i){ NM_MaxCoverage = i;}
-    inline void setMinCoverage(int i){ NM_MinCoverage = i;}
-
-
-
-        bool addReadHolder(ReadHolder * RH);
-
+		bool addReadHolder(ReadHolder * RH);
 
         NodeListIterator nodeBegin(void)
         {
-            return NM_Nodes.begin();
+            return mNodes.begin();
         }
         
         NodeListIterator nodeEnd(void)
         {
-            return NM_Nodes.end();
+            return mNodes.end();
         }
+        
+    // get / set
     
+        inline StringCheck * getStringCheck(void) { return &mStringCheck; }
+		void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
+		void findAllNodes(NodeVector * allNodes);
+        
     // Walking
-
-
-    void walk(void);
-    bool getEdge(WalkingManager * walkElem, CrisprNode * node, EDGE_TYPE * et);
-    bool stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprNode ** detatchDelay);
-    void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
-    void countEdgesForType(int * count, CrisprNode * currNode, EDGE_TYPE edgeType);
+		void walk(void);
+		bool getEdge(WalkingManager * walkElem, CrisprNode * node, EDGE_TYPE * et);
+		bool stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprNode ** detatchDelay);
+		void countEdgesForType(int * count, CrisprNode * currNode, EDGE_TYPE edgeType);
+		
     // Cleaning
+        int cleanGraph(void);
 
-
-        void cleanGraph(void);
-
+    // Spacer dictionaries
+        void dumpSpacerDict(std::string spacerFileName);
 
     // Making purdy colours
         void setColourLimits(void);
 
-
     // Printing / IO
         void printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges);         // Print a graphviz style graph of the DRs and spacers
-    void printNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode);
-    void printEdgeAttributes(std::ostream& dataOut);
+		void printNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode);
+		void printEdgeAttributes(std::ostream& dataOut);
     
     private:
-        bool splitReadHolder(ReadHolder * RH);
-        void addCrisprNodes(CrisprNode ** prevNode, std::string& workingString);
-        void addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString);
-        void addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString);
+		
+	// functions
+		bool splitReadHolder(ReadHolder * RH);
+        void addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
+        void addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
+        void addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
         void setUpperAndLowerCoverage(void);
-        // members
-        std::string NM_DirectRepeatSequence;  // the sequence of this managers direct repeat
-        NodeList NM_Nodes;                    // list of CrisprNodes this manager manages
-        SpacerList NM_Spacers;                // list of all the spacers
-        ReadList NM_ReadList;                 // list of readholders
-        StringCheck NM_StringCheck;           // string check object for unique strings 
-        Rainbow NM_Rainbow;                   // the Rainbow class for making colours
-        int NM_MaxCoverage;                   // The maximum coverage of any of the CrisprNodes managed 
-        int NM_MinCoverage;                   // The minimum coverage of any of the CrisprNodes managed
-        const options * NM_opts;              // pointer to the user options structure
+     
+    // members
+        std::string mDirectRepeatSequence;  // the sequence of this managers direct repeat
+        NodeList mNodes;                    // list of CrisprNodes this manager manages
+        SpacerList mSpacers;                // list of all the spacers
+        ReadList mReadList;                 // list of readholders
+        StringCheck mStringCheck;           // string check object for unique strings 
+        Rainbow mRainbow;                   // the Rainbow class for making colours
+        int mMaxCoverage;                   // The maximum coverage of any of the CrisprNodes managed 
+        int mMinCoverage;                   // The minimum coverage of any of the CrisprNodes managed
+        const options * mOpts;              // pointer to the user options structure
 };
 
 

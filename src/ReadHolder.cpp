@@ -88,30 +88,52 @@ std::string ReadHolder::spacerStringAt(unsigned int i)
     return RH_Seq.substr(curr_spacer_start_index, (curr_spacer_end_index - curr_spacer_start_index));
 }
 
-unsigned int ReadHolder::spacerLengthAt(unsigned int i)
-{
-    if (i % 2 != 0) 
-    {
-        logError("Attempting to cut a spacer sequence from a odd numbered index in RH_StartStops: "<<i)
-    }
-    if (i > RH_StartStops.size()) 
-    {
-        logError("Index is greater than the length of the Vector: "<<i);
-    }
-    unsigned int curr_spacer_start_index = RH_StartStops[i] + 1;
-    unsigned int curr_spacer_end_index = RH_StartStops[i + 1] - 1;
-    return curr_spacer_end_index - curr_spacer_start_index;
-}
-
 unsigned int ReadHolder::getAverageSpacerLength()
 {
+	//-----
+	// Used to determine if the string seaching functions are doing a good job
+	// eats poo and dies when the read starts / ends with a spacer. So we need to watch that
+	//
     unsigned int sum = 0;
-    unsigned int final_index = (getStartStopListSize()/2) + 1;
-    for (unsigned int i = 0; i < final_index; i+=2)
-    {
-        sum += spacerLengthAt(i);
+    int stored_len = 0;
+    unsigned int num_spacers = 0;
+
+    // get the first spacer, but only include it if a DR lies before it
+    std::string tmp_string;
+    if(getFirstSpacer(&tmp_string))
+    {		
+    	// check to make sure that the read doesn't start on a spacer
+		if(*(RH_StartStops.begin()) == 0)
+		{
+			// starts on a DR
+			stored_len = tmp_string.length();
+		}
+		// else stored_len == 0
+		
+		// get all the middle spacers
+		while(getNextSpacer(&tmp_string))
+		{
+			num_spacers++;
+			sum += stored_len;
+			stored_len = tmp_string.length();
+		}
+		
+		// check to make sure that the read doesn't end on a spacer
+		if(RH_StartStops.back() == (RH_Seq.length() - 1))
+		{
+			// ends on a DR
+			num_spacers++;
+			sum += stored_len;
+		}
+		
+		if(0 != num_spacers)
+			return sum/numSpacers();
     }
-    return sum/numSpacers();
+    else
+    {
+    	logError("No Spacers!");
+    }
+    return 0;
 }
 
 std::vector<std::string> ReadHolder::getAllSpacerStrings(void)
@@ -322,9 +344,6 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         }
     }
 }
-
-
-
 
 std::string ReadHolder::DRLowLexi(void)
 {
@@ -629,8 +648,8 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     	{
     		// read starts with a spacer
     		// the next spacer starts after the first DR
-    		RH_NextSpacerStart = 1;
             *retStr = RH_Seq.substr(0, *ss_iter);
+    		RH_NextSpacerStart = 1;
             return true;
     	}
     	else
@@ -640,23 +659,25 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     		int start_cut = (*ss_iter) + 1;
     		ss_iter++;
     		int length = *ss_iter - start_cut;
-    		RH_NextSpacerStart = 3;
             *retStr = RH_Seq.substr(start_cut, length);
+    		RH_NextSpacerStart = 3;
             return true;
     	}
     }
     else
     {
+    	// bump the iterator up!
+    	
+        ss_iter += RH_NextSpacerStart;
     	// we've been here before
     	if(RH_NextSpacerStart == ((int)(RH_StartStops.size()) - 1))
     	{
     		// last one
-            ss_iter += RH_NextSpacerStart;
             if(*ss_iter < (RH_Seq.length() - 1))
             {
             	// read ends with a spacer
-                RH_NextSpacerStart+=2;
                 *retStr = RH_Seq.substr(*ss_iter + 1);
+                RH_NextSpacerStart+=2;
                 return true;
             }
             else
@@ -675,8 +696,8 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     		int start_cut = (*ss_iter) + 1;
     		ss_iter++;
     		int length = *ss_iter - start_cut;
-    		RH_NextSpacerStart += 2;
             *retStr = RH_Seq.substr(start_cut, length);
+    		RH_NextSpacerStart += 2;
             return true;
     	}
     }    

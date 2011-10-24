@@ -69,26 +69,26 @@ class CrisprNode
         //constructor
         CrisprNode(void)
         {
-            CN_id = 0;
-            CN_Attached = true;
-            CN_InnerRank_F = 0;
-            CN_InnerRank_B = 0;
-            CN_JumpingRank_F = 0;
-            CN_JumpingRank_B = 0;
-            CN_Coverage = 0;
-            CN_IsForward = true;
+            mid = 0;
+            mAttached = true;
+            mInnerRank_F = 0;
+            mInnerRank_B = 0;
+            mJumpingRank_F = 0;
+            mJumpingRank_B = 0;
+            mCoverage = 0;
+            mIsForward = true;
         }
 
         CrisprNode(StringToken id)
         {
-            CN_id = id;
-            CN_Attached = true;                                         // by default, a node is attached unless actually detached by the user
-            CN_InnerRank_F = 0;
-            CN_InnerRank_B = 0;
-            CN_JumpingRank_F = 0;
-            CN_JumpingRank_B = 0;
-            CN_Coverage = 1;
-            CN_IsForward = true;
+            mid = id;
+            mAttached = true;                                         // by default, a node is attached unless actually detached by the user
+            mInnerRank_F = 0;
+            mInnerRank_B = 0;
+            mJumpingRank_F = 0;
+            mJumpingRank_B = 0;
+            mCoverage = 1;
+            mIsForward = true;
         }
         
         //destructor
@@ -97,10 +97,11 @@ class CrisprNode
         //
         // Generic get and set
         //
-        inline StringToken getID(void) { return CN_id; }
-        inline bool isForward(void) { return CN_IsForward; }
-        inline void setForward(bool forward) { CN_IsForward = forward; }
-        inline int getCoverage() {return CN_Coverage;}
+        inline StringToken getID(void) { return mid; }
+        inline bool isForward(void) { return mIsForward; }
+        inline void setForward(bool forward) { mIsForward = forward; }
+        inline int getCoverage() {return mCoverage;}
+        inline void addReadHeader(StringToken readHeader) { mReadHeaders.push_back(readHeader); }
         
         //
         // Edge level functions
@@ -113,16 +114,16 @@ class CrisprNode
         //
         inline void detachNode(void) { setAttach(false); }              // detach this node
         inline void reattachNode(void) { setAttach(true); }             // re-attach this node
-        inline bool isAttached(void) { return CN_Attached; }            // der...
+        inline bool isAttached(void) { return mAttached; }            // der...
         int getRank(EDGE_TYPE type);                                    // return the rank of the node
-        inline void incrementCount(void) { CN_Coverage++; }             // Increment the coverage
+        inline void incrementCount(void) { mCoverage++; }             // Increment the coverage
         
         //
         // File IO / printing
         //
 
-        void printEdges(std::ostream &dataOut, bool showDetached, bool printBackEdges);    
-
+        void printEdges(std::ostream &dataOut, StringCheck * ST, std::string label, bool showDetached, bool printBackEdges);    
+        std::vector<std::string> getReadHeaders(StringCheck * ST);
         std::string sayEdgeTypeLikeAHuman(EDGE_TYPE type);
     
     private:
@@ -130,7 +131,7 @@ class CrisprNode
         void setAttach(bool attachState);                               // set the attach state of the node
         
         // id of the kmer of the cripsr node
-        StringToken CN_id;
+        StringToken mid;
         
         //
         // We need different edge lists to store the variety of edges we may encounter, observe...
@@ -151,25 +152,28 @@ class CrisprNode
         //  NODE 6 |   X    |   X    |   X    |   X    |   B    |   X    |
         // ---------------------------------------------------------------
         //
-        edgeList CN_ForwardEdges;
-        edgeList CN_BackwardEdges;
-        edgeList CN_JumpingForwardEdges;
-        edgeList CN_JumpingBackwardEdges;
+        edgeList mForwardEdges;
+        edgeList mBackwardEdges;
+        edgeList mJumpingForwardEdges;
+        edgeList mJumpingBackwardEdges;
 
         // We need multiple classes of RANK
-        int CN_InnerRank_F;
-        int CN_InnerRank_B;
-        int CN_JumpingRank_F;
-        int CN_JumpingRank_B;
+        int mInnerRank_F;
+        int mInnerRank_B;
+        int mJumpingRank_F;
+        int mJumpingRank_B;
 
         // We need to mark whether nodes are atached or detached
-        bool CN_Attached;
+        bool mAttached;
         
         // how many times have we seen this guy?
-        int CN_Coverage;
+        int mCoverage;
         
         // is this a forward facing node?
-        bool CN_IsForward;
+        bool mIsForward;
+
+        // we need to know which reads produced these nodes
+        std::vector<StringToken> mReadHeaders;  // headers of all reads which contain these spacers
 };
 
 #endif //CrisprNode_h

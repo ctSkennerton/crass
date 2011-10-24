@@ -202,8 +202,6 @@ class ReadHolder
         
         std::string spacerStringAt(unsigned int i);
     
-        unsigned int spacerLengthAt(unsigned int i);
-        
         unsigned int getAverageSpacerLength(void);
         
         std::vector<std::string> getAllSpacerStrings(void);
@@ -386,9 +384,6 @@ class ReadHolder
         bool getFirstSpacer(std::string * retStr);
         
         bool getNextSpacer(std::string * retStr);        
-        
-
-
     
         std::string toStringInColumns(void);    
     
@@ -407,8 +402,8 @@ class ReadHolder
         bool RH_WasLowLexi;                     // was the sequence DR_low lexi in the file?
         StartStopList RH_StartStops;            // start stops for DRs, (must be even in length!)
         bool RH_isSqueezed;                     // Bool to tell whether the read has homopolymers removed
-        int RH_LastDREnd;                         // the end of the last DR cut (offset of the iterator)
-        int RH_NextSpacerStart;                     // the end of the last spacer cut (offset of the iterator)
+        int RH_LastDREnd;                       // the end of the last DR cut (offset of the iterator)
+        int RH_NextSpacerStart;                 // the end of the last spacer cut (offset of the iterator)
         int RH_RepeatLength;
 };
 

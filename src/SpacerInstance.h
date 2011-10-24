@@ -72,13 +72,16 @@ class SpacerInstance {
         ~SpacerInstance () {}
         
         inline void incrementCount(void) { SI_InstanceCount++; }
+        inline unsigned int getCount(void) { return SI_InstanceCount; }
+        inline StringToken getID(void) { return SI_SpacerSeqID; }
+        inline CrisprNode * getLeader(void) { return SI_LeadingNode; }
+        inline CrisprNode * getLast(void) { return SI_LastNode; }
         
     private:
         StringToken SI_SpacerSeqID;               // the StringToken of this spacer
         CrisprNode * SI_LeadingNode;              // the first node of this spacer
         CrisprNode * SI_LastNode;                 // the last node
         unsigned int SI_InstanceCount;            // the number of times this exact instance has been seen
-
 };
 
 
