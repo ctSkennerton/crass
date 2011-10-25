@@ -658,7 +658,7 @@ int NodeManager::findCapsAt(NodeVector * capNodes, bool searchForward, bool isIn
 			el_iter++;
 		}
 	}
-	return capNodes->size();
+	return (int)capNodes->size();
 }
 
 // Cleaning
@@ -789,7 +789,7 @@ int NodeManager::cleanGraph(void)
 			}
 			else
 			{
-				// something has gone wrong
+				// TODO: something has gone wrong
 			}
 		}
 		
@@ -804,8 +804,6 @@ int NodeManager::cleanGraph(void)
 		nv_iter++;
 	}
 
-
-
 	return 0;
 }
 
@@ -816,14 +814,13 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
 
     // the key is the hashed values of both the root node and the edge
     // the value is the node id of the edge
-    std::map<int, int > bubble_map;
+    std::map<int, int> bubble_map;
 
     // now go through each of the edges and make a hashed key for the edge 
     edgeListIterator curr_edges_iter = curr_edges->begin();
     while(curr_edges_iter != curr_edges->end())
     {
-        
-        if (curr_edges_iter->second) 
+        if ((curr_edges_iter->first)->isAttached()) 
         {
             int key = makeKey(rootNode->getID(),(curr_edges_iter->first)->getID());
             
@@ -837,12 +834,12 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
             while (edges_of_curr_edge_iter != edges_of_curr_edge->end()) 
             {
                 // make sue that this guy is attached
-                if (edges_of_curr_edge_iter->second) 
+                if ((edges_of_curr_edge_iter->first)->isAttached()) 
                 {
                     // so now we're at the second degree of separation for our edges
                     // again make a key but check to see if the key exists in the hash
                     
-                    int new_key = makeKey(rootNode->getID(), edges_of_curr_edge_iter->first->getID());
+                    int new_key = makeKey(rootNode->getID(), (edges_of_curr_edge_iter->first)->getID());
                     if (bubble_map.find(new_key) == bubble_map.end()) 
                     {
                         // first time we've seen him
@@ -852,8 +849,13 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                     {
                         // aha! he is pointing back onto the same guy as someone else.  We have a bubble!
                         //get the CrisprNode of the first guy
+                        
                         CrisprNode * first_node = mNodes[bubble_map[new_key]];
                         
+                        
+#ifdef DEBUG
+                        logInfo("Bubble found conecting "<<rootNode->getID()<<" : "<<first_node->getID()<<" : "<<(edges_of_curr_edge_iter->first)->getID(), 7);
+#endif
                         //perform a coverage test on the nodes that end up here and kill the one with the least coverage
                         
                         // TODO: this is a pretty dumb test, since the coverage between the two nodes could be very similar
@@ -866,17 +868,22 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                         {
                             // the first guy has greater coverage so detach our current node
                             (edges_of_curr_edge_iter->first)->detachNode();
-                            
-                            //and update the bool in the edgelist
-                            edges_of_curr_edge_iter->second = false;
+#ifdef DEBUG
+                            logInfo("Detaching "<<(edges_of_curr_edge_iter->first)->getID()<<" as it has lower coverage", 8);
+#endif
+                            //TODO: and update the bool in the edgelist?
+                            // edges_of_curr_edge_iter->second = false;
                         } 
                         else 
                         {
                             // the first guy was lower so kill him
                             first_node->detachNode();
-                            
-                            //need to find him in the edge list in the outer while loop and set to false (detached)
-                            curr_edges->at(first_node) = false;
+#ifdef DEBUG
+                            logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 8);
+#endif
+
+                            //TODO: need to find him in the edge list in the outer while loop and set to false?
+                            // curr_edges->at(first_node) = false;
                         }
                     }
                 }
