@@ -779,21 +779,13 @@ int NodeManager::cleanGraph(void)
 			if((*nv_iter)->getInnerRank() != 2)
 			{
 				// there are multiple inner edges for this guy
-				// get a list of edges
-				edgeList * curr_edges = (*nv_iter)->getEdges(CN_EDGE_FORWARD);
-				
-				// perform coverage arguement on the edges to choose the correct one
-				edgeListIterator curr_edges_iter = curr_edges->begin();
-				while(curr_edges_iter != curr_edges->end())
-				{
-					
-					curr_edges_iter++;
-				}
-				// add the bad guy to the detach list
+                clearBubbles(*nv_iter, CN_EDGE_FORWARD);
+
 			}
 			else if((*nv_iter)->getJumpingRank() != 2)
 			{
 				// there are multiple jumping edges for this guy
+                clearBubbles(*nv_iter, CN_EDGE_JUMPING_F);
 			}
 			else
 			{
@@ -815,6 +807,106 @@ int NodeManager::cleanGraph(void)
 
 
 	return 0;
+}
+
+void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
+{
+    // get a list of edges
+    edgeList * curr_edges = rootNode->getEdges(currentEdgeType);
+
+    // the key is the hashed values of both the root node and the edge
+    // the value is the node id of the edge
+    std::map<int, int > bubble_map;
+
+    // now go through each of the edges and make a hashed key for the edge 
+    edgeListIterator curr_edges_iter = curr_edges->begin();
+    while(curr_edges_iter != curr_edges->end())
+    {
+        
+        if (curr_edges_iter->second) 
+        {
+            int key = makeKey(rootNode->getID(),(curr_edges_iter->first)->getID());
+            
+            bubble_map[key] = (curr_edges_iter->first)->getID();
+            
+            // we also want to go through all the edges of the nodes above (2nd degree separation)
+            // and since we used the forward edges to get here we now want the opposite (Jummping_F)
+            edgeList * edges_of_curr_edge = (curr_edges_iter->first)->getEdges(currentEdgeType);
+            
+            edgeListIterator edges_of_curr_edge_iter = edges_of_curr_edge->begin();
+            while (edges_of_curr_edge_iter != edges_of_curr_edge->end()) 
+            {
+                // make sue that this guy is attached
+                if (edges_of_curr_edge_iter->second) 
+                {
+                    // so now we're at the second degree of separation for our edges
+                    // again make a key but check to see if the key exists in the hash
+                    
+                    int new_key = makeKey(rootNode->getID(), edges_of_curr_edge_iter->first->getID());
+                    if (bubble_map.find(new_key) == bubble_map.end()) 
+                    {
+                        // first time we've seen him
+                        bubble_map[new_key] = (edges_of_curr_edge_iter->first)->getID();
+                    } 
+                    else 
+                    {
+                        // aha! he is pointing back onto the same guy as someone else.  We have a bubble!
+                        //get the CrisprNode of the first guy
+                        CrisprNode * first_node = mNodes[bubble_map[new_key]];
+                        
+                        //perform a coverage test on the nodes that end up here and kill the one with the least coverage
+                        
+                        // TODO: this is a pretty dumb test, since the coverage between the two nodes could be very similar
+                        // for example one has a coverage of 20 and the other a coverage of 18.  The node with 18 will get
+                        // removed but should it have been?  The way to fix this would be to create some infastructure in
+                        // NodeManager to calculate the average and stdev of the coverage and then remove a node only if
+                        // it is below 1 stdev of the average, else it could be a biological thing that this bubble exists.
+                        
+                        if (first_node->getCoverage() > (edges_of_curr_edge_iter->first)->getCoverage()) 
+                        {
+                            // the first guy has greater coverage so detach our current node
+                            (edges_of_curr_edge_iter->first)->detachNode();
+                            
+                            //and update the bool in the edgelist
+                            edges_of_curr_edge_iter->second = false;
+                        } 
+                        else 
+                        {
+                            // the first guy was lower so kill him
+                            first_node->detachNode();
+                            
+                            //need to find him in the edge list in the outer while loop and set to false (detached)
+                            curr_edges->at(first_node) = false;
+                        }
+                    }
+                }
+                edges_of_curr_edge_iter++;
+            }
+        }
+        curr_edges_iter++;
+    }
+}
+
+EDGE_TYPE NodeManager::getOppositeEdgeType(EDGE_TYPE currentEdgeType)
+{
+    switch (currentEdgeType) {
+        case CN_EDGE_BACKWARD:
+            return CN_EDGE_JUMPING_B;
+            break;
+        case CN_EDGE_FORWARD:
+            return CN_EDGE_JUMPING_F;
+            break;
+        case CN_EDGE_JUMPING_B:
+            return CN_EDGE_BACKWARD;
+            break;
+        case CN_EDGE_JUMPING_F:
+            return CN_EDGE_FORWARD;
+            break;
+        default:
+            logError("Cannot find the opposite edge type for input");
+            return CN_EDGE_ERROR;
+            break;
+    }
 }
 
 // Spacer dictionaries

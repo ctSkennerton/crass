@@ -198,7 +198,7 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
                 scanRight(tmp_holder, pattern, opts.lowSpacerSize, 24);
             }
 
-            if ( (tmp_holder->numRepeats() > opts.minNumRepeats) ) //numRepeats is half the size of the StartStopList
+            if ( (tmp_holder->numRepeats() > opts.minNumRepeats) ) //tmp_holder->numRepeats is half the size of the StartStopList
             {
 #ifdef DEBUG
                 logInfo(tmp_holder->getHeader(), 8);
@@ -433,9 +433,16 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     WuManber search;
     search.Initialize(patterns);
     
-    int l;
+    int l, log_counter;
+    int read_counter = log_counter = 0;
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
+        if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
+        {
+            std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<std::endl;
+            log_counter = 0;
+        }
+        
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
         
         if (opts.removeHomopolymers) 
@@ -470,6 +477,8 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         {
             delete tmp_holder;
         }
+        log_counter++;
+        read_counter++;
     }
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }

@@ -55,7 +55,8 @@ enum EDGE_TYPE {
     CN_EDGE_BACKWARD,
     CN_EDGE_FORWARD,
     CN_EDGE_JUMPING_F,
-    CN_EDGE_JUMPING_B
+    CN_EDGE_JUMPING_B,
+    CN_EDGE_ERROR
 };
 
 // a list of edges ( we use a map to make lookups faster )

@@ -70,6 +70,12 @@ typedef std::vector<CrisprNode *>::iterator NodeVectorIterator;
 typedef std::pair<CrisprNode *, CrisprNode *> CrisprNodePair;
 typedef std::pair<CrisprNode *, CrisprNode *> CrisprNodePairIterator;
 
+
+//macros
+#define makeKey(i,j) (i*100000)+j
+
+
+
 class WalkingManager {
     CrisprNodePair WM_WalkingElem;
     bool WM_Direction;
@@ -151,6 +157,8 @@ class NodeManager {
 		void findAllNodes(NodeVector * allNodes);
 		void findAllNodes(NodeVector * capNodes, NodeVector * otherNodes);
 		int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
+        EDGE_TYPE getOppositeEdgeType(EDGE_TYPE currentEdgeType);
+
     // Walking
 		void walk(void);
 		bool getEdge(WalkingManager * walkElem, CrisprNode * node, EDGE_TYPE * et);
@@ -158,7 +166,7 @@ class NodeManager {
 		
     // Cleaning
         int cleanGraph(void);
-
+        void clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType);
     // Spacer dictionaries
         void dumpSpacerDict(std::string spacerFileName);
 
