@@ -130,6 +130,7 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<std::endl;
+            log_counter = 0;
         }
         
         // grab a readholder
