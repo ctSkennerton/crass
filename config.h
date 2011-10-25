@@ -2,7 +2,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* define to 1 for debug statments */
-/* #undef DEBUG */
+#define DEBUG 1
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #define HAVE_FCNTL_H 1
@@ -33,14 +33,14 @@
 #define HAVE_NEATO 1
 
 /* Define to 1 if you have the `pow' function. */
-#define HAVE_POW 1
+/* #undef HAVE_POW */
 
 /* Define to 1 if your system has a GNU libc compatible `realloc' function,
    and to 0 otherwise. */
 #define HAVE_REALLOC 1
 
 /* Define to 1 if stdbool.h conforms to C99. */
-/* #undef HAVE_STDBOOL_H */
+#define HAVE_STDBOOL_H 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -99,11 +99,14 @@
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "crass"
 
+/* Define to the home page for this package. */
+#define PACKAGE_URL ""
+
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "0.0.3"
 
 /* Defines to 1 if image rendering is to be performed */
-/* #undef RENDERING */
+#define RENDERING 1
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
