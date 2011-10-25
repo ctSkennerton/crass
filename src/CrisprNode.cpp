@@ -80,6 +80,9 @@ bool CrisprNode::addEdge(CrisprNode * parterNode, EDGE_TYPE type)
             case CN_EDGE_JUMPING_B:
                 mJumpingRank_B++;
                 break;
+            default:
+            	logError("Edge error");
+            	return false;
         }
         return true;
     }
@@ -202,7 +205,8 @@ int CrisprNode::getRank(EDGE_TYPE type)
     }
 }
 
-void CrisprNode::updateRank(bool attachState, EDGE_TYPE type){
+void CrisprNode::updateRank(bool attachState, EDGE_TYPE type)
+{
     //-----
 	// increment or decrement the rank of this type
     //
@@ -223,14 +227,14 @@ void CrisprNode::updateRank(bool attachState, EDGE_TYPE type){
 		case CN_EDGE_JUMPING_B:
 			mJumpingRank_B += increment;
             break;
+        default:
+        	logError("Edge error");
 	}
 }
 
 //
 // File IO / printing
 //
-
-
 void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string label, bool showDetached, bool printBackEdges, bool longDesc)
 {
     //-----

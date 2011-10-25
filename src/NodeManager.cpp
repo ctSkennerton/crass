@@ -772,17 +772,17 @@ int NodeManager::cleanGraph(void)
 	nv_iter = nv_other.begin();
 	while(nv_iter != nv_other.end())
 	{
-		// get the total rank first.  A linear node should have 4 edges
-		if((*nv_iter)->getTotalRank() != 4)
+		// get the total rank first.  A linear node should have 2 edges
+		if((*nv_iter)->getTotalRank() != 2)
 		{
 			// get the rank for the the inner and jumping edges.
-			if((*nv_iter)->getInnerRank() != 2)
+			if((*nv_iter)->getInnerRank() != 1)
 			{
 				// there are multiple inner edges for this guy
                 clearBubbles(*nv_iter, CN_EDGE_FORWARD);
 
 			}
-			else if((*nv_iter)->getJumpingRank() != 2)
+			else if((*nv_iter)->getJumpingRank() != 1)
 			{
 				// there are multiple jumping edges for this guy
                 clearBubbles(*nv_iter, CN_EDGE_JUMPING_F);
@@ -790,6 +790,7 @@ int NodeManager::cleanGraph(void)
 			else
 			{
 				// TODO: something has gone wrong
+				logError("something has gone wrong");
 			}
 		}
 		
@@ -822,13 +823,9 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
     {
         if ((curr_edges_iter->first)->isAttached()) 
         {
-            int key = makeKey(rootNode->getID(),(curr_edges_iter->first)->getID());
-            
-            bubble_map[key] = (curr_edges_iter->first)->getID();
-            
-            // we also want to go through all the edges of the nodes above (2nd degree separation)
+            // we want to go through all the edges of the nodes above (2nd degree separation)
             // and since we used the forward edges to get here we now want the opposite (Jummping_F)
-            edgeList * edges_of_curr_edge = (curr_edges_iter->first)->getEdges(currentEdgeType);
+            edgeList * edges_of_curr_edge = (curr_edges_iter->first)->getEdges(getOppositeEdgeType(currentEdgeType));
             
             edgeListIterator edges_of_curr_edge_iter = edges_of_curr_edge->begin();
             while (edges_of_curr_edge_iter != edges_of_curr_edge->end()) 
@@ -843,7 +840,7 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                     if (bubble_map.find(new_key) == bubble_map.end()) 
                     {
                         // first time we've seen him
-                        bubble_map[new_key] = (edges_of_curr_edge_iter->first)->getID();
+                        bubble_map[new_key] = (curr_edges_iter->first)->getID();
                     } 
                     else 
                     {
@@ -851,11 +848,9 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                         //get the CrisprNode of the first guy
                         
                         CrisprNode * first_node = mNodes[bubble_map[new_key]];
-                        
-                        
-#ifdef DEBUG
-                        logInfo("Bubble found conecting "<<rootNode->getID()<<" : "<<first_node->getID()<<" : "<<(edges_of_curr_edge_iter->first)->getID(), 7);
-#endif
+//#ifdef DEBUG
+                        logInfo("Bubble found conecting "<<rootNode->getID()<<" : "<<first_node->getID()<<" : "<<(edges_of_curr_edge_iter->first)->getID(), 4);
+//#endif
                         //perform a coverage test on the nodes that end up here and kill the one with the least coverage
                         
                         // TODO: this is a pretty dumb test, since the coverage between the two nodes could be very similar
@@ -864,26 +859,23 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                         // NodeManager to calculate the average and stdev of the coverage and then remove a node only if
                         // it is below 1 stdev of the average, else it could be a biological thing that this bubble exists.
                         
-                        if (first_node->getCoverage() > (edges_of_curr_edge_iter->first)->getCoverage()) 
+                        if (first_node->getCoverage() > (curr_edges_iter->first)->getCoverage()) 
                         {
                             // the first guy has greater coverage so detach our current node
-                            (edges_of_curr_edge_iter->first)->detachNode();
-#ifdef DEBUG
-                            logInfo("Detaching "<<(edges_of_curr_edge_iter->first)->getID()<<" as it has lower coverage", 8);
-#endif
-                            //TODO: and update the bool in the edgelist?
-                            // edges_of_curr_edge_iter->second = false;
+                        	(curr_edges_iter->first)->detachNode();
+//#ifdef DEBUG
+                            logInfo("Detaching "<<(curr_edges_iter->first)->getID()<<" as it has lower coverage", 4);
+//#endif
                         } 
                         else 
                         {
                             // the first guy was lower so kill him
                             first_node->detachNode();
-#ifdef DEBUG
-                            logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 8);
-#endif
-
-                            //TODO: need to find him in the edge list in the outer while loop and set to false?
-                            // curr_edges->at(first_node) = false;
+//#ifdef DEBUG
+                            logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 4);
+//#endif
+                            // replace the existing key (to check for triple bubbles)
+                            bubble_map[new_key] = (curr_edges_iter->first)->getID();
                         }
                     }
                 }
