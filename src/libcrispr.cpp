@@ -70,7 +70,7 @@ THIS JUST DEFINES A BUNCH OF **templated** structs
     KSEQ_INIT(gzFile, gzread)
 
 
-READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
+READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength, const options& opts)
 {
     //-----
     // Wrapper used for searching reads for DRs
@@ -98,7 +98,10 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength)
     
     *aveReadLength = total_base / read_counter;
     logInfo("Average read length (of the first "<< CRASS_DEF_MAX_READS_FOR_DECISION<<" reads): "<< *aveReadLength, 2);
-    if((total_base / read_counter) > CRASS_DEF_READ_LENGTH_CUTOFF)
+    
+    // long reads defined by having at least two spacers 4DR + 2SP
+    unsigned int long_read_cutoff = (4*opts.lowDRsize) + (2*opts.lowSpacerSize);
+    if((total_base / read_counter) > long_read_cutoff)
     {
         return LONG_READ;
     }
@@ -200,6 +203,7 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
                 logInfo(tmp_holder->getHeader(), 8);
                 logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " ("<<tmp_holder->numRepeats()<<") repeated kmers found", 8);
 #endif
+
                 unsigned int actual_repeat_length = extendPreRepeat(tmp_holder, opts.searchWindowLength, opts.lowSpacerSize);
 
                 if ( (actual_repeat_length >= opts.lowDRsize) && (actual_repeat_length <= opts.highDRsize) )
@@ -208,7 +212,11 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
 
                     logInfo("\tPassed test 2. The repeat length is between "<<opts.lowDRsize<<" and "<<opts.highDRsize, 8);
 #endif
-
+                    if (opts.removeHomopolymers) 
+                    {
+                        tmp_holder->decode();
+                    }
+                    
                     // drop partials
                     tmp_holder->dropPartials();
                     if (qcFoundRepeats(tmp_holder))
@@ -955,9 +963,7 @@ bool isRepeatLowComplexity(std::string& repeat)
 void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder, const options& opts)
 {
 
-    if (opts.removeHomopolymers) {
-        tmpReadholder->decode();
-    }
+
     std::string dr_lowlexi = tmpReadholder->DRLowLexi();
     //logInfo(dr_lowlexi, 8);
     StringToken st = mStringCheck->getToken(dr_lowlexi);

@@ -51,10 +51,6 @@
 // --------------------------------------------------------------------
  // STRING LENGTH / MISMATCH / CLUSTER SIZE PARAMETERS
 // --------------------------------------------------------------------
-#define CRASS_DEF_READ_LENGTH_CUTOFF            (200.0)             // The length of read where the multipattern matcher would become insignificant. 
-                                                                    //   ie where it is very likely that there is 2 full repeat-spacer-repeat units
-#define CRASS_DEF_MAX_PATTERN_LENGTH            1024                // How long can a DR be?
-#define CRASS_DEF_MAX_LOST_SOULS_MISMATCHES     2
 #define CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW       30                  // Maximum number of cluster reps we will all vs all sw for
 #define CRASS_DEF_MIN_SW_ALIGNMENT_RATIO        (0.85)              // SW alignments need to be this percentage of the original query to be considered real
 #define CRASS_DEF_SW_SEARCH_EXT                 8

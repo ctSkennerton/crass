@@ -223,7 +223,14 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         lookupTable reads_found;
         
         // Use a different search routine, depending on if we allow mismatches or not.
-        READ_TYPE rt = decideWhichSearch(input_fastq, &mAveReadLength);
+        READ_TYPE rt = decideWhichSearch(input_fastq, &mAveReadLength, *mOpts);
+        
+        // Die if the average read length falls below 2DR + SP
+        if (mAveReadLength < (2*mOpts->lowDRsize) + mOpts->lowSpacerSize) 
+        {
+            logInfo("The average read length "<<mAveReadLength<<" is below the minimum threshold of "<<(2*mOpts->lowDRsize) + mOpts->lowSpacerSize, 1);
+            return 1;
+        }
         
         if(rt == LONG_READ)
         {
@@ -243,7 +250,7 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         if (patterns_lookup.empty()) 
         {
             logInfo("No direct repeat sequences were identified", 1);
-            return -1;
+            return 1;
         } 
         else 
         {
