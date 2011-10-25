@@ -117,7 +117,6 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
     int l, read_counter = 0, log_counter = 0;
-    unsigned int total_base = 0;
     // initialize seq
     seq = kseq_init(fp);
     //ReadHolder * tmp_holder = new ReadHolder();
@@ -147,7 +146,6 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
         // get the length of this sequence
         unsigned int seq_length = (unsigned int)read.length();
         
-        total_base += seq_length;
 
         //the mumber of bases that can be skipped while we still guarantee that the entire search
         //window will at some point in its iteration thru the sequence will not miss a any repeat
@@ -263,7 +261,6 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
     int l, read_counter = 0, log_counter = 0;
-    unsigned int total_base = 0;
     // initialize seq
     seq = kseq_init(fp);
         
@@ -293,7 +290,6 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
         unsigned int search_end = seq_length - opts.lowDRsize - 1;
         unsigned int final_index = seq_length - 1;
         
-        total_base += seq_length;
         
         // boyer-moore search
         for (unsigned int first_start = 0; first_start < search_end; first_start++)
@@ -303,6 +299,7 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
             if (search_begin >= search_end ) break;
             
             // do the search
+            
             int second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
 
             // check to see if we found something

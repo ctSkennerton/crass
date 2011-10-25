@@ -43,6 +43,7 @@
 #include <string>
 #include <getopt.h>
 #include "Rainbow.h"
+#include "config.h"
 // --------------------------------------------------------------------
 // General Macros
 // --------------------------------------------------------------------
@@ -109,8 +110,13 @@
 #define CRASS_DEF_MIN_SPACER_SIZE               26                  // minimum spacer size
 #define CRASS_DEF_MAX_SPACER_SIZE               50                  // maximum spacer size
 #define CRASS_DEF_NUM_DR_ERRORS                 0                   // maxiumum allowable errors in direct repeat
-#define CRASS_DEF_MAX_DEBUG_LOGGING             10
-#define CRASS_DEF_MAX_LOGGING                   4
+
+#ifdef DEBUG
+    #define CRASS_DEF_MAX_LOGGING               10
+#else
+    #define CRASS_DEF_MAX_LOGGING               4
+#endif
+
 #define CRASS_DEF_DEFAULT_LOGGING               1
 #define CRASS_DEF_HOMOPOLYMER_SCALLING          (0.70)              // the scalling for the spacers and direct repeats when remove homopolymers is set
 
