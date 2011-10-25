@@ -50,7 +50,7 @@
 #include <sys/stat.h>
 
 // local includes
-#include <config.h>
+#include "config.h"
 #include "crass.h"
 #include "crassDefines.h"
 #include "LoggerSimp.h"
@@ -68,11 +68,7 @@ void usage(void)
     std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { inputFile ...}"<<std::endl<<std::endl;
     std::cout<<"General Options:"<<std::endl;
     std::cout<< "-h --help                    This help message"<<std::endl;
-//-DDEBUG#ifdef DEBUG
-    std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_DEBUG_LOGGING<<"]"<<std::endl;
-//-DDEBUG#else
-//-DDEBUG    std::cout<< "\t-l --logLevel <INT>        Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_LOGGING<<"]"<<std::endl;
-//-DDEBUG#endif
+    std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_LOGGING<<"]"<<std::endl;
     std::cout<< "-o --outDir          <DIR>   Output directory [default: .]"<<std::endl;
     std::cout<< "-V --version                 Program and version information"<<std::endl;
     std::cout<< "--logToScreen                Print the logging information to screen rather than a file"<<std::endl;
@@ -241,20 +237,11 @@ int processOptions(int argc, char *argv[], options *opts)
                 break;
             case 'l': 
                 opts->logLevel =  atoi(optarg);
-//-DDEBUG#ifdef DEBUG
-                if (opts->logLevel > CRASS_DEF_MAX_DEBUG_LOGGING)
+                if(opts->logLevel > CRASS_DEF_MAX_LOGGING)
                 {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_DEBUG_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
-                    opts->logLevel = CRASS_DEF_MAX_DEBUG_LOGGING;
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
+                    opts->logLevel = CRASS_DEF_MAX_LOGGING;
                 }
-
-//-DDEBUG#else
-//-DDEBUG                if(opts->logLevel > CRASS_DEF_MAX_LOGGING)
-//-DDEBUG                {
-//-DDEBUG                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
-//-DDEBUG                    opts->logLevel = CRASS_DEF_MAX_LOGGING;
-//-DDEBUG                }
-//-DDEBUG#endif
                 break;
             case 'x':
                 opts->averageSpacerScalling = atof(optarg);

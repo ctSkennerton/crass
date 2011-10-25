@@ -768,6 +768,42 @@ int NodeManager::cleanGraph(void)
 		fcm_iter++;
 	}
 	
+	// then do bubbles
+	nv_iter = nv_other.begin();
+	while(nv_iter != nv_other.end())
+	{
+		// get the total rank first.  A linear node should have 4 edges
+		if((*nv_iter)->getTotalRank() != 4)
+		{
+			// get the rank for the the inner and jumping edges.
+			if((*nv_iter)->getInnerRank() != 2)
+			{
+				// there are multiple inner edges for this guy
+				// get a list of edges
+				edgeList * curr_edges = nv_iter->getEdges(CN_EDGE_FORWARD);
+				
+				// perform coverage arguement on the edges to choose the correct one
+				edgeListIterator curr_edges_iter = curr_edges->begin();
+				while(curr_edges_iter != curr_edges->end())
+				{
+					
+					curr_edges_iter++;
+				}
+				// add the bad guy to the detach list
+			}
+			else if((*nv_iter)->getJumpingRank != 2)
+			{
+				// there are multiple jumping edges for this guy
+			}
+			else
+			{
+				// something has gone wrong
+			}
+		}
+		
+		nv_iter++;
+	}
+	
 	// finally, detach!
 	nv_iter = detach_list.begin();
 	while(nv_iter != detach_list.end())
@@ -776,12 +812,7 @@ int NodeManager::cleanGraph(void)
 		nv_iter++;
 	}
 
-	// then do bubbles
-	nv_iter = nv_other.begin();
-	while(nv_iter != nv_other.end())
-	{
-		nv_iter++;
-	}
+
 
 	return 0;
 }
@@ -828,9 +859,9 @@ void NodeManager::setUpperAndLowerCoverage(void)
         }
         nl_iter++;
     }
-//-DDEBUG#ifdef DEBUG
+#ifdef DEBUG
     logInfo("Max Node Coverage: "<<mMaxCoverage<<" Min Node Coverage: "<<mMinCoverage<<std::endl,5);
-//-DDEBUG#endif
+#endif
 }
 
 
@@ -847,7 +878,7 @@ void NodeManager::setColourLimits(void)
     } 
     else 
     {
-    mRainbow.setLimits(mMinCoverage,mMaxCoverage);
+    	mRainbow.setLimits(mMinCoverage,mMaxCoverage);
     }
 }
 

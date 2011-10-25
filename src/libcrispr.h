@@ -77,7 +77,7 @@ enum side{rightSide, leftSide};
 // search functions
 //**************************************
 
-READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength);
+READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength, const options &opts);
 
 void longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
 
@@ -100,7 +100,7 @@ bool isRepeatLowComplexity(std::string& repeat);
 
 
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder, const options& opts);
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder);
 
 //
 //
