@@ -115,14 +115,18 @@ class CrisprNode
         inline void detachNode(void) { setAttach(false); }              // detach this node
         inline void reattachNode(void) { setAttach(true); }             // re-attach this node
         inline bool isAttached(void) { return mAttached; }            // der...
+        void setAsDetached(void) { mAttached = false; }					// DO NOT CALL THIS OUTSIDE OF THE ATTACH FUNCTION!
         int getRank(EDGE_TYPE type);                                    // return the rank of the node
+        void updateRank(bool attachState, EDGE_TYPE type);				// increment or decrement the rank of this type
         inline void incrementCount(void) { mCoverage++; }             // Increment the coverage
-        
+        int getTotalRank(void) { return getRank(CN_EDGE_BACKWARD) + getRank(CN_EDGE_FORWARD) + getRank(CN_EDGE_JUMPING_F) + getRank(CN_EDGE_JUMPING_B); }
+        int getJumpingRank(void) { return getRank(CN_EDGE_JUMPING_F) + getRank(CN_EDGE_JUMPING_B); }
+        int getInnerRank(void) { return getRank(CN_EDGE_BACKWARD) + getRank(CN_EDGE_FORWARD); }
         //
         // File IO / printing
         //
 
-        void printEdges(std::ostream &dataOut, StringCheck * ST, std::string label, bool showDetached, bool printBackEdges);    
+        void printEdges(std::ostream &dataOut, StringCheck * ST, std::string label, bool showDetached, bool printBackEdges, bool longDesc);    
         std::vector<std::string> getReadHeaders(StringCheck * ST);
         std::string sayEdgeTypeLikeAHuman(EDGE_TYPE type);
     

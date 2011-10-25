@@ -196,7 +196,13 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 		}
 		drg_iter++;
 	}
-	
+
+	// print clean graphs
+	if(renderDebugGraphs("Clean_"))
+	{
+		return 3;
+	}
+
     logInfo("all done!", 1);
 	return 0;
 }
@@ -1704,7 +1710,7 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
             graph_file.open(graph_file_name.c_str());
             if (graph_file.good()) 
             {
-                mDRs[mTrueDRs[drg_iter->first]]->printGraph(graph_file, mTrueDRs[drg_iter->first], true, false);
+                mDRs[mTrueDRs[drg_iter->first]]->printGraph(graph_file, mTrueDRs[drg_iter->first], false, false, false);
 #if HAVE_NEATO && RENDERING
                 // create a command string and call neato to make the image file
                 std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";

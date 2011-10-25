@@ -149,12 +149,12 @@ class NodeManager {
         inline StringCheck * getStringCheck(void) { return &mStringCheck; }
 		void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
 		void findAllNodes(NodeVector * allNodes);
-        
+		void findAllNodes(NodeVector * capNodes, NodeVector * otherNodes);
+		int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
     // Walking
 		void walk(void);
 		bool getEdge(WalkingManager * walkElem, CrisprNode * node, EDGE_TYPE * et);
 		bool stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprNode ** detatchDelay);
-		void countEdgesForType(int * count, CrisprNode * currNode, EDGE_TYPE edgeType);
 		
     // Cleaning
         int cleanGraph(void);
@@ -166,10 +166,11 @@ class NodeManager {
         void setColourLimits(void);
 
     // Printing / IO
-        void printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges);         // Print a graphviz style graph of the DRs and spacers
-		void printNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode);
+        void printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc);         // Print a graphviz style graph of the DRs and spacers
+		void printNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc);
 		void printEdgeAttributes(std::ostream& dataOut);
-    
+		int printReadInfo(void);
+		
     private:
 		
 	// functions

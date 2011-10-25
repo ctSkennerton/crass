@@ -58,8 +58,6 @@ bool CrisprNode::addEdge(CrisprNode * parterNode, EDGE_TYPE type)
     // Add a new edge return success if the partner has been added
     // 
     
-    //logInfo("Adding "<<sayEdgeTypeLikeAHuman(type)<<" edge from "<<getID()<<" to "<<parterNode->getID(), 1);
-
     // get the right edge list
     edgeList * add_list = getEdges(type);
     
@@ -68,13 +66,23 @@ bool CrisprNode::addEdge(CrisprNode * parterNode, EDGE_TYPE type)
     {
         // new guy
         (*add_list)[parterNode] = true;
+        switch(type)
+        {
+            case CN_EDGE_FORWARD:
+                mInnerRank_F++;
+                break;
+            case CN_EDGE_BACKWARD:
+                mInnerRank_B++;
+                break;
+            case CN_EDGE_JUMPING_F:
+                mJumpingRank_F++;
+                break;
+            case CN_EDGE_JUMPING_B:
+                mJumpingRank_B++;
+                break;
+        }
         return true;
     }
-//    else
-//    {
-//        // already got this guy
-//        logError("Adding edge ("<<parterNode->getID()<<") twice to CN ("<<getID()<<")");
-//    }
     return false;
 }
 
@@ -119,6 +127,9 @@ void CrisprNode::setAttach(bool attachState)
             edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_BACKWARD);
             (*other_eli)[this] = attachState;
             eli->second = attachState;
+            (eli->first)->updateRank(attachState, CN_EDGE_BACKWARD);
+            if((eli->first)->getTotalRank() == 0)
+            	(eli->first)->setAsDetached();
         }
         eli++;
     }
@@ -130,6 +141,9 @@ void CrisprNode::setAttach(bool attachState)
             edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_FORWARD);
             (*other_eli)[this] = attachState;
             eli->second = attachState;
+            (eli->first)->updateRank(attachState, CN_EDGE_FORWARD);
+            if((eli->first)->getTotalRank() == 0)
+            	(eli->first)->setAsDetached();
         }
         eli++;
     }
@@ -141,6 +155,9 @@ void CrisprNode::setAttach(bool attachState)
             edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_JUMPING_B);
             (*other_eli)[this] = attachState;
             eli->second = attachState;
+            (eli->first)->updateRank(attachState, CN_EDGE_JUMPING_B);
+            if((eli->first)->getTotalRank() == 0)
+            	(eli->first)->setAsDetached();
         }
         eli++;
     }
@@ -153,6 +170,9 @@ void CrisprNode::setAttach(bool attachState)
             edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_JUMPING_F);
             (*other_eli)[this] = attachState;
             eli->second = attachState;
+            (eli->first)->updateRank(attachState, CN_EDGE_JUMPING_F);
+            if((eli->first)->getTotalRank() == 0)
+            	(eli->first)->setAsDetached();
         }
         eli++;
     }
@@ -182,12 +202,36 @@ int CrisprNode::getRank(EDGE_TYPE type)
     }
 }
 
+void CrisprNode::updateRank(bool attachState, EDGE_TYPE type){
+    //-----
+	// increment or decrement the rank of this type
+    //
+	int increment = -1;
+	if(attachState)
+		increment = 1;
+	switch(type)
+	{
+		case CN_EDGE_FORWARD:
+			mInnerRank_F += increment;
+            break;
+		case CN_EDGE_BACKWARD:
+			mInnerRank_B += increment;
+            break;
+		case CN_EDGE_JUMPING_F:
+			mJumpingRank_F += increment;
+            break;
+		case CN_EDGE_JUMPING_B:
+			mJumpingRank_B += increment;
+            break;
+	}
+}
+
 //
 // File IO / printing
 //
 
 
-void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string label, bool showDetached, bool printBackEdges)
+void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string label, bool showDetached, bool printBackEdges, bool longDesc)
 {
     //-----
     // print the edges so that the first member of the pair is first
@@ -201,9 +245,11 @@ void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string
         if((eli->second) || showDetached)
         {
         	std::stringstream ss;
-        	ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
-        	std::string label2 = ss.str();
-            gvEdge(dataOut,label,label2);
+        	if(longDesc)
+        		ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
+        	else
+        		ss << (eli->first)->getID();
+            gvEdge(dataOut,label,ss.str());
         }
         eli++;
     }
@@ -213,9 +259,11 @@ void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string
          if((eli->second) || showDetached)
          {
          	std::stringstream ss;
-         	ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
-         	std::string label2 = ss.str();
-            gvJumpingEdge(dataOut,label,label2);
+        	if(longDesc)
+        		ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
+        	else
+        		ss << (eli->first)->getID();
+            gvJumpingEdge(dataOut,label,ss.str());
          }
         eli++;
     }
@@ -227,9 +275,11 @@ void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string
             if((eli->second) || showDetached)
             {
             	std::stringstream ss;
-            	ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
-            	std::string label2 = ss.str();
-                gvEdge(dataOut,label,label2);
+            	if(longDesc)
+            		ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
+            	else
+            		ss << (eli->first)->getID();
+                gvEdge(dataOut,label,ss.str());
             }
             eli++;
         }
@@ -239,9 +289,11 @@ void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string
             if((eli->second) || showDetached)
             {
             	std::stringstream ss;
-            	ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
-            	std::string label2 = ss.str();
-                gvJumpingEdge(dataOut,label,label2);
+            	if(longDesc)
+            		ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
+            	else
+            		ss << (eli->first)->getID();
+                gvJumpingEdge(dataOut,label,ss.str());
             }
             eli++;
         }
