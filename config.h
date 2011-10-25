@@ -2,7 +2,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* define to 1 for debug statments */
-#define DEBUG 1
+/* #undef DEBUG */
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #define HAVE_FCNTL_H 1
@@ -106,7 +106,7 @@
 #define PACKAGE_VERSION "0.0.3"
 
 /* Defines to 1 if image rendering is to be performed */
-#define RENDERING 1
+/* #undef RENDERING */
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

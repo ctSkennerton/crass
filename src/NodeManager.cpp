@@ -780,7 +780,7 @@ int NodeManager::cleanGraph(void)
 			{
 				// there are multiple inner edges for this guy
 				// get a list of edges
-				edgeList * curr_edges = nv_iter->getEdges(CN_EDGE_FORWARD);
+				edgeList * curr_edges = (*nv_iter)->getEdges(CN_EDGE_FORWARD);
 				
 				// perform coverage arguement on the edges to choose the correct one
 				edgeListIterator curr_edges_iter = curr_edges->begin();
@@ -791,7 +791,7 @@ int NodeManager::cleanGraph(void)
 				}
 				// add the bad guy to the detach list
 			}
-			else if((*nv_iter)->getJumpingRank != 2)
+			else if((*nv_iter)->getJumpingRank() != 2)
 			{
 				// there are multiple jumping edges for this guy
 			}
