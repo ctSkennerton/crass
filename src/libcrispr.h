@@ -100,7 +100,7 @@ bool isRepeatLowComplexity(std::string& repeat);
 
 
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder, const options& opts);
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmp_holder);
 
 //
 //

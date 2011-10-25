@@ -232,7 +232,7 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
                         //ReadHolder * candidate_read = new ReadHolder();
                         //*candidate_read = *tmp_holder;
                         //addReadHolder(mReads, mStringCheck, candidate_read);
-                        addReadHolder(mReads, mStringCheck, tmp_holder, opts);
+                        addReadHolder(mReads, mStringCheck, tmp_holder);
                         match_found = true;
                         patternsHash[tmp_holder->repeatStringAt(0)] = true;
                         readsFound[tmp_holder->getHeader()] = true;
@@ -371,7 +371,7 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
 #endif
                             patternsHash[tmp_holder->repeatStringAt(0)] = true;
                             readsFound[tmp_holder->getHeader()] = true;
-                            addReadHolder(mReads, mStringCheck, tmp_holder, opts);
+                            addReadHolder(mReads, mStringCheck, tmp_holder);
                             break;
                         }
                     }
@@ -463,7 +463,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
                     DR_end = (unsigned int)read.length() - 1;
                 }
                 tmp_holder->startStopsAdd(start_pos, DR_end);
-                addReadHolder(mReads, mStringCheck, tmp_holder, opts);
+                addReadHolder(mReads, mStringCheck, tmp_holder);
             }
         }
         else
@@ -961,7 +961,7 @@ bool isRepeatLowComplexity(std::string& repeat)
 
 
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder, const options& opts)
+void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder)
 {
 
 
