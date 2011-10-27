@@ -71,13 +71,6 @@ fi
 AC_PROG_CXX
 AC_PROG_CC
 
-# Checks for Graphviz program neato
-AC_CHECK_PROG([NEATO],[neato],[yes],[no])
-if test x$NEATO = xyes; then
-    AC_DEFINE([HAVE_NEATO],[1],[Defines to 1 if the program 'neato' is found in PATH])
-fi 
-
-
 # Checks for libraries.
 AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found])])
 
@@ -95,5 +88,23 @@ AC_TYPE_SIZE_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset pow strchr strspn])
+
+# Checks for Graphviz program neato
+AC_CHECK_PROG([NEATO],[neato],[yes],[no])
+if test x$NEATO = xyes; then
+    AC_DEFINE([HAVE_NEATO],[1],[Defines to 1 if the program 'neato' is found in PATH])
+fi 
+
+# Checks for Cap3 assembler
+AC_CHECK_PROG([CAP],[cap3],[yes],[no])
+if test x$CAP = xyes; then
+    AC_DEFINE([HAVE_CAP3],[1],[Defines to 1 if the program 'cap3' is found in PATH])
+fi 
+
+# Checks for both executables for velvet
+AC_CHECK_PROGS([VELVET],[velvetg velveth],[yes],[no])
+if test x$VELVET = xyes; then
+    AC_DEFINE([HAVE_VELVET],[1],[Defines to 1 if the program 'velvetg' and 'velveth' is found in PATH])
+fi 
 
 AC_OUTPUT(Makefile src/Makefile man/Makefile)

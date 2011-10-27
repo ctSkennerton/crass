@@ -80,6 +80,7 @@ static struct option long_options [] = {
     {NULL, no_argument, NULL, 0}
 };
 
+void assemblyMain(int argc, char * argv[]);
 
 void  usage(void);
 

@@ -57,6 +57,7 @@
 #include "SeqUtils.h"
 #include "WorkHorse.h"
 #include "Rainbow.h"
+#include "AssemblyWrapper.h"
 
 
 //**************************************
@@ -328,6 +329,12 @@ int main(int argc, char *argv[])
     {
         usage();
         exit(1);
+    }
+    
+    if (strcmp(argv[1], "assemble") == 0) {
+        // our user wants to do an assembly so let's load up the assembler main function
+        assemblyMain(argc - 1 , argv + 1);
+        
     }
     /* application of default options */
     options opts = {
