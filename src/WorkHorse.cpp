@@ -148,16 +148,6 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 		return 1;
 	}
 	
-    // print the reads to a file if requested
-    if (mOpts->detect)
-    {
-    	logInfo("Dumping reads", 1);
-        dumpReads(&mDR2GIDMap, true);
-        logInfo("all done!", 1);
-
-        return 0;
-    }
-    
     // build the spacer end graph
 	if(buildGraph())
 	{
@@ -170,37 +160,40 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 		return 3;
 	}
 
-	DR_Cluster_MapIterator drg_iter;
-	
-	// create a spacer dictionary
-	drg_iter = mDR2GIDMap.begin();
-	while(drg_iter != mDR2GIDMap.end())
+	// clean each spacer end graph
+	if(cleanGraph())
 	{
-		if(NULL != drg_iter->second)
-		{            
-			(mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers");
-		}
-		drg_iter++;
+		return 4;
 	}
 
-	// clean each spacer end graph
-	drg_iter = mDR2GIDMap.begin();
-	while(drg_iter != mDR2GIDMap.end())
+	// make contigs
+	if(splitIntoContigs())
 	{
-		if(NULL != drg_iter->second)
-		{            
-			if((mDRs[mTrueDRs[drg_iter->first]])->cleanGraph())
-			{
-				return 5;
-			}
-		}
-		drg_iter++;
+		return 5;
+	}
+	
+	// dump the spacers to file
+	if(dumpSpacers())
+	{
+		return 6;
+	}
+
+    // print the reads to a file if requested
+	if(dumpReads(&mDR2GIDMap, false))
+	{
+		return 7;
 	}
 
 	// print clean graphs
 	if(renderDebugGraphs("Clean_"))
 	{
-		return 3;
+		return 8;
+	}
+
+	// print spacer graphs
+	if(renderSpacerGraphs())
+	{
+		return 9;
 	}
 
     logInfo("all done!", 1);
@@ -313,6 +306,27 @@ int WorkHorse::buildGraph(void)
     return 0;
 }
 
+int WorkHorse::cleanGraph(void)
+{
+	//-----
+	// Wrapper for graph cleaning
+	//
+	logInfo("Cleaning graphs", 1);
+	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+	while(drg_iter != mDR2GIDMap.end())
+	{
+		if(NULL != drg_iter->second)
+		{            
+			if((mDRs[mTrueDRs[drg_iter->first]])->cleanGraph())
+			{
+				return 1;
+			}
+		}
+		drg_iter++;
+	}
+	return 0;
+}
+
 //**************************************
 // Functions used to cluster DRs into groups and identify the "true" DR
 //**************************************
@@ -336,7 +350,7 @@ int WorkHorse::mungeDRs(void)
         clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &group_kmer_counts_map);
         ++read_map_iter;
     }
-    
+#if 0
     logInfo("Reducing list of potential DRs (2): Purging singleton clusters", 1);
     int purge_counter = 0;
     DR_Cluster_MapIterator dcg_iter = mDR2GIDMap.begin();
@@ -374,7 +388,7 @@ int WorkHorse::mungeDRs(void)
 
     }
    
-    
+#endif
     logInfo("Reducing list of potential DRs (3): Cluster refinement and true DR finding", 1);
     
     // go through all the counts for each group
@@ -942,8 +956,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                 collapsed_options.clear();
 #ifdef DEBUG
                 logInfo("   ...ignoring (FA)", 5);
-                true_DR += consensus_array[i];
 #endif
+                true_DR += consensus_array[i];
+                refined_DR_ends[i] = true;
             }
             else
             {
@@ -998,8 +1013,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                     {
 #ifdef DEBUG
                     	logInfo("   ...ignoring (RLO KK)", 5);
-                        true_DR += consensus_array[i];
 #endif
+                        true_DR += consensus_array[i];
+                        refined_DR_ends[i] = true;
                     }
                     collapsed_options.clear();
                 }
@@ -1056,10 +1072,13 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                 dr_zone_end--;
                 diffs--;
             }
-            if(!refined_DR_ends[dr_zone_start])
+            if(0 < diffs)
             {
-                dr_zone_start++;
-                diffs--;
+				if(!refined_DR_ends[dr_zone_start])
+				{
+					dr_zone_start++;
+					diffs--;
+				}
             }
         }
         
@@ -1615,6 +1634,28 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
 }
 
 //**************************************
+// contig making
+//**************************************
+int WorkHorse::splitIntoContigs(void)
+{
+	//-----
+	// split all groups into contigs
+	//
+    // go through the DR2GID_map and make all reads in each group into nodes
+    DR_ListIterator dr_iter = mDRs.begin();
+    while(dr_iter != mDRs.end())
+    {
+        if(NULL != dr_iter->second)
+        {
+        	if((dr_iter->second)->splitIntoContigs())
+        		return 1;
+        }
+        dr_iter++;
+    }
+    return 0;
+}
+
+//**************************************
 // file IO
 //**************************************
 
@@ -1637,22 +1678,22 @@ void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup ,
 }
 
 
-void WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
+int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
 {
     //-----
     // Print the reads from one cluster to a file...
     //
-    DR_Cluster_MapIterator dr_clust_iter = DR2GID_map->begin();
-    while (dr_clust_iter != DR2GID_map->end()) 
+	logInfo("Dumping reads", 1);
+    DR_Cluster_MapIterator drg_iter = DR2GID_map->begin();
+    while (drg_iter != DR2GID_map->end()) 
     {
         // make sure that our cluster is real
-        if (dr_clust_iter->second != NULL) 
+        if (drg_iter->second != NULL) 
         {
-
         	std::ofstream reads_file;
-            reads_file.open((mOpts->output_fastq + "Cluster_"+ to_string(dr_clust_iter->first) + ".fa").c_str());
-            DR_ClusterIterator dr_iter = dr_clust_iter->second->begin();
-            while (dr_iter != dr_clust_iter->second->end()) 
+            reads_file.open((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str());
+            DR_ClusterIterator dr_iter = drg_iter->second->begin();
+            while (dr_iter != drg_iter->second->end()) 
             {
                 ReadListIterator read_iter = mReads[*dr_iter]->begin();
                 while (read_iter != mReads[*dr_iter]->end()) 
@@ -1669,10 +1710,29 @@ void WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
             reads_file.close();
         }
 
-        dr_clust_iter++;
+        drg_iter++;
     }
+	return 0;
 }
 
+int WorkHorse::dumpSpacers(void)
+{
+	//-----
+	// Wrapper for graph cleaning
+	//
+	// create a spacer dictionary
+	logInfo("Dumping spacers", 1);
+	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+	while(drg_iter != mDR2GIDMap.end())
+	{
+		if(NULL != drg_iter->second)
+		{            
+			(mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers", false);
+		}
+		drg_iter++;
+	}
+	return 0;
+}
 
 void WorkHorse::writeLookupToFile(string &outFileName, lookupTable &outLookup)
 {
@@ -1713,11 +1773,11 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
         {            
             std::ofstream graph_file;
             std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
-            std::string graph_file_name = graph_file_prefix + ".gv";
+            std::string graph_file_name = graph_file_prefix + "_debug.gv";
             graph_file.open(graph_file_name.c_str());
             if (graph_file.good()) 
             {
-                mDRs[mTrueDRs[drg_iter->first]]->printGraph(graph_file, mTrueDRs[drg_iter->first], false, false, false);
+                mDRs[mTrueDRs[drg_iter->first]]->printDebugGraph(graph_file, mTrueDRs[drg_iter->first], false, false, false);
 #if HAVE_NEATO && RENDERING
                 // create a command string and call neato to make the image file
                 std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
@@ -1736,3 +1796,49 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
     return 0;
 }
 
+int WorkHorse::renderSpacerGraphs(void)
+{
+	//-----
+	// Print the cleaned? spacer graph
+	//
+    // use the default name
+	return renderSpacerGraphs("Group_");
+}
+
+int WorkHorse::renderSpacerGraphs(std::string namePrefix)
+{
+	//-----
+	// Print the cleaned? spacer graph
+	//
+	// go through the DR2GID_map and make all reads in each group into nodes
+    logInfo("Rendering spacer graphs" , 1);
+
+    DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+    while(drg_iter != mDR2GIDMap.end())
+    {
+        if(NULL != drg_iter->second)
+        {            
+            std::ofstream graph_file;
+            std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
+            std::string graph_file_name = graph_file_prefix + "_spacers.gv";
+            graph_file.open(graph_file_name.c_str());
+            if (graph_file.good()) 
+            {
+                mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], true);
+#if HAVE_NEATO && RENDERING
+                // create a command string and call neato to make the image file
+                std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                int bob = system(cmd.c_str());
+                bob++;
+#endif
+            } 
+            else 
+            {
+                logError("Unable to create graph output file "<<graph_file_name);
+            }
+            graph_file.close();
+        }
+        drg_iter++;
+    }
+    return 0;
+}

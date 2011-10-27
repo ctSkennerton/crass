@@ -74,8 +74,6 @@ typedef std::pair<CrisprNode *, CrisprNode *> CrisprNodePairIterator;
 //macros
 #define makeKey(i,j) (i*100000)+j
 
-
-
 class WalkingManager {
     CrisprNodePair WM_WalkingElem;
     bool WM_Direction;
@@ -133,11 +131,6 @@ class NodeManager {
         NodeManager(std::string drSeq, const options * userOpts);
         ~NodeManager(void);
 
-		inline int getMaxCoverage(void){ return mMaxCoverage;}
-		inline int getMinCoverage(void){ return mMinCoverage;}
-		inline void setMaxCoverage(int i){ mMaxCoverage = i;}
-		inline void setMinCoverage(int i){ mMinCoverage = i;}
-
 		bool addReadHolder(ReadHolder * RH);
 
         NodeListIterator nodeBegin(void)
@@ -156,6 +149,7 @@ class NodeManager {
 		void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
 		void findAllNodes(NodeVector * allNodes);
 		void findAllNodes(NodeVector * capNodes, NodeVector * otherNodes);
+		void findAllNodes(NodeVector * crossNodes, NodeVector * pathNodes, NodeVector * capNodes, NodeVector * otherNodes);
 		int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
         EDGE_TYPE getOppositeEdgeType(EDGE_TYPE currentEdgeType);
 
@@ -167,18 +161,22 @@ class NodeManager {
     // Cleaning
         int cleanGraph(void);
         void clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType);
-    // Spacer dictionaries
-        void dumpSpacerDict(std::string spacerFileName);
+    
+    // Contigs
+        int splitIntoContigs(void);
 
     // Making purdy colours
-        void setColourLimits(void);
+        void setDebugColourLimits(void);
+        void setSpacerColourLimits(void);
 
     // Printing / IO
-        void printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc);         // Print a graphviz style graph of the DRs and spacers
-		void printNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc);
-		void printEdgeAttributes(std::ostream& dataOut);
-		int printReadInfo(void);
-		
+        void printDebugGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc);         // Print a graphviz style graph of the DRs and spacers
+		void printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc); 
+        void printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc);         // Print a graphviz style graph of the FULL spacers
+
+	// Spacer dictionaries
+		void dumpSpacerDict(std::string spacerFileName, bool showDetached);
+
     private:
 		
 	// functions
@@ -194,9 +192,8 @@ class NodeManager {
         SpacerList mSpacers;                // list of all the spacers
         ReadList mReadList;                 // list of readholders
         StringCheck mStringCheck;           // string check object for unique strings 
-        Rainbow mRainbow;                   // the Rainbow class for making colours
-        int mMaxCoverage;                   // The maximum coverage of any of the CrisprNodes managed 
-        int mMinCoverage;                   // The minimum coverage of any of the CrisprNodes managed
+        Rainbow mDebugRainbow;              // the Rainbow class for making colours
+        Rainbow mSpacerRainbow;             // the Rainbow class for making colours
         const options * mOpts;              // pointer to the user options structure
 };
 

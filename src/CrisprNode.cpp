@@ -167,7 +167,6 @@ void CrisprNode::setAttach(bool attachState)
     eli = mJumpingBackwardEdges.begin();
     while(eli != mJumpingBackwardEdges.end())
     {
-        std::cout<<(eli->first)->isAttached()<<" : "<<eli->second<< " : "<< attachState<<std::endl;
         if((eli->second ^ attachState) && (eli->first)->isAttached())
         {
             edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_JUMPING_F);

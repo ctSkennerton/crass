@@ -62,8 +62,6 @@ NodeManager::NodeManager(std::string drSeq, const options * userOpts)
     // constructor
     //
     mDirectRepeatSequence = drSeq;
-    mMinCoverage = 1000000;
-    mMaxCoverage = 0;
     mOpts = userOpts;
     mStringCheck.setName("NM_" + drSeq);
 }
@@ -602,6 +600,43 @@ void NodeManager::findAllNodes(NodeVector * capNodes, NodeVector * otherNodes)
     }
 }
 
+void NodeManager::findAllNodes(NodeVector * crossNodes, NodeVector * pathNodes, NodeVector * capNodes, NodeVector * otherNodes)
+{
+	//-----
+	// make nodevectors of all of the nodes, split between cap, cross, path and other 
+	//
+	crossNodes->clear();
+	pathNodes->clear();
+	capNodes->clear();
+	otherNodes->clear();
+	
+    NodeListIterator all_node_iter = mNodes.begin();
+    while (all_node_iter != mNodes.end()) 
+    {
+    	if((all_node_iter->second)->isAttached())
+    	{
+			int rank = (all_node_iter->second)->getTotalRank();
+			switch (rank)
+			{
+			case 3:
+				crossNodes->push_back(all_node_iter->second);
+				break;
+			case 2:
+				pathNodes->push_back(all_node_iter->second);
+				break;
+			case 1:
+				capNodes->push_back(all_node_iter->second);
+				break;
+			default:
+				otherNodes->push_back(all_node_iter->second);
+				break;
+					
+			}
+    	}
+    	all_node_iter++;
+    }
+}
+
 int NodeManager::findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode)
 {
 	//-----
@@ -848,9 +883,9 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                         //get the CrisprNode of the first guy
                         
                         CrisprNode * first_node = mNodes[bubble_map[new_key]];
-//#ifdef DEBUG
-                        logInfo("Bubble found conecting "<<rootNode->getID()<<" : "<<first_node->getID()<<" : "<<(edges_of_curr_edge_iter->first)->getID(), 4);
-//#endif
+#ifdef DEBUG
+                        logInfo("Bubble found conecting "<<rootNode->getID()<<" : "<<first_node->getID()<<" : "<<(edges_of_curr_edge_iter->first)->getID(), 8);
+#endif
                         //perform a coverage test on the nodes that end up here and kill the one with the least coverage
                         
                         // TODO: this is a pretty dumb test, since the coverage between the two nodes could be very similar
@@ -863,17 +898,17 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                         {
                             // the first guy has greater coverage so detach our current node
                         	(curr_edges_iter->first)->detachNode();
-//#ifdef DEBUG
-                            logInfo("Detaching "<<(curr_edges_iter->first)->getID()<<" as it has lower coverage", 4);
-//#endif
+#ifdef DEBUG
+                            logInfo("Detaching "<<(curr_edges_iter->first)->getID()<<" as it has lower coverage", 8);
+#endif
                         } 
                         else 
                         {
                             // the first guy was lower so kill him
                             first_node->detachNode();
-//#ifdef DEBUG
-                            logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 4);
-//#endif
+#ifdef DEBUG
+                            logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 8);
+#endif
                             // replace the existing key (to check for triple bubbles)
                             bubble_map[new_key] = (curr_edges_iter->first)->getID();
                         }
@@ -908,8 +943,23 @@ EDGE_TYPE NodeManager::getOppositeEdgeType(EDGE_TYPE currentEdgeType)
     }
 }
 
+// Contigs    
+int NodeManager::splitIntoContigs(void)
+{
+	//-----
+	// split the group into contigs 
+	//
+	// get all of  the node lists
+	NodeVector cross_nodes, path_nodes, cap_nodes, other_nodes;
+	findAllNodes(&cross_nodes, &path_nodes, &cap_nodes, &other_nodes);
+
+	return 0;
+}
+    
+// Printing / IO
+
 // Spacer dictionaries
-void NodeManager::dumpSpacerDict(std::string spacerFileName)
+void NodeManager::dumpSpacerDict(std::string spacerFileName, bool showDetached)
 {
 	//-----
 	// Dump a spacer dictionary to file
@@ -918,12 +968,16 @@ void NodeManager::dumpSpacerDict(std::string spacerFileName)
 	spacer_file	.open(spacerFileName.c_str());
     if (spacer_file.good()) 
     {
+    	spacer_file <<"SEQ,ID,COUNT" << std::endl;
     	SpacerListIterator spacer_iter = mSpacers.begin();
     	while(spacer_iter != mSpacers.end())
     	{
-    		SpacerInstance * SI = spacer_iter->second;
-    		std::string spacer = mStringCheck.getString(SI->getID());
-        	spacer_file << spacer << " : " << SI->getCount() << " : " << (SI->getLeader())->getID() << " : " << (SI->getLast())->getID() << std::endl;
+			SpacerInstance * SI = spacer_iter->second;
+    		if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+    		{
+				std::string spacer = mStringCheck.getString(SI->getID());
+				spacer_file << spacer << "," << SI->getID() << "," << SI->getCount() << std::endl;// << " : " << (SI->getLeader())->getID() << " : " << (SI->getLast())->getID() << std::endl;
+    		}
     		spacer_iter++;
     	}
     	spacer_file.close();
@@ -931,57 +985,81 @@ void NodeManager::dumpSpacerDict(std::string spacerFileName)
 
 }
 
-
 // Making purdy colours
-void NodeManager::setUpperAndLowerCoverage(void)
-{
-    // loop through all of the nodes and determine the upper and lower dounds for our graph
-    NodeListIterator nl_iter = nodeBegin();
-    while (nl_iter != nodeEnd()) 
-    {
-        int coverage = (nl_iter->second)->getCoverage();
-        if (coverage > mMaxCoverage) 
-        {
-            mMaxCoverage = coverage;
-        }
-        else if(coverage < mMinCoverage)
-        {
-            mMinCoverage = coverage;
-        }
-        nl_iter++;
-    }
-#ifdef DEBUG
-    logInfo("Max Node Coverage: "<<mMaxCoverage<<" Min Node Coverage: "<<mMinCoverage<<std::endl,5);
-#endif
-}
-
-
-void NodeManager::setColourLimits(void)
+void NodeManager::setDebugColourLimits(void)
 {
     //-----
     // Make the colurs needed for printing the graphviz stuff
     //
-    setUpperAndLowerCoverage();
-    mRainbow.setType(mOpts->graphColourType);
+    double max_coverage = 0;
+    double min_coverage = 10000000;
+    NodeListIterator nl_iter = nodeBegin();
+    while (nl_iter != nodeEnd()) 
+    {
+        int coverage = (nl_iter->second)->getCoverage();
+        if (coverage > max_coverage) 
+        {
+            max_coverage = coverage;
+        }
+        else if(coverage < min_coverage)
+        {
+            min_coverage = coverage;
+        }
+        nl_iter++;
+    }
+
+    mDebugRainbow.setType(mOpts->graphColourType);
+    
     if (mOpts->coverageBins != -1) 
     {
-        mRainbow.setLimits(mMinCoverage, mMaxCoverage, mOpts->coverageBins);
+        mDebugRainbow.setLimits(min_coverage, max_coverage, mOpts->coverageBins);
     } 
     else 
     {
-    	mRainbow.setLimits(mMinCoverage,mMaxCoverage);
+    	mDebugRainbow.setLimits(min_coverage,max_coverage);
     }
 }
 
-// Printing / IO
+void NodeManager::setSpacerColourLimits(void)
+{
+    //-----
+    // Make the colurs needed for printing the graphviz stuff
+    //
+    double max_coverage = 0;
+    double min_coverage = 10000000;
 
+    SpacerListIterator sp_iter = mSpacers.begin();
+    while (sp_iter != mSpacers.end()) 
+    {
+        int coverage = (sp_iter->second)->getCount();
+        if (coverage > max_coverage) 
+        {
+            max_coverage = coverage;
+        }
+        else if(coverage < min_coverage)
+        {
+            min_coverage = coverage;
+        }
+        sp_iter++;
+    }
 
-void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc)
+    mSpacerRainbow.setType(mOpts->graphColourType);
+    if (mOpts->coverageBins != -1) 
+    {
+        mSpacerRainbow.setLimits(min_coverage, max_coverage, mOpts->coverageBins);
+    } 
+    else 
+    {
+    	mSpacerRainbow.setLimits(min_coverage,max_coverage);
+    }
+}
+
+void NodeManager::printDebugGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc)
 {
     //-----
     // Print a graphviz style graph of the DRs and spacers
     //
-    setColourLimits();
+    setDebugColourLimits();
     
     gvGraphHeader(dataOut, title);
     NodeListIterator nl_iter = nodeBegin();
@@ -991,13 +1069,13 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
         // check whether we should print
         if((nl_iter->second)->isAttached() | showDetached)
         {
-            printNodeAttributes(dataOut, nl_iter->second ,mRainbow.getColour((nl_iter->second)->getCoverage()), longDesc);
+            printDebugNodeAttributes(dataOut, nl_iter->second ,mDebugRainbow.getColour((nl_iter->second)->getCoverage()), longDesc);
         }
         nl_iter++;
     }
-    nl_iter = nodeBegin();
     
     // and go through again to print the edges
+    nl_iter = nodeBegin();
     while (nl_iter != nodeEnd()) 
     {
         // check whether we should print
@@ -1015,7 +1093,7 @@ void NodeManager::printGraph(std::ostream &dataOut, std::string title, bool show
     gvGraphFooter(dataOut)
 }
 
-void NodeManager::printNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc)
+void NodeManager::printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc)
 {
 	//-----
     // print the node declaration
@@ -1036,70 +1114,90 @@ void NodeManager::printNodeAttributes(std::ostream& dataOut, CrisprNode * currCr
     }
 }
 
-int NodeManager::printReadInfo(void)
+void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc)
 {
     //-----
-    // Print information about the reads from this group
+    // Print a graphviz style graph of the DRs and spacers
     //
-	std::multimap<std::string, StringToken> seen_map;
-	NodeVector nv_cap, nv_other;
-	
-	// get the cap nodes
-	findAllNodes(&nv_cap, &nv_other);
-	
-	// go through once and build the multimap
-	NodeVectorIterator nv_iter = nv_cap.begin();
-	while(nv_iter != nv_cap.end())
-	{
-		StringToken ST =  (*nv_iter)->getID();
-		std::vector<std::string> read_headers = (*nv_iter)->getReadHeaders(&mStringCheck);
-		std::vector<std::string>::iterator rh_iter = read_headers.begin();
-		while(rh_iter != read_headers.end())
-		{
-			seen_map.insert(std::pair<std::string, StringToken>(*rh_iter, ST));
-			rh_iter++;
-		}
-		nv_iter++;
-	}
-	// now print
-	nv_iter = nv_cap.begin();
-	while(nv_iter != nv_cap.end())
-	{
-		std::cout << (*nv_iter)->getID() << " : " << mStringCheck.getString((*nv_iter)->getID()) << std::endl;
-		std::vector<std::string> read_headers = (*nv_iter)->getReadHeaders(&mStringCheck);
-		std::vector<std::string>::iterator rh_iter = read_headers.begin();
-		while(rh_iter != read_headers.end())
-		{
-			std::pair<std::multimap<std::string, StringToken>::iterator, std::multimap<std::string, StringToken>::iterator> m_str_iter = seen_map.equal_range(*rh_iter);
-			std::multimap<std::string, StringToken>::iterator it2 = m_str_iter.first;
-			while(it2 != m_str_iter.second)
-			{
-				std::cout << "  [" << (*it2).first << ", " << (*it2).second << "]" << std::endl;
-				it2++;
-			}
-			rh_iter++;
-		}
-		nv_iter++;
-		std::cout << "-------------" << std::endl;
-	}
-	std::cout << "==============" << std::endl;
-	
-	return 0;
+    setSpacerColourLimits();
+    
+    gvGraphHeader(dataOut, title);
+    NodeListIterator nl_iter = nodeBegin();
+    std::multimap<SpacerInstance*, int> edge_map;
+    std::map<int, std::string> label_map;
+    
+    // first loop to print out the nodes
+    while (nl_iter != nodeEnd()) 
+    {
+        // check whether we should print
+        if((nl_iter->second)->isAttached())
+        {
+        	// we only care about forward nodes
+        	if((nl_iter->second)->isForward())
+        	{
+        		// get all the forward Inner edges
+        		edgeList * el = (nl_iter->second)->getEdges(CN_EDGE_FORWARD);
+        		edgeListIterator el_iter = el->begin();
+        		while(el_iter != el->end())
+        		{
+        			if((el_iter->first)->isAttached())
+        			{
+        				// get the spacer for this guy
+        				SpacerKey sk = makeSpacerKey((nl_iter->second)->getID(), (el_iter->first)->getID());
+        				if(mSpacers.find(sk) != mSpacers.end())
+        				{
+        					// make the nodes
+            				SpacerInstance * current_spacer = mSpacers[sk];
+            				std::stringstream ss;
+    						if(longDesc)
+    							ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID() << "_" << mStringCheck.getString(current_spacer->getID());
+    						else
+    							ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
+    						std::string label = ss.str();
+    						
+    						// store the label for later
+    						label_map.insert(std::pair<int, std::string>((nl_iter->second)->getID(), label));
+
+    						// print the node attribute
+            				gvSpacer(dataOut,label,mSpacerRainbow.getColour(current_spacer->getCount()));
+            				
+            				// make some edges
+            				// we basically need to keep track of the jumping forward edges
+                    		edgeList * el2 = (el_iter->first)->getEdges(CN_EDGE_JUMPING_F);
+                    		edgeListIterator el2_iter = el2->begin();
+                    		while(el2_iter != el2->end())
+                    		{
+                    			if((el2_iter->first)->isAttached())
+                    			{
+                    				edge_map.insert(std::pair<SpacerInstance*, int>(current_spacer, (el2_iter->first)->getID()));
+                    			}
+                    			el2_iter++;
+                    		}
+        				}
+        			}
+        			el_iter++;
+        		}
+        	}
+        }
+        nl_iter++;
+    }
+    
+    std::multimap<SpacerInstance*, int>::iterator edge_map_iter = edge_map.begin();
+    while(edge_map_iter != edge_map.end())
+    {
+    	if(label_map.find(edge_map_iter->second) != label_map.end())
+    	{
+    		SpacerInstance * current_spacer = edge_map_iter->first;
+			std::stringstream ss;
+			if(longDesc)
+				ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID() << "_" << mStringCheck.getString(current_spacer->getID());
+			else
+				ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
+			std::string label = ss.str();
+			gvSpEdge(dataOut, label, label_map[edge_map_iter->second]);	
+    	}
+    	edge_map_iter++;
+    }
+
+    gvGraphFooter(dataOut)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

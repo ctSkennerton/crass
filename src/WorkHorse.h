@@ -86,8 +86,6 @@ class WorkHorse {
         //void write_direct_repeatID(direct_repeat &dr_match, kseq_t *seq);
         void writeLookupToFile(string &outFileName, lookupTable &outLookup);
         int numOfReads(void);
-        int renderDebugGraphs(void);							// render debug graphs
-        int renderDebugGraphs(std::string namePrefix);
         
     private:
         
@@ -99,6 +97,7 @@ class WorkHorse {
         //**************************************
         int parseSeqFiles(std::vector<std::string> seqFiles);	// parse the raw read files
         int buildGraph(void);									// build the basic graph structue
+        int cleanGraph(void);									// clean the graph structue
         int mungeDRs(void);                         			// cluster potential DRs and make node managers
         bool clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
         bool parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int * nextFreeGID);
@@ -107,10 +106,20 @@ class WorkHorse {
         std::vector<std::string> getNMostAbundantKmers(int num2Get, std::map<std::string, int> * kmer_CountMap);
         
         //**************************************
+        // contig making
+        //**************************************
+        int splitIntoContigs(void);
+        
+        //**************************************
         // file IO
         //**************************************
         void printFileLookups(std::string fileName, lookupTable &kmerLookup, lookupTable &patternsLookup, lookupTable &spacerLookup);
-        void dumpReads(DR_Cluster_Map * DR2GID_map, bool split);
+        int dumpReads(DR_Cluster_Map * DR2GID_map, bool split);		// dump the reads for this group to file
+        int dumpSpacers(void);										// Dump the spacers for this group to file
+        int renderDebugGraphs(void);							// render debug graphs
+        int renderDebugGraphs(std::string namePrefix);
+        int renderSpacerGraphs(void);							// render debug graphs
+        int renderSpacerGraphs(std::string namePrefix);
         
     // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat

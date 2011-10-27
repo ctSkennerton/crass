@@ -327,7 +327,7 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
                 {
                     // read through the subsuquent bases untill they don't match
                     unsigned int extenstion_length = 0;
-                    while (read.at(first_end + extenstion_length) == read.at(second_end + extenstion_length)) 
+                    while (0)//read.at(first_end + extenstion_length) == read.at(second_end + extenstion_length)) 
                     {
 #ifdef DEBUG
                         logInfo(read.at(first_end + extenstion_length)<<" == "<<read.at(second_end + extenstion_length),8);
@@ -413,17 +413,19 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     std::vector<std::string> patterns;
     int old_number = (int)mReads->size();
     mapToVector(patternsHash, patterns);
-    try {
+    try
+    {
         if (patterns.empty())
         {
             logError("No patterns in vector for multimatch");
             throw "No patterns in vector for multimatch";
         }
-    } catch (char * c) {
-        std::cerr<<c<<std::endl;
+    }
+    catch (char * c)
+    {
+        std::cerr << c << std::endl;
         return;
     }   
-
     
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
@@ -482,8 +484,6 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     }
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
-
-
 
 
 int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange)
