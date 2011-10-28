@@ -45,6 +45,7 @@
 #define CRASS_DEF_GV_NODE_FILL                  "filled"            // should our nodes be filled with colour
 #define CRASS_DEF_DEFAULT_GRAPH_TYPE            "digraph"           // the default type of graphviz graph to generate
 
+#define CRASS_DEF_DEFAULT_SUB_GRAPH_TYPE 		"subgraph"           // the default type of graphviz graph to generate
 #define CRASS_DEF_GV_SPA_EDGE_LENGTH                2                   // length of arrows for edges in images
 #define CRASS_DEF_GV_SPA_SHAPE                 "rectangle"            // shape of nodes
 #define CRASS_DEF_GV_SPA_PREFIX                 "sp_"               // prefix used when naming spacers for the image
@@ -82,16 +83,25 @@
     stream<<CRASS_DEF_DEFAULT_GRAPH_TYPE<<" "<<gRAPHtITLE<<" {"<<std::endl;\
 }
 
+#define gvGraphFooter(stream){ \
+    stream<<std::endl<<"}"<<std::endl;\
+}
+
 #define gvSpacer(stream,id1,color){\
-    stream<<id1<<" [ color = \"#"<<color<<"\", fillcolor=\"#"<<color<<"\", style= "<<CRASS_DEF_GV_NODE_FILL<<\
+    stream<<"\t\t" << id1<<" [ color = \"#"<<color<<"\", fillcolor=\"#"<<color<<"\", style= "<<CRASS_DEF_GV_NODE_FILL<<\
                                                 ", shape="<< CRASS_DEF_GV_SPA_SHAPE<<"];"<<std::endl;\
 }
 
 #define gvSpEdge(stream,id1,id2){\
-    stream<<id1<<" -> "<<id2<< " [ len="<<CRASS_DEF_GV_SPA_EDGE_LENGTH<<" ];"<<std::endl;\
+    stream<<"\t\t"<<id1<<" -> "<<id2<< " [ len="<<CRASS_DEF_GV_SPA_EDGE_LENGTH<<" ];"<<std::endl;\
 }
 
-#define gvGraphFooter(stream){ \
-    stream<<std::endl<<"}"<<std::endl;\
+#define gvSubGraphHeader(stream,gRAPHtITLE,cLUSTERnUMBER){\
+    stream<<"\t"<<CRASS_DEF_DEFAULT_SUB_GRAPH_TYPE<<" cluster_"<<cLUSTERnUMBER<<"\t{\n\t\tstyle=filled;\n\t\tcolor=lightgrey;\n\t\tlabel = \""<<gRAPHtITLE <<"\";\n"<<std::endl;\
 }
+
+#define gvSubGraphFooter(stream){ \
+    stream<<std::endl<<"\t}"<<std::endl;\
+}
+
 #endif

@@ -55,7 +55,11 @@ inline SpacerKey makeSpacerKey(StringToken backST, StringToken frontST)
     //-----
     // make a spacer key from two string tokens
     //
-    return (backST * 10000000) + frontST;
+	if(backST < frontST)
+	{
+		return (backST * 10000000) + frontST;
+	}
+	return (frontST * 10000000) + backST;
 }
 
 class SpacerInstance {
@@ -65,23 +69,42 @@ class SpacerInstance {
             SI_LeadingNode = NULL;
             SI_LastNode = NULL;
             SI_InstanceCount = 0;
+            mSpacerRank = 0;
+            mContigID = 0;
+            mAttached = false;
         }
         
         SpacerInstance (StringToken spacerID);
         SpacerInstance (StringToken spacerID, CrisprNode * leadingNode, CrisprNode * lastNode);
         ~SpacerInstance () {}
         
+        //
+        // get / set
+        //
         inline void incrementCount(void) { SI_InstanceCount++; }
         inline unsigned int getCount(void) { return SI_InstanceCount; }
         inline StringToken getID(void) { return SI_SpacerSeqID; }
         inline CrisprNode * getLeader(void) { return SI_LeadingNode; }
         inline CrisprNode * getLast(void) { return SI_LastNode; }
+        inline bool isAttached(void) { return mAttached; }
+        inline void setAttached(bool attached) { mAttached = attached; }
+        
+        //
+        // contig functions
+        //
+        inline int getContigID(void) { return mContigID; }
+        inline void setContigID(int CID) { mContigID = CID; }
+        inline int getSpacerRank(void) { return mSpacerRank; }
+        inline void setSpacerRank(int rank) { mSpacerRank = rank; }
         
     private:
         StringToken SI_SpacerSeqID;               // the StringToken of this spacer
         CrisprNode * SI_LeadingNode;              // the first node of this spacer
         CrisprNode * SI_LastNode;                 // the last node
         unsigned int SI_InstanceCount;            // the number of times this exact instance has been seen
+        bool mAttached;							  // is this spacer attached?
+        int mSpacerRank;						  // how many spacers come off this guy?
+        int mContigID;							  // contig ID
 };
 
 
