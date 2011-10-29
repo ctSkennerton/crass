@@ -38,6 +38,7 @@
 #include <list>
 #include <fstream>
 #include <sstream>
+#include <cstring>
 
 // Local Includes
 #include "AssemblyWrapper.h"
