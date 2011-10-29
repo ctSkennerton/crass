@@ -123,6 +123,7 @@ class CrisprNode
         int getTotalRank(void) { return getRank(CN_EDGE_BACKWARD) + getRank(CN_EDGE_FORWARD) + getRank(CN_EDGE_JUMPING_F) + getRank(CN_EDGE_JUMPING_B); }
         int getJumpingRank(void) { return getRank(CN_EDGE_JUMPING_F) + getRank(CN_EDGE_JUMPING_B); }
         int getInnerRank(void) { return getRank(CN_EDGE_BACKWARD) + getRank(CN_EDGE_FORWARD); }
+        
         //
         // File IO / printing
         //

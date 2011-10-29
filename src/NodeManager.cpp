@@ -41,6 +41,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <queue>
 
 // local includes
 #include <config.h>
@@ -64,6 +65,7 @@ NodeManager::NodeManager(std::string drSeq, const options * userOpts)
     mDirectRepeatSequence = drSeq;
     mOpts = userOpts;
     mStringCheck.setName("NM_" + drSeq);
+    mNextContigID = 0;
 }
 
 NodeManager::~NodeManager(void)
@@ -97,6 +99,8 @@ NodeManager::~NodeManager(void)
     }
     mSpacers.clear();
 
+    // delete contigs;
+    clearContigs();
 }
 
 bool NodeManager::addReadHolder(ReadHolder * RH)
@@ -242,14 +246,14 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
 
     // the first kmers pair is the previous node which lay before it therefore bool is true
     // make sure prevNode is not NULL
-    if (*prevNode != NULL) 
+    if (NULL != *prevNode) 
     {
-		this_sp_key = makeSpacerKey(st1, (*prevNode)->getID());
-		if(mSpacers.find(this_sp_key) == mSpacers.end())
-		{
-	        (*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
-	        first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
-		}
+        this_sp_key = makeSpacerKey(st1, (*prevNode)->getID());
+        if(mSpacers.find(this_sp_key) == mSpacers.end())
+        {
+            (*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
+            first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
+        }
     }
 
     // now it's time to add the spacer
@@ -350,12 +354,12 @@ void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workin
     // check to see if we already have it here
     if(NULL != *prevNode)
     {
-		SpacerKey this_sp_key = makeSpacerKey(st1, (*prevNode)->getID());
-		if(mSpacers.find(this_sp_key) == mSpacers.end())
-		{
-			(*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
-			first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
-		}
+        SpacerKey this_sp_key = makeSpacerKey(st1, (*prevNode)->getID());
+        if(mSpacers.find(this_sp_key) == mSpacers.end())
+        {
+            (*prevNode)->addEdge(first_kmer_node, CN_EDGE_JUMPING_F);
+            first_kmer_node->addEdge(*prevNode, CN_EDGE_JUMPING_B);
+        }
     }
 }
 
@@ -384,7 +388,7 @@ void NodeManager::walk(void)
             if (getEdge(walk_elem, *cap_node_iter, &wanted_edge)) 
             {
                 do {                    
-                    if (detatch_delay != NULL) 
+                    if (NULL != detatch_delay) 
                     {
                         detatch_list.push_back(detatch_delay);
                     }
@@ -540,160 +544,123 @@ bool NodeManager::stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprN
 
 void NodeManager::findCapNodes(NodeVector * capNodes)
 {
-	//-----
-	// find cap nodes!
-	//
-	capNodes->clear();
+    //-----
+    // find cap nodes!
+    //
+    capNodes->clear();
 
     NodeListIterator all_node_iter = mNodes.begin();
     while (all_node_iter != mNodes.end()) 
     {
-    	if((all_node_iter->second)->isAttached())
-    	{
-			if ((all_node_iter->second)->getTotalRank() == 1) 
-			{
-				capNodes->push_back(all_node_iter->second);
-			}
-    	}
+        if((all_node_iter->second)->isAttached())
+        {
+            if ((all_node_iter->second)->getTotalRank() == 1) 
+            {
+                capNodes->push_back(all_node_iter->second);
+            }
+        }
         all_node_iter++;
     }
 }
 
 void NodeManager::findAllNodes(NodeVector * allNodes)
 {
-	//-----
-	// make a nodevector of all of the nodes!
-	//
-	allNodes->clear();
+    //-----
+    // make a nodevector of all of the nodes!
+    //
+    allNodes->clear();
 
-	NodeListIterator all_node_iter = mNodes.begin();
-	while (all_node_iter != mNodes.end()) 
-	{
-    	if((all_node_iter->second)->isAttached())
-    	{
-			allNodes->push_back(all_node_iter->second);
-			all_node_iter++;
-    	}
-	}
+    NodeListIterator all_node_iter = mNodes.begin();
+    while (all_node_iter != mNodes.end()) 
+    {
+        if((all_node_iter->second)->isAttached())
+        {
+            allNodes->push_back(all_node_iter->second);
+            all_node_iter++;
+        }
+    }
 }
 
 void NodeManager::findAllNodes(NodeVector * capNodes, NodeVector * otherNodes)
 {
-	//-----
-	// make nodevectors of all of the nodes, split between cap and other 
-	//
-	capNodes->clear();
-	otherNodes->clear();
-	
+    //-----
+    // make nodevectors of all of the nodes, split between cap and other 
+    //
+    capNodes->clear();
+    otherNodes->clear();
+    
     NodeListIterator all_node_iter = mNodes.begin();
     while (all_node_iter != mNodes.end()) 
     {
-    	if((all_node_iter->second)->isAttached())
-    	{
-			int rank = (all_node_iter->second)->getTotalRank(); 
-			if (rank == 1) 
-				{ capNodes->push_back(all_node_iter->second); }
-			else
-				{ otherNodes->push_back(all_node_iter->second); }
-    	}
-    	all_node_iter++;
-    }
-}
-
-void NodeManager::findAllNodes(NodeVector * crossNodes, NodeVector * pathNodes, NodeVector * capNodes, NodeVector * otherNodes)
-{
-	//-----
-	// make nodevectors of all of the nodes, split between cap, cross, path and other 
-	//
-	crossNodes->clear();
-	pathNodes->clear();
-	capNodes->clear();
-	otherNodes->clear();
-	
-    NodeListIterator all_node_iter = mNodes.begin();
-    while (all_node_iter != mNodes.end()) 
-    {
-    	if((all_node_iter->second)->isAttached())
-    	{
-			int rank = (all_node_iter->second)->getTotalRank();
-			switch (rank)
-			{
-			case 3:
-				crossNodes->push_back(all_node_iter->second);
-				break;
-			case 2:
-				pathNodes->push_back(all_node_iter->second);
-				break;
-			case 1:
-				capNodes->push_back(all_node_iter->second);
-				break;
-			default:
-				otherNodes->push_back(all_node_iter->second);
-				break;
-					
-			}
-    	}
-    	all_node_iter++;
+        if((all_node_iter->second)->isAttached())
+        {
+            int rank = (all_node_iter->second)->getTotalRank(); 
+            if (rank == 1) 
+                { capNodes->push_back(all_node_iter->second); }
+            else
+                { otherNodes->push_back(all_node_iter->second); }
+        }
+        all_node_iter++;
     }
 }
 
 int NodeManager::findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode)
 {
-	//-----
-	// Populate the passed nodevector with the capnodes at queryNode
-	// and return the size of the vector
-	//
-	// if doStrict is true then the function will only return a non-zero result 
-	// when the the query node is joined ONLY to cap nodes (of the given edge type)
-	//
-	capNodes->clear();
-	
-	if(queryNode->isAttached())
-	{
-		// first, find what type of edge we are searching for.
-		edgeListIterator el_iter;
-		edgeList * el;
-		if(searchForward)
-		{
-			if(isInner)
-				el = queryNode->getEdges(CN_EDGE_FORWARD);
-			else
-				el = queryNode->getEdges(CN_EDGE_JUMPING_F);
-		}
-		else
-		{
-			if(isInner)
-				el = queryNode->getEdges(CN_EDGE_BACKWARD);
-			else
-				el = queryNode->getEdges(CN_EDGE_JUMPING_B);
-		}
-		el_iter = el->begin();
-		while(el_iter != el->end())
-		{
-			// make sure we only look at attached edges
-			if(el_iter->second)
-			{
-				CrisprNode * attached_node = el_iter->first;
-				if(1 == attached_node->getTotalRank())
-				{
-					// this guy is a cap!
-					capNodes->push_back(attached_node);
-				}
-				else
-				{
-					// non-cap of the same edge type
-					if(doStrict)
-					{
-						capNodes->clear();
-						return 0;
-					}
-				}
-			}
-			
-			el_iter++;
-		}
-	}
-	return (int)capNodes->size();
+    //-----
+    // Populate the passed nodevector with the capnodes at queryNode
+    // and return the size of the vector
+    //
+    // if doStrict is true then the function will only return a non-zero result 
+    // when the the query node is joined ONLY to cap nodes (of the given edge type)
+    //
+    capNodes->clear();
+    
+    if(queryNode->isAttached())
+    {
+        // first, find what type of edge we are searching for.
+        edgeListIterator el_iter;
+        edgeList * el;
+        if(searchForward)
+        {
+            if(isInner)
+                el = queryNode->getEdges(CN_EDGE_FORWARD);
+            else
+                el = queryNode->getEdges(CN_EDGE_JUMPING_F);
+        }
+        else
+        {
+            if(isInner)
+                el = queryNode->getEdges(CN_EDGE_BACKWARD);
+            else
+                el = queryNode->getEdges(CN_EDGE_JUMPING_B);
+        }
+        el_iter = el->begin();
+        while(el_iter != el->end())
+        {
+            // make sure we only look at attached edges
+            if(el_iter->second)
+            {
+                CrisprNode * attached_node = el_iter->first;
+                if(1 == attached_node->getTotalRank())
+                {
+                    // this guy is a cap!
+                    capNodes->push_back(attached_node);
+                }
+                else
+                {
+                    // non-cap of the same edge type
+                    if(doStrict)
+                    {
+                        capNodes->clear();
+                        return 0;
+                    }
+                }
+            }
+            
+            el_iter++;
+        }
+    }
+    return (int)capNodes->size();
 }
 
 // Cleaning
@@ -702,145 +669,145 @@ int NodeManager::cleanGraph(void)
     //-----
     // Clean all the bits off the graph mofo!
     //
-	std::multimap<CrisprNode *, CrisprNode *> fork_choice_map;
-	NodeVector nv_cap, nv_other, detach_list;
-	NodeVectorIterator nv_iter;
-	
-	// get all the nodes
-	findAllNodes(&nv_cap, &nv_other);
-	
-	// First do caps
-	nv_iter = nv_cap.begin();
-	while(nv_iter != nv_cap.end())
-	{
-		// we can just lop off caps joined by jumpers (perhaps)
+    std::multimap<CrisprNode *, CrisprNode *> fork_choice_map;
+    NodeVector nv_cap, nv_other, detach_list;
+    NodeVectorIterator nv_iter;
+    
+    // get all the nodes
+    findAllNodes(&nv_cap, &nv_other);
+    
+    // First do caps
+    nv_iter = nv_cap.begin();
+    while(nv_iter != nv_cap.end())
+    {
+        // we can just lop off caps joined by jumpers (perhaps)
         if ((*nv_iter)->getInnerRank() == 0)
         {
-        	// make sure that this guy is linked to a cross node
-        	edgeList * el;
-        	if(0 != (*nv_iter)->getRank(CN_EDGE_JUMPING_F))
-        		el = (*nv_iter)->getEdges(CN_EDGE_JUMPING_F);
-        	else
-        		el = (*nv_iter)->getEdges(CN_EDGE_JUMPING_B);
-        	
-        	// there is only one guy in this list!
-        	int other_rank = ((el->begin())->first)->getTotalRank();
-        	if(other_rank != 2)
-        		detach_list.push_back(*nv_iter);
+            // make sure that this guy is linked to a cross node
+            edgeList * el;
+            if(0 != (*nv_iter)->getRank(CN_EDGE_JUMPING_F))
+                el = (*nv_iter)->getEdges(CN_EDGE_JUMPING_F);
+            else
+                el = (*nv_iter)->getEdges(CN_EDGE_JUMPING_B);
+            
+            // there is only one guy in this list!
+            int other_rank = ((el->begin())->first)->getTotalRank();
+            if(other_rank != 2)
+                detach_list.push_back(*nv_iter);
         }
         else
         {
-        	// make sure that this guy is linked to a cross node
-        	edgeList * el;
-        	bool is_forward;
-        	if(0 != (*nv_iter)->getRank(CN_EDGE_FORWARD))
-        	{
-        		el = (*nv_iter)->getEdges(CN_EDGE_FORWARD);
-        		is_forward = false;
-        	}
-        	else
-        	{
-        		el = (*nv_iter)->getEdges(CN_EDGE_BACKWARD);
-        		is_forward = true;
-        	}
-        	
-        	// there is only one guy in this list!
-        	CrisprNode * joining_node = ((el->begin())->first); 
-        	int other_rank = joining_node->getTotalRank();
-        	if(other_rank != 2)
-        	{
-        		// this guy joins onto a crossnode
-        		// check to see if he is the only cap here!
-        		NodeVector caps_at_join;
-        		if(findCapsAt(&caps_at_join, is_forward, true, true, joining_node) > 1)
-        		{
-        			// this is a fork at the end of an arm
-        			fork_choice_map.insert(std::pair<CrisprNode *, CrisprNode *>(joining_node, *nv_iter)) ;
-        		}
-        		else
-        		{
-        			// the only cap at a cross. NUKE!
-        			detach_list.push_back(*nv_iter);
-        		}
-        	}
+            // make sure that this guy is linked to a cross node
+            edgeList * el;
+            bool is_forward;
+            if(0 != (*nv_iter)->getRank(CN_EDGE_FORWARD))
+            {
+                el = (*nv_iter)->getEdges(CN_EDGE_FORWARD);
+                is_forward = false;
+            }
+            else
+            {
+                el = (*nv_iter)->getEdges(CN_EDGE_BACKWARD);
+                is_forward = true;
+            }
+            
+            // there is only one guy in this list!
+            CrisprNode * joining_node = ((el->begin())->first); 
+            int other_rank = joining_node->getTotalRank();
+            if(other_rank != 2)
+            {
+                // this guy joins onto a crossnode
+                // check to see if he is the only cap here!
+                NodeVector caps_at_join;
+                if(findCapsAt(&caps_at_join, is_forward, true, true, joining_node) > 1)
+                {
+                    // this is a fork at the end of an arm
+                    fork_choice_map.insert(std::pair<CrisprNode *, CrisprNode *>(joining_node, *nv_iter)) ;
+                }
+                else
+                {
+                    // the only cap at a cross. NUKE!
+                    detach_list.push_back(*nv_iter);
+                }
+            }
         }
-		nv_iter++;
-	}
+        nv_iter++;
+    }
 
-	// make coverage decisions for end forks
-	std::map<CrisprNode *, int> best_coverage_map_cov;
-	std::map<CrisprNode *, CrisprNode *> best_coverage_map_node;
-	std::multimap<CrisprNode *, CrisprNode *>::iterator fcm_iter = fork_choice_map.begin();
-	while(fcm_iter != fork_choice_map.end())
-	{
-		if(best_coverage_map_cov.find(fcm_iter->first) == best_coverage_map_cov.end())
-		{
-			// first one!
-			best_coverage_map_cov.insert(std::pair<CrisprNode *, int>(fcm_iter->first, ((*fcm_iter).second)->getCoverage()));
-			best_coverage_map_node.insert(std::pair<CrisprNode *, CrisprNode *>(fcm_iter->first, (*fcm_iter).second));
-		}
-		else
-		{
-			// one is already here!
-			int new_cov = ((*fcm_iter).second)->getCoverage();
-			if(best_coverage_map_cov[fcm_iter->first] < new_cov)
-			{
-				// the new one is better!
-				best_coverage_map_cov[fcm_iter->first] = ((*fcm_iter).second)->getCoverage();
-				best_coverage_map_node[fcm_iter->first] = (*fcm_iter).second;
-			}
-		}
-		fcm_iter++;
-	}
-	fcm_iter = fork_choice_map.begin();
-	while(fcm_iter != fork_choice_map.end())
-	{
-		if(best_coverage_map_node[fcm_iter->first] != (*fcm_iter).second)
-		{
-			// not the best one!
-			detach_list.push_back((*fcm_iter).second);
-		}
-		fcm_iter++;
-	}
-	
-	// then do bubbles
-	nv_iter = nv_other.begin();
-	while(nv_iter != nv_other.end())
-	{
-		// get the total rank first.  A linear node should have 2 edges
-		if((*nv_iter)->getTotalRank() != 2)
-		{
-			// get the rank for the the inner and jumping edges.
-			if((*nv_iter)->getInnerRank() != 1)
-			{
-				// there are multiple inner edges for this guy
+    // make coverage decisions for end forks
+    std::map<CrisprNode *, int> best_coverage_map_cov;
+    std::map<CrisprNode *, CrisprNode *> best_coverage_map_node;
+    std::multimap<CrisprNode *, CrisprNode *>::iterator fcm_iter = fork_choice_map.begin();
+    while(fcm_iter != fork_choice_map.end())
+    {
+        if(best_coverage_map_cov.find(fcm_iter->first) == best_coverage_map_cov.end())
+        {
+            // first one!
+            best_coverage_map_cov.insert(std::pair<CrisprNode *, int>(fcm_iter->first, ((*fcm_iter).second)->getCoverage()));
+            best_coverage_map_node.insert(std::pair<CrisprNode *, CrisprNode *>(fcm_iter->first, (*fcm_iter).second));
+        }
+        else
+        {
+            // one is already here!
+            int new_cov = ((*fcm_iter).second)->getCoverage();
+            if(best_coverage_map_cov[fcm_iter->first] < new_cov)
+            {
+                // the new one is better!
+                best_coverage_map_cov[fcm_iter->first] = ((*fcm_iter).second)->getCoverage();
+                best_coverage_map_node[fcm_iter->first] = (*fcm_iter).second;
+            }
+        }
+        fcm_iter++;
+    }
+    fcm_iter = fork_choice_map.begin();
+    while(fcm_iter != fork_choice_map.end())
+    {
+        if(best_coverage_map_node[fcm_iter->first] != (*fcm_iter).second)
+        {
+            // not the best one!
+            detach_list.push_back((*fcm_iter).second);
+        }
+        fcm_iter++;
+    }
+    
+    // then do bubbles
+    nv_iter = nv_other.begin();
+    while(nv_iter != nv_other.end())
+    {
+        // get the total rank first.  A linear node should have 2 edges
+        if((*nv_iter)->getTotalRank() != 2)
+        {
+            // get the rank for the the inner and jumping edges.
+            if((*nv_iter)->getInnerRank() != 1)
+            {
+                // there are multiple inner edges for this guy
                 clearBubbles(*nv_iter, CN_EDGE_FORWARD);
 
-			}
-			else if((*nv_iter)->getJumpingRank() != 1)
-			{
-				// there are multiple jumping edges for this guy
+            }
+            else if((*nv_iter)->getJumpingRank() != 1)
+            {
+                // there are multiple jumping edges for this guy
                 clearBubbles(*nv_iter, CN_EDGE_JUMPING_F);
-			}
-			else
-			{
-				// TODO: something has gone wrong
-				logError("something has gone wrong");
-			}
-		}
-		
-		nv_iter++;
-	}
-	
-	// finally, detach!
-	nv_iter = detach_list.begin();
-	while(nv_iter != detach_list.end())
-	{
-		(*nv_iter)->detachNode();
-		nv_iter++;
-	}
+            }
+            else
+            {
+                // TODO: something has gone wrong
+                logError("something has gone wrong");
+            }
+        }
+        
+        nv_iter++;
+    }
+    
+    // finally, detach!
+    nv_iter = detach_list.begin();
+    while(nv_iter != detach_list.end())
+    {
+        (*nv_iter)->detachNode();
+        nv_iter++;
+    }
 
-	return 0;
+    return 0;
 }
 
 void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
@@ -897,7 +864,7 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                         if (first_node->getCoverage() > (curr_edges_iter->first)->getCoverage()) 
                         {
                             // the first guy has greater coverage so detach our current node
-                        	(curr_edges_iter->first)->detachNode();
+                            (curr_edges_iter->first)->detachNode();
 #ifdef DEBUG
                             logInfo("Detaching "<<(curr_edges_iter->first)->getID()<<" as it has lower coverage", 8);
 #endif
@@ -944,43 +911,344 @@ EDGE_TYPE NodeManager::getOppositeEdgeType(EDGE_TYPE currentEdgeType)
 }
 
 // Contigs    
+void NodeManager::clearContigs(void)
+{
+    //-----
+    // Clear all contig information
+    //
+    ContigListIterator cl_iter = mContigs.begin();
+    while(cl_iter != mContigs.end())
+    {
+        if(NULL != cl_iter->second)
+        {
+            SpacerVectorIterator sp_iter = (cl_iter->second)->begin();
+            while(sp_iter != (cl_iter->second)->end())
+            {
+                (mSpacers[*sp_iter])->setContigID(0);
+                sp_iter++;
+            }
+            delete cl_iter->second;
+        }
+        cl_iter++;
+    }
+    mNextContigID = 0;
+}
+
+void NodeManager::findAllForwardAttachedNodes(NodeVector * nodes)
+{
+    //-----
+    // make nodevectors of all of the nodes, split between cap, cross, path and other 
+    //
+    nodes->clear();
+    
+    NodeListIterator all_node_iter = mNodes.begin();
+    while (all_node_iter != mNodes.end()) 
+    {
+        if((all_node_iter->second)->isAttached()&& (all_node_iter->second)->isForward())
+        {
+            nodes->push_back(all_node_iter->second);
+        }
+        all_node_iter++;
+    }
+}
+
+void NodeManager::setSpacerRanks(void)
+{
+    //-----
+    // For all forward nodes, count the number of ongoing spacers
+    //
+    SpacerListIterator spacers_iter = mSpacers.begin();
+    while(spacers_iter != mSpacers.end()) 
+    {
+        // get the last node of this spacer
+        CrisprNode * rq_leader_node = (spacers_iter->second)->getLeader();
+        CrisprNode * rq_last_node = (spacers_iter->second)->getLast();
+        
+        int rank = 0;
+        if(rq_last_node->isAttached() && rq_leader_node->isAttached())
+        {
+        	// mark this guy as attached
+        	(spacers_iter->second)->setAttached(true);
+        	
+			// now get all the jumping forward edges from this node
+			edgeList * qel = rq_last_node->getEdges(CN_EDGE_JUMPING_F);
+			edgeListIterator qel_iter = qel->begin();
+			while(qel_iter != qel->end())
+			{
+				if((qel_iter->first)->isAttached() && (qel_iter->first)->isForward())
+				{
+					// a forward attached node. Now check for inner edges.
+					edgeList * el = (qel_iter->first)->getEdges(CN_EDGE_FORWARD);
+					edgeListIterator el_iter = el->begin();
+					while(el_iter != el->end())
+					{
+						if((el_iter->first)->isAttached())
+						{
+							// bingo!
+							rank++;
+						}
+						el_iter++;
+					}
+				}
+				qel_iter++;
+			}
+        }
+        else
+        {
+        	(spacers_iter->second)->setAttached(false);	
+        }
+        (spacers_iter->second)->setSpacerRank(rank);
+        spacers_iter++;
+    }
+}
+
 int NodeManager::splitIntoContigs(void)
 {
-	//-----
-	// split the group into contigs 
-	//
-	// get all of  the node lists
-	NodeVector cross_nodes, path_nodes, cap_nodes, other_nodes;
-	findAllNodes(&cross_nodes, &path_nodes, &cap_nodes, &other_nodes);
-
-	return 0;
-}
+    //-----
+    // split the group into contigs 
+    //
     
+    // make sure these flags are up to date
+    setSpacerRanks(); 
+    
+    // get all of  the node lists
+    std::queue<SpacerInstance *> walking_queue;
+    SpacerListIterator sp_iter = mSpacers.begin();
+    
+    // first we build up the contents of the walking queue
+    while(sp_iter != mSpacers.end())
+    {
+        // we only care about spacers which are not yet allocated to a contig
+        // the rank is the forward rank. so it's less than the node rank
+    	if((sp_iter->second)->isAttached() && 0 == (sp_iter->second)->getContigID())
+    	{
+    		int spacer_rank = (sp_iter->second)->getSpacerRank();
+			SpacerInstance * prev_spacer;
+			switch (spacer_rank)
+			{
+				case 0:
+					// singleton or end cap
+					if(!getPrevSpacer(&prev_spacer, sp_iter->second))
+					{
+						// singleton
+						mNextContigID++;
+						(sp_iter->second)->setContigID(mNextContigID);
+						walking_queue.push(sp_iter->second);
+					}
+					break;
+				case 1:
+					// path node or start cap
+					if(!getPrevSpacer(&prev_spacer, sp_iter->second))
+					{
+						// start cap!
+						mNextContigID++;
+						(sp_iter->second)->setContigID(mNextContigID);
+						walking_queue.push(sp_iter->second);
+					} // else  ignore path nodes for now
+					break;
+				default:
+					// a cross node!
+					mNextContigID++;
+					(sp_iter->second)->setContigID(mNextContigID);
+					contigiseForwardSpacers(&walking_queue, sp_iter->second);
+					break;
+			}
+    	}
+        sp_iter++;
+    }
+    
+    // now go through the walking queue
+    while (!walking_queue.empty())
+    {
+        SpacerInstance * current_spacer = walking_queue.front();
+        SpacerInstance * forward_spacer;
+        walking_queue.pop();
+        if(getForwardSpacer(&forward_spacer, current_spacer))
+        {
+			if(forward_spacer->getContigID() == 0)
+			{
+				int CID = current_spacer->getContigID();
+				forward_spacer->setContigID(CID);
+				walking_queue.push(forward_spacer);
+			}
+        }
+    }
+    
+	logInfo("Made: " << mNextContigID << " spacer contig(s)", 1);
+    return 0;
+}
+
+bool NodeManager::getForwardSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI)
+{
+    //-----
+    // get the first found spacer in from of this one 
+    //
+    CrisprNode * rq_node = SI->getLast();
+     
+    // the first step is to find all forward spacers
+    edgeList * qel = rq_node->getEdges(CN_EDGE_JUMPING_F);
+    edgeListIterator qel_iter = qel->begin();
+    while(qel_iter != qel->end())
+    {
+        if((qel_iter->first)->isAttached() && (qel_iter->first)->isForward())
+        {
+            // a forward attached node. Now check for inner edges.
+            edgeList * el = (qel_iter->first)->getEdges(CN_EDGE_FORWARD);
+            edgeListIterator el_iter = el->begin();
+            while(el_iter != el->end())
+            {
+                if((el_iter->first)->isAttached())
+                {
+                    SpacerInstance * forward_spacer = mSpacers[makeSpacerKey((qel_iter->first)->getID(), (el_iter->first)->getID())];
+                    if(forward_spacer->isAttached())
+                    {
+                        switch(forward_spacer->getSpacerRank())
+                        {
+							case 0:
+                            case 1:
+							   // forward is a cap or path spacer
+								*retSpacer = forward_spacer;
+								return true;
+                                break;
+                            default:
+                                // forward is not a path 
+                            	return false;
+                                break;
+                        }
+                    }
+                }
+                el_iter++;
+            }
+        }
+        qel_iter++;
+    }
+
+    return false;
+}
+
+bool NodeManager::getPrevSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI)
+{
+    //-----
+    // get the first found spacer behind this guy
+    //
+    CrisprNode * rq_node = SI->getLeader();
+    // the first step is to find all forward spacers
+    edgeList * qel = rq_node->getEdges(CN_EDGE_JUMPING_B);
+    edgeListIterator qel_iter = qel->begin();
+    while(qel_iter != qel->end())
+    {
+        if((qel_iter->first)->isAttached() && !(qel_iter->first)->isForward())
+        {
+            // a forward attached node. Now check for inner edges.
+            edgeList * el = (qel_iter->first)->getEdges(CN_EDGE_BACKWARD);
+            edgeListIterator el_iter = el->begin();
+            while(el_iter != el->end())
+            {
+                if((el_iter->first)->isAttached())
+                {
+                    SpacerInstance * previous_spacer = mSpacers[makeSpacerKey((qel_iter->first)->getID(), (el_iter->first)->getID())];
+                    if(previous_spacer->isAttached())
+                    {
+                        switch(previous_spacer->getSpacerRank())
+                        {
+                            case 1:
+                                // forward is a path spacer
+                            	*retSpacer = previous_spacer;
+                            	return true;
+                                break;
+                            default:
+                                // forward is not a path 
+                            	return false;
+                                break;
+                        }
+                    }
+                }
+                el_iter++;
+            }
+        }
+        qel_iter++;
+    }
+    return false;
+}
+
+void NodeManager::contigiseForwardSpacers(std::queue<SpacerInstance *> * walkingQueue, SpacerInstance * SI)
+{
+    //-----
+    // expects to be passed a crossSpacer and a walking queue to mess with
+    //
+    CrisprNode * rq_node = SI->getLast();
+     
+    // the first step is to find all forward spacers
+    edgeList * qel = rq_node->getEdges(CN_EDGE_JUMPING_F);
+    edgeListIterator qel_iter = qel->begin();
+    while(qel_iter != qel->end())
+    {
+        if((qel_iter->first)->isAttached() && (qel_iter->first)->isForward())
+        {
+            // a forward attached node. Now check for inner edges.
+            edgeList * el = (qel_iter->first)->getEdges(CN_EDGE_FORWARD);
+            edgeListIterator el_iter = el->begin();
+            while(el_iter != el->end())
+            {
+                if((el_iter->first)->isAttached())
+                {
+                    SpacerInstance * forward_spacer = mSpacers[makeSpacerKey((qel_iter->first)->getID(), (el_iter->first)->getID())];
+                    if(forward_spacer->getContigID() == 0)
+                    {
+                        // a cross node!
+                        mNextContigID++;
+                        logInfo("Assigning : other CD : " << SI->getID() << " : " << forward_spacer->getID() << " : " << mNextContigID, 1);
+                        forward_spacer->setContigID(mNextContigID);
+                        int rank = forward_spacer->getSpacerRank();
+                        switch(rank)
+                        {
+                            case 0:
+                                // end of the line
+                                break;
+                            case 1:
+                                // forward is a path spacer
+                                walkingQueue->push(forward_spacer);
+                                break;
+                            default:
+                                // we have a cross joined onto a cross. recurse
+                                contigiseForwardSpacers(walkingQueue, forward_spacer);
+                                break;
+                        }
+                    }
+                }
+                el_iter++;
+            }
+        }
+        qel_iter++;
+    }
+
+}
+
 // Printing / IO
 
 // Spacer dictionaries
 void NodeManager::dumpSpacerDict(std::string spacerFileName, bool showDetached)
 {
-	//-----
-	// Dump a spacer dictionary to file
-	//
-	std::ofstream spacer_file;
-	spacer_file	.open(spacerFileName.c_str());
+    //-----
+    // Dump a spacer dictionary to file
+    //
+    std::ofstream spacer_file;
+    spacer_file    .open(spacerFileName.c_str());
     if (spacer_file.good()) 
     {
-    	spacer_file <<"SEQ,ID,COUNT" << std::endl;
-    	SpacerListIterator spacer_iter = mSpacers.begin();
-    	while(spacer_iter != mSpacers.end())
-    	{
-			SpacerInstance * SI = spacer_iter->second;
-    		if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
-    		{
-				std::string spacer = mStringCheck.getString(SI->getID());
-				spacer_file << spacer << "," << SI->getID() << "," << SI->getCount() << std::endl;// << " : " << (SI->getLeader())->getID() << " : " << (SI->getLast())->getID() << std::endl;
-    		}
-    		spacer_iter++;
-    	}
-    	spacer_file.close();
+        spacer_file <<"SEQ,ID,COUNT" << std::endl;
+        SpacerListIterator spacer_iter = mSpacers.begin();
+        while(spacer_iter != mSpacers.end())
+        {
+            SpacerInstance * SI = spacer_iter->second;
+            if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+            {
+                std::string spacer = mStringCheck.getString(SI->getID());
+                spacer_file << spacer << "," << SI->getID() << "," << SI->getCount() << std::endl;// << " : " << (SI->getLeader())->getID() << " : " << (SI->getLast())->getID() << std::endl;
+            }
+            spacer_iter++;
+        }
+        spacer_file.close();
     }
 
 }
@@ -1016,7 +1284,7 @@ void NodeManager::setDebugColourLimits(void)
     } 
     else 
     {
-    	mDebugRainbow.setLimits(min_coverage,max_coverage);
+        mDebugRainbow.setLimits(min_coverage,max_coverage);
     }
 }
 
@@ -1050,7 +1318,7 @@ void NodeManager::setSpacerColourLimits(void)
     } 
     else 
     {
-    	mSpacerRainbow.setLimits(min_coverage,max_coverage);
+        mSpacerRainbow.setLimits(min_coverage,max_coverage);
     }
 }
 
@@ -1081,11 +1349,11 @@ void NodeManager::printDebugGraph(std::ostream &dataOut, std::string title, bool
         // check whether we should print
         if((nl_iter->second)->isAttached() | showDetached)
         {
-        	std::stringstream ss;
-        	if(longDesc)
-        		ss << (nl_iter->second)->getID() << "_" << mStringCheck.getString((nl_iter->second)->getID());
-        	else
-        		ss << (nl_iter->second)->getID();
+            std::stringstream ss;
+            if(longDesc)
+                ss << (nl_iter->second)->getID() << "_" << mStringCheck.getString((nl_iter->second)->getID());
+            else
+                ss << (nl_iter->second)->getID();
             (nl_iter->second)->printEdges(dataOut, &mStringCheck, ss.str(), showDetached, printBackEdges, longDesc);
         }
         nl_iter++;
@@ -1095,15 +1363,15 @@ void NodeManager::printDebugGraph(std::ostream &dataOut, std::string title, bool
 
 void NodeManager::printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc)
 {
-	//-----
+    //-----
     // print the node declaration
-	//
-	std::stringstream ss;
-	if(longDesc)
-		ss << currCrisprNode->getID() << "_" << mStringCheck.getString(currCrisprNode->getID());
-	else
-		ss << currCrisprNode->getID();
-	std::string label = ss.str();
+    //
+    std::stringstream ss;
+    if(longDesc)
+        ss << currCrisprNode->getID() << "_" << mStringCheck.getString(currCrisprNode->getID());
+    else
+        ss << currCrisprNode->getID();
+    std::string label = ss.str();
     if(currCrisprNode->isForward())
     {
         gvNodeF(dataOut,label,colourCode);
@@ -1122,81 +1390,102 @@ void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, boo
     setSpacerColourLimits();
     
     gvGraphHeader(dataOut, title);
-    NodeListIterator nl_iter = nodeBegin();
-    std::multimap<SpacerInstance*, int> edge_map;
-    std::map<int, std::string> label_map;
-    
-    // first loop to print out the nodes
-    while (nl_iter != nodeEnd()) 
+    if(mNextContigID > 0)
     {
-        // check whether we should print
-        if((nl_iter->second)->isAttached())
-        {
-        	// we only care about forward nodes
-        	if((nl_iter->second)->isForward())
-        	{
-        		// get all the forward Inner edges
-        		edgeList * el = (nl_iter->second)->getEdges(CN_EDGE_FORWARD);
-        		edgeListIterator el_iter = el->begin();
-        		while(el_iter != el->end())
-        		{
-        			if((el_iter->first)->isAttached())
-        			{
-        				// get the spacer for this guy
-        				SpacerKey sk = makeSpacerKey((nl_iter->second)->getID(), (el_iter->first)->getID());
-        				if(mSpacers.find(sk) != mSpacers.end())
-        				{
-        					// make the nodes
-            				SpacerInstance * current_spacer = mSpacers[sk];
-            				std::stringstream ss;
-    						if(longDesc)
-    							ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID() << "_" << mStringCheck.getString(current_spacer->getID());
-    						else
-    							ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
-    						std::string label = ss.str();
-    						
-    						// store the label for later
-    						label_map.insert(std::pair<int, std::string>((nl_iter->second)->getID(), label));
-
-    						// print the node attribute
-            				gvSpacer(dataOut,label,mSpacerRainbow.getColour(current_spacer->getCount()));
-            				
-            				// make some edges
-            				// we basically need to keep track of the jumping forward edges
-                    		edgeList * el2 = (el_iter->first)->getEdges(CN_EDGE_JUMPING_F);
-                    		edgeListIterator el2_iter = el2->begin();
-                    		while(el2_iter != el2->end())
-                    		{
-                    			if((el2_iter->first)->isAttached())
-                    			{
-                    				edge_map.insert(std::pair<SpacerInstance*, int>(current_spacer, (el2_iter->first)->getID()));
-                    			}
-                    			el2_iter++;
-                    		}
-        				}
-        			}
-        			el_iter++;
-        		}
-        	}
-        }
-        nl_iter++;
-    }
-    
-    std::multimap<SpacerInstance*, int>::iterator edge_map_iter = edge_map.begin();
-    while(edge_map_iter != edge_map.end())
-    {
-    	if(label_map.find(edge_map_iter->second) != label_map.end())
+    	int current_contig_ID = 0;
+    	while(current_contig_ID < mNextContigID)
     	{
-    		SpacerInstance * current_spacer = edge_map_iter->first;
-			std::stringstream ss;
-			if(longDesc)
-				ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID() << "_" << mStringCheck.getString(current_spacer->getID());
-			else
-				ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
-			std::string label = ss.str();
-			gvSpEdge(dataOut, label, label_map[edge_map_iter->second]);	
+    		current_contig_ID++;
+    		std::stringstream ss_sg_title;
+    		ss_sg_title << "Contig_" << current_contig_ID;
+    		std::string sg_title = ss_sg_title.str();
+    	    gvSubGraphHeader(dataOut, sg_title, current_contig_ID-1);
+
+    	    std::multimap<SpacerInstance*, int> edge_map;
+    	    std::map<int, std::string> label_map;
+    	    NodeListIterator nl_iter = nodeBegin();
+    	    
+    	    // first loop to print out the nodes
+    	    while (nl_iter != nodeEnd()) 
+    	    {
+    	        // check whether we should print
+    	        if((nl_iter->second)->isAttached())
+    	        {
+    	            // we only care about forward nodes
+    	            if((nl_iter->second)->isForward())
+    	            {
+    	                // get all the forward Inner edges
+    	                edgeList * el = (nl_iter->second)->getEdges(CN_EDGE_FORWARD);
+    	                edgeListIterator el_iter = el->begin();
+    	                while(el_iter != el->end())
+    	                {
+    	                    if((el_iter->first)->isAttached())
+    	                    {
+    	                        // get the spacer for this guy
+    	                        SpacerKey sk = makeSpacerKey((nl_iter->second)->getID(), (el_iter->first)->getID());
+    	                        if(mSpacers.find(sk) != mSpacers.end())
+    	                        {
+    	                            // make the nodes
+    	                            SpacerInstance * current_spacer = mSpacers[sk];
+    	                            if(current_spacer->getContigID() == current_contig_ID)
+    	                            {
+										std::stringstream ss;
+										if(longDesc)
+											ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID() << "_" << mStringCheck.getString(current_spacer->getID());
+										else
+											ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
+										std::string label = ss.str();
+										
+										// store the label for later
+										label_map.insert(std::pair<int, std::string>((nl_iter->second)->getID(), label));
+	
+										// print the node attribute
+										gvSpacer(dataOut,label,mSpacerRainbow.getColour(current_spacer->getCount()));
+										
+										// make some edges
+										// we basically need to keep track of the jumping forward edges
+										edgeList * el2 = (el_iter->first)->getEdges(CN_EDGE_JUMPING_F);
+										edgeListIterator el2_iter = el2->begin();
+										while(el2_iter != el2->end())
+										{
+											if((el2_iter->first)->isAttached())
+											{
+												edge_map.insert(std::pair<SpacerInstance*, int>(current_spacer, (el2_iter->first)->getID()));
+											}
+											el2_iter++;
+										}
+    	                            }
+    	                            else
+    	                            {
+    	                            	logInfo("RJH: " << current_spacer->getID() << " : " << current_spacer->getContigID() << " != " << current_contig_ID, 1);
+    	                            }
+    	                        }
+    	                    }
+    	                    el_iter++;
+    	                }
+    	            }
+    	        }
+    	        nl_iter++;
+    	    }
+    	    
+    	    std::multimap<SpacerInstance*, int>::iterator edge_map_iter = edge_map.begin();
+    	    while(edge_map_iter != edge_map.end())
+    	    {
+    	        if(label_map.find(edge_map_iter->second) != label_map.end())
+    	        {
+    	            SpacerInstance * current_spacer = edge_map_iter->first;
+    	            std::stringstream ss;
+    	            if(longDesc)
+    	                ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID() << "_" << mStringCheck.getString(current_spacer->getID());
+    	            else
+    	                ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
+    	            std::string label = ss.str();
+    	            gvSpEdge(dataOut, label, label_map[edge_map_iter->second]);    
+    	        }
+    	        edge_map_iter++;
+    	    }
+    	    gvSubGraphFooter(dataOut)
     	}
-    	edge_map_iter++;
     }
 
     gvGraphFooter(dataOut)

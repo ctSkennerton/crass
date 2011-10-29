@@ -46,6 +46,7 @@
 #include <map>
 #include <string>
 #include <fstream>
+#include <queue>
 
 // local includes
 #include "NodeManager.h"
@@ -61,6 +62,7 @@
 // typedefs
 typedef std::map<StringToken, CrisprNode *> NodeList;
 typedef std::map<StringToken, CrisprNode *>::iterator NodeListIterator;
+
 typedef std::map<SpacerKey, SpacerInstance *> SpacerList;
 typedef std::map<SpacerKey, SpacerInstance *>::iterator SpacerListIterator;
 
@@ -70,6 +72,11 @@ typedef std::vector<CrisprNode *>::iterator NodeVectorIterator;
 typedef std::pair<CrisprNode *, CrisprNode *> CrisprNodePair;
 typedef std::pair<CrisprNode *, CrisprNode *> CrisprNodePairIterator;
 
+typedef std::vector<SpacerKey> SpacerVector;
+typedef std::vector<SpacerKey>::iterator SpacerVectorIterator;
+
+typedef std::map<int, SpacerVector *>ContigList;
+typedef std::map<int, SpacerVector *>::iterator ContigListIterator;
 
 //macros
 #define makeKey(i,j) (i*100000)+j
@@ -79,50 +86,26 @@ class WalkingManager {
     bool WM_Direction;
     EDGE_TYPE WM_Wanted_Edge_Type;
     
-public:
-
-    WalkingManager(CrisprNode * firstNode, CrisprNode * secondNode, EDGE_TYPE incommingEdge)
-    {
-        WM_WalkingElem.first = firstNode;
-        WM_WalkingElem.second = secondNode;
-        WM_Wanted_Edge_Type = incommingEdge;
-    }
-    WalkingManager(void){}
-    ~WalkingManager(void){}
-
-
-    CrisprNode * getFirstNode(void)
-    {
-        return WM_WalkingElem.first;
-    }
-    CrisprNode * getSecondNode(void)
-    {
-        return WM_WalkingElem.second;
-    }
-    CrisprNodePair getWalkingElem(void)
-    {
-        return WM_WalkingElem;
-    }
-    EDGE_TYPE getEdgeType(void)
-    {
-        return WM_Wanted_Edge_Type;
-    }
-    void setFirstNode(CrisprNode * fn)
-    {
-        WM_WalkingElem.first = fn;
-    }
-    void setSecontNode(CrisprNode * sn)
-    {
-        WM_WalkingElem.second = sn;
-    }
-    void setWalkingElem(CrisprNodePair np)
-    {
-        WM_WalkingElem = np;
-    }
-    void setWantedEdge(EDGE_TYPE e)
-    {
-        WM_Wanted_Edge_Type = e;
-    }
+	public:
+	
+		WalkingManager(CrisprNode * firstNode, CrisprNode * secondNode, EDGE_TYPE incommingEdge)
+		{
+			WM_WalkingElem.first = firstNode;
+			WM_WalkingElem.second = secondNode;
+			WM_Wanted_Edge_Type = incommingEdge;
+		}
+		WalkingManager(void){}
+		~WalkingManager(void){}
+	
+	
+		CrisprNode * getFirstNode(void) { return WM_WalkingElem.first; }
+		CrisprNode * getSecondNode(void) { return WM_WalkingElem.second; }
+		CrisprNodePair getWalkingElem(void) { return WM_WalkingElem; }
+		EDGE_TYPE getEdgeType(void) { return WM_Wanted_Edge_Type; }
+		void setFirstNode(CrisprNode * fn) { WM_WalkingElem.first = fn; }
+		void setSecontNode(CrisprNode * sn) { WM_WalkingElem.second = sn; }
+		void setWalkingElem(CrisprNodePair np) { WM_WalkingElem = np; }
+		void setWantedEdge(EDGE_TYPE e) { WM_Wanted_Edge_Type = e; }
 };
 
 class NodeManager {
@@ -133,15 +116,8 @@ class NodeManager {
 
 		bool addReadHolder(ReadHolder * RH);
 
-        NodeListIterator nodeBegin(void)
-        {
-            return mNodes.begin();
-        }
-        
-        NodeListIterator nodeEnd(void)
-        {
-            return mNodes.end();
-        }
+        NodeListIterator nodeBegin(void) { return mNodes.begin(); } 
+        NodeListIterator nodeEnd(void) { return mNodes.end(); }
         
     // get / set
     
@@ -149,7 +125,6 @@ class NodeManager {
 		void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
 		void findAllNodes(NodeVector * allNodes);
 		void findAllNodes(NodeVector * capNodes, NodeVector * otherNodes);
-		void findAllNodes(NodeVector * crossNodes, NodeVector * pathNodes, NodeVector * capNodes, NodeVector * otherNodes);
 		int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
         EDGE_TYPE getOppositeEdgeType(EDGE_TYPE currentEdgeType);
 
@@ -164,6 +139,12 @@ class NodeManager {
     
     // Contigs
         int splitIntoContigs(void);
+		void findAllForwardAttachedNodes(NodeVector * nodes);
+		void setSpacerRanks(void);
+        void clearContigs(void);
+        void contigiseForwardSpacers(std::queue<SpacerInstance *> * walkingQueue, SpacerInstance * SI);
+        bool getForwardSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI);
+        bool getPrevSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI);
 
     // Making purdy colours
         void setDebugColourLimits(void);
@@ -187,14 +168,16 @@ class NodeManager {
         void setUpperAndLowerCoverage(void);
      
     // members
-        std::string mDirectRepeatSequence;  // the sequence of this managers direct repeat
-        NodeList mNodes;                    // list of CrisprNodes this manager manages
-        SpacerList mSpacers;                // list of all the spacers
-        ReadList mReadList;                 // list of readholders
-        StringCheck mStringCheck;           // string check object for unique strings 
-        Rainbow mDebugRainbow;              // the Rainbow class for making colours
-        Rainbow mSpacerRainbow;             // the Rainbow class for making colours
-        const options * mOpts;              // pointer to the user options structure
+        std::string mDirectRepeatSequence;  				// the sequence of this managers direct repeat
+        NodeList mNodes;                    				// list of CrisprNodes this manager manages
+        SpacerList mSpacers;                				// list of all the spacers
+        ReadList mReadList;                 				// list of readholders
+        StringCheck mStringCheck;           				// string check object for unique strings 
+        Rainbow mDebugRainbow;              				// the Rainbow class for making colours
+        Rainbow mSpacerRainbow;      				        // the Rainbow class for making colours
+        const options * mOpts;              				// pointer to the user options structure
+        int mNextContigID;									// next free contig ID (doubles as a counter)
+        ContigList mContigs; 								// our contigs
 };
 
 

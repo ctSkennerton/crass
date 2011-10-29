@@ -1647,6 +1647,7 @@ int WorkHorse::splitIntoContigs(void)
     {
         if(NULL != dr_iter->second)
         {
+        	logInfo("Making spacer contigs for DR: " << dr_iter->first, 1);
         	if((dr_iter->second)->splitIntoContigs())
         		return 1;
         }
@@ -1827,7 +1828,7 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
                 mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], true);
 #if HAVE_NEATO && RENDERING
                 // create a command string and call neato to make the image file
-                std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                std::string cmd = "dot -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
                 int bob = system(cmd.c_str());
                 bob++;
 #endif

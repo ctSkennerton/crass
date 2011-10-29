@@ -50,6 +50,9 @@ SpacerInstance::SpacerInstance(StringToken spacerID)
     SI_LeadingNode = NULL;
     SI_LastNode = NULL;
     SI_InstanceCount = 0;
+    mSpacerRank = 0;
+    mContigID = 0;
+    mAttached = false;
 }
 
 SpacerInstance::SpacerInstance(StringToken spacerID, CrisprNode * leadingNode, CrisprNode * lastNode)
@@ -58,6 +61,9 @@ SpacerInstance::SpacerInstance(StringToken spacerID, CrisprNode * leadingNode, C
     SI_LeadingNode = leadingNode;
     SI_LastNode = lastNode;
     SI_InstanceCount  = 1;
+    mSpacerRank = 0;
+    mContigID = 0;
+    mAttached = false;
 }
 
 
