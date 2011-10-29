@@ -2,7 +2,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* define to 1 for debug statments */
-/* #undef DEBUG */
+#define DEBUG 1
 
 /* Defines to 1 if the program 'cap3' is found in PATH */
 /* #undef HAVE_CAP3 */
