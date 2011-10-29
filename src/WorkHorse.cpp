@@ -206,6 +206,12 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
 	// Load data from files and search for DRs
 	//
     std::vector<std::string>::iterator seq_iter = seqFiles.begin();
+    
+    // direct repeat sequence and unique ID
+    lookupTable patterns_lookup;
+    
+    // the sequence of whole spacers and their unique ID
+    lookupTable reads_found;
     while(seq_iter != seqFiles.end())
     {
         logInfo("Parsing file: " << *seq_iter, 1);
@@ -214,12 +220,6 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         // the search functions don't cry!
         char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
         strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
-        
-        // direct repeat sequence and unique ID
-        lookupTable patterns_lookup;
-        
-        // the sequence of whole spacers and their unique ID
-        lookupTable reads_found;
         
         // Use a different search routine, depending on if we allow mismatches or not.
         READ_TYPE rt = decideWhichSearch(input_fastq, &mAveReadLength, *mOpts);
@@ -248,28 +248,40 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         // Check to see if we found anything, should return if we haven't
         if (patterns_lookup.empty()) 
         {
-            logInfo("No direct repeat sequences were identified", 1);
-            return 1;
-        } 
-        else 
-        {
-            logInfo("Begining Second iteration through file to recruit singletons", 2);
-            
-            findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
-            
-            logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
-            logInfo("number of reads found so far: "<<this->numOfReads(), 2);
-
-            // There will be an abundance of forms for each direct repeat.
-            // We needs to do somes clustering! Then trim and concatenate the direct repeats
-            if (mungeDRs())
-            {
-            	logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
-            }
-		}
+            logInfo("No direct repeat sequences were identified for file: "<<input_fastq, 1);
+        }
         logInfo("Finished file: " << *seq_iter, 1);
         
         seq_iter++;
+    }
+    
+    if (patterns_lookup.size() > 0) 
+    {
+        seq_iter = seqFiles.begin();
+        while (seq_iter != seqFiles.end()) {
+            
+            logInfo("Parsing file: " << *seq_iter, 1);
+            
+            // Need to make the string into something more old-skool so that
+            // the search functions don't cry!
+            char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
+            strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
+            
+            logInfo("Begining Second iteration through files to recruit singletons", 2);
+            
+            findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            
+            seq_iter++;
+        }
+    }
+    logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
+    logInfo("number of reads found so far: "<<this->numOfReads(), 2);
+    
+    // There will be an abundance of forms for each direct repeat.
+    // We needs to do somes clustering! Then trim and concatenate the direct repeats
+    if (mungeDRs())
+    {
+        logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
     }
 
     return 0;

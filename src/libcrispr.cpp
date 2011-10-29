@@ -119,7 +119,8 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
     //
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
-    int l, read_counter = 0, log_counter = 0;
+    int l, log_counter = 0;
+    static int read_counter = 0;
     // initialize seq
     seq = kseq_init(fp);
     //ReadHolder * tmp_holder = new ReadHolder();
@@ -269,7 +270,8 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
 {
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
-    int l, read_counter = 0, log_counter = 0;
+    int l, log_counter = 0;
+    static int read_counter = 0;
     // initialize seq
     seq = kseq_init(fp);
         
@@ -435,8 +437,9 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     WuManber search;
     search.Initialize(patterns);
     
-    int l, log_counter;
-    int read_counter = log_counter = 0;
+    int l;
+    int log_counter = 0;
+    static int read_counter = 0;
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 

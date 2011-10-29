@@ -2,7 +2,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* define to 1 for debug statments */
-#define DEBUG 1
+/* #undef DEBUG */
 
 /* Defines to 1 if the program 'cap3' is found in PATH */
 /* #undef HAVE_CAP3 */
@@ -97,16 +97,16 @@
 #define PACKAGE_NAME "crass"
 
 /* Define the revision of the package */
-#define PACKAGE_REVISION 3
+#define PACKAGE_REVISION 5
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "crass 0.0.3"
+#define PACKAGE_STRING "crass 0.0.5"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "crass"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.0.3"
+#define PACKAGE_VERSION "0.0.5"
 
 /* Defines to 1 if image rendering is to be performed */
 /* #undef RENDERING */
@@ -118,7 +118,7 @@
 /* #undef SUPER_LOGGING */
 
 /* Version number of package */
-#define VERSION "0.0.3"
+#define VERSION "0.0.5"
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
