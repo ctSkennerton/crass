@@ -1791,11 +1791,13 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
             if (graph_file.good()) 
             {
                 mDRs[mTrueDRs[drg_iter->first]]->printDebugGraph(graph_file, mTrueDRs[drg_iter->first], false, false, false);
-#if HAVE_NEATO && RENDERING
+#if RENDERING
                 // create a command string and call neato to make the image file
                 std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
-                int bob = system(cmd.c_str());
-                bob++;
+                if (system(cmd.c_str()))
+                {
+                    logError("Problem running neato when rendering debug graphs");
+                }
 #endif
             } 
             else 
@@ -1837,12 +1839,14 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
             graph_file.open(graph_file_name.c_str());
             if (graph_file.good()) 
             {
-                mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], true);
-#if HAVE_NEATO && RENDERING
-                // create a command string and call neato to make the image file
-                std::string cmd = "dot -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
-                int bob = system(cmd.c_str());
-                bob++;
+                mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription);
+#if RENDERING
+                // create a command string and call graphviz to make the image file
+                std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                if(system(cmd.c_str()))
+                {
+                    logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
+                }
 #endif
             } 
             else 

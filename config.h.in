@@ -6,8 +6,17 @@
 /* Defines to 1 if the program 'cap3' is found in PATH */
 #undef HAVE_CAP3
 
+/* Defines to 1 if the program 'circo' is found in PATH */
+#undef HAVE_CIRCO
+
+/* Defines to 1 if the program 'dot' is found in PATH */
+#undef HAVE_DOT
+
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
+
+/* Defines to 1 if the program 'fdp' is found in PATH */
+#undef HAVE_FDP
 
 /* Define to 1 if you have the <getopt.h> header file. */
 #undef HAVE_GETOPT_H
@@ -41,6 +50,9 @@
    and to 0 otherwise. */
 #undef HAVE_REALLOC
 
+/* Defines to 1 if the program 'sfdp' is found in PATH */
+#undef HAVE_SFDP
+
 /* Define to 1 if stdbool.h conforms to C99. */
 #undef HAVE_STDBOOL_H
 
@@ -67,6 +79,9 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
+
+/* Defines to 1 if the program 'twopi' is found in PATH */
+#undef HAVE_TWOPI
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H

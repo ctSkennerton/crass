@@ -2,13 +2,22 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* define to 1 for debug statments */
-/* #undef DEBUG */
+#define DEBUG 1
 
 /* Defines to 1 if the program 'cap3' is found in PATH */
 /* #undef HAVE_CAP3 */
 
+/* Defines to 1 if the program 'circo' is found in PATH */
+#define HAVE_CIRCO 1
+
+/* Defines to 1 if the program 'dot' is found in PATH */
+#define HAVE_DOT 1
+
 /* Define to 1 if you have the <fcntl.h> header file. */
 #define HAVE_FCNTL_H 1
+
+/* Defines to 1 if the program 'fdp' is found in PATH */
+#define HAVE_FDP 1
 
 /* Define to 1 if you have the <getopt.h> header file. */
 #define HAVE_GETOPT_H 1
@@ -42,6 +51,9 @@
    and to 0 otherwise. */
 #define HAVE_REALLOC 1
 
+/* Defines to 1 if the program 'sfdp' is found in PATH */
+#define HAVE_SFDP 1
+
 /* Define to 1 if stdbool.h conforms to C99. */
 /* #undef HAVE_STDBOOL_H */
 
@@ -68,6 +80,9 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
+
+/* Defines to 1 if the program 'twopi' is found in PATH */
+#define HAVE_TWOPI 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
@@ -109,7 +124,7 @@
 #define PACKAGE_VERSION "0.0.5"
 
 /* Defines to 1 if image rendering is to be performed */
-/* #undef RENDERING */
+#define RENDERING 1
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

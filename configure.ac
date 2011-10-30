@@ -47,18 +47,22 @@ if test x$verbose_logging = xtrue; then
     AC_DEFINE([SUPER_LOGGING],[1],[define to 1 for verbose logging statments])
 fi
 
-# stop image drawing even with graphviz installed 
+# enable rendering of images with graphviz 
 AC_ARG_ENABLE([rendering],
     [AS_HELP_STRING([--enable-rendering],
     [Enables images being drawn in the output files])],
     [case "${enableval}" in
         yes) rendering=true ;;
         no)  rendering=false ;;
-        *) AC_MSG_ERROR([bad value ${enableval} for --disable-rendering]) ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --enable-rendering]) ;;
     esac],[rendering=false])
 
+#check that graphviz is installed before defining RENDERING
 if test x$rendering = xtrue; then
-    AC_DEFINE([RENDERING],[1],[Defines to 1 if image rendering is to be performed])
+    AC_CHECK_PROGS([GV_PROGS], [neato dot circo fdp sfdp twopi], [no])
+    if test x$GV_PROGS != xno; then
+        AC_DEFINE([RENDERING],[1],[Defines to 1 if image rendering is to be performed])
+    fi
 fi
 
 
@@ -94,6 +98,37 @@ AC_CHECK_PROG([NEATO],[neato],[yes],[no])
 if test x$NEATO = xyes; then
     AC_DEFINE([HAVE_NEATO],[1],[Defines to 1 if the program 'neato' is found in PATH])
 fi 
+
+# Checks for Graphviz program dot
+AC_CHECK_PROG([DOT],[dot],[yes],[no])
+if test x$DOT = xyes; then
+    AC_DEFINE([HAVE_DOT],[1],[Defines to 1 if the program 'dot' is found in PATH])
+fi 
+
+# Checks for Graphviz program fdp
+AC_CHECK_PROG([FDP],[fdp],[yes],[no])
+if test x$FDP = xyes; then
+    AC_DEFINE([HAVE_FDP],[1],[Defines to 1 if the program 'fdp' is found in PATH])
+fi 
+
+# Checks for Graphviz program sfdp
+AC_CHECK_PROG([SFDP],[sfdp],[yes],[no])
+if test x$SFDP = xyes; then
+    AC_DEFINE([HAVE_SFDP],[1],[Defines to 1 if the program 'sfdp' is found in PATH])
+fi 
+
+# Checks for Graphviz program circo
+AC_CHECK_PROG([CIRCO],[circo],[yes],[no])
+if test x$CIRCO = xyes; then
+    AC_DEFINE([HAVE_CIRCO],[1],[Defines to 1 if the program 'circo' is found in PATH])
+fi 
+
+# Checks for Graphviz program twopi
+AC_CHECK_PROG([TWOPI],[twopi],[yes],[no])
+if test x$FDP = xyes; then
+    AC_DEFINE([HAVE_TWOPI],[1],[Defines to 1 if the program 'twopi' is found in PATH])
+fi 
+
 
 # Checks for Cap3 assembler
 AC_CHECK_PROG([CAP],[cap3],[yes],[no])

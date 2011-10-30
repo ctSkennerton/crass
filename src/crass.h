@@ -76,15 +76,17 @@ static struct option long_options [] = {
     {"graphColour",required_argument,NULL,'c'},
     {"spacerScalling",required_argument,NULL,'x'},
     {"repeatScalling",required_argument,NULL,'y'},
+    {"layoutAlgorithm",required_argument,NULL,'a'},
+    {"longDescription",no_argument,NULL,'L'},
     {"noScalling",required_argument,NULL,'0'},
     {NULL, no_argument, NULL, 0}
 };
 
-void assemblyMain(int argc, char * argv[]);
-
 void  usage(void);
 
 void  versionInfo(void);
+
+void  recursiveMkdir(std::string dir);
 
 int   processOptions(int argc, char *argv[], options *opts);
 

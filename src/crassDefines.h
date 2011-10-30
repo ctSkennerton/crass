@@ -45,7 +45,7 @@
 #include "Rainbow.h"
 #include "config.h"
 // --------------------------------------------------------------------
-// General Macros
+ // General Macros
 // --------------------------------------------------------------------
 #define isNotDecimal(number) (number > 1.0 || number < 0.0)
 // --------------------------------------------------------------------
@@ -137,6 +137,8 @@ typedef struct {
     double              averageSpacerScalling;                              // decimal for reduction in the spacer size
     double              averageDrScalling;                                  // decimal for the reduction in the direct repeat size
     bool                dontPerformScalling;                                // turn all scalling off for the user to define variables
+    std::string         layoutAlgorithm;                                    // the graphviz layout algorithm to use 
+    bool                longDescription;                                    // print a long description for the final spacer graph
 } options;
 
 // --------------------------------------------------------------------

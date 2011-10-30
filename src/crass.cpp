@@ -99,12 +99,34 @@ void usage(void)
     std::cout<< "                             shared for clustering [Default: "<<CRASS_DEF_K_CLUST_MIN<<"]"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"Graph Output Options: "<<std::endl;
+#ifdef RENDERING
+    std::cout<<"-a --layoutAlgorithm  <TYPE>  Graphviz layout algorithm to use for printing spacer graphs. The following are available:"<<std::endl;
+    #ifdef HAVE_NEATO
+    std::cout<<"                              \tneato"<<std::endl;
+    #endif
+    #ifdef HAVE_DOT
+    std::cout<<"                              \tdot [Default]"<<std::endl;
+    #endif
+    #ifdef HAVE_FDP
+    std::cout<<"                              \tfdp"<<std::endl;
+    #endif
+    #ifdef HAVE_SFDP
+    std::cout<<"                              \tsfdp"<<std::endl;
+    #endif
+    #ifdef HAVE_CIRCO
+    std::cout<<"                              \tcirco"<<std::endl;
+    #endif
+    #ifdef HAVE_TWOPI
+    std::cout<<"                              \ttwopi"<<std::endl;
+    #endif
+#endif 
     std::cout<<"-b --numBins          <INT>   The number of colour bins for the output graph."<<std::endl;
     std::cout<<"                              Default is to have as many colours as there are"<<std::endl;
     std::cout<<"                              different values for the coverage of Nodes in the graph"<<std::endl;
     std::cout<<"-c --graphColour     <TYPE>   Defines the range of colours to use for the output graph"<<std::endl;
     std::cout<<"                              the different types available are:"<<std::endl;
     std::cout<<"                              red-blue, blue-red, green-red-blue, red-blue-green"<<std::endl;
+    std::cout<<"-L --longDescription          set if you want the spacer sequence printed along with the ID in the spacer graph. [Default: false]"<<std::endl;
 }
 
 void versionInfo(void) 
@@ -118,58 +140,57 @@ void versionInfo(void)
     std::cout<<"---------------------------------------------------------------"<<std::endl;
 }
 
+//make a new directory
+// Stoled from SaSSY
+void recursiveMkdir(std::string dir) 
+{
+    std::string tmp;
+    size_t pos = 0;
+    while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
+        tmp = dir.substr(0,pos);
+        mkdir(tmp.c_str(), S_IRWXU);
+    }
+    mkdir(dir.c_str(), S_IRWXU);
+}
+
 int processOptions(int argc, char *argv[], options *opts) 
 {
     int c;
     int index;
     bool scalling = false;
-    while( (c = getopt_long(argc, argv, "w:hVrl:k:n:o:b:c:d:D:s:S:x:y:", long_options, &index)) != -1 ) 
+    while( (c = getopt_long(argc, argv, "ab:c:d:D:hk:l:Ln:o:rs:S:Vw:x:y:", long_options, &index)) != -1 ) 
     {
         switch(c) 
         {
-            case 'n':
-                if (atoi(optarg) < 2) 
-                {
-                    std::cerr<<PACKAGE_NAME<<" [ERROR]: The mininum number of repeats cannot be less than 2"<<std::endl;
-                    usage();
-                    exit(1);
+            case 'a':
+#if RENDERING                
+                if (strcmp(optarg, "dot") && strcmp(optarg, "neato") && strcmp(optarg, "fdp") && strcmp(optarg, "sfdp") && strcmp(optarg, "twopi") && strcmp(optarg, "circo")) {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: '"<<optarg<<"' is not a recognised layout algorithm. Please choose from the following:"<<std::endl;
+#ifdef HAVE_NEATO
+                    std::cerr<<"\tneato"<<std::endl;
+#endif
+#ifdef HAVE_DOT
+                    std::cerr<<"\tdot"<<std::endl;
+#endif
+#ifdef HAVE_FDP
+                    std::cerr<<"\tfdp"<<std::endl;
+#endif
+#ifdef HAVE_SFDP
+                    std::cerr<<"\tsfdp"<<std::endl;
+#endif
+#ifdef HAVE_CIRCO
+                    std::cerr<<"\tcirco"<<std::endl;
+#endif
+#ifdef HAVE_TWOPI
+                    std::cerr<<"\ttwopi"<<std::endl;
+#endif
+                    
+                } else {
+                    opts->layoutAlgorithm = optarg;
                 }
-                opts->minNumRepeats = atoi(optarg); 
-                break;
-            case 'w': 
-                opts->searchWindowLength = atoi(optarg); 
-                if ((opts->searchWindowLength < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (opts->searchWindowLength > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
-                {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified window length higher than max. Changing window length to " << CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH << " instead of " << opts->searchWindowLength<<std::endl;
-                    // Change window length
-                    opts->searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH;
-                }
-                break;        
-            case 'h': 
-                versionInfo(); 
-                usage();
-                exit(0); 
-                break;
-            case 'V': 
-                versionInfo(); 
-                exit(0); 
-                break;
-            case 'o': 
-                opts->output_fastq = optarg; 
-                // just in case the user put '.' or '..' or '~' as the output directory
-                if (opts->output_fastq[opts->output_fastq.length() - 1] != '/')
-                {
-                    opts->output_fastq += '/';
-                }
-                
-                // check if our output folder exists
-                struct stat file_stats;
-                if (stat(opts->output_fastq.c_str(),&file_stats)) 
-                {
-                    std::cerr<<PACKAGE_NAME<<" [ERROR]: The Directory "<<opts->output_fastq<<" does not exist"<<std::endl;
-                    usage();
-                    exit(1);
-                }
+#else 
+                std::cerr<<PACKAGE_NAME<<" [WARNING]: Not compiled with the correct options to allow rendering of graphs.\nEither use the --enable-rendering option during ./configure and make sure that the graphviz layout programs are in your PATH"<<std::endl;
+#endif
                 break;
             case 'b': 
                 if (atoi(optarg) < 1) 
@@ -203,9 +224,6 @@ int processOptions(int argc, char *argv[], options *opts)
                     opts->graphColourType = RED_BLUE;
                 }
                 break;
-            case 'r': 
-                opts->reportStats = true; 
-                break;
             case 'd': 
                 opts->lowDRsize = atoi(optarg); 
                 if (opts->lowDRsize < 8) 
@@ -217,16 +235,10 @@ int processOptions(int argc, char *argv[], options *opts)
             case 'D': 
                 opts->highDRsize = atoi(optarg); 
                 break;
-            case 's': 
-                opts->lowSpacerSize = atoi(optarg); 
-                if (opts->lowSpacerSize < 8) 
-                {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for spacer sizes cannot be "<<opts->lowSpacerSize<<" changing to "<<CRASS_DEF_MIN_SPACER_SIZE<<std::endl;
-                    opts->lowSpacerSize = CRASS_DEF_MIN_SPACER_SIZE;
-                }
-                break;
-            case 'S': 
-                opts->highSpacerSize = atoi(optarg); 
+            case 'h': 
+                versionInfo(); 
+                usage();
+                exit(1); 
                 break;
             case 'k': 
                 opts->kmer_size = atoi(optarg);
@@ -244,6 +256,61 @@ int processOptions(int argc, char *argv[], options *opts)
                     opts->logLevel = CRASS_DEF_MAX_LOGGING;
                 }
                 break;
+            case 'L':
+                opts->longDescription = true;
+                break;
+            case 'n':
+                if (atoi(optarg) < 2) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [ERROR]: The mininum number of repeats cannot be less than 2"<<std::endl;
+                    usage();
+                    exit(1);
+                }
+                opts->minNumRepeats = atoi(optarg); 
+                break;
+            case 'o': 
+                opts->output_fastq = optarg; 
+                // just in case the user put '.' or '..' or '~' as the output directory
+                if (opts->output_fastq[opts->output_fastq.length() - 1] != '/')
+                {
+                    opts->output_fastq += '/';
+                }
+                
+                // check if our output folder exists
+                struct stat file_stats;
+                if (stat(opts->output_fastq.c_str(),&file_stats)) 
+                {
+                    //std::cerr<<PACKAGE_NAME<<" [WARNING]: The Directory "<<opts->output_fastq<<" does not exist. "<<std::endl;
+                    recursiveMkdir(opts->output_fastq);
+                }
+                break;
+            case 'r': 
+                opts->reportStats = true; 
+                break;
+            case 's': 
+                opts->lowSpacerSize = atoi(optarg); 
+                if (opts->lowSpacerSize < 8) 
+                {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for spacer sizes cannot be "<<opts->lowSpacerSize<<" changing to "<<CRASS_DEF_MIN_SPACER_SIZE<<std::endl;
+                    opts->lowSpacerSize = CRASS_DEF_MIN_SPACER_SIZE;
+                }
+                break;
+            case 'S': 
+                opts->highSpacerSize = atoi(optarg); 
+                break;
+            case 'V': 
+                versionInfo(); 
+                exit(1); 
+                break;
+            case 'w': 
+                opts->searchWindowLength = atoi(optarg); 
+                if ((opts->searchWindowLength < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (opts->searchWindowLength > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
+                {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified window length higher than max. Changing window length to " << CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH << " instead of " << opts->searchWindowLength<<std::endl;
+                    // Change window length
+                    opts->searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH;
+                }
+                break;        
             case 'x':
                 opts->averageSpacerScalling = atof(optarg);
                 if (isNotDecimal(opts->averageSpacerScalling)) 
@@ -334,7 +401,7 @@ int main(int argc, char *argv[])
     if (strcmp(argv[1], "assemble") == 0) {
         // our user wants to do an assembly so let's load up the assembler main function
         assemblyMain(argc - 1 , argv + 1);
-        
+        return 0;
     }
     /* application of default options */
     options opts = {
@@ -356,7 +423,9 @@ int main(int argc, char *argv[])
         RED_BLUE,                               // default colour type of the graph
         CRASS_DEF_HOMOPOLYMER_SCALLING,         // average spacer scalling
         CRASS_DEF_HOMOPOLYMER_SCALLING,         // average direct repeat scalling
-        false                                   // perform scalling by default
+        false,                                  // perform scalling by default
+        "dot",                                  // use dot as the default layout algorithm for rendering
+        false                                   // do not use a long description for the nodes of the spacer graph
     };
 
     int opt_idx = processOptions(argc, argv, &opts);
