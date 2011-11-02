@@ -1,0 +1,41 @@
+<!DOCTYPE crass_assem [
+<!ELEMENT crass_assem (log,group+)>
+<!ATTLIST crass_assem version CDATA "1.0">
+<!ELEMENT log (#PCDATA)>
+<!ELEMENT group (data+,assembly+)>
+<!ATTLIST group gid ID #REQUIRED>
+<!ATTLIST group drseq CDATA #REQUIRED>
+<!ELEMENT data (drs+,spacers+,flankers+)>
+<!ELEMENT drs (dr+)>
+<!ELEMENT dr EMPTY>
+<!ATTLIST dr seq CDATA #REQUIRED>
+<!ATTLIST dr drid ID #REQUIRED>
+<!ATTLIST dr confcnt CDATA #IMPLIED>
+<!ATTLIST dr totcnt CDATA #IMPLIED>
+<!ELEMENT spacers (spacer+)>
+<!ELEMENT spacer EMPTY>
+<!ATTLIST spacer seq CDATA #REQUIRED>
+<!ATTLIST spacer spid ID #REQUIRED>
+<!ELEMENT flankers (flanker*)>
+<!ELEMENT flanker EMPTY>
+<!ATTLIST flanker seq CDATA #REQUIRED>
+<!ATTLIST flanker flid ID #REQUIRED>
+<!ELEMENT assembly (contig+)>
+<!ELEMENT contig (cspacer+)>
+<!ATTLIST contig cid ID #REQUIRED>
+<!ELEMENT cspacer (bspacers?,fspacers?)>
+<!ATTLIST cspacer spid IDREF #REQUIRED>
+<!ELEMENT bspacers (bs+)>
+<!ELEMENT bs EMPTY>
+<!ATTLIST bs spid IDREF #REQUIRED>
+<!ATTLIST bs drid IDREF #IMPLIED>
+<!ATTLIST bs drconf (0|1) #IMPLIED>
+<!ATTLIST bs flid IDREF #IMPLIED>
+<!ELEMENT fspacers (fs+)>
+<!ELEMENT fs EMPTY>
+<!ATTLIST fs spid IDREF #REQUIRED>
+<!ATTLIST fs drid IDREF #IMPLIED>
+<!ATTLIST fs drconf (0|1) "0">
+<!ATTLIST fs flid IDREF #IMPLIED>
+]>
+
