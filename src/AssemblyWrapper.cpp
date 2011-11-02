@@ -39,6 +39,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstring>
+#include <getopt.h>
 
 // Local Includes
 #include "AssemblyWrapper.h"
@@ -48,7 +49,7 @@
 
 void assemblyUsage(void)
 {
-    std::cout<<"Usage: "PACKAGE_NAME<<" assemble ASSEMBLER -g INT -s LIST -i INDIR [options]"<<std::endl;
+    std::cout<<"Usage: "PACKAGE_NAME<<" assemble ASSEMBLER -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]"<<std::endl;
     std::cout<<"\twhere ASSEMBLER is one of the assembly algorithms listed below:"<<std::endl<<std::endl;
 #ifdef HAVE_VELVET
     std::cout<<"\tvelvet"<<std::endl;
@@ -64,10 +65,66 @@ void assemblyUsage(void)
     std::cout<< "--logToScreen                Print the logging information to screen rather than a file"<<std::endl;
     std::cout<< "-g --group           <INT>   ID of the group that you want to assemble"<<std::endl;
     std::cout<< "-s --segments        <LIST>  A comma separated list of numbered segments to assemble from the specified group"<<std::endl;
-    std::cout<< "-i --indir           <DIR>   input directory for the assembly [default: .]"<<std::endl;
+    std::cout<< "-x --xml             <FILE>  xml output file created by crass"<<std::endl;
+    std::cout<< "-i --inDir           <DIR>   input directory for the assembly [default: .]"<<std::endl;    
+    std::cout<< "-p --pairedEnd               Set if you want paired end assembly.  The crass assembler will check for unmatched"<<std::endl;
+    std::cout<<"                              pairs and add them into the input file."<<std::endl;
+    std::cout<< "-I --insertSize      <INT>   size of the insert for paired end assembly"<<std::endl;
+    std::cout<< "-o --outDir          <DIR>   name of the directory for the assembly output files"<<std::endl;
+
 
 
 }
+
+int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
+{
+    int c;
+    int index;
+    while( (c = getopt_long(argc, argv, "g:hi:I:l:o:ps:Vx:", assemblyLongOptions, &index)) != -1 ) 
+    {
+        switch(c) 
+        {
+            case 'g':
+                from_string<int>(opts.group, optarg, std::dec);
+                break;
+            case 'h':
+                assemblyUsage();
+                exit(1);
+                break;
+            case 'i':
+                opts.inputDirName = optarg;
+                break;
+            case 'I':
+                from_string<int>(opts.insertSize, optarg, std::dec);
+                break;
+            case 'l':
+                from_string<int>(opts.logLevel, optarg, std::dec);
+                break;
+            case 'o':
+                opts.outputDirName = optarg;
+                break;
+            case 'p':
+                opts.pairedEnd = true;
+                break;
+            case 's':
+                opts.segments = optarg;
+                break;
+            case 'V':
+                break;
+            case 'x':
+                opts.xmlFileName = optarg;
+                break;
+            case 0:
+                if ( strcmp( "logToScreen", assemblyLongOptions[index].name ) == 0 ) opts.logToScreen = true;
+            default:
+                assemblyUsage();
+                exit(1);
+                break;
+        }
+    }
+    return optind;
+}
+
 
 int calculateOverlapLength(int group, std::string& inputDir)
 {

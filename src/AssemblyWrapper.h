@@ -38,7 +38,39 @@
 #include <string>
 #include <vector>
 
+typedef struct{
+    std::string xmlFileName;            // name of the crass xml file
+    int         group;                  // group id to parse
+    int         logLevel;               // log level
+    bool        pairedEnd;              // does the user want a paired end assembly
+    std::string inputDirName;           // location of the input directory
+    std::string outputDirName;          // location of the output directory
+    std::string segments;               // a comma separated list of segments to assemble
+    bool        logToScreen;            // does the user want logging info printed to screen
+    int         insertSize;             // the insert size for the paired end assembly
+
+
+} assemblyOptions;
+
+static struct option assemblyLongOptions [] = {
+    
+    {"segments", required_argument, NULL, 's'},
+    {"group", required_argument, NULL, 'g'},
+    {"logLevel", required_argument, NULL, 'l'},
+    {"version", no_argument, NULL, 'V'},
+    {"inDir", required_argument, NULL, 'i'},
+    {"outDir", required_argument, NULL, 'o'},
+    {"help", no_argument, NULL, 'h'},
+    {"pairedEnd", no_argument, NULL, 'p'},
+    {"insertSize", required_argument, NULL, 'I'},
+    {"logToScreen", no_argument, NULL, 0},
+    {"xml",required_argument,NULL,'x'},
+    {NULL, no_argument, NULL, 0}
+};
+
 void assemblyUsage(void);
+
+int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts);
 
 int calculateOverlapLength(int group, std::string& inputDir);
 
