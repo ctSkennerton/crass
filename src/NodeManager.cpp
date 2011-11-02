@@ -1226,6 +1226,66 @@ void NodeManager::contigiseForwardSpacers(std::queue<SpacerInstance *> * walking
 
 // Printing / IO
 
+void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool split)
+{
+	//-----
+	// dump reads to this file
+	//
+	std::map<std::string, int> read_2_contig_map; 
+    std::ofstream reads_file;
+    reads_file.open(readsFileName.c_str());
+    if (reads_file.good()) 
+    {
+        SpacerListIterator spacer_iter = mSpacers.begin();
+        while(spacer_iter != mSpacers.end())
+        {
+            SpacerInstance * SI = spacer_iter->second;
+            int CID = SI->getContigID();
+            
+            // get the crisprnodes for these guys
+            CrisprNode * Cleader = SI->getLeader();
+            CrisprNode * Clast = SI->getLast();
+            
+            if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+            {
+            	std::vector<std::string> headers = Cleader->getReadHeaders(&mStringCheck);
+            	std::vector<std::string>::iterator h_iter = headers.begin();
+            	while(h_iter != headers.end())
+            	{
+            		read_2_contig_map[*h_iter] = CID;
+            		h_iter++;
+            	}
+            	
+            	headers = Clast->getReadHeaders(&mStringCheck);
+            	h_iter = headers.begin();
+				while(h_iter != headers.end())
+				{
+					read_2_contig_map[*h_iter] = CID;
+					h_iter++;
+				}
+            }
+            spacer_iter++;
+        }
+
+		// now we can print all the reads to file
+		ReadListIterator read_iter = mReadList.begin();
+		while (read_iter != mReadList.end()) 
+		{
+			std::string header = (*read_iter)->getHeader();
+			if(read_2_contig_map.find(header) != read_2_contig_map.end())
+			{
+				reads_file<<">"<<(*read_iter)->getHeader()<<"_C_"<<read_2_contig_map[header]<<std::endl;
+				if(split)
+					reads_file<<(*read_iter)->splitApart()<<std::endl;
+				else
+					reads_file<<(*read_iter)->getSeq()<<std::endl;
+			}
+			read_iter++;
+		}
+		reads_file.close();
+	}
+}
+
 // Spacer dictionaries
 void NodeManager::dumpSpacerDict(std::string spacerFileName, bool showDetached)
 {
@@ -1233,7 +1293,7 @@ void NodeManager::dumpSpacerDict(std::string spacerFileName, bool showDetached)
     // Dump a spacer dictionary to file
     //
     std::ofstream spacer_file;
-    spacer_file    .open(spacerFileName.c_str());
+    spacer_file.open(spacerFileName.c_str());
     if (spacer_file.good()) 
     {
         spacer_file <<"SEQ,ID,COUNT" << std::endl;
@@ -1382,7 +1442,7 @@ void NodeManager::printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * c
     }
 }
 
-void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc)
+void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc, bool showKey)
 {
     //-----
     // Print a graphviz style graph of the DRs and spacers
@@ -1390,9 +1450,9 @@ void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, boo
     setSpacerColourLimits();
     
     gvGraphHeader(dataOut, title);
+	int current_contig_ID = 0;
     if(mNextContigID > 0)
     {
-    	int current_contig_ID = 0;
     	while(current_contig_ID < mNextContigID)
     	{
     		current_contig_ID++;
@@ -1455,10 +1515,6 @@ void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, boo
 											el2_iter++;
 										}
     	                            }
-    	                            else
-    	                            {
-    	                            	logInfo("RJH: " << current_spacer->getID() << " : " << current_spacer->getContigID() << " != " << current_contig_ID, 1);
-    	                            }
     	                        }
     	                    }
     	                    el_iter++;
@@ -1488,5 +1544,29 @@ void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, boo
     	}
     }
 
-    gvGraphFooter(dataOut)
+    if(showKey)
+    	printSpacerKey(dataOut, 10, current_contig_ID);
+    
+    gvGraphFooter(dataOut);
+}
+
+void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, int clusterNumber)
+{
+    //-----
+    // Print a graphviz style graph of the DRs and spacers
+    //
+	
+	gvKeyHeader(dataOut, clusterNumber);
+	double ul = mSpacerRainbow.getUpperLimit();
+	double ll = mSpacerRainbow.getLowerLimit();
+	double step_size = (ul - ll) / (numSteps - 1);
+	if(step_size < 1) { step_size = 1; }
+	for(double i = ll; i <= ul; i+= step_size)
+	{
+		int this_step = int(i); 
+		std::stringstream ss;
+		ss << this_step;
+		gvKeyEntry(dataOut, ss.str(), mSpacerRainbow.getColour(this_step));
+	}
+	gvKeyFooter(dataOut);
 }

@@ -55,6 +55,7 @@
 #include "StlExt.h"
 #include "StringCheck.h"
 #include "config.h"
+#include "CrassXML.h"
 
 
 bool sortDirectRepeatByLength( const std::string &a, const std::string &b)
@@ -142,6 +143,11 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     //-----
     // wrapper for the various processes needed to assemble crisprs
     //
+//	CrassXML * CX = new CrassXML();
+//	CX->parseCrassXMLFile("/home/uqmimelf/working/crass/data/crass2.xml");
+//	delete CX;
+//	return 0;
+	
 	logInfo("Parsing reads in " << (seqFiles.size()) << " files", 1);
 	if(parseSeqFiles(seqFiles))
 	{
@@ -154,12 +160,14 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 		return 2;
 	}
 	
+#if DEBUG
 	// print debug graphs
 	if(renderDebugGraphs())
 	{
 		return 3;
 	}
-
+#endif
+	
 	// clean each spacer end graph
 	if(cleanGraph())
 	{
@@ -183,19 +191,21 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	{
 		return 7;
 	}
-
+	
+#if DEBUG
 	// print clean graphs
 	if(renderDebugGraphs("Clean_"))
 	{
 		return 8;
 	}
+#endif
 
 	// print spacer graphs
 	if(renderSpacerGraphs())
 	{
 		return 9;
 	}
-
+	
     logInfo("all done!", 1);
 	return 0;
 }
@@ -1703,26 +1713,8 @@ int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
         // make sure that our cluster is real
         if (drg_iter->second != NULL) 
         {
-        	std::ofstream reads_file;
-            reads_file.open((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str());
-            DR_ClusterIterator dr_iter = drg_iter->second->begin();
-            while (dr_iter != drg_iter->second->end()) 
-            {
-                ReadListIterator read_iter = mReads[*dr_iter]->begin();
-                while (read_iter != mReads[*dr_iter]->end()) 
-                {
-                	reads_file<<">"<<(*read_iter)->getHeader()<<std::endl;
-                	if(split)
-                		reads_file<<(*read_iter)->splitApart()<<std::endl;
-                	else
-                		reads_file<<(*read_iter)->getSeq()<<std::endl;
-                    read_iter++;
-                }
-                dr_iter++;
-            }
-            reads_file.close();
+            (mDRs[mTrueDRs[drg_iter->first]])->dumpReads((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str(), false, split);
         }
-
         drg_iter++;
     }
 	return 0;
@@ -1839,7 +1831,7 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
             graph_file.open(graph_file_name.c_str());
             if (graph_file.good()) 
             {
-                mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription);
+                mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription, true);
 #if RENDERING
                 // create a command string and call graphviz to make the image file
                 std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
