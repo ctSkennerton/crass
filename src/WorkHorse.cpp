@@ -362,7 +362,7 @@ int WorkHorse::mungeDRs(void)
         clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &group_kmer_counts_map);
         ++read_map_iter;
     }
-#if 0
+
     logInfo("Reducing list of potential DRs (2): Purging singleton clusters", 1);
     int purge_counter = 0;
     DR_Cluster_MapIterator dcg_iter = mDR2GIDMap.begin();
@@ -373,7 +373,9 @@ int WorkHorse::mungeDRs(void)
         {
             logInfo("Purging Group " << dcg_iter->first<<" as it contains a single DR variant", 4);
             // make this group point to null so that we won't go through it again
+            delete dcg_iter->second;
             dcg_iter->second = NULL;
+            mDR2GIDMap[dcg_iter->first] = NULL;
             purge_counter++;
         }
         // log the cluster as needed
@@ -400,7 +402,7 @@ int WorkHorse::mungeDRs(void)
 
     }
    
-#endif
+
     logInfo("Reducing list of potential DRs (3): Cluster refinement and true DR finding", 1);
     
     // go through all the counts for each group
@@ -412,11 +414,19 @@ int WorkHorse::mungeDRs(void)
         {
             // it's real, so parse this group
             // get the five top kmers
-
-            std::vector<std::string> n_top_kmers = getNMostAbundantKmers(CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second);
-            
-            // a return value of false indicates that this function has deleted clustered_DRs
-            parseGroupedDRs(group_count_iter->first, &n_top_kmers, clustered_DRs, &next_free_GID);
+            std::vector<std::string> n_top_kmers;
+            if (getNMostAbundantKmers(n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second)) 
+            {
+                // a return value of false indicates that this function has deleted clustered_DRs
+                parseGroupedDRs(group_count_iter->first, &n_top_kmers, clustered_DRs, &next_free_GID);
+            }
+            else
+            {
+                // if there is less kill the group
+                delete group_count_iter->second;
+                group_count_iter->second = NULL;
+                mDR2GIDMap[group_count_iter->first] = NULL;
+            }
         }
 
         // delete the kmer count lists cause we're finsihed with them now
@@ -1400,38 +1410,42 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
     return false;
 }
 
-std::vector<std::string> WorkHorse::getNMostAbundantKmers(int num2Get, std::map<std::string, int> * kmer_CountMap)
+bool WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
 {
     std::string top_kmer;    
     std::map<std::string, bool> top_kmer_map;
     
-    int iterations = ((int)(kmer_CountMap->size()) < num2Get ) ? (int)kmer_CountMap->size() : num2Get;
-    
-    for (int i = 1; i <= iterations; i++) 
-    {
-        std::map<std::string, int>::iterator map_iter = kmer_CountMap->begin();
-        int max_count = 0;
-        
-        while (map_iter != kmer_CountMap->end()) 
+    if ((int)(kmer_CountMap->size()) < num2Get) {
+        return false;
+    } else {
+        for (int i = 1; i <= num2Get; i++) 
         {
-            if((map_iter->second > max_count) && (top_kmer_map.find(map_iter->first) == top_kmer_map.end()))
+            std::map<std::string, int>::iterator map_iter = kmer_CountMap->begin();
+            int max_count = 0;
+            
+            while (map_iter != kmer_CountMap->end()) 
             {
-                max_count = map_iter->second;
-                top_kmer = map_iter->first;
+                if((map_iter->second > max_count) && (top_kmer_map.find(map_iter->first) == top_kmer_map.end()))
+                {
+                    max_count = map_iter->second;
+                    top_kmer = map_iter->first;
+                }
+                map_iter++;
             }
-            map_iter++;
+            top_kmer_map[top_kmer] = true;
         }
-        top_kmer_map[top_kmer] = true;
+        std::map<std::string, bool>::iterator tkm_iter = top_kmer_map.begin();
+        while(tkm_iter != top_kmer_map.end())
+        {
+            //std::cout<<tkm_iter->first<<std::endl;
+            mostAbundantKmers.push_back(tkm_iter->first);
+            tkm_iter++;
+        }
+        return true;
+
     }
-    std::vector<std::string> top_kmers;
-    std::map<std::string, bool>::iterator tkm_iter = top_kmer_map.begin();
-    while(tkm_iter != top_kmer_map.end())
-    {
-        //std::cout<<tkm_iter->first<<std::endl;
-        top_kmers.push_back(tkm_iter->first);
-        tkm_iter++;
-    }
-    return top_kmers;
+    //int iterations = ((int)(kmer_CountMap->size()) < num2Get ) ? (int)kmer_CountMap->size() : num2Get;
+    
 }
 
 bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap)

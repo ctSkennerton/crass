@@ -67,6 +67,13 @@ inline std::string to_string (const T& t)
     return ss.str();
 }
 
+template <class T>
+bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&))
+{
+    std::istringstream iss(s);
+    return !(iss >> f >> t).fail();
+}
+
 template <class T1, class T2, class T3>
 void mapToVector(std::map<T1, T2>& map, std::vector<T3>& vector) 
 {

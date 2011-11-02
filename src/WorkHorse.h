@@ -103,7 +103,7 @@ class WorkHorse {
         bool parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int * nextFreeGID);
 
         bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string * kmer, const std::string * DR);
-        std::vector<std::string> getNMostAbundantKmers(int num2Get, std::map<std::string, int> * kmer_CountMap);
+        bool getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
         
         //**************************************
         // contig making
