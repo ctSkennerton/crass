@@ -52,21 +52,6 @@ typedef struct{
 
 } assemblyOptions;
 
-static struct option assemblyLongOptions [] = {
-    
-    {"segments", required_argument, NULL, 's'},
-    {"group", required_argument, NULL, 'g'},
-    {"logLevel", required_argument, NULL, 'l'},
-    {"version", no_argument, NULL, 'V'},
-    {"inDir", required_argument, NULL, 'i'},
-    {"outDir", required_argument, NULL, 'o'},
-    {"help", no_argument, NULL, 'h'},
-    {"pairedEnd", no_argument, NULL, 'p'},
-    {"insertSize", required_argument, NULL, 'I'},
-    {"logToScreen", no_argument, NULL, 0},
-    {"xml",required_argument,NULL,'x'},
-    {NULL, no_argument, NULL, 0}
-};
 
 void assemblyUsage(void);
 

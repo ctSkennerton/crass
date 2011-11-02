@@ -80,6 +80,22 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
 {
     int c;
     int index;
+    static struct option assemblyLongOptions [] = {
+        
+        {"segments", required_argument, NULL, 's'},
+        {"group", required_argument, NULL, 'g'},
+        {"logLevel", required_argument, NULL, 'l'},
+        {"version", no_argument, NULL, 'V'},
+        {"inDir", required_argument, NULL, 'i'},
+        {"outDir", required_argument, NULL, 'o'},
+        {"help", no_argument, NULL, 'h'},
+        {"pairedEnd", no_argument, NULL, 'p'},
+        {"insertSize", required_argument, NULL, 'I'},
+        {"logToScreen", no_argument, NULL, 0},
+        {"xml",required_argument,NULL,'x'},
+        {NULL, no_argument, NULL, 0}
+    };
+    
     while( (c = getopt_long(argc, argv, "g:hi:I:l:o:ps:Vx:", assemblyLongOptions, &index)) != -1 ) 
     {
         switch(c) 
