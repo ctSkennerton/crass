@@ -52,7 +52,6 @@ typedef struct{
 
 } assemblyOptions;
 
-
 void assemblyUsage(void);
 
 int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts);

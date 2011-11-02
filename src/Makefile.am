@@ -1,8 +1,10 @@
-AM_CXXFLAGS = -Werror -pedantic -Wall -lxerces-c 
-
+AM_CXXFLAGS = -Werror -pedantic -Wall 
+LIBS += -lxerces-c
 if DEBUG
     AM_CXXFLAGS += -ggdb
 endif
+
+
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
 # the previous manual Makefile
 bin_PROGRAMS = crass

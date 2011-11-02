@@ -78,7 +78,8 @@ void assemblyUsage(void)
 
 int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
 {
-    int c;
+
+	int c;
     int index;
     static struct option assemblyLongOptions [] = {
         

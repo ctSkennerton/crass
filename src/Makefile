@@ -30,7 +30,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-am__append_1 = -ggdb
+#am__append_1 = -ggdb
 bin_PROGRAMS = crass$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -50,7 +50,7 @@ am_crass_OBJECTS = PatternMatcher.$(OBJEXT) Rainbow.$(OBJEXT) \
 	libcrispr.$(OBJEXT) WorkHorse.$(OBJEXT) \
 	SpacerInstance.$(OBJEXT) ReadHolder.$(OBJEXT) \
 	SmithWaterman.$(OBJEXT) StringCheck.$(OBJEXT) \
-	AssemblyWrapper.$(OBJEXT)
+	AssemblyWrapper.$(OBJEXT) CrassXML.$(OBJEXT)
 crass_OBJECTS = $(am_crass_OBJECTS)
 crass_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
@@ -93,7 +93,7 @@ EGREP = /usr/bin/grep -E
 EXEEXT = 
 FDP = yes
 GREP = /usr/bin/grep
-GV_PROGS = neato
+GV_PROGS = 
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -101,7 +101,7 @@ INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LDFLAGS = 
 LIBOBJS = 
-LIBS = -lz 
+LIBS = -lz  -lxerces-c
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /Users/uqcskenn/Documents/Projects/crass/missing --run makeinfo
 MKDIR_P = .././install-sh -c -d
@@ -110,9 +110,9 @@ OBJEXT = o
 PACKAGE = crass
 PACKAGE_BUGREPORT = c.skennerton@gmail.com
 PACKAGE_NAME = crass
-PACKAGE_STRING = crass 0.0.5
+PACKAGE_STRING = crass 0.0.7
 PACKAGE_TARNAME = crass
-PACKAGE_VERSION = 0.0.5
+PACKAGE_VERSION = 0.0.7
 PATH_SEPARATOR = :
 SET_MAKE = 
 SFDP = yes
@@ -121,7 +121,7 @@ STRIP =
 TWOPI = yes
 VELVET_G = yes
 VELVET_H = yes
-VERSION = 0.0.5
+VERSION = 0.0.7
 abs_builddir = /Users/uqcskenn/Documents/Projects/crass/src
 abs_srcdir = /Users/uqcskenn/Documents/Projects/crass/src
 abs_top_builddir = /Users/uqcskenn/Documents/Projects/crass
@@ -165,7 +165,7 @@ target_alias =
 top_builddir = ..
 top_srcdir = ..
 AM_CXXFLAGS = -Werror -pedantic -Wall $(am__append_1)
-crass_SOURCES = PatternMatcher.cpp Rainbow.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp AssemblyWrapper.cpp 
+crass_SOURCES = PatternMatcher.cpp Rainbow.cpp crass.cpp WuManber.cpp LoggerSimp.cpp SeqUtils.cpp CrisprNode.cpp NodeManager.cpp libcrispr.cpp WorkHorse.cpp SpacerInstance.cpp ReadHolder.cpp SmithWaterman.cpp StringCheck.cpp AssemblyWrapper.cpp CrassXML.cpp 
 all: all-am
 
 .SUFFIXES:
@@ -233,6 +233,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 include ./$(DEPDIR)/AssemblyWrapper.Po
+include ./$(DEPDIR)/CrassXML.Po
 include ./$(DEPDIR)/CrisprNode.Po
 include ./$(DEPDIR)/LoggerSimp.Po
 include ./$(DEPDIR)/NodeManager.Po
