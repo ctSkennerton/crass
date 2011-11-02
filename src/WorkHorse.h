@@ -50,6 +50,7 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 #include "StringCheck.h"
+#include "CrassXML.h"
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
@@ -59,6 +60,7 @@ typedef std::map<std::string, NodeManager *>::iterator DR_ListIterator;
 // indexed using StringCheck type tokens
 typedef std::vector<StringToken> DR_Cluster; 
 typedef std::vector<StringToken>::iterator DR_ClusterIterator;
+
 typedef std::map<int, DR_Cluster *>::iterator DR_Cluster_MapIterator;
 typedef std::map<int, DR_Cluster *> DR_Cluster_Map;
 

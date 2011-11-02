@@ -79,6 +79,10 @@ class Rainbow
         std::string getColour(double value);
         std::string int2RGB(int rgb);
         
+        // get the limits
+        double getUpperLimit(void) { return mUpperBound; }
+        double getLowerLimit(void) { return mLowerBound; }
+        
     private:
         // members
         double mLowerBound;        // lowest number we'll colour`
