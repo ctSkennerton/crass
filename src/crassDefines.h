@@ -92,6 +92,10 @@
 #define CRASS_DEF_DEF_KMER_LOOKUP_EXT           "crass_kmers.txt"
 #define CRASS_DEF_DEF_PATTERN_LOOKUP_EXT        "crass_direct_repeats.txt"
 #define CRASS_DEF_DEF_SPACER_LOOKUP_EXT         "crass_spacers.txt"
+#define CRASS_DEF_CRISPR_EXT					".crispr"
+#define CRASS_DEF_CRISPR_HEADER					"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<crass_assem version=\"1.0\">\n"
+#define CRASS_DEF_CRISPR_FOOTER					"</crass_assem>\n"
+
 // --------------------------------------------------------------------
 // GRAPH BUILDING
 // --------------------------------------------------------------------

@@ -1286,6 +1286,131 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
 	}
 }
 
+void NodeManager::printXML(std::ofstream * XMLFile, int GID, bool showDetached)
+{
+	//-----
+	// print this nodemanagers portion of the XML file
+	//
+	(*XMLFile) << "\t<group gid=\"G"<<GID<<"\" drseq=\""<<mDirectRepeatSequence<<"\">\n";
+	
+	// first print the data section
+	(*XMLFile) << "\t\t<data>\n";
+	
+	//DRs
+	// at this stage, there is only 1 DR per group, but this may change...
+	(*XMLFile) << "\t\t\t<drs>\n";
+	(*XMLFile) << "\t\t\t\t<dr seq=\""<<mDirectRepeatSequence<<"\" drid=\"DR1\" />\n";
+	(*XMLFile) << "\t\t\t</drs>\n";
+	
+	// spacers
+	(*XMLFile) << "\t\t\t<spacers>\n";
+    SpacerListIterator spacer_iter = mSpacers.begin();
+    while(spacer_iter != mSpacers.end())
+    {
+        SpacerInstance * SI = spacer_iter->second;
+        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+        {
+            std::string spacer = mStringCheck.getString(SI->getID());
+            (*XMLFile) << "\t\t\t\t<spacer seq=\""<<spacer<<"\" spid=\"SP"<<SI->getID()<<"\" />\n";
+        }
+		spacer_iter++;
+	}
+	(*XMLFile) << "\t\t\t</spacers>\n";
+    
+    // flankers
+    // not implemented
+    
+	(*XMLFile) << "\t\t</data>\n";
+
+	// then print the assembly section
+	int current_contig_ID = 0;
+    if(mNextContigID > 0)
+    {
+    	(*XMLFile) << "\t\t<assembly>\n";
+    	while(current_contig_ID < mNextContigID)
+    	{
+    		current_contig_ID++;
+    		std::stringstream ss_sg_title;
+    		(*XMLFile) << "\t\t\t\t<contig cid=\"C"<<current_contig_ID<<"\">\n";
+
+    	    std::multimap<SpacerInstance*, int> edge_map;
+    	    std::map<int, std::string> label_map;
+    	    NodeListIterator nl_iter = nodeBegin();
+    	    
+    	    // first loop to print out the nodes
+    	    while (nl_iter != nodeEnd()) 
+    	    {
+    	        // check whether we should print
+    	        if((nl_iter->second)->isAttached())
+    	        {
+    	            // we only care about forward nodes
+    	            if((nl_iter->second)->isForward())
+    	            {
+    	                // get all the forward Inner edges
+    	                edgeList * el = (nl_iter->second)->getEdges(CN_EDGE_FORWARD);
+    	                edgeListIterator el_iter = el->begin();
+    	                while(el_iter != el->end())
+    	                {
+    	                    if((el_iter->first)->isAttached())
+    	                    {
+    	                        // get the spacer for this guy
+    	                        SpacerKey sk = makeSpacerKey((nl_iter->second)->getID(), (el_iter->first)->getID());
+    	                        if(mSpacers.find(sk) != mSpacers.end())
+    	                        {
+    	                            // make the nodes
+    	                            SpacerInstance * current_spacer = mSpacers[sk];
+    	                            if(current_spacer->getContigID() == current_contig_ID)
+    	                            {
+										std::stringstream ss;
+										ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
+										std::string label = ss.str();
+										
+										// store the label for later
+										label_map.insert(std::pair<int, std::string>((nl_iter->second)->getID(), label));
+	
+										// print the node attribute
+										
+										// make some edges
+										// we basically need to keep track of the jumping forward edges
+										edgeList * el2 = (el_iter->first)->getEdges(CN_EDGE_JUMPING_F);
+										edgeListIterator el2_iter = el2->begin();
+										while(el2_iter != el2->end())
+										{
+											if((el2_iter->first)->isAttached())
+											{
+												edge_map.insert(std::pair<SpacerInstance*, int>(current_spacer, (el2_iter->first)->getID()));
+											}
+											el2_iter++;
+										}
+    	                            }
+    	                        }
+    	                    }
+    	                    el_iter++;
+    	                }
+    	            }
+    	        }
+    	        nl_iter++;
+    	    }
+    	    
+    	    std::multimap<SpacerInstance*, int>::iterator edge_map_iter = edge_map.begin();
+    	    while(edge_map_iter != edge_map.end())
+    	    {
+    	        if(label_map.find(edge_map_iter->second) != label_map.end())
+    	        {
+    	            SpacerInstance * current_spacer = edge_map_iter->first;
+    	            std::stringstream ss;
+   	                ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
+    	            std::string label = ss.str();
+    	        }
+    	        edge_map_iter++;
+    	    }
+    		(*XMLFile) << "\t\t\t\t</contig>\n";
+    	}
+    	(*XMLFile) << "\t\t</assembly>\n";
+    }
+	(*XMLFile) << "\t</group>\n"; 
+}
+
 // Spacer dictionaries
 void NodeManager::dumpSpacerDict(std::string spacerFileName, bool showDetached)
 {

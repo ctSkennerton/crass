@@ -437,8 +437,19 @@ int main(int argc, char *argv[])
         exit(1);
     }
     
-    // initialize the log file
+    // always make a timestamp
     std::string logFileName;
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer [80];
+    
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    
+    strftime (buffer,80,"%d_%m_%Y_%H%M%S",timeinfo);
+    std::string timestamp(buffer);
+
+    // initialize the log file
     if (opts.logToScreen) 
     {
         logFileName = "";
@@ -446,16 +457,7 @@ int main(int argc, char *argv[])
     else 
     {
         // create a time stamp for the log file
-        time_t rawtime;
-        struct tm * timeinfo;
-        char buffer [80];
-        
-        time ( &rawtime );
-        timeinfo = localtime ( &rawtime );
-        
-        strftime (buffer,80,"%d_%m_%Y_%H%M%S",timeinfo);
-        std::string tmp(buffer);
-        logFileName = opts.output_fastq+ "crass."+tmp+".log";
+        logFileName = opts.output_fastq+ "crass."+timestamp+".log";
         
     }
     
@@ -476,7 +478,7 @@ int main(int argc, char *argv[])
     }
     logTimeStamp();
     
-    WorkHorse * mHorse = new WorkHorse(&opts);
+    WorkHorse * mHorse = new WorkHorse(&opts, timestamp);
     mHorse->doWork(seq_files);
     delete mHorse;
     return 0;

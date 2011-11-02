@@ -156,6 +156,7 @@ class NodeManager {
         void printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc, bool showKey);         // Print a graphviz style graph of the FULL spacers
         void printSpacerKey(std::ostream &dataOut, int numSteps, int clusterNumber);         													// make a key for the spacer graph 	
         void dumpReads(std::string readsFileName, bool showDetached, bool split);												// dump reads to this file
+        void printXML(std::ofstream * XMLFile, int GID, bool showDetached);						// print this node managers portion of the XML file 
         
 	// Spacer dictionaries
 		void dumpSpacerDict(std::string spacerFileName, bool showDetached);

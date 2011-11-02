@@ -70,11 +70,12 @@ bool sortDirectRepeatByLength( const std::string &a, const std::string &b);
 
 class WorkHorse {
     public:
-        WorkHorse (const options * opts) 
+        WorkHorse (const options * opts, std::string timestamp) 
         { 
             mOpts = opts; 
             mAveReadLength = 0;
             mStringCheck.setName("WH");
+            mTimeStamp = timestamp;
         }
         ~WorkHorse();
         
@@ -122,6 +123,8 @@ class WorkHorse {
         int renderDebugGraphs(std::string namePrefix);
         int renderSpacerGraphs(void);							// render debug graphs
         int renderSpacerGraphs(std::string namePrefix);
+        bool printXML(void) { return printXML(mOpts->output_fastq + "crass_" + mTimeStamp); } // print all the assembly gossip to XML
+        bool printXML(std::string namePrefix);
         
     // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
@@ -130,6 +133,7 @@ class WorkHorse {
         std::string mOutFileDir;                    // where to spew text to
         float mAveReadLength;                       // the average seen read length
         StringCheck mStringCheck;                   // Place to swap strings for tokens
+        std::string mTimeStamp;						// hold the timestmp so we can make filenames
         
         // global variables used to cluster and munge DRs
         std::map<int, bool> mGroupMap;				// list of valid group IDs

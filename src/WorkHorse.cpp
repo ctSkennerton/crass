@@ -206,6 +206,8 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 		return 9;
 	}
 	
+	printXML();
+	
     logInfo("all done!", 1);
 	return 0;
 }
@@ -1864,4 +1866,36 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
         drg_iter++;
     }
     return 0;
+}
+
+bool WorkHorse::printXML(std::string namePrefix)
+{
+	// print all the assembly gossip to XML
+	namePrefix += CRASS_DEF_CRISPR_EXT;
+	logInfo("Writing XML output to \"" << namePrefix << "\"", 1);
+	
+	// open the XML file and write the header information
+    std::ofstream XML_file;
+    XML_file.open(namePrefix.c_str());
+    if (XML_file.good()) 
+    {
+    	XML_file << CRASS_DEF_CRISPR_HEADER;
+    }
+    
+    // print all the inside information
+    DR_Cluster_MapIterator drg_iter =  mDR2GIDMap.begin();
+	while (drg_iter != mDR2GIDMap.end()) 
+	{
+		// make sure that our cluster is real
+		if (drg_iter->second != NULL) 
+		{
+			(mDRs[mTrueDRs[drg_iter->first]])->printXML(&XML_file, drg_iter->first, false);
+		}
+		drg_iter++;
+	}
+	
+	// close the XML file
+	XML_file << CRASS_DEF_CRISPR_FOOTER;
+	XML_file.close();
+	return 0;
 }
