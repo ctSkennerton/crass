@@ -54,7 +54,6 @@
 #include "WuManber.h"
 #include "PatternMatcher.h"
 #include "SeqUtils.h"
-#include "Levensthein.h"
 #include "kseq.h"
 #include "StlExt.h"
 #include "config.h"

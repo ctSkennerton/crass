@@ -62,7 +62,6 @@
 #include "SmithWaterman.h"
 #include "SeqUtils.h"
 #include "LoggerSimp.h"
-#include "Levensthein.h"
 #include "PatternMatcher.h"
 
 double findMax(double a, double b, double c, double d, int * index)

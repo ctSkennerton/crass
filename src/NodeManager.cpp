@@ -1291,6 +1291,8 @@ void NodeManager::printXML(std::ofstream * XMLFile, int GID, bool showDetached)
 	//-----
 	// print this nodemanagers portion of the XML file
 	//
+	// please forgive me
+	//
 	(*XMLFile) << "\t<group gid=\"G"<<GID<<"\" drseq=\""<<mDirectRepeatSequence<<"\">\n";
 	
 	// first print the data section
@@ -1333,10 +1335,8 @@ void NodeManager::printXML(std::ofstream * XMLFile, int GID, bool showDetached)
     		std::stringstream ss_sg_title;
     		(*XMLFile) << "\t\t\t\t<contig cid=\"C"<<current_contig_ID<<"\">\n";
 
-    	    std::multimap<SpacerInstance*, int> edge_map;
-    	    std::map<int, std::string> label_map;
-    	    NodeListIterator nl_iter = nodeBegin();
     	    
+    	    NodeListIterator nl_iter = nodeBegin();
     	    // first loop to print out the nodes
     	    while (nl_iter != nodeEnd()) 
     	    {
@@ -1361,27 +1361,89 @@ void NodeManager::printXML(std::ofstream * XMLFile, int GID, bool showDetached)
     	                            SpacerInstance * current_spacer = mSpacers[sk];
     	                            if(current_spacer->getContigID() == current_contig_ID)
     	                            {
-										std::stringstream ss;
-										ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
-										std::string label = ss.str();
-										
-										// store the label for later
-										label_map.insert(std::pair<int, std::string>((nl_iter->second)->getID(), label));
-	
-										// print the node attribute
-										
-										// make some edges
-										// we basically need to keep track of the jumping forward edges
-										edgeList * el2 = (el_iter->first)->getEdges(CN_EDGE_JUMPING_F);
-										edgeListIterator el2_iter = el2->begin();
-										while(el2_iter != el2->end())
+    	                            	
+    	                        		(*XMLFile) << "\t\t\t\t\t<cspacer spid=\"SP"<<current_spacer->getID()<<"\">\n";
+    	                        	    CrisprNode * leader = nl_iter->second;
+    	                        	    CrisprNode * last = el_iter->first;
+    	                        	    edgeList * el_near,  *el_far;
+    	                        	    edgeListIterator el_near_iter, el_far_iter; 
+    	                        	    bool found_b = false;
+    	                        	    bool found_f = false;
+    	                        	    // do the backward edges
+										el_near = leader->getEdges(CN_EDGE_JUMPING_B);
+										el_near_iter = el_near->begin();
+										while(el_near_iter != el_near->end())
 										{
-											if((el2_iter->first)->isAttached())
+											if(((*el_near_iter).first)->isAttached())
 											{
-												edge_map.insert(std::pair<SpacerInstance*, int>(current_spacer, (el2_iter->first)->getID()));
+												el_far = ((*el_near_iter).first)->getEdges(CN_EDGE_BACKWARD);
+												el_far_iter = el_far->begin();
+												while(el_far_iter != el_far->end())
+												{
+													if(((*el_far_iter).first)->isAttached())
+													{
+														// lo and behold, we finally have a spacer
+														if(!found_b)
+														{
+															(*XMLFile) << "\t\t\t\t\t\t<bspacers>\n";
+															found_b = true;
+														}
+														// get the spacer
+														SpacerKey sk2 = makeSpacerKey(((*el_near_iter).first)->getID(), (*el_far_iter).first->getID());
+														SpacerInstance * tmp_spacer = mSpacers[sk2];
+														
+														// print the spacer
+														(*XMLFile) << "\t\t\t\t\t\t\t<bs spid=\"SP"<< tmp_spacer->getID() <<"\" drid=\"DR1\" drconf=\"0\" />\n";
+													}
+													el_far_iter++;
+												}
 											}
-											el2_iter++;
+											el_near_iter++;
 										}
+										if(found_b)
+										{
+											(*XMLFile) << "\t\t\t\t\t\t</bspacers>\n";
+											found_b = false;
+										}
+    	                        	    
+    	                        	    // do the forward edges
+										el_near = last->getEdges(CN_EDGE_JUMPING_F);
+										el_near_iter = el_near->begin();
+										while(el_near_iter != el_near->end())
+										{
+											if(((*el_near_iter).first)->isAttached())
+											{
+												el_far = ((*el_near_iter).first)->getEdges(CN_EDGE_FORWARD);
+												el_far_iter = el_far->begin();
+												while(el_far_iter != el_far->end())
+												{
+													if(((*el_far_iter).first)->isAttached())
+													{
+														// lo and behold, we finally have a spacer
+														if(!found_f)
+														{
+															(*XMLFile) << "\t\t\t\t\t\t<fspacers>\n";
+															found_f = true;
+														}
+														// get the spacer
+														SpacerKey sk2 = makeSpacerKey(((*el_near_iter).first)->getID(), (*el_far_iter).first->getID());
+														SpacerInstance * tmp_spacer = mSpacers[sk2];
+														
+														// print the spacer
+														(*XMLFile) << "\t\t\t\t\t\t\t<fs spid=\"SP"<< tmp_spacer->getID() <<"\" drid=\"DR1\" drconf=\"0\" />\n";
+													}
+													el_far_iter++;
+												}
+											}
+											el_near_iter++;
+										}
+										if(found_f)
+										{
+											(*XMLFile) << "\t\t\t\t\t\t</fspacers>\n";
+											found_b = false;
+										}
+										
+    	                        		(*XMLFile) << "\t\t\t\t\t</cspacer>\n";
     	                            }
     	                        }
     	                    }
@@ -1390,19 +1452,6 @@ void NodeManager::printXML(std::ofstream * XMLFile, int GID, bool showDetached)
     	            }
     	        }
     	        nl_iter++;
-    	    }
-    	    
-    	    std::multimap<SpacerInstance*, int>::iterator edge_map_iter = edge_map.begin();
-    	    while(edge_map_iter != edge_map.end())
-    	    {
-    	        if(label_map.find(edge_map_iter->second) != label_map.end())
-    	        {
-    	            SpacerInstance * current_spacer = edge_map_iter->first;
-    	            std::stringstream ss;
-   	                ss << CRASS_DEF_GV_SPA_PREFIX << current_spacer->getID();
-    	            std::string label = ss.str();
-    	        }
-    	        edge_map_iter++;
     	    }
     		(*XMLFile) << "\t\t\t\t</contig>\n";
     	}
@@ -1435,7 +1484,6 @@ void NodeManager::dumpSpacerDict(std::string spacerFileName, bool showDetached)
         }
         spacer_file.close();
     }
-
 }
 
 // Making purdy colours

@@ -1,41 +1,54 @@
 <!DOCTYPE crass_assem [
-<!ELEMENT crass_assem (log,group+)>
+<!ELEMENT crass_assem (log*,group+)>
 <!ATTLIST crass_assem version CDATA "1.0">
 <!ELEMENT log (#PCDATA)>
-<!ELEMENT group (data+,assembly+)>
-<!ATTLIST group gid ID #REQUIRED>
+<!ELEMENT group (data+,metadata*,assembly+)>
+<!ATTLIST group gid CDATA #REQUIRED>
 <!ATTLIST group drseq CDATA #REQUIRED>
-<!ELEMENT data (drs+,spacers+,flankers+)>
+<!ELEMENT data (drs+,spacers+,flankers*)>
 <!ELEMENT drs (dr+)>
 <!ELEMENT dr EMPTY>
 <!ATTLIST dr seq CDATA #REQUIRED>
-<!ATTLIST dr drid ID #REQUIRED>
+<!ATTLIST dr drid CDATA #REQUIRED>
 <!ATTLIST dr confcnt CDATA #IMPLIED>
 <!ATTLIST dr totcnt CDATA #IMPLIED>
 <!ELEMENT spacers (spacer+)>
 <!ELEMENT spacer EMPTY>
 <!ATTLIST spacer seq CDATA #REQUIRED>
-<!ATTLIST spacer spid ID #REQUIRED>
+<!ATTLIST spacer spid CDATA #REQUIRED>
 <!ELEMENT flankers (flanker*)>
 <!ELEMENT flanker EMPTY>
 <!ATTLIST flanker seq CDATA #REQUIRED>
-<!ATTLIST flanker flid ID #REQUIRED>
+<!ATTLIST flanker flid CDATA #REQUIRED>
+<!ELEMENT metadata (notes?,file*)>
+<!ELEMENT notes (#PCDATA)>
+<!ELEMENT file EMPTY>
+<!ATTLIST file type "image|sequence" #REQUIRED>
+<!ATTLIST file url CDATA #REQUIRED>
 <!ELEMENT assembly (contig+)>
-<!ELEMENT contig (cspacer+)>
-<!ATTLIST contig cid ID #REQUIRED>
-<!ELEMENT cspacer (bspacers?,fspacers?)>
-<!ATTLIST cspacer spid IDREF #REQUIRED>
+<!ELEMENT contig (consensus*,cspacer+)>
+<!ATTLIST contig cid CDATA #REQUIRED>
+<!ELEMENT consensus (#PCDATA)>
+<!ELEMENT cspacer (bspacers?,fspacers?,bflankers?,fflankers?)>
+<!ATTLIST cspacer spid CDATA #REQUIRED>
 <!ELEMENT bspacers (bs+)>
 <!ELEMENT bs EMPTY>
-<!ATTLIST bs spid IDREF #REQUIRED>
-<!ATTLIST bs drid IDREF #IMPLIED>
+<!ATTLIST bs spid CDATA #REQUIRED>
+<!ATTLIST bs drid CDATA #IMPLIED>
 <!ATTLIST bs drconf (0|1) #IMPLIED>
-<!ATTLIST bs flid IDREF #IMPLIED>
 <!ELEMENT fspacers (fs+)>
 <!ELEMENT fs EMPTY>
-<!ATTLIST fs spid IDREF #REQUIRED>
-<!ATTLIST fs drid IDREF #IMPLIED>
+<!ATTLIST fs spid CDATA #REQUIRED>
+<!ATTLIST fs drid CDATA #IMPLIED>
 <!ATTLIST fs drconf (0|1) "0">
-<!ATTLIST fs flid IDREF #IMPLIED>
+<!ELEMENT bflankers (bf)>
+<!ELEMENT bf EMPTY>
+<!ATTLIST bf flid CDATA #REQUIRED>
+<!ATTLIST bf drconf (0|1) "0">
+<!ATTLIST bf directjoin (0|1) "0">
+<!ELEMENT fflankers (bf)>
+<!ELEMENT ff EMPTY>
+<!ATTLIST ff flid CDATA #REQUIRED>
+<!ATTLIST ff drconf (0|1) "0">
+<!ATTLIST ff directjoin (0|1) "0">
 ]>
-
