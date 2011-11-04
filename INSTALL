@@ -1,4 +1,11 @@
-on most UNIX systems type:
+Crass has two library dependancies that need to be installed prior to building:
+
+zlib - is commonly already installed so you shouldn't have to worry about it 
+
+Xerces - is freely available at http://xerces.apache.org/
+note that only version 3.1.1 of Xerces has been tested and is known to work
+
+then on most UNIX systems type:
     
     ./configure
     make

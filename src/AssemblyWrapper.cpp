@@ -46,6 +46,7 @@
 #include "config.h"
 #include "crassDefines.h"
 #include "StlExt.h"
+#include "CrassXML.h"
 
 void assemblyUsage(void)
 {
