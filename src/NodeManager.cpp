@@ -1274,7 +1274,7 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
 			std::string header = (*read_iter)->getHeader();
 			if(read_2_contig_map.find(header) != read_2_contig_map.end())
 			{
-				reads_file<<">"<<(*read_iter)->getHeader()<<"_C_"<<read_2_contig_map[header]<<std::endl;
+				reads_file<<">"<<(*read_iter)->getHeader()<<"_C"<<read_2_contig_map[header]<<std::endl;
 				if(split)
 					reads_file<<(*read_iter)->splitApart()<<std::endl;
 				else

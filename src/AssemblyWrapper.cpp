@@ -40,6 +40,7 @@
 #include <sstream>
 #include <cstring>
 #include <getopt.h>
+#include <zlib.h>
 
 // Local Includes
 #include "AssemblyWrapper.h"
@@ -47,6 +48,12 @@
 #include "crassDefines.h"
 #include "StlExt.h"
 #include "CrassXML.h"
+#include "kseq.h"
+#include "SeqUtils.h"
+
+
+KSEQ_INIT(gzFile, gzread)
+
 
 void assemblyUsage(void)
 {
@@ -144,85 +151,121 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
 }
 
 
-int calculateOverlapLength(int group, std::string& inputDir)
-{
-    int olap = 1;
-    //go to the input directory and look for the group required
-    
-    // return the length of the DR plus X number of bases
-    return olap;
-}
-
-
-void parseSegmentString(std::string& segmentString)
+void parseSegmentString(std::string& segmentString, std::set<std::string>& segments)
 {
     // split the segment id string into the individual pieces
-    std::list<std::string> segments;
-    tokenize(segmentString, segments, ",");
+    std::vector<std::string> tmp;
+    tokenize(segmentString, tmp, ",");
+
+    std::vector<std::string>::iterator tmp_iter = tmp.begin();
+    while (tmp_iter != tmp.end()) 
+    {
+        // prepend on a 'C' cause that is the format of the xml file
+        segments.insert("C" + *tmp_iter);
+
+        tmp_iter++;
+    }
+}
+
+void generateTmpAssemblyFile(std::string fileName, std::set<std::string>& wantedContigs, assemblyOptions& opts, std::string& tmpFileName)
+{
     
-    // create a output stream for the tmp file
-    std::ofstream combined_file;
-    std::stringstream ss;
-    ss<<PACKAGE_NAME<<"_tmp.fa";
-    combined_file.open((ss.str()).c_str());
+    gzFile fp = getFileHandle((opts.inputDirName + fileName).c_str());
+    kseq_t *seq;
+    int l;
     
-    if (combined_file.good()) {
+    // initialize an output file handle
+    std::ofstream out_file;
+    out_file.open(tmpFileName.c_str());
+    
+    if (out_file.good()) {
+        // initialize seq
+        seq = kseq_init(fp);
         
-        // iterate through the segments
-        std::list<std::string>::iterator seg_iter = segments.begin();
-        while (seg_iter != segments.end()) {
-            
-            // check for the file that should corespond to each token
-            std::string curr_seg = "";
-            
-            // open the segment file
-            std::ifstream curr_segment_file;
-            curr_segment_file.open(curr_seg.c_str());
-            
-            if (curr_segment_file.good()) {
+        // read sequence  
+        while ( (l = kseq_read(seq)) >= 0 ) 
+        {
+            std::string name = seq->name.s;
+            // get the last char of the name and see if it's from one of our contigs
+            std::stringstream ss;
+            ss << name.substr(name.length() - 2);
+            std::string contig_number = ss.str();
+            if (wantedContigs.find(contig_number) != wantedContigs.end()) {
+                // this read comes from a segment that we want
                 
-                // cat the files together
-                char c;
-                while (curr_segment_file >> c) combined_file << c;
-                
-                curr_segment_file.close();
-                
-            } else {
-                // print error
+                // check to see if it is fasta or fastq
+                if (seq->qual.s) {
+                    // it's fastq
+                    out_file<<'@'<<seq->name.s<<std::endl;
+                    out_file<<seq->seq.s<<std::endl;
+                    out_file<<'+';
+                    if(seq->comment.s) {
+                        out_file<<seq->comment.s;
+                    }
+                    out_file<<std::endl<<seq->qual.s<<std::endl;
+                } else {
+                    // it's fasta
+                    out_file<<'>'<<seq->name.s;
+                    if (seq->comment.s) {
+                        out_file<<' '<<seq->comment.s;
+                    }
+                    out_file<<std::endl<<seq->seq.s<<std::endl;
+                }                
             }
-            seg_iter++;
         }
-    } else {
-        //TODO: print error
     }
 }
 
 
-void velvetWrapper( int hashLength, std::string& inputDir)
+void velvetWrapper( int hashLength, assemblyOptions& opts, std::string& tmpFileName)
 {
     // get the hash length from the DR
     
     
     // create the command string for velvet
-    std::string h_cmd = "velveth " + inputDir +" " + to_string(hashLength) + " " + inputDir + "tmp.fa";
-    std::string g_cmd = "velvetg " + inputDir ; 
-    // execute velvet
-    
+    std::string h_cmd = "velveth " + opts.outputDirName +" " + to_string(hashLength) + " " + opts.inputDirName + tmpFileName;
+    std::string g_cmd = "velvetg " + opts.outputDirName;     
     int h_exit = system(h_cmd.c_str());
     
     if (h_exit) {
         // print error
+        std::cout<<"error in velveth"<<std::endl;
+        return;
     }
     int g_exit = system(g_cmd.c_str());
     if (g_exit) {
         // print error
+        std::cout<<"error in velvetg"<<std::endl;
+        return;
     }
     
 }
 
-void capWrapper(std::string& inputFile, std::string& inputDir)
+void capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileName)
 {
+    // cap3 doesn't control the output directory so we need to move 
+    // the tmp_file to the output directory
+    std::ifstream input_file;
+    input_file.open((opts.inputDirName + tmpFileName).c_str());
+    if (input_file.good()) {
+        std::ofstream output_file;
+        output_file.open((opts.outputDirName + tmpFileName).c_str());
+        if (output_file.good()) {
+            char c;
+            while (input_file.get(c)) output_file << c;
+        } else {
+            // print error
+        }
+    } else {
+        //print error
+    }
     
+    
+    std::string cap3cmd = "cap3 " + opts.outputDirName + tmpFileName + " -o " + to_string(overlapLength) + " -x crass > " + opts.outputDirName + tmpFileName + ".crass.cap3";
+    int cap_exit = system(cap3cmd.c_str());
+    if (cap_exit) {
+        std::cout<<"error when running cap3"<<std::endl;
+    }
 }
 
 
@@ -234,22 +277,61 @@ void assemblyMain(int argc, char * argv[])
         exit(1);
     }
     
+    assemblyOptions opts;
+    ASSEMBLERS wantedAssembler;
+    
+    
+    
+    
 #ifdef HAVE_VELVET
     if (strcmp(argv[1], "velvet") == 0) {
         // the user wants velvet
-        
-        // process options
-        
-        //pass everything into the velvet wrapper
+        wantedAssembler = velvet;
     } 
 #endif
     
 #ifdef HAVE_CAP3
     if(strcmp(argv[1], "cap3") == 0){
         // the user wants CAP3
-        
-        // process options
+        wantedAssembler = cap3;
     }
 #endif
     
+    processAssemblyOptions(argc - 1, argv + 1, opts);
+    
+    std::set<std::string> segments;
+    parseSegmentString(opts.segments, segments);
+    
+    std::list<std::string> spacers_for_assembly;
+
+    //parse xml file
+    CrassXML xml_parser;  
+    std::string direct_repeat;
+    std::string group_as_string = "G" + to_string(opts.group);
+
+    xml_parser.parseCrassXMLFile(opts.xmlFileName, group_as_string, &direct_repeat, segments, spacers_for_assembly );
+    
+    // parse the read file and create tmp.fa for the right segments
+    //build the read file name from what we know
+    std::string group_read_file = "Group_" + to_string(opts.group) + "_" + direct_repeat + ".fa";
+    
+    // get the tmp file name
+    std::string tmp_file_name = PACKAGE_NAME;
+    tmp_file_name += "_tmp.fa";
+    
+    generateTmpAssemblyFile(group_read_file, segments, opts, tmp_file_name);
+    
+    switch (wantedAssembler) {
+        case velvet:
+            // velvet wrapper
+            velvetWrapper(calculateOverlapLength((int)direct_repeat.length()), opts, tmp_file_name);
+            break;
+         case cap3:
+            // cap3 wrapper
+            capWrapper(calculateOverlapLength((int)direct_repeat.length()), opts, tmp_file_name);
+            break;
+        default:
+            // assembler not known throw error
+            break;
+    }
 }

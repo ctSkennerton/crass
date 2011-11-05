@@ -37,6 +37,14 @@
 
 #include <string>
 #include <vector>
+#include <set>
+#include "kseq.h"
+#include <fstream>
+
+enum ASSEMBLERS {
+    velvet,
+    cap3
+    };
 
 typedef struct{
     std::string xmlFileName;            // name of the crass xml file
@@ -56,13 +64,15 @@ void assemblyUsage(void);
 
 int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts);
 
-int calculateOverlapLength(int group, std::string& inputDir);
+inline int calculateOverlapLength(int drLength){return drLength + 8;}
 
-void parseSegmentString(std::string& segmentString);
+void parseSegmentString(std::string& segmentString, std::set<std::string>& segments);
 
-void velvetWrapper(int hashLength, std::string& inputDir);
+void generateTmpAssemblyFile(std::string fileName, std::set<std::string>& wantedContigs, assemblyOptions& opts, std::string& tmpFileName);
 
-void capWrapper(std::string& inputFile, std::string& inputDir);
+void velvetWrapper(int hashLength, assemblyOptions& opts, std::string& tmpFileName);
+
+void capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileName);
 
 void assemblyMain(int argc, char * argv[]);
 

@@ -50,14 +50,13 @@
 #include <xercesc/dom/DOMNodeIterator.hpp>
 #include <xercesc/dom/DOMNodeList.hpp>
 #include <xercesc/dom/DOMText.hpp>
-
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
 #include <xercesc/util/TransService.hpp>
-
 #include <string>
 #include <stdexcept>
-
+#include <set>
+#include <list>
 // local includes
 #include "crassDefines.h"
 
@@ -84,8 +83,12 @@ class CrassXML
         // Working functions
         //
         void parseCrassXMLFile(std::string XMLFile);
+    void parseCrassXMLFile(std::string XMLFile, std::string& wantedGroup, std::string * directRepeat, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly);
         std::string XMLCH_2_STR(const XMLCh* xmlch);
-
+        xercesc::DOMElement * getWantedGroupFromRoot(xercesc::DOMElement * currentElement, std::string& wantedGroup, std::string * directRepeat);
+        xercesc::DOMElement * parseGroupForAssembly(xercesc::DOMElement* currentElement);
+        void parseAssemblyForContigIds(xercesc::DOMElement* currentElement, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly);
+        void getSpacerIdForAssembly(xercesc::DOMElement* currentElement, std::list<std::string>& spacersForAssembly);
         //
         // File IO / printing
         //

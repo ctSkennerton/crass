@@ -40,6 +40,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <list>
+#include <map>
+#include <set>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -49,6 +51,7 @@
 // local includes
 #include "CrassXML.h"
 #include "LoggerSimp.h"
+#include "StlExt.h"
 
 using namespace xercesc;
 
@@ -166,54 +169,53 @@ void CrassXML::parseCrassXMLFile(std::string XMLFile)
     //-----
     // why not!
     //
-
+    
     logInfo("Parsing from " << XMLFile, 1);
     // Test to see if the file is ok.
     struct stat fileStatus;
-
+    
     int iretStat = stat(XMLFile.c_str(), &fileStatus);
     if( iretStat == ENOENT )
-       throw ( std::runtime_error("Path file_name does not exist, or path is an empty string.") );
+        throw ( std::runtime_error("Path file_name does not exist, or path is an empty string.") );
     else if( iretStat == ENOTDIR )
-       throw ( std::runtime_error("A component of the path is not a directory."));
+        throw ( std::runtime_error("A component of the path is not a directory."));
     else if( iretStat == ELOOP )
-       throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
+        throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
     else if( iretStat == EACCES )
-       throw ( std::runtime_error("Permission denied."));
+        throw ( std::runtime_error("Permission denied."));
     else if( iretStat == ENAMETOOLONG )
-       throw ( std::runtime_error("File can not be read\n"));
-
+        throw ( std::runtime_error("File can not be read\n"));
+    
     // Configure DOM parser.
     mConfigFileParser->setValidationScheme( XercesDOMParser::Val_Never );
     mConfigFileParser->setDoNamespaces( false );
     mConfigFileParser->setDoSchema( false );
     mConfigFileParser->setLoadExternalDTD( false );
-
+    
     try
-       {
-          mConfigFileParser->parse( XMLFile.c_str() );
-
-          // no need to free this pointer - owned by the parent parser object
-          DOMDocument* xmlDoc = mConfigFileParser->getDocument();
-
-          // Get the top-level element: 
-          DOMElement* elementRoot = xmlDoc->getDocumentElement();
-          if( !elementRoot ) throw(std::runtime_error( "empty XML document" ));
-
-          // get the children
-          DOMNodeList*      children = elementRoot->getChildNodes();
-          const  XMLSize_t nodeCount = children->getLength();
-
-          // For all nodes, children of "root" in the XML tree.
-          for( XMLSize_t xx = 0; xx < nodeCount; ++xx )
-          {
-             DOMNode* currentNode = children->item(xx);
-             if( currentNode->getNodeType() &&  // true is not NULL
-                 currentNode->getNodeType() == DOMNode::ELEMENT_NODE ) // is element 
-             {
+    {
+        mConfigFileParser->parse( XMLFile.c_str() );
+        
+        // no need to free this pointer - owned by the parent parser object
+        DOMDocument* xmlDoc = mConfigFileParser->getDocument();
+        
+        // Get the top-level element: 
+        DOMElement* elementRoot = xmlDoc->getDocumentElement();
+        if( !elementRoot ) throw(std::runtime_error( "empty XML document" ));
+        
+        // get the children
+        DOMNodeList*      children = elementRoot->getChildNodes();
+        const  XMLSize_t nodeCount = children->getLength();
+        
+        // For all nodes, children of "root" in the XML tree.
+        for( XMLSize_t xx = 0; xx < nodeCount; ++xx )
+        {
+            DOMNode* currentNode = children->item(xx);
+            if( currentNode->getNodeType() &&  // true is not NULL
+               currentNode->getNodeType() == DOMNode::ELEMENT_NODE ) // is element 
+            {
                 // Found node which is an Element. Re-cast node as element
-                DOMElement* currentElement
-                            = dynamic_cast< xercesc::DOMElement* >( currentNode );
+                DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
                 if( XMLString::equals(currentElement->getTagName(), TAG_log))
                 {
                     // log section
@@ -223,20 +225,212 @@ void CrassXML::parseCrassXMLFile(std::string XMLFile)
                     // new group
                     std::cout << XMLCH_2_STR(currentElement->getTagName()) << std::endl;
                     std::cout << "Group_" << XMLCH_2_STR(currentElement->getAttribute(ATTR_gid)) << "_" << XMLCH_2_STR(currentElement->getAttribute(ATTR_drseq)) << ".fa" << std::endl;
-                    
                 }
-             }
-          }
-       }
-       catch( xercesc::XMLException& e )
-       {
-          char* message = xercesc::XMLString::transcode( e.getMessage() );
-          std::ostringstream errBuf;
-          errBuf << "Error parsing file: " << message << std::flush;
-          XMLString::release( &message );
-       }
+            }
+        }
+    }
+    catch( xercesc::XMLException& e )
+    {
+        char* message = xercesc::XMLString::transcode( e.getMessage() );
+        std::ostringstream errBuf;
+        errBuf << "Error parsing file: " << message << std::flush;
+        XMLString::release( &message );
+    }
 }
 
+void CrassXML::parseCrassXMLFile(std::string XMLFile, std::string& wantedGroup, std::string * directRepeat, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly)
+{
+    //-----
+    // why not!
+    //
+    
+    logInfo("Parsing from " << XMLFile, 1);
+    // Test to see if the file is ok.
+    struct stat fileStatus;
+    
+    int iretStat = stat(XMLFile.c_str(), &fileStatus);
+    switch (iretStat)
+    {
+    case ENOENT:
+        throw ( std::runtime_error("Path file_name does not exist, or path is an empty string.") );
+        break;
+    case ENOTDIR:
+        throw ( std::runtime_error("A component of the path is not a directory."));
+        break;
+    case ELOOP:
+        throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
+        break;
+    case EACCES:
+        throw ( std::runtime_error("You do not have permission to access this file."));
+        break;
+    case ENAMETOOLONG:
+        throw ( std::runtime_error("File can not be read\n"));
+        break;
+    default:
+        break;
+ 
+    }
+
+    
+    // Configure DOM parser.
+    mConfigFileParser->setValidationScheme( XercesDOMParser::Val_Never );
+    mConfigFileParser->setDoNamespaces( false );
+    mConfigFileParser->setDoSchema( false );
+    mConfigFileParser->setLoadExternalDTD( false );
+    
+    try
+    {
+        mConfigFileParser->parse( XMLFile.c_str() );
+        
+        // no need to free this pointer - owned by the parent parser object
+        DOMDocument* xmlDoc = mConfigFileParser->getDocument();
+        
+        // Get the top-level element: 
+        xercesc::DOMElement* elementRoot = xmlDoc->getDocumentElement();
+        if( !elementRoot ) throw(std::runtime_error( "empty XML document" ));
+        
+        // find our wanted group
+        xercesc::DOMElement * wanted_group_element = getWantedGroupFromRoot(elementRoot, wantedGroup, directRepeat);
+        if (!wanted_group_element) 
+        {
+            throw (std::runtime_error("Could not find the input group."));
+        }
+        
+        // get the assembly node
+        xercesc::DOMElement * assembly_element = parseGroupForAssembly(wanted_group_element);
+        if (assembly_element == NULL) {
+            throw (std::runtime_error("no assembly tag for group."));
+        }
+        // get the contigs and spacers
+        parseAssemblyForContigIds(assembly_element, wantedContigs, spacersForAssembly);
+        
+    }
+    catch( xercesc::XMLException& e )
+    {
+        char* message = xercesc::XMLString::transcode( e.getMessage() );
+        std::ostringstream errBuf;
+        errBuf << "Error parsing file: " << message << std::flush;
+        XMLString::release( &message );
+    }
+}
+
+           
+xercesc::DOMElement * CrassXML::getWantedGroupFromRoot(xercesc::DOMElement * currentElement, std::string& wantedGroup, std::string * directRepeat)
+{
+    
+    // get the children
+    DOMNodeList*      children = currentElement->getChildNodes();
+    const  XMLSize_t nodeCount = children->getLength();
+
+    // For all nodes, children of "root" in the XML tree.
+    for( XMLSize_t xx = 0; xx < nodeCount; ++xx )
+    {
+        DOMNode* current_node = children->item(xx);
+        if( current_node->getNodeType() &&  // true is not NULL
+           current_node->getNodeType() == DOMNode::ELEMENT_NODE ) // is element 
+        {
+            // Found node which is an Element. Re-cast node as element
+            xercesc::DOMElement* element = dynamic_cast< xercesc::DOMElement* >( current_node );
+            if( XMLString::equals(element->getTagName(), TAG_log))
+            {
+                // log section
+            }
+            else if (XMLString::equals(element->getTagName(), TAG_group))
+            {
+                // new group
+                // test if it's one that we want
+                //std::cout << "Group_" << XMLCH_2_STR(element->getAttribute(ATTR_gid)) << "_" << XMLCH_2_STR(element->getAttribute(ATTR_drseq)) << ".fa" << std::endl;
+
+                std::string current_group_name = XMLCH_2_STR(element->getAttribute(ATTR_gid));
+
+                if (current_group_name == wantedGroup) 
+                {
+                    // get the length of the direct repeat 
+                    *directRepeat = XMLCH_2_STR(element->getAttribute(ATTR_drseq));
+                    return element;
+                }
+            }
+        }
+    }
+    
+    // we should theoretically never get here but if the xml is bad then it might just happen
+    // or if the user has put in a group that doesn't exist by mistake
+    return NULL;
+}
+
+xercesc::DOMElement * CrassXML::parseGroupForAssembly(xercesc::DOMElement* currentElement)
+{
+   DOMNodeList*      group_children = currentElement->getChildNodes();
+   const  XMLSize_t group_nodeCount = group_children->getLength();
+   
+   // For all nodes, children of "root" in the XML tree.
+   for( XMLSize_t yy = 0; yy < group_nodeCount; ++yy )
+   {
+       DOMNode* current_node = group_children->item(yy);
+       if( current_node->getNodeType() &&  current_node->getNodeType() == DOMNode::ELEMENT_NODE ) // is element 
+       {
+           // Found node which is an Element. Re-cast node as element
+           xercesc::DOMElement* element = dynamic_cast< xercesc::DOMElement* >( current_node );
+           if( XMLString::equals(element->getTagName(), TAG_assembly))
+           {
+               // assembly section
+               // the child nodes will be the contigs
+               return element;
+           }
+           
+       }
+   }
+    // if there is no assembly for this group
+    return NULL;
+} 
+
+void CrassXML::parseAssemblyForContigIds(xercesc::DOMElement* currentElement, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly)
+{
+   DOMNodeList*      group_children = currentElement->getChildNodes();
+   const  XMLSize_t group_nodeCount = group_children->getLength();
+   
+   for( XMLSize_t yy = 0; yy < group_nodeCount; ++yy )
+   {
+       DOMNode* current_node = group_children->item(yy);
+       if( current_node->getNodeType() &&  current_node->getNodeType() == DOMNode::ELEMENT_NODE ) // is element 
+       {
+           // Found node which is an Element. Re-cast node as element
+           xercesc::DOMElement* element = dynamic_cast< xercesc::DOMElement* >( current_node );
+           if( XMLString::equals(element->getTagName(), TAG_contig))
+           {
+               // check to see if the current contig is one that we want
+               std::set<std::string>::iterator contig_iter = wantedContigs.find(XMLCH_2_STR(element->getAttribute(ATTR_cid)));
+               if( contig_iter != wantedContigs.end())
+               {
+                   
+                   // get the spacers from the assembly
+                   getSpacerIdForAssembly(element, spacersForAssembly);
+               }
+           }
+       }
+   }
+}
+
+void CrassXML::getSpacerIdForAssembly(xercesc::DOMElement* currentElement, std::list<std::string>& spacersForAssembly)
+{
+    DOMNodeList*      group_children = currentElement->getChildNodes();
+    const  XMLSize_t group_nodeCount = group_children->getLength();
+    
+    for( XMLSize_t yy = 0; yy < group_nodeCount; ++yy )
+    {
+        DOMNode* current_node = group_children->item(yy);
+        if( current_node->getNodeType() &&  current_node->getNodeType() == DOMNode::ELEMENT_NODE ) // is element 
+        {
+            // Found node which is an Element. Re-cast node as element
+            xercesc::DOMElement* element = dynamic_cast< xercesc::DOMElement* >( current_node );
+            if( XMLString::equals(element->getTagName(), TAG_cspacer))
+            {
+                spacersForAssembly.push_back(XMLCH_2_STR(element->getAttribute(ATTR_spid)));
+            }
+        }
+    }
+}
+               
 std::string CrassXML::XMLCH_2_STR(const XMLCh* xmlch)
 {
     //-----
