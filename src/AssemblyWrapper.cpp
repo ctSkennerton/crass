@@ -108,206 +108,209 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
         {"xml",required_argument,NULL,'x'},
         {NULL, no_argument, NULL, 0}
     };
-
-    while( (c = getopt_long(argc, argv, "g:hi:I:l:o:ps:Vx:", assemblyLongOptions, &index)) != -1 ) 
+    try 
     {
-        switch(c) 
+        while( (c = getopt_long(argc, argv, "g:hi:I:l:o:ps:Vx:", assemblyLongOptions, &index)) != -1 ) 
         {
-            case 'g':
+            switch(c) 
             {
-                from_string<int>(opts.group, optarg, std::dec);
-                break;
-            }
-            case 'h':
-            {
-                assemblyUsage();
-                exit(1);
-                break;
-            }
-            case 'i':
-            {
-                // Test to see if the file is ok.
-                struct stat inputDirStatus;
-                int iStat = stat(optarg, &inputDirStatus);
-                // stat failed
-                switch (iStat) 
+                case 'g':
                 {
-                    case -1:
+                    from_string<int>(opts.group, optarg, std::dec);
+                    break;
+                }
+                case 'h':
+                {
+                    assemblyUsage();
+                    exit(1);
+                    break;
+                }
+                case 'i':
+                {
+                    // Test to see if the file is ok.
+                    struct stat inputDirStatus;
+                    int iStat = stat(optarg, &inputDirStatus);
+                    // stat failed
+                    switch (iStat) 
                     {
-                        switch (errno)
+                        case -1:
                         {
-                            case ENOENT:
+                            switch (errno)
                             {
-                                throw ( std::runtime_error("Path does not exist, or path is an empty string.") );
-                                break;
+                                case ENOENT:
+                                {
+                                    throw ( std::runtime_error("Input directory path does not exist, or path is an empty string.") );
+                                    break;
+                                }
+                                case ELOOP:
+                                {
+                                    throw ( std::runtime_error("Too many symbolic links encountered while traversing the input directory path."));
+                                    break;
+                                }
+                                case EACCES:
+                                {
+                                    throw ( std::runtime_error("You do not have permission to access the input directory."));
+                                    break;
+                                }
+                                case ENOTDIR:
+                                {
+                                    throw ( std::runtime_error("Input is not a directory\n"));
+                                    break;
+                                }
+                                default:
+                                {
+                                    throw (std::runtime_error("An error occured when reading the input directory"));
+                                    break;
+                                }
                             }
-                            case ELOOP:
-                            {
-                                throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
-                                break;
-                            }
-                            case EACCES:
-                            {
-                                throw ( std::runtime_error("You do not have permission to access this directory."));
-                                break;
-                            }
-                            case ENOTDIR:
-                            {
-                                throw ( std::runtime_error("Not a directory\n"));
-                                break;
-                            }
-                            default:
-                            {
-                                throw (std::runtime_error("An error occured when reading the file"));
-                                break;
-                            }
+                            break;
                         }
-                        break;
-                    }
-                    default:
-                    {
-                        opts.inputDirName = optarg;
-                        break;
-                    }
-                }
-                break;
-            }
-            case 'I':
-            {
-                from_string<int>(opts.insertSize, optarg, std::dec);
-                break;
-            }
-            case 'l':
-            {
-                from_string<int>(opts.logLevel, optarg, std::dec);
-                if(opts.logLevel > CRASS_DEF_MAX_LOGGING)
-                {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<opts.logLevel<<std::endl;
-                    opts.logLevel = CRASS_DEF_MAX_LOGGING;
-                }
-                break;
-            }
-            case 'o':
-            {
-                // Test to see if the file is ok.
-                struct stat outputDirStatus;
-                int oStat = stat(optarg, &outputDirStatus);
-                switch (oStat) 
-                {
-                    case -1:
-                    {
-                        switch (errno)
+                        default:
                         {
-                            case ENOENT:
-                            {
-                                RecursiveMkdir(optarg);
-                                break;
-                            }
-                            case ELOOP:
-                            {
-                                throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
-                                break;
-                            }
-                            case EACCES:
-                            {
-                                throw ( std::runtime_error("You do not have permission to access this directory."));
-                                break;
-                            }
-                            case ENOTDIR:
-                            {
-                                throw ( std::runtime_error("Not a directory\n"));
-                                break;
-                            }
-                            default:
-                            {
-                                throw std::runtime_error("Wierd Error!");
-                                break;
-                            }
+                            opts.inputDirName = optarg;
+                            break;
                         }
                     }
-                    default:
-                    {
-                        opts.outputDirName = optarg;
-                        break;
-                    }
+                    break;
                 }
-                break;
-            }
-            case 'p':
-            {
-                opts.pairedEnd = true;
-                break;
-            }
-            case 's':
-            {
-                opts.segments = optarg;
-                break;
-            }
-            case 'V':
-            {
-                break;
-            }
-            case 'x':
-            {
-                // Test to see if the file is ok.
-                struct stat inputDirStatus;
-                int xStat = stat(optarg, &inputDirStatus);
-                // stat failed
-                switch (xStat) 
+                case 'I':
                 {
-                    case -1:
+                    from_string<int>(opts.insertSize, optarg, std::dec);
+                    break;
+                }
+                case 'l':
+                {
+                    from_string<int>(opts.logLevel, optarg, std::dec);
+                    if(opts.logLevel > CRASS_DEF_MAX_LOGGING)
                     {
-                        switch (errno)
+                        std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<opts.logLevel<<std::endl;
+                        opts.logLevel = CRASS_DEF_MAX_LOGGING;
+                    }
+                    break;
+                }
+                case 'o':
+                {
+                    // Test to see if the file is ok.
+                    struct stat outputDirStatus;
+                    int oStat = stat(optarg, &outputDirStatus);
+                    switch (oStat) 
+                    {
+                        case -1:
                         {
-                            case ENOENT:
+                            switch (errno)
                             {
-                                throw ( std::runtime_error("Path does not exist, or path is an empty string.") );
-                                break;
-                            }
-                            case ELOOP:
-                            {
-                                throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
-                                break;
-                            }
-                            case EACCES:
-                            {
-                                throw ( std::runtime_error("You do not have permission to access this directory."));
-                                break;
-                            }
-                            case ENOTDIR:
-                            {
-                                throw ( std::runtime_error("Not a directory\n"));
-                                break;
-                            }
-                            default:
-                            {
-                                throw (std::runtime_error("An error occured when reading the file"));
-                                break;
+                                case ENOENT:
+                                {
+                                    RecursiveMkdir(optarg);
+                                    break;
+                                }
+                                case ELOOP:
+                                {
+                                    throw ( std::runtime_error("Too many symbolic links encountered while traversing the output directory path."));
+                                    break;
+                                }
+                                case EACCES:
+                                {
+                                    throw ( std::runtime_error("You do not have permission to access the output directory."));
+                                    break;
+                                }
+                                case ENOTDIR:
+                                {
+                                    throw ( std::runtime_error("Output path is not a directory\n"));
+                                    break;
+                                }
+                                default:
+                                {
+                                    throw std::runtime_error("An error occurred when accessing the output directory");
+                                    break;
+                                }
                             }
                         }
-                        break;
+                        default:
+                        {
+                            opts.outputDirName = optarg;
+                            break;
+                        }
                     }
-                    default:
-                    {
-                        opts.xmlFileName = optarg;
-                        break;
-                    }
+                    break;
                 }
-                break;
-            }
-            case 0:
-            {
-                if ( strcmp( "logToScreen", assemblyLongOptions[index].name ) == 0 ) opts.logToScreen = true;
-                break;
-            }
-            default:
-            {
-                assemblyUsage();
-                exit(1);
-                break;
+                case 'p':
+                {
+                    opts.pairedEnd = true;
+                    break;
+                }
+                case 's':
+                {
+                    opts.segments = optarg;
+                    break;
+                }
+                case 'V':
+                {
+                    break;
+                }
+                case 'x':
+                {
+                    // Test to see if the file is ok.
+                    struct stat inputDirStatus;
+                    int xStat = stat(optarg, &inputDirStatus);
+                    // stat failed
+                    switch (xStat) 
+                    {
+                        case -1:
+                        {
+                            switch (errno)
+                            {
+                                case ENOENT:
+                                {
+                                    throw ( std::runtime_error("Path to the XML file does not exist, or path is an empty string.") );
+                                    break;
+                                }
+                                case ELOOP:
+                                {
+                                    throw ( std::runtime_error("Too many symbolic links encountered while traversing the path to the XML file."));
+                                    break;
+                                }
+                                case EACCES:
+                                {
+                                    throw ( std::runtime_error("You do not have permission to access the XML file."));
+                                    break;
+                                }
+                                default:
+                                {
+                                    throw (std::runtime_error("An error occured when reading the XML file"));
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        default:
+                        {
+                            opts.xmlFileName = optarg;
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case 0:
+                {
+                    if ( strcmp( "logToScreen", assemblyLongOptions[index].name ) == 0 ) opts.logToScreen = true;
+                    break;
+                }
+                default:
+                {
+                    assemblyUsage();
+                    exit(1);
+                    break;
+                }
             }
         }
+    } 
+    catch (std::exception& e) 
+    {
+        std::cerr<<PACKAGE_NAME<<" [ERROR]: "<<e.what()<<std::endl;
+        exit(1);
     }
+
     return optind;
 }
 
@@ -339,7 +342,8 @@ void generateTmpAssemblyFile(std::string fileName, std::set<std::string>& wanted
     std::ofstream out_file;
     out_file.open(tmpFileName.c_str());
     
-    if (out_file.good()) {
+    if (out_file.good()) 
+    {
         // initialize seq
         seq = kseq_init(fp);
         
@@ -351,23 +355,29 @@ void generateTmpAssemblyFile(std::string fileName, std::set<std::string>& wanted
             std::stringstream ss;
             ss << name.substr(name.length() - 2);
             std::string contig_number = ss.str();
-            if (wantedContigs.find(contig_number) != wantedContigs.end()) {
+            if (wantedContigs.find(contig_number) != wantedContigs.end()) 
+            {
                 // this read comes from a segment that we want
                 
                 // check to see if it is fasta or fastq
-                if (seq->qual.s) {
+                if (seq->qual.s) 
+                {
                     // it's fastq
                     out_file<<'@'<<seq->name.s<<std::endl;
                     out_file<<seq->seq.s<<std::endl;
                     out_file<<'+';
-                    if(seq->comment.s) {
+                    if(seq->comment.s) 
+                    {
                         out_file<<seq->comment.s;
                     }
                     out_file<<std::endl<<seq->qual.s<<std::endl;
-                } else {
+                } 
+                else 
+                {
                     // it's fasta
                     out_file<<'>'<<seq->name.s;
-                    if (seq->comment.s) {
+                    if (seq->comment.s) 
+                    {
                         out_file<<' '<<seq->comment.s;
                     }
                     out_file<<std::endl<<seq->seq.s<<std::endl;
@@ -382,23 +392,30 @@ void velvetWrapper( int hashLength, assemblyOptions& opts, std::string& tmpFileN
 {
     // get the hash length from the DR
     
-    
-    // create the command string for velvet
-    std::string h_cmd = "velveth " + opts.outputDirName +" " + to_string(hashLength) + " " + opts.inputDirName + tmpFileName;
-    std::string g_cmd = "velvetg " + opts.outputDirName;     
-    int h_exit = system(h_cmd.c_str());
-    
-    if (h_exit) {
-        // print error
-        std::cout<<"error in velveth"<<std::endl;
-        return;
-    }
-    int g_exit = system(g_cmd.c_str());
-    if (g_exit) {
-        // print error
-        std::cout<<"error in velvetg"<<std::endl;
-        return;
-    }
+    try 
+    {
+        // create the command string for velvet
+        std::string h_cmd = "velveth " + opts.outputDirName +" " + to_string(hashLength) + " " + opts.inputDirName + tmpFileName;
+        std::string g_cmd = "velvetg " + opts.outputDirName;     
+        int h_exit = system(h_cmd.c_str());
+        if (h_exit) 
+        {
+            // print error
+            throw (std::runtime_error("velveth did not exit normally"));
+        }
+        int g_exit = system(g_cmd.c_str());
+        if (g_exit) 
+        {
+            // print error
+            throw (std::runtime_error("velvetg did not exit normally"));
+        }
+    } 
+    catch (std::exception& e) 
+    {
+        std::cerr<<PACKAGE_NAME<<" [ERROR]: "<<e.what()<<std::endl;
+        exit(1);
+    }  
+
     
 }
 
@@ -406,33 +423,47 @@ void capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileNa
 {
     // cap3 doesn't control the output directory so we need to move 
     // the tmp_file to the output directory
-    std::ifstream input_file;
-    input_file.open((opts.inputDirName + tmpFileName).c_str());
-    if (input_file.good()) {
-        std::ofstream output_file;
-        output_file.open((opts.outputDirName + tmpFileName).c_str());
-        if (output_file.good()) {
-            char c;
-            while (input_file.get(c)) output_file << c;
-        } else {
-            // print error
+    try 
+    {
+        std::ifstream input_file;
+        input_file.open((opts.inputDirName + tmpFileName).c_str());
+        if (input_file.good()) 
+        {
+            std::ofstream output_file;
+            output_file.open((opts.outputDirName + tmpFileName).c_str());
+            if (output_file.good()) 
+            {
+                char c;
+                while (input_file.get(c)) output_file << c;
+            } 
+            else 
+            {
+                throw (std::runtime_error("Output file stream is not good"));
+            }
+        } 
+        else 
+        {
+            throw (std::runtime_error("Input file stream is not good"));
         }
-    } else {
-        //print error
-    }
-    
-    
-    std::string cap3cmd = "cap3 " + opts.outputDirName + tmpFileName + " -o " + to_string(overlapLength) + " -x crass > " + opts.outputDirName + tmpFileName + ".crass.cap3";
-    int cap_exit = system(cap3cmd.c_str());
-    if (cap_exit) {
-        std::cout<<"error when running cap3"<<std::endl;
+        std::string cap3cmd = "cap3 " + opts.outputDirName + tmpFileName + " -o " + to_string(overlapLength) + " -x crass > " + opts.outputDirName + tmpFileName + ".crass.cap3";
+        int cap_exit = system(cap3cmd.c_str());
+        if (cap_exit) 
+        {
+            throw (std::runtime_error("cap3 did not exit normally"));
+        }
+    } 
+    catch (std::exception& e) 
+    {
+        std::cerr<<PACKAGE_NAME<<" [ERROR]: "<<e.what()<<std::endl;
+        exit(1);
     }
 }
 
 
 void assemblyMain(int argc, char * argv[])
 {
-    if (argc == 1) {
+    if (argc == 1) 
+    {
         // print assembly wrapper help
         assemblyUsage();
         exit(1);
@@ -442,14 +473,16 @@ void assemblyMain(int argc, char * argv[])
     ASSEMBLERS wantedAssembler;
 
 #ifdef HAVE_VELVET
-    if (strcmp(argv[1], "velvet") == 0) {
+    if (strcmp(argv[1], "velvet") == 0) 
+    {
         // the user wants velvet
         wantedAssembler = velvet;
     } 
 #endif
     
 #ifdef HAVE_CAP3
-    if(strcmp(argv[1], "cap3") == 0){
+    if(strcmp(argv[1], "cap3") == 0)
+    {
         // the user wants CAP3
         wantedAssembler = cap3;
     }
@@ -479,7 +512,8 @@ void assemblyMain(int argc, char * argv[])
     
     generateTmpAssemblyFile(group_read_file, segments, opts, tmp_file_name);
     
-    switch (wantedAssembler) {
+    switch (wantedAssembler) 
+    {
         case velvet:
             // velvet wrapper
             velvetWrapper(calculateOverlapLength((int)direct_repeat.length()), opts, tmp_file_name);
