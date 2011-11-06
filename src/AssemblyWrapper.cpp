@@ -41,6 +41,10 @@
 #include <cstring>
 #include <getopt.h>
 #include <zlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 
 // Local Includes
 #include "AssemblyWrapper.h"
@@ -104,47 +108,204 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
         {"xml",required_argument,NULL,'x'},
         {NULL, no_argument, NULL, 0}
     };
-    
+
     while( (c = getopt_long(argc, argv, "g:hi:I:l:o:ps:Vx:", assemblyLongOptions, &index)) != -1 ) 
     {
         switch(c) 
         {
             case 'g':
+            {
                 from_string<int>(opts.group, optarg, std::dec);
                 break;
+            }
             case 'h':
+            {
                 assemblyUsage();
                 exit(1);
                 break;
+            }
             case 'i':
-                opts.inputDirName = optarg;
+            {
+                // Test to see if the file is ok.
+                struct stat inputDirStatus;
+                int iStat = stat(optarg, &inputDirStatus);
+                // stat failed
+                switch (iStat) 
+                {
+                    case -1:
+                    {
+                        switch (errno)
+                        {
+                            case ENOENT:
+                            {
+                                throw ( std::runtime_error("Path does not exist, or path is an empty string.") );
+                                break;
+                            }
+                            case ELOOP:
+                            {
+                                throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
+                                break;
+                            }
+                            case EACCES:
+                            {
+                                throw ( std::runtime_error("You do not have permission to access this directory."));
+                                break;
+                            }
+                            case ENOTDIR:
+                            {
+                                throw ( std::runtime_error("Not a directory\n"));
+                                break;
+                            }
+                            default:
+                            {
+                                throw (std::runtime_error("An error occured when reading the file"));
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        opts.inputDirName = optarg;
+                        break;
+                    }
+                }
                 break;
+            }
             case 'I':
+            {
                 from_string<int>(opts.insertSize, optarg, std::dec);
                 break;
+            }
             case 'l':
+            {
                 from_string<int>(opts.logLevel, optarg, std::dec);
+                if(opts.logLevel > CRASS_DEF_MAX_LOGGING)
+                {
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<opts.logLevel<<std::endl;
+                    opts.logLevel = CRASS_DEF_MAX_LOGGING;
+                }
                 break;
+            }
             case 'o':
-                opts.outputDirName = optarg;
+            {
+                // Test to see if the file is ok.
+                struct stat outputDirStatus;
+                int oStat = stat(optarg, &outputDirStatus);
+                switch (oStat) 
+                {
+                    case -1:
+                    {
+                        switch (errno)
+                        {
+                            case ENOENT:
+                            {
+                                RecursiveMkdir(optarg);
+                                break;
+                            }
+                            case ELOOP:
+                            {
+                                throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
+                                break;
+                            }
+                            case EACCES:
+                            {
+                                throw ( std::runtime_error("You do not have permission to access this directory."));
+                                break;
+                            }
+                            case ENOTDIR:
+                            {
+                                throw ( std::runtime_error("Not a directory\n"));
+                                break;
+                            }
+                            default:
+                            {
+                                throw std::runtime_error("Wierd Error!");
+                                break;
+                            }
+                        }
+                    }
+                    default:
+                    {
+                        opts.outputDirName = optarg;
+                        break;
+                    }
+                }
                 break;
+            }
             case 'p':
+            {
                 opts.pairedEnd = true;
                 break;
+            }
             case 's':
+            {
                 opts.segments = optarg;
                 break;
+            }
             case 'V':
+            {
                 break;
+            }
             case 'x':
-                opts.xmlFileName = optarg;
+            {
+                // Test to see if the file is ok.
+                struct stat inputDirStatus;
+                int xStat = stat(optarg, &inputDirStatus);
+                // stat failed
+                switch (xStat) 
+                {
+                    case -1:
+                    {
+                        switch (errno)
+                        {
+                            case ENOENT:
+                            {
+                                throw ( std::runtime_error("Path does not exist, or path is an empty string.") );
+                                break;
+                            }
+                            case ELOOP:
+                            {
+                                throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
+                                break;
+                            }
+                            case EACCES:
+                            {
+                                throw ( std::runtime_error("You do not have permission to access this directory."));
+                                break;
+                            }
+                            case ENOTDIR:
+                            {
+                                throw ( std::runtime_error("Not a directory\n"));
+                                break;
+                            }
+                            default:
+                            {
+                                throw (std::runtime_error("An error occured when reading the file"));
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        opts.xmlFileName = optarg;
+                        break;
+                    }
+                }
                 break;
+            }
             case 0:
+            {
                 if ( strcmp( "logToScreen", assemblyLongOptions[index].name ) == 0 ) opts.logToScreen = true;
+                break;
+            }
             default:
+            {
                 assemblyUsage();
                 exit(1);
                 break;
+            }
         }
     }
     return optind;
@@ -279,10 +440,7 @@ void assemblyMain(int argc, char * argv[])
     
     assemblyOptions opts;
     ASSEMBLERS wantedAssembler;
-    
-    
-    
-    
+
 #ifdef HAVE_VELVET
     if (strcmp(argv[1], "velvet") == 0) {
         // the user wants velvet

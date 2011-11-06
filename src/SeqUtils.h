@@ -45,4 +45,6 @@ std::string laurenize(std::string seq);
 //**************************************
 
 gzFile getFileHandle(const char * inputFile);
+
+void RecursiveMkdir(std::string dir);
 #endif

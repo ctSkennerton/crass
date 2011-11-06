@@ -41,6 +41,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <config.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "SeqUtils.h"
 
 
@@ -158,6 +162,17 @@ gzFile getFileHandle(const char * inputFile)
         exit(1);
     }
     return fp;
+}
+
+void RecursiveMkdir(std::string dir) 
+{
+    std::string tmp;
+    size_t pos = 0;
+    while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
+        tmp = dir.substr(0,pos);
+        mkdir(tmp.c_str(), S_IRWXU);
+    }
+    mkdir(dir.c_str(), S_IRWXU);
 }
 
 

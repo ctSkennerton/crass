@@ -100,6 +100,7 @@ class CrassXML
         // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%XMLCh\* TAG_\1;%" | sort | uniq
         XMLCh* ATTR_cid;
         XMLCh* ATTR_confcnt;
+        XMLCh* ATTR_directjoin;
         XMLCh* ATTR_drconf;
         XMLCh* ATTR_drid;
         XMLCh* ATTR_drseq;
@@ -108,24 +109,36 @@ class CrassXML
         XMLCh* ATTR_seq;
         XMLCh* ATTR_spid;
         XMLCh* ATTR_totcnt;
+        XMLCh* ATTR_type;
+        XMLCh* ATTR_url;
         XMLCh* ATTR_version;
+        
         XMLCh* TAG_assembly;
+        XMLCh* TAG_bf;
+        XMLCh* TAG_bflankers;
         XMLCh* TAG_bs;
         XMLCh* TAG_bspacers;
+        XMLCh* TAG_consensus;
         XMLCh* TAG_contig;
         XMLCh* TAG_crass_assem;
         XMLCh* TAG_cspacer;
         XMLCh* TAG_data;
         XMLCh* TAG_dr;
         XMLCh* TAG_drs;
+        XMLCh* TAG_ff;
+        XMLCh* TAG_fflankers;
+        XMLCh* TAG_file;
         XMLCh* TAG_flanker;
         XMLCh* TAG_flankers;
         XMLCh* TAG_fs;
         XMLCh* TAG_fspacers;
         XMLCh* TAG_group;
         XMLCh* TAG_log;
+        XMLCh* TAG_metadata;
+        XMLCh* TAG_notes;
         XMLCh* TAG_spacer;
         XMLCh* TAG_spacers;
+
 };
 
 #endif //CrassXML_h

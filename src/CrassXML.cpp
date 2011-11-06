@@ -71,32 +71,40 @@ CrassXML::CrassXML(void)
     mConfigFileParser = new XercesDOMParser;
     
     
-    // gotta hard code all these motherfuckers
     // USE sed
     // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%TAG_\1 = XMLString::transcode(\"\1\");%" | sort | uniq
     // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%XMLString::release( \&TAG_\1 );%" | sort | uniq
     // grep ATTLIST crass.dtd | sed -e "s%[^ ]* [^ ]* \([^ ]*\) .*%ATTR_\1 = XMLString::transcode(\"\1\");%" | sort | uniq
     // grep ATTLIST crass.dtd | sed -e "s%[^ ]* [^ ]* \([^ ]*\) .*%XMLString::release( \&ATTR_\1 );%" | sort | uniq
     TAG_assembly = XMLString::transcode("assembly");
-    TAG_bspacers = XMLString::transcode("bspacers");
+    TAG_bf = XMLString::transcode("bf");
+    TAG_bflankers = XMLString::transcode("bflankers");
     TAG_bs = XMLString::transcode("bs");
+    TAG_bspacers = XMLString::transcode("bspacers");
+    TAG_consensus = XMLString::transcode("consensus");
     TAG_contig = XMLString::transcode("contig");
     TAG_crass_assem = XMLString::transcode("crass_assem");
     TAG_cspacer = XMLString::transcode("cspacer");
     TAG_data = XMLString::transcode("data");
-    TAG_drs = XMLString::transcode("drs");
     TAG_dr = XMLString::transcode("dr");
-    TAG_flankers = XMLString::transcode("flankers");
+    TAG_drs = XMLString::transcode("drs");
+    TAG_ff = XMLString::transcode("ff");
+    TAG_fflankers = XMLString::transcode("fflankers");
+    TAG_file = XMLString::transcode("file");
     TAG_flanker = XMLString::transcode("flanker");
-    TAG_fspacers = XMLString::transcode("fspacers");
+    TAG_flankers = XMLString::transcode("flankers");
     TAG_fs = XMLString::transcode("fs");
+    TAG_fspacers = XMLString::transcode("fspacers");
     TAG_group = XMLString::transcode("group");
     TAG_log = XMLString::transcode("log");
-    TAG_spacers = XMLString::transcode("spacers");
+    TAG_metadata = XMLString::transcode("metadata");
+    TAG_notes = XMLString::transcode("notes");
     TAG_spacer = XMLString::transcode("spacer");
+    TAG_spacers = XMLString::transcode("spacers");
     
     ATTR_cid = XMLString::transcode("cid");
     ATTR_confcnt = XMLString::transcode("confcnt");
+    ATTR_directjoin = XMLString::transcode("directjoin");
     ATTR_drconf = XMLString::transcode("drconf");
     ATTR_drid = XMLString::transcode("drid");
     ATTR_drseq = XMLString::transcode("drseq");
@@ -105,7 +113,10 @@ CrassXML::CrassXML(void)
     ATTR_seq = XMLString::transcode("seq");
     ATTR_spid = XMLString::transcode("spid");
     ATTR_totcnt = XMLString::transcode("totcnt");
+    ATTR_type = XMLString::transcode("type");
+    ATTR_url = XMLString::transcode("url");
     ATTR_version = XMLString::transcode("version");
+
 }
 
 
@@ -116,35 +127,49 @@ CrassXML::~CrassXML(void)
     
     try // Free memory
     {
-       XMLString::release( &TAG_assembly );
-       XMLString::release( &TAG_bs );
-       XMLString::release( &TAG_bspacers );
-       XMLString::release( &TAG_contig );
-       XMLString::release( &TAG_crass_assem );
-       XMLString::release( &TAG_cspacer );
-       XMLString::release( &TAG_data );
-       XMLString::release( &TAG_dr );
-       XMLString::release( &TAG_drs );
-       XMLString::release( &TAG_flanker );
-       XMLString::release( &TAG_flankers );
-       XMLString::release( &TAG_fs );
-       XMLString::release( &TAG_fspacers );
-       XMLString::release( &TAG_group );
-       XMLString::release( &TAG_log );
-       XMLString::release( &TAG_spacer );
-       XMLString::release( &TAG_spacers );
-       
-       XMLString::release( &ATTR_cid );
-       XMLString::release( &ATTR_confcnt );
-       XMLString::release( &ATTR_drconf );
-       XMLString::release( &ATTR_drid );
-       XMLString::release( &ATTR_drseq );
-       XMLString::release( &ATTR_flid );
-       XMLString::release( &ATTR_gid );
-       XMLString::release( &ATTR_seq );
-       XMLString::release( &ATTR_spid );
-       XMLString::release( &ATTR_totcnt );
-       XMLString::release( &ATTR_version );
+        
+        XMLString::release( &TAG_assembly );
+        XMLString::release( &TAG_bf );
+        XMLString::release( &TAG_bflankers );
+        XMLString::release( &TAG_bs );
+        XMLString::release( &TAG_bspacers );
+        XMLString::release( &TAG_consensus );
+        XMLString::release( &TAG_contig );
+        XMLString::release( &TAG_crass_assem );
+        XMLString::release( &TAG_cspacer );
+        XMLString::release( &TAG_data );
+        XMLString::release( &TAG_dr );
+        XMLString::release( &TAG_drs );
+        XMLString::release( &TAG_ff );
+        XMLString::release( &TAG_fflankers );
+        XMLString::release( &TAG_file );
+        XMLString::release( &TAG_flanker );
+        XMLString::release( &TAG_flankers );
+        XMLString::release( &TAG_fs );
+        XMLString::release( &TAG_fspacers );
+        XMLString::release( &TAG_group );
+        XMLString::release( &TAG_log );
+        XMLString::release( &TAG_metadata );
+        XMLString::release( &TAG_notes );
+        XMLString::release( &TAG_spacer );
+        XMLString::release( &TAG_spacers );
+        
+        XMLString::release( &ATTR_cid );
+        XMLString::release( &ATTR_confcnt );
+        XMLString::release( &ATTR_directjoin );
+        XMLString::release( &ATTR_drconf );
+        XMLString::release( &ATTR_drid );
+        XMLString::release( &ATTR_drseq );
+        XMLString::release( &ATTR_flid );
+        XMLString::release( &ATTR_gid );
+        XMLString::release( &ATTR_seq );
+        XMLString::release( &ATTR_spid );
+        XMLString::release( &ATTR_totcnt );
+        XMLString::release( &ATTR_type );
+        XMLString::release( &ATTR_url );
+        XMLString::release( &ATTR_version );
+        
+
     }
     catch( ... )
     {
@@ -245,31 +270,8 @@ void CrassXML::parseCrassXMLFile(std::string XMLFile, std::string& wantedGroup, 
     //
     
     logInfo("Parsing from " << XMLFile, 1);
-    // Test to see if the file is ok.
-    struct stat fileStatus;
-    
-    int iretStat = stat(XMLFile.c_str(), &fileStatus);
-    switch (iretStat)
-    {
-    case ENOENT:
-        throw ( std::runtime_error("Path file_name does not exist, or path is an empty string.") );
-        break;
-    case ENOTDIR:
-        throw ( std::runtime_error("A component of the path is not a directory."));
-        break;
-    case ELOOP:
-        throw ( std::runtime_error("Too many symbolic links encountered while traversing the path."));
-        break;
-    case EACCES:
-        throw ( std::runtime_error("You do not have permission to access this file."));
-        break;
-    case ENAMETOOLONG:
-        throw ( std::runtime_error("File can not be read\n"));
-        break;
-    default:
-        break;
- 
-    }
+
+
 
     
     // Configure DOM parser.
