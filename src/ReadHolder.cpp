@@ -964,3 +964,34 @@ void ReadHolder::logContents(int logLevel)
     logInfo(bob, logLevel);
     logInfo(RH_Seq, logLevel);
 }
+
+
+std::ostream& ReadHolder::print (std::ostream& s)
+{
+    if (RH_IsFasta) 
+    {
+        s<<'>'<<RH_Header;
+        if (RH_Comment.length() > 0) 
+        {
+            s<<'_'<<RH_Comment;
+        }
+        s<<std::endl<<RH_Seq;
+    } 
+    else 
+    {
+        s<<'@'<<RH_Header<<std::endl<<RH_Seq<<std::endl<<'+';
+        if (RH_Comment.length() > 0) 
+        {
+            s<<RH_Comment<<std::endl;
+        }
+        s<<RH_Qual;
+    }
+    return s;
+}
+
+// overloaded operators 
+std::ostream& operator<< (std::ostream& s,  ReadHolder& c)
+{
+    return c.print(s);
+    
+}

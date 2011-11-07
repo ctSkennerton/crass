@@ -53,6 +53,8 @@ typedef std::vector<unsigned int>::iterator StartStopListIterator;
 typedef std::vector<unsigned int>::reverse_iterator StartStopListRIterator;
 
 
+
+
 class ReadHolder 
 {
     public:
@@ -63,6 +65,7 @@ class ReadHolder
             RH_LastDREnd = 0; 
             RH_NextSpacerStart = 0; 
             RH_isSqueezed = false;
+            RH_IsFasta = true;
         }  
         
         ReadHolder(std::string s, std::string h) 
@@ -72,6 +75,8 @@ class ReadHolder
             RH_LastDREnd = 0; 
             RH_NextSpacerStart = 0; 
             RH_isSqueezed = false;
+            RH_IsFasta = true;
+
         }
 
         ReadHolder(const char * s, const char * h) 
@@ -81,6 +86,32 @@ class ReadHolder
             RH_LastDREnd = 0; 
             RH_NextSpacerStart = 0; 
             RH_isSqueezed = false;
+            RH_IsFasta = true;
+
+        }
+        ReadHolder(std::string s, std::string h, std::string c, std::string q) 
+        {
+            RH_Seq = s; 
+            RH_Header = h; 
+            RH_Comment = c;
+            RH_Qual = q;
+            RH_LastDREnd = 0; 
+            RH_NextSpacerStart = 0; 
+            RH_isSqueezed = false;
+            RH_IsFasta = false;
+        }
+        
+        ReadHolder(const char * s, const char * h, const char * c, const char * q) 
+        {
+            RH_Seq = s; 
+            RH_Header = h;
+            RH_Comment = c;
+            RH_Qual = q;
+            RH_LastDREnd = 0; 
+            RH_NextSpacerStart = 0; 
+            RH_isSqueezed = false;
+            RH_IsFasta = false;
+
         }
         ~ReadHolder(void)
         {
@@ -92,6 +123,8 @@ class ReadHolder
             RH_StartStops.clear();
             RH_Header.clear();
             RH_Rle.clear();
+            RH_Comment.clear();
+            RH_Qual.clear();
         }
 
 
@@ -99,6 +132,18 @@ class ReadHolder
         //----
         // Getters
         //
+        inline std::string getComment(void)
+        {
+            return this->RH_Comment;
+        }
+        inline std::string getQual(void)
+        {
+            return this->RH_Qual;
+        }
+        inline bool getIsFasta(void)
+        {
+            return this->RH_IsFasta;
+        }
         inline std::string getSeq(void)
         {
             return this->RH_Seq;
@@ -215,6 +260,15 @@ class ReadHolder
         //----
         //setters
         // 
+        inline void setComment(std::string _comment)
+        {
+            RH_Comment = _comment;
+        }
+        inline void setQual(std::string _qual)
+        {
+            RH_Qual = _qual;
+            RH_IsFasta = false;
+        }
         inline void setSequence(std::string _sequence)
         {
             RH_RepeatLength = 0;
@@ -394,10 +448,16 @@ class ReadHolder
         void printContents(void);
         
         void logContents(int logLevel);
+    
+        inline std::ostream& print(std::ostream& s);
+    
     private:
         // members
         std::string RH_Rle;                     // Run length encoded string
         std::string RH_Header;                  // Header for the sequence
+        std::string RH_Comment;                 // The comment attribute of the sequence
+        std::string RH_Qual;                    // The quality of the sequence
+        bool RH_IsFasta;                        // boolean to tell us if the read is fastq or fasta
         std::string RH_Seq;                     // The DR_lowlexi sequence of this read
         bool RH_WasLowLexi;                     // was the sequence DR_low lexi in the file?
         StartStopList RH_StartStops;            // start stops for DRs, (must be even in length!)
@@ -407,4 +467,6 @@ class ReadHolder
         int RH_RepeatLength;
 };
 
+// overloaded operators 
+std::ostream& operator<< (std::ostream& s,  ReadHolder& c);
 #endif //ReadHolder_h

@@ -278,9 +278,8 @@ int processOptions(int argc, char *argv[], options *opts)
                 
                 // check if our output folder exists
                 struct stat file_stats;
-                if (stat(opts->output_fastq.c_str(),&file_stats)) 
+                if (0 != stat(opts->output_fastq.c_str(),&file_stats)) 
                 {
-                    //std::cerr<<PACKAGE_NAME<<" [WARNING]: The Directory "<<opts->output_fastq<<" does not exist. "<<std::endl;
                     recursiveMkdir(opts->output_fastq);
                 }
                 break;

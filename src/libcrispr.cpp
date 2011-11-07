@@ -135,6 +135,16 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
         
         // grab a readholder
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+        // test if it has a comment entry and a quality entry
+        if (seq->comment.s) 
+        {
+            tmp_holder->setComment(seq->comment.s);
+        }
+        if (seq->qual.s) 
+        {
+            tmp_holder->setQual(seq->qual.s);
+        }
+        
         //tmp_holder->setHeader(seq->name.s);
         //tmp_holder->setSequence(seq->seq.s);
         
@@ -287,6 +297,14 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
 
         // create the read holder
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+        if (seq->comment.s) 
+        {
+            tmp_holder->setComment(seq->comment.s);
+        }
+        if (seq->qual.s) 
+        {
+            tmp_holder->setQual(seq->qual.s);
+        }
         
         if (opts.removeHomopolymers)
         {
@@ -448,6 +466,14 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         }
         
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+        if (seq->comment.s) 
+        {
+            tmp_holder->setComment(seq->comment.s);
+        }
+        if (seq->qual.s) 
+        {
+            tmp_holder->setQual(seq->qual.s);
+        }
         
         if (opts.removeHomopolymers) 
         {

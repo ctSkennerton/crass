@@ -1274,11 +1274,48 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
 			std::string header = (*read_iter)->getHeader();
 			if(read_2_contig_map.find(header) != read_2_contig_map.end())
 			{
-				reads_file<<">"<<(*read_iter)->getHeader()<<"_C"<<read_2_contig_map[header]<<std::endl;
-				if(split)
-					reads_file<<(*read_iter)->splitApart()<<std::endl;
-				else
-					reads_file<<(*read_iter)->getSeq()<<std::endl;
+				if ((*read_iter)->getIsFasta()) 
+                {
+                    reads_file<<">"<<header<<"_C"<<read_2_contig_map[header];
+                    if (((*read_iter)->getComment()).length() > 0) 
+                    {
+                        reads_file<<' '<<(*read_iter)->getComment();
+                    }
+                    reads_file<<std::endl;
+                    if(split)
+                    {
+                        reads_file<<(*read_iter)->splitApart()<<std::endl;
+                    }
+                    else
+                    {
+                        reads_file<<(*read_iter)->getSeq()<<std::endl;
+                    }
+                } 
+                else 
+                {
+                    reads_file<<"@"<<header<<"_C"<<read_2_contig_map[header];
+                    if (((*read_iter)->getComment()).length() > 0) 
+                    {
+                        reads_file<<' '<<(*read_iter)->getComment();
+                    }
+                    reads_file<<std::endl;
+                    if(split)
+                    {
+                        reads_file<<(*read_iter)->splitApart()<<std::endl;
+                    }
+                    else
+                    {
+                        reads_file<<(*read_iter)->getSeq()<<std::endl;
+                    }
+                    reads_file<<'+'<<header<<"_C"<<read_2_contig_map[header];
+                    if (((*read_iter)->getComment()).length() > 0) 
+                    {
+                        reads_file<<' '<<(*read_iter)->getComment();
+                    }
+                    reads_file<<std::endl<<(*read_iter)->getQual()<<std::endl;
+                }
+                
+
 			}
 			read_iter++;
 		}

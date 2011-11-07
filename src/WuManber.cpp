@@ -44,47 +44,59 @@ void WuManber::Initialize( const WuVector &patterns,
     k = patterns.size();
     m = 0; // start with 0 and grow from there
     
-    for ( unsigned int i = 0; i < k; ++i ) {
+    for ( unsigned int i = 0; i < k; ++i ) 
+    {
         size_t lenPattern = patterns.at(i).length();
         //if ( B > lenPattern ) throw runtime_error( "found pattern less than B in length" );
         m = ( 0 == m ) ? lenPattern : min( m, lenPattern );
     }
     
     m_nSizeOfAlphabet = 1; // at minimum we have a white space character
-    for ( unsigned short i = 0; i <= 255; ++i ) {
+    for ( unsigned short i = 0; i <= 255; ++i ) 
+    {
         m_lu[i].letter = ' '; // table is defaulted to whitespace
         m_lu[i].offset = 0;  // 
-        if ( ( i >= 'a' ) && ( i <= 'z' ) ) {
+        if ( ( i >= 'a' ) && ( i <= 'z' ) ) 
+        {
             m_lu[i].letter = (char) i; // no problems with lower case letters
             m_lu[i].offset = m_nSizeOfAlphabet++;
         }  
-        if ( bCaseSensitive ) { // case of !bCaseSensitive fixed up later on
-            if ( ( i >= 'A' ) && ( i <= 'Z' ) ) {  
+        if ( bCaseSensitive ) 
+        { // case of !bCaseSensitive fixed up later on
+            if ( ( i >= 'A' ) && ( i <= 'Z' ) ) 
+            {  
                 m_lu[i].letter = (char) i; // map upper case to lower case
                 m_lu[i].offset = m_nSizeOfAlphabet++;
             }
         }
-        if ( ( i >= '0' ) && ( i <= '9' ) ) {
+        if ( ( i >= '0' ) && ( i <= '9' ) ) 
+        {
             m_lu[i].letter = (char) i; // use digits
             m_lu[i].offset = m_nSizeOfAlphabet++;
         }
     }
-    if ( !bCaseSensitive ) {  // fix up upper case mappings ( uppercase comes before lower case in ascii table )
-        for ( unsigned short i = 'A'; i <= 'Z'; ++i ) {
+    if ( !bCaseSensitive ) 
+    {  // fix up upper case mappings ( uppercase comes before lower case in ascii table )
+        for ( unsigned short i = 'A'; i <= 'Z'; ++i ) 
+        {
             char letter = i - 'A' + 'a';  // map upper case to lower case
             m_lu[i].letter = letter; // map upper case to lower case
             m_lu[i].offset = m_lu[(int)letter].offset;  
             // no unique characters so don't increment size
         }
     }
-    if ( bIncludeSpecialCharacters ) {
-        for ( char *c = rchSpecialCharacters; 0 != *c; ++c ) {
+    if ( bIncludeSpecialCharacters ) 
+    {
+        for ( char *c = rchSpecialCharacters; 0 != *c; ++c ) 
+        {
             m_lu[(int)*c].letter = *c;
             m_lu[(int)*c].offset = m_nSizeOfAlphabet++;
         }
     }
-    if ( bIncludeExtendedAscii ) {
-        for ( unsigned char *c = rchExtendedAscii; 0 != *c; ++c ) {
+    if ( bIncludeExtendedAscii ) 
+    {
+        for ( unsigned char *c = rchExtendedAscii; 0 != *c; ++c ) 
+        {
             m_lu[(unsigned int)*c].letter = static_cast<char>( *c );
             m_lu[(unsigned int)*c].offset = m_nSizeOfAlphabet++;
         }
@@ -99,13 +111,15 @@ void WuManber::Initialize( const WuVector &patterns,
     // this will only work for a 64 bit system on a 32 bit system this equates to an unsigned int
     m_ShiftTable = new unsigned long[ m_nTableSize ]; 
     
-    for ( size_t i = 0; i < m_nTableSize; ++i ) {
+    for ( size_t i = 0; i < m_nTableSize; ++i ) 
+    {
         m_ShiftTable[ i ] = m - B + 1; // default to m-B+1 for shift
     }
     
     m_vPatternMap = new vector<structPatternMap>[ m_nTableSize ];
     
-    for ( size_t j = 0; j < k; ++j ) {  // loop through patterns
+    for ( size_t j = 0; j < k; ++j ) 
+    {  // loop through patterns
         for ( size_t q = m; q >= B; --q ) {
             unsigned int hash;
             hash  = m_lu[(int)(patterns[j][q - 2 - 1])].offset; // bring in offsets of X in pattern j
@@ -115,7 +129,8 @@ void WuManber::Initialize( const WuVector &patterns,
             hash += m_lu[(int)(patterns[j][q     - 1])].offset;
             size_t shiftlen = m - q;
             m_ShiftTable[ hash ] = min( m_ShiftTable[ hash ], shiftlen );
-            if ( 0 == shiftlen ) {
+            if ( 0 == shiftlen ) 
+            {
                 m_PatternMapElement.ix = j;
                 m_PatternMapElement.PrefixHash = m_lu[(int)(patterns[j][0])].offset;
                 m_PatternMapElement.PrefixHash <<= m_nBitsInShift;
