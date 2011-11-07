@@ -31,7 +31,7 @@ unsigned char WuManber::rchExtendedAscii[] = {
     0x00 };
 
 WuManber::WuManber( void ): 
-k( 0 ), m( 0 ), m_bInitialized( false ) {
+k( 0 ), m( 0 ), B(2), m_bInitialized( false ) {
 }
 
 WuManber::~WuManber( void ) {
@@ -43,7 +43,9 @@ void WuManber::Initialize( const WuVector &patterns,
     
     k = patterns.size();
     m = 0; // start with 0 and grow from there
-    
+    if (k > 400) {
+        B = 3;
+    } 
     for ( unsigned int i = 0; i < k; ++i ) 
     {
         size_t lenPattern = patterns.at(i).length();

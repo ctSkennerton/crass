@@ -31,7 +31,7 @@ protected:
     size_t k_saved;
     size_t m_saved;
     
-    static const size_t B = 3;  // Wu Manber paper suggests B is 2 or 3 
+    size_t B;  // Wu Manber paper suggests B is 2 or 3 
     // small number of patterns, use B=2, use an exact table
     // for large number of patterns, use B=3 use compressed table (their code uses 400 as a cross over )
     // this class needs to be adjusted for B=2 (in the build shift table portion)
