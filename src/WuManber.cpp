@@ -35,6 +35,8 @@ k( 0 ), m( 0 ), B(2), m_bInitialized( false ) {
 }
 
 WuManber::~WuManber( void ) {
+    delete [] m_ShiftTable;
+    delete [] m_vPatternMap;
 }
 
 void WuManber::Initialize( const WuVector &patterns, 
