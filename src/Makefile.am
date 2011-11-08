@@ -1,5 +1,5 @@
 AM_CXXFLAGS = -Werror -pedantic -Wall 
-LIBS += -lxerces-c
+LIBS += @LIBXERCES_C@
 if DEBUG
     AM_CXXFLAGS += -ggdb
 endif
