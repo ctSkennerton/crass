@@ -774,7 +774,14 @@ int NodeManager::cleanGraph(void)
     nv_iter = nv_other.begin();
     while(nv_iter != nv_other.end())
     {
-        // get the total rank first.  A linear node should have 2 edges
+        // get the total rank first.  A linear node should have 2 edges - one inner and one jumping
+        // TODO: I think this test could have smarter logic to test for more stuff.
+        // For example, if a node has only two inner or jumping edges it will get through
+        // this test even though it is very wrong 
+        
+        
+        
+        
         if((*nv_iter)->getTotalRank() != 2)
         {
             // get the rank for the the inner and jumping edges.
@@ -784,16 +791,17 @@ int NodeManager::cleanGraph(void)
                 clearBubbles(*nv_iter, CN_EDGE_FORWARD);
 
             }
-            else if((*nv_iter)->getJumpingRank() != 1)
+            
+            if((*nv_iter)->getJumpingRank() != 1)
             {
                 // there are multiple jumping edges for this guy
                 clearBubbles(*nv_iter, CN_EDGE_JUMPING_F);
             }
-            else
-            {
-                // TODO: something has gone wrong
-                logError("something has gone wrong");
-            }
+//            else
+//            {
+//                // TODO: something has gone wrong
+//                logError("something has gone wrong");
+//            }
         }
         
         nv_iter++;
