@@ -324,6 +324,7 @@ int WorkHorse::buildGraph(void)
                 
                 drc_iter++;
             }
+            // TODO: should check here if there is sufficient nodes in the graph to continue -- otherwise delete
         }
         drg_iter++;
     }
@@ -375,7 +376,7 @@ int WorkHorse::mungeDRs(void)
         ++read_map_iter;
     }
 
-    logInfo("Reducing list of potential DRs (2): Purging singleton clusters", 1);
+    logInfo("Reducing list of potential DRs (2): Purging singleton and low abundance clusters", 1);
     int purge_counter = 0;
     DR_Cluster_MapIterator dcg_iter = mDR2GIDMap.begin();
     while(dcg_iter != mDR2GIDMap.end())
@@ -390,30 +391,58 @@ int WorkHorse::mungeDRs(void)
             mDR2GIDMap[dcg_iter->first] = NULL;
             purge_counter++;
         }
-        // log the cluster as needed
-        else if(isLogging(4))
+        else 
         {
-            logInfo("-------------", 4);
-            DR_ClusterIterator dc_iter = (dcg_iter->second)->begin();
-            logInfo("Group: " << dcg_iter->first, 4);
-            while(dc_iter != (dcg_iter->second)->end())
+            // test to remove groups that have a small number of reads
+            DR_ClusterIterator grouped_drs_iter = (dcg_iter->second)->begin();
+            size_t number_of_reads_in_group = 0;
+            while (grouped_drs_iter != (dcg_iter->second)->end()) 
             {
-                logInfo(mStringCheck.getString(*dc_iter), 4);
-                dc_iter++;
+               number_of_reads_in_group += mReads[*grouped_drs_iter]->size();
+                ++grouped_drs_iter;
             }
-            logInfo("-------------", 4);
+            // if the number of reads is low kill the group
+            if ((int)number_of_reads_in_group < mOpts->covCutoff) 
+            {
+                logInfo("Purging Group " << dcg_iter->first<<" as it contains less than "<< mOpts->covCutoff <<"reads", 4);
+
+                delete dcg_iter->second;
+                dcg_iter->second = NULL;
+                mDR2GIDMap[dcg_iter->first] = NULL;
+                purge_counter++;
+            }
+        }
+        
+        // log the cluster if needed
+        if(isLogging(4))
+        {
+            DR_ClusterIterator dc_iter = (dcg_iter->second)->begin();
+            if (dcg_iter->second != NULL) 
+            {
+                logInfo("-------------", 4);
+                logInfo("Group: " << dcg_iter->first, 4);
+                while(dc_iter != (dcg_iter->second)->end())
+                {
+                    logInfo(mStringCheck.getString(*dc_iter), 4);
+                    dc_iter++;
+                }
+                logInfo("-------------", 4);
+            }
 
         }
         dcg_iter++;
     }
     
-    if (purge_counter == 1) {
+    
+    if (purge_counter == 1) 
+    {
         logInfo(purge_counter<<" cluster was purged",2);
-    } else {
+    } 
+    else 
+    {
         logInfo(purge_counter<<" clusters were purged",2);
 
     }
-   
 
     logInfo("Reducing list of potential DRs (3): Cluster refinement and true DR finding", 1);
     

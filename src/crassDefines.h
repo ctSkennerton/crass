@@ -109,7 +109,7 @@
 #define CRASS_DEF_MIN_SPACER_SIZE               26                  // minimum spacer size
 #define CRASS_DEF_MAX_SPACER_SIZE               50                  // maximum spacer size
 #define CRASS_DEF_NUM_DR_ERRORS                 0                   // maxiumum allowable errors in direct repeat
-
+#define CRASS_DEF_COVCUTOFF                     10
 #ifdef DEBUG
     #define CRASS_DEF_MAX_LOGGING               10
 #else
@@ -142,6 +142,7 @@ typedef struct {
     bool                dontPerformScalling;                                // turn all scalling off for the user to define variables
     std::string         layoutAlgorithm;                                    // the graphviz layout algorithm to use 
     bool                longDescription;                                    // print a long description for the final spacer graph
+    int                 covCutoff;                                          // The lower bounds of acceptable numbers of reads that a group can have
 } options;
 
 // --------------------------------------------------------------------

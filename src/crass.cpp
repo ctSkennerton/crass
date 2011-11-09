@@ -58,6 +58,7 @@
 #include "WorkHorse.h"
 #include "Rainbow.h"
 #include "AssemblyWrapper.h"
+#include "StlExt.h"
 
 
 //**************************************
@@ -95,6 +96,7 @@ void usage(void)
     std::cout<< "--removeHomopolymers         Correct for homopolymer errors [default: no correction]"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"CRISPR Assembly Options:"<<std::endl;
+    std::cout<< "-f --covCutoff       <INT>   Remove groups with less than x reads [Default: "<<CRASS_DEF_COVCUTOFF<<"]"<<std::endl;
     std::cout<< "-k --kmerCount       <INT>   The number of the kmers that need to be"<<std::endl; 
     std::cout<< "                             shared for clustering [Default: "<<CRASS_DEF_K_CLUST_MIN<<"]"<<std::endl;
     std::cout<<std::endl;
@@ -158,7 +160,7 @@ int processOptions(int argc, char *argv[], options *opts)
     int c;
     int index;
     bool scalling = false;
-    while( (c = getopt_long(argc, argv, "ab:c:d:D:hk:l:Ln:o:rs:S:Vw:x:y:", long_options, &index)) != -1 ) 
+    while( (c = getopt_long(argc, argv, "ab:c:d:D:f:hk:l:Ln:o:rs:S:Vw:x:y:", long_options, &index)) != -1 ) 
     {
         switch(c) 
         {
@@ -193,13 +195,13 @@ int processOptions(int argc, char *argv[], options *opts)
 #endif
                 break;
             case 'b': 
-                if (atoi(optarg) < 1) 
+                from_string<int>(opts->coverageBins, optarg, std::dec);
+                if (opts->coverageBins < 1) 
                 {
                     std::cerr<<PACKAGE_NAME<<" [ERROR]: The number of bins for coverage cannot be less than 1"<<std::endl;
                     usage();
                     exit(1);
                 }
-                opts->coverageBins = atoi(optarg); 
                 break;
             case 'c': 
                 if (strcmp(optarg, "red-blue") == 0) 
@@ -225,7 +227,7 @@ int processOptions(int argc, char *argv[], options *opts)
                 }
                 break;
             case 'd': 
-                opts->lowDRsize = atoi(optarg); 
+                from_string<unsigned int>(opts->lowDRsize, optarg, std::dec);
                 if (opts->lowDRsize < 8) 
                 {
                     std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for direct repeat sizes cannot be "<<opts->lowDRsize<<" changing to "<<CRASS_DEF_MIN_DR_SIZE<<std::endl;
@@ -233,7 +235,10 @@ int processOptions(int argc, char *argv[], options *opts)
                 }
                 break;
             case 'D': 
-                opts->highDRsize = atoi(optarg); 
+                from_string<unsigned int>(opts->highDRsize, optarg, std::dec);
+                break;
+            case 'f':
+                from_string<int>(opts->covCutoff, optarg, std::dec);
                 break;
             case 'h': 
                 versionInfo(); 
@@ -241,7 +246,7 @@ int processOptions(int argc, char *argv[], options *opts)
                 exit(1); 
                 break;
             case 'k': 
-                opts->kmer_size = atoi(optarg);
+                from_string<int>(opts->kmer_size, optarg, std::dec);
                 if (opts->kmer_size < 6) 
                 {
                     std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for kmer clustering cannot be "<<opts->kmer_size<<" changing to "<<CRASS_DEF_K_CLUST_MIN<<std::endl;
@@ -249,7 +254,7 @@ int processOptions(int argc, char *argv[], options *opts)
                 }
                 break;
             case 'l': 
-                opts->logLevel =  atoi(optarg);
+                from_string<int>(opts->logLevel, optarg, std::dec);
                 if(opts->logLevel > CRASS_DEF_MAX_LOGGING)
                 {
                     std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<CRASS_DEF_MAX_LOGGING<<" instead of "<<opts->logLevel<<std::endl;
@@ -260,13 +265,13 @@ int processOptions(int argc, char *argv[], options *opts)
                 opts->longDescription = true;
                 break;
             case 'n':
-                if (atoi(optarg) < 2) 
+                from_string<unsigned int>(opts->minNumRepeats, optarg, std::dec);
+                if (opts->minNumRepeats < 2) 
                 {
                     std::cerr<<PACKAGE_NAME<<" [ERROR]: The mininum number of repeats cannot be less than 2"<<std::endl;
                     usage();
                     exit(1);
                 }
-                opts->minNumRepeats = atoi(optarg); 
                 break;
             case 'o': 
                 opts->output_fastq = optarg; 
@@ -287,7 +292,7 @@ int processOptions(int argc, char *argv[], options *opts)
                 opts->reportStats = true; 
                 break;
             case 's': 
-                opts->lowSpacerSize = atoi(optarg); 
+                from_string<unsigned int>(opts->lowSpacerSize, optarg, std::dec);
                 if (opts->lowSpacerSize < 8) 
                 {
                     std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for spacer sizes cannot be "<<opts->lowSpacerSize<<" changing to "<<CRASS_DEF_MIN_SPACER_SIZE<<std::endl;
@@ -295,14 +300,14 @@ int processOptions(int argc, char *argv[], options *opts)
                 }
                 break;
             case 'S': 
-                opts->highSpacerSize = atoi(optarg); 
+                from_string<unsigned int>(opts->highSpacerSize, optarg, std::dec);
                 break;
             case 'V': 
                 versionInfo(); 
                 exit(1); 
                 break;
             case 'w': 
-                opts->searchWindowLength = atoi(optarg); 
+                from_string<unsigned int>(opts->searchWindowLength, optarg, std::dec);
                 if ((opts->searchWindowLength < CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH) || (opts->searchWindowLength > CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH))
                 {
                     std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified window length higher than max. Changing window length to " << CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH << " instead of " << opts->searchWindowLength<<std::endl;
@@ -311,7 +316,7 @@ int processOptions(int argc, char *argv[], options *opts)
                 }
                 break;        
             case 'x':
-                opts->averageSpacerScalling = atof(optarg);
+                from_string<double>(opts->averageSpacerScalling, optarg, std::dec);
                 if (isNotDecimal(opts->averageSpacerScalling)) 
                 {
                     std::cerr<<PACKAGE_NAME<<" [WARNING]: The average spacer scalling must be a decimal number. Changing to "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" instead of "<<opts->averageSpacerScalling<<std::endl;
@@ -320,7 +325,7 @@ int processOptions(int argc, char *argv[], options *opts)
                 scalling = true;
                 break;
             case 'y':
-                opts->averageDrScalling = atof(optarg);
+                from_string<double>(opts->averageDrScalling, optarg, std::dec);
                 if (isNotDecimal(opts->averageDrScalling)) 
                 {
                     std::cerr<<PACKAGE_NAME<<" [WARNING]: The average spacer scalling must be a decimal number. Changing to "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" instead of "<<opts->averageDrScalling<<std::endl;
@@ -424,7 +429,8 @@ int main(int argc, char *argv[])
         CRASS_DEF_HOMOPOLYMER_SCALLING,         // average direct repeat scalling
         false,                                  // perform scalling by default
         "dot",                                  // use dot as the default layout algorithm for rendering
-        false                                   // do not use a long description for the nodes of the spacer graph
+        false,                                  // do not use a long description for the nodes of the spacer graph
+        CRASS_DEF_COVCUTOFF                     // Groups with less than 10 reads will be purged
     };
 
     int opt_idx = processOptions(argc, argv, &opts);

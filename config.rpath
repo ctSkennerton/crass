@@ -1,4 +1,3 @@
-config.rpath   [plain text]
 #! /bin/sh
 # Output a system dependent set of variables, describing how to set the
 # run time search path of shared libraries in an executable.

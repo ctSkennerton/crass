@@ -79,6 +79,7 @@ static struct option long_options [] = {
     {"layoutAlgorithm",required_argument,NULL,'a'},
     {"longDescription",no_argument,NULL,'L'},
     {"noScalling",required_argument,NULL,'0'},
+    {"covCutoff",required_argument,NULL,'f'},
     {NULL, no_argument, NULL, 0}
 };
 
