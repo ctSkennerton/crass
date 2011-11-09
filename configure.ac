@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(crass, 0.0.8, c.skennerton@gmail.com)
+AC_INIT(crass, 0.0.9, c.skennerton@gmail.com)
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -13,7 +13,7 @@ AC_CONFIG_HEADER([config.h])
 AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
 AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
 AC_DEFINE([PACKAGE_MINOR_VERSION],[0],[Define the minor version of the package])
-AC_DEFINE([PACKAGE_REVISION],[8],[Define the revision of the package])
+AC_DEFINE([PACKAGE_REVISION],[9],[Define the revision of the package])
 
 # extra configure options
 #

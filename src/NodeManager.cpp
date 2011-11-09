@@ -774,36 +774,43 @@ int NodeManager::cleanGraph(void)
     nv_iter = nv_other.begin();
     while(nv_iter != nv_other.end())
     {
-        // get the total rank first.  A linear node should have 2 edges - one inner and one jumping
-        // TODO: I think this test could have smarter logic to test for more stuff.
-        // For example, if a node has only two inner or jumping edges it will get through
-        // this test even though it is very wrong 
-        
-        
-        
-        
-        if((*nv_iter)->getTotalRank() != 2)
-        {
-            // get the rank for the the inner and jumping edges.
-            if((*nv_iter)->getInnerRank() != 1)
-            {
-                // there are multiple inner edges for this guy
-                clearBubbles(*nv_iter, CN_EDGE_FORWARD);
 
-            }
-            
-            if((*nv_iter)->getJumpingRank() != 1)
+        switch ((*nv_iter)->getTotalRank()) 
+        {
+            case 2:
             {
-                // there are multiple jumping edges for this guy
-                clearBubbles(*nv_iter, CN_EDGE_JUMPING_F);
+                // check that there is one inner and one jumping edge
+                if (!((*nv_iter)->getInnerRank() && (*nv_iter)->getJumpingRank())) 
+                {
+#ifdef DEBUG
+                    logInfo("node "<<(*nv_iter)->getID()<<" has only two edges of the same type -- cannot be linear -- detaching", 8);
+#endif
+                    (*nv_iter)->detachNode();
+                }
+                break;
             }
-//            else
-//            {
-//                // TODO: something has gone wrong
-//                logError("something has gone wrong");
-//            }
-        }
-        
+            case 1:
+            case 0:
+                logError("Nodes in bubble removal have less than two edges!");
+                break;
+            default:
+            {
+                // get the rank for the the inner and jumping edges.
+                if((*nv_iter)->getInnerRank() != 1)
+                {
+                    // there are multiple inner edges for this guy
+                    clearBubbles(*nv_iter, CN_EDGE_FORWARD);
+                    
+                }
+                
+                if((*nv_iter)->getJumpingRank() != 1)
+                {
+                    // there are multiple jumping edges for this guy
+                    clearBubbles(*nv_iter, CN_EDGE_JUMPING_F);
+                }
+                break;
+            }
+        }        
         nv_iter++;
     }
     
