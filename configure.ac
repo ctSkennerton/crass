@@ -80,6 +80,9 @@ AC_PROG_CC
 # Checks for libraries.
 
 AX_XERCESC
+if test $HAVE_LIBXERCES_C = no; then
+    AC_MSG_ERROR([Xerces-c library not found])
+fi
 
 AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found])])
 # Checks for header files.
