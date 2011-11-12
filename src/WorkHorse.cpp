@@ -55,7 +55,9 @@
 #include "StlExt.h"
 #include "StringCheck.h"
 #include "config.h"
-#include "CrassXML.h"
+#ifdef PERFORM_CRASS_ASSEMBLY
+    #include "CrassXML.h"
+#endif
 
 
 bool sortDirectRepeatByLength( const std::string &a, const std::string &b)

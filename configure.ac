@@ -64,10 +64,27 @@ if test x$rendering = xtrue; then
     AC_CHECK_PROGS([GV_PROGS], [neato dot circo fdp sfdp twopi], [no])
     if test x$GV_PROGS != xno; then
         AC_DEFINE([RENDERING],[1],[Defines to 1 if image rendering is to be performed])
+    else
+        echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
+        echo "None of the Graphviz executables could"
+        echo "be found in your PATH!"
+        echo "Your installation will not conatin"
+        echo "rendering options!"
+        echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
     fi
 fi
 
+# check for assembly
+AC_ARG_ENABLE([assembly],
+[AS_HELP_STRING([--disable-assembly],
+[Enables images being drawn in the output files])],
+[case "${enableval}" in
+yes) assembly=true ;;
+no)  assembly=false ;;
+*) AC_MSG_ERROR([bad value ${enableval} for --disable-assembly]) ;;
+esac],[assembly=true])
 
+    
 
 # Checks for different libs, headers, functions & programs
 #
@@ -77,12 +94,36 @@ fi
 AC_PROG_CXX
 AC_PROG_CC
 
+PERFORM_CRASS_ASSEMBLY=no 
+#ASSEMBLY_WRAPPER=
 # Checks for libraries.
-
-AX_XERCESC
-if test $HAVE_LIBXERCES_C = no; then
-    AC_MSG_ERROR([Xerces-c library not found])
+if test $assembly = true; then
+    AX_XERCESC
+    if test $HAVE_LIBXERCES_C = no; then
+        echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
+        echo "Cannot find Xerces-c library"
+        echo "Your installation will not conatin"
+        echo "the Crass assembler!"
+        echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
+    else
+        AC_CHECK_PROGS([ASSEMBLERS], [velvetg cap3], [no])
+        if test ASSEMBLERS != no; then
+            PERFORM_CRASS_ASSEMBLY=yes
+#ASSEMBLY_WRAPPER='CrassXML.$(OBJEXT) AssemblyWrapper.$(OBJEXT)'
+            AC_DEFINE([PERFORM_CRASS_ASSEMBLY],[1],[Defines to 1 if your system configuration enables you to use the Crass assembler])
+        else
+            echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
+            echo "No genome assemblers were found"
+            echo "in your PATH!"
+            echo "Your installation will not conatin"
+            echo "the Crass assembler!"
+            echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
+        fi
+    fi
 fi
+#AC_SUBST(ASSEMBLY_WRAPPER)
+
+AM_CONDITIONAL([ASSEMBLY_WRAPPER], [test x$PERFORM_CRASS_ASSEMBLY = xyes])
 
 AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found])])
 # Checks for header files.

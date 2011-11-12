@@ -57,8 +57,10 @@
 #include "SeqUtils.h"
 #include "WorkHorse.h"
 #include "Rainbow.h"
-#include "AssemblyWrapper.h"
 #include "StlExt.h"
+#ifdef PERFORM_CRASS_ASSEMBLY
+    #include "AssemblyWrapper.h"
+#endif
 
 
 //**************************************
@@ -67,6 +69,32 @@
 
 void usage(void) 
 {
+    std::cout<<"Compiler Options:"<<std::endl;
+    std::cout<<"RENDERING =";
+#ifdef RENDERING
+    std::cout<<" 1"<<std::endl;
+#else
+    std::cout<<" 0"<<std::endl;
+#endif
+    std::cout<<"DEBUG =";
+#ifdef DEBUG
+    std::cout<<" 1"<<std::endl;
+#else
+    std::cout<<" 0"<<std::endl;
+#endif
+    std::cout<<"ASSEMBER =";
+#ifdef PERFORM_CRASS_ASSEMBLY
+    std::cout<<" 1"<<std::endl;
+#else
+    std::cout<<" 0"<<std::endl;
+#endif
+    std::cout<<"VERBOSE_LOGGER =";
+#ifdef SUPER_LOGGING
+    std::cout<<" 1"<<std::endl;
+#else
+    std::cout<<" 0"<<std::endl;
+#endif
+    std::cout<<std::endl;
     std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { inputFile ...}"<<std::endl<<std::endl;
     std::cout<<"General Options:"<<std::endl;
     std::cout<< "-h --help                    This help message"<<std::endl;
@@ -401,12 +429,14 @@ int main(int argc, char *argv[])
         usage();
         exit(1);
     }
-    
+#ifdef PERFORM_CRASS_ASSEMBLY
+   
     if (strcmp(argv[1], "assemble") == 0) {
         // our user wants to do an assembly so let's load up the assembler main function
         assemblyMain(argc - 1 , argv + 1);
         return 0;
     }
+#endif
     /* application of default options */
     options opts = {
         false,                                  // exit after first find
@@ -484,7 +514,7 @@ int main(int argc, char *argv[])
     logTimeStamp();
     
     WorkHorse * mHorse = new WorkHorse(&opts, timestamp);
-    mHorse->doWork(seq_files);
+    int error_code = mHorse->doWork(seq_files);
     delete mHorse;
-    return 0;
+    return error_code;
 }

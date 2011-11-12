@@ -50,7 +50,9 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 #include "StringCheck.h"
-#include "CrassXML.h"
+#ifdef PERFORM_CRASS_ASSEMBLY
+    #include "CrassXML.h"
+#endif
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
