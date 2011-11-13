@@ -1,0 +1,178 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+% \geometry{margin=2in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+% \usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{hyperref} % for following hyperlinks
+\hypersetup{
+    colorlinks,%
+    citecolor=blue,%
+    filecolor=blue,%
+    linkcolor=blue,%
+    urlcolor=blue
+}
+\usepackage{listings} % for source code
+\usepackage{longtable}
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+% These packages are all incorporated in the memoir class to one degree or another...
+
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+%%% END Article customizations
+
+%%% The "real" document content comes below...
+
+\title{Crass:  The CRISPR assembler}
+\author{Connor Skennerton and Micheal Imelfort}
+%\date{} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed 
+
+\begin{document}
+\maketitle
+\tableofcontents
+\section{Installation}
+Crass has been developed with the GNU build system for maximum compatibility across platforms.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
+\subsection{Prerequisites}
+\subsubsection{Computer Resources}
+Crass should run on Linux or MacOSX with 64-bit or 32-bit architectures with gcc installed (note that other compilers have not been tested).  Crass successfully compiles with gcc 4.2, gcc 4.6 and gcc 4.7 other versions of gcc have not been tested.  Crass itself is not a memory intensive program, requiring less than 50mb to run through 20 million Illumina reads, and requires a single processor.  
+
+\subsubsection{Pre-installed Software and Libraries}
+Crass requires that the Xerces-c XML library  and Zlib are installed for compilation.  Xerces-c is available freely at \url{http://xerces.apache.org/} and Zlib at \url{www.zlib.net}, which is usually installed although may not be on a minimally built server.  All other programs and packages are optional.
+\subsubsection{Optional Packages and Programs}
+There are a number of optional features of Crass that require additional software.  These programs are not required for compilation but add extra features that you might find useful.  It is possible to create image files of the graphs that are produced by Crass if the Graphviz package is installed \url{www.graphviz.org}.  By default Crass outputs a .gv file of Graphviz source code, so even if your running Crass on a server that doesn't have it installed you can download the .gv file to another computer for visualization.  Testing for the Graphviz package occurs during configuration and it should be noted that even if you have Graphviz you still need to opt-in to graph rendering (see  ~\nameref{sec:configure} for the correct options) as for large graphs this can take time.  If you enable rendering during the configuration process you will be presented with new user options based on what Graphviz executables were found (see~\nameref{sec:userflags}).
+
+\subsection{Compiling}
+On a GNU system simply:
+\begin{lstlisting}
+  ./configure
+  make
+  [sudo] make install
+\end{lstlisting}
+
+\subsubsection{Configure/Compiling Options}
+\label{sec:configure}
+Crass supports a number of compile-time options as well as the common options:
+
+    \begin{longtable}{  l    p{10cm} }
+    \hline
+    Option & Definition \\  \hline\hline
+    enable-debug &   Setting this option will define the HAVE\_DEBUG preprocessor symbol.  When set it will change the scale of the log level from 1 - 4 to 1 - 10.  Note that when setting the log level above 4, Crass will print alot of information to the log file that is only nessessary when debugging the program.  Extra stages of Crass will also be performed such as printing debug graphs and the -ggdb CPPFLAG will be set.  Crass will probably run slower with enable-debug even if the log level is set low due to the extra operations that Crass performs.\\ \\
+    enable-rendering &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\ 
+    \hline
+    \end{longtable}
+
+\section{Running Instructions}
+Crass has two separate commands for finding and for assembling CRISPRs:
+ \begin{lstlisting}
+ ./crass [options] input_file
+ ./crass assemble assembler -g Group/CRISPR -x crass.crispr -s segments
+\end{lstlisting}
+\subsection{Finding CRISPRs}
+Once installed the most minimal comand is 
+\begin{lstlisting}
+  ./crass input_file
+\end{lstlisting}
+which leaves all of the user options at their default values.
+
+\subsubsection{User Flags}
+\label{sec:userflags}
+Crass has a large munber of user options which may seem overwhelming to a new user.  Luckily most of the options are considered 'advanced' and should never have to be changed from their default values.  Of course they are in there as user options in case you want to experiment or you suspect that your sample contains a very unusual CRISPR which may require special attention. 
+\paragraph{Basic Options}
+Most of the basic options control the output style, for example the colours of the spacr graph or the verbosity of the log file.  There are as well some options which will change the way Crass works.  These inclue the upper and lower size ranges for the spacers and direct repeats and the number of reads that a putative CRISPR must contain to be considered real.
+    \begin{longtable}{  l   p{10cm} }
+    \hline
+    Option & Definition \\  \hline\hline
+    -a  --layoutAlgorithm &   When enable-rendering is set and you have Graphviz installed this option will become available and allow you to change the Graphviz layout engine.  The full range of layout engines is: neato, dot, fdp, sfdp, twopi, circo \\ \\
+-c --graphColour & Changes the colour range for the output spacer graph.  There are four colour scales: red-blue, blue-red, green-red-blue, red-blue-green with the default being red-blue\\ \\
+-d --minDR & The lower bound considered acceptable for the size of a direct repeat.  The default is 23bp\\ \\
+-D --maxDR & The upper bound considered acceptable for the size of a direct repeat. The default is 47bp\\ \\
+-f --covCutoff & This variable sets the minimum number of reads allowed for a putative CRISPR to be considered real and for the assembly to be attempted.  The default is 10 reads \\ \\
+-h --help & Print the basic usage and version information. \\ \\
+
+-l --logLevel & Sets the verbosity of the log file.  Under most circumstances the log level cannot go higher than 4, unless the enable-debug option is set during configuration, which will increase the maximum value to 10.  Note that above a level of 4 alot of the information will not be understandable to the user as most of these messages are specifically for us, the developers to track down bugs.  \\ \\
+-L --longDescription & This changes  the names of the nodes in the spacer graph to include the sequence of the spacer.  The default is to just use the spacer ID\\ \\
+--logToScreen & Does not produce a log file but instead prints the contents to screen.\\ \\
+
+-o --outDir & Sets the output directory for files produced by Crass.  The default is the current directory\\ \\
+-s --minSpacer & The lower bound considered acceptable for the size of a spacer sequence. Default is 26bp.\\ \\
+-S --maxSpacer & The upper bound considered acceptable for the size of a spacer sequence. Default is 50bp.\\ \\
+-V --version & Preints out program version information. \\
+    \hline
+ \end{longtable}
+\paragraph{Advanced Options}
+Crass also contains a number of options for fine tunning various parts of the underlying algorithms.  These options should not be used under normal circumstances as their behaviour could cause unexpected results.  There has been alot of time and effort put in to testing and creating the default variables for these options so it is important to change them only if you understand what they are doing.
+    \begin{longtable}{  l   p{10cm} }
+    \hline
+    Option & Definition \\  \hline\hline 
+-b --numBins &  sets the number of colour bins used in the output spacer graph for visualising the coverage of spacers in a dataset.  By default the number of bins is equal to the range of the highest and lowest coverage for a CRISPR \\ \\
+-k --kmerCount & Sets the number of kmers that need to be shared between putative direct repeats for them to be clustered together after the find stage.  Clustered direct repeats are eventually concatenated to form a 'true' direct repeat for a CRISPR; putative repeats that cannot be clustered are removed from consideration.  Change this variable if you feel that the clustering is too stringent and is breaking appart one CRISPR into multiple types.  The default number of kmers is 12, however the value should not be set below 6 as this would not be stringent enough\\ \\
+-n --minNumRepeats & Changes the minimum number of repeated seed sequences needed in the long read search algorithm. The default is 3.\\ \\
+-w --windowLength & When using the long read search algorithm, changes the window length for finding seed sequences; can be set between 6 - 9bp.  The default value is 8bp.\\ \\ 
+-x --spacerScalling & Overide the default scalling of the spacer bounds (-s -S) set by --removeHomopolymers.  The default is 0.7, i.e. the size of the spacer bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.   \\ \\
+-y --repeatScalling & Overide the default scalling of the direct repeat bounds (-d -D) set by --removeHomopolymers.  The default is 0.7, i.e. the size of the direct repeat bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.\\   
+\hline
+    \end{longtable}
+\subsubsection{Output From Crass}
+Once the CRISPR finder is done there will be a number of output output files.  For every CRISPR type that Crass finds it will produce a sequence file in either fasta or fastq (depending on the format of the input data) and a .gv Graphviz file containing the arrangment of spacers.  There will also be a .crispr file containing information about all the found CRISPRs in an XML format (see \nameref{sec:Fileformats} for information about the .crispr specification) and a log file (if you specified for one) that contains all the information about the run. Note that at this stage the CRISPR has not been assembled into contigs, however the reads have been ordered and the arragnement of spacers will be known.
+
+The graph file is important for you to visualise all of the spacer arrangments in your CRISPRs.  If your input was a metagenomic sample then it is likely that there will be multiple arrangments of spacers.  Each individual section will be numbered and this numbering is important to the Crass assembler.   
+\subsection{Assembling CRISPRs}
+CRISPRs from metagenomic data can/will have many spacer arrangements.  This makes them difficult for a regular genome assembler to resolve as they look for a single route through the graph.   The Crass assembler is a wrapper for other popular genome assemblers; currently there are wrappers for Velvet and Cap3.  I premise is that you, the user will look at the output from Crass to determine which of the paths to take through the spacer graph, which are listed as different 'contigs'. To perform the assembly you need to tell Crass the group number of the CRISPR from the finder stage (this will be in the file name), the .crispr file from Crass and the a comma separated list of the segments/contigs IDs for your group of interest.  The most minimal command is shown below: 
+ \begin{lstlisting}
+ ./crass assemble assembler -g Group -x crass.crispr -s segments
+\end{lstlisting}
+ If for example you run Crass of a metagenome and get 5 groups and you want to assemble contigs 1, 2, 5, 6, 10 from group 3 using velvet
+ \begin{lstlisting}
+ ./crass assemble velvet -g 3 -x crass.crispr -s 1,2,5,6,10
+\end{lstlisting}
+
+This will extract all of the reads that contain spacers from those contigs and use them as input to velvet which will do the assembly in the backgroud.  This is a 'dumb' process in the sense that if you provide contig IDs for multiple pathways the assembler will still try and succeed but this will undoubtibly cause breaks. 
+
+\section{File Formats}
+\label{sec:Fileformats}
+\subsection{The CRISPR File (.crispr)}
+
+\section{Practical Considerations}
+
+\end{document}

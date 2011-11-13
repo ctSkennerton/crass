@@ -11,11 +11,25 @@
 .Nd the CRISPR Assembler.
 .Sh SYNOPSIS             
 .Nm
-.Op Fl bcdhklnoswxyDSV
+.Op Fl abcdfhklnoswxyDSV
 .Op Fl "-dumpReads"
 .Op Fl "-removeHomopolymers"
 .Op Fl "-logToScreen"
 .Ao Em sequence_files Ac
+
+.Nm
+assemble
+ASSEMBLER
+.Fl x Ar crass.crispr
+.Fl s Ar CONTIGS
+.Fl i Ar INPUT_DIR 
+.Fl g Ar GROUP
+.Op Fl pIohlV 
+.Op Fl "-logToScreen" 
+.Pp
+where ASSEMBLER is one of the following if they are installed:
+velvet
+cap3
 
 .Sh DESCRIPTION         
 .Nm
@@ -39,9 +53,11 @@ then reads containing direct repeats are then outputed for further analysis.
 .It  
 .Nm
 .Op Fl hV
+.Op Fl a Ar LAYOUT_TYPE
 .Op Fl b Ar INT
 .Op Fl c Ar COLOUR_TYPE
-.Op Fl d Ar INT 
+.Op Fl d Ar INT
+.Op Fl f Ar INT
 .Op Fl k Ar INT
 .Op Fl l Ar INT
 .Op Fl n Ar INT
@@ -55,7 +71,9 @@ then reads containing direct repeats are then outputed for further analysis.
 .Op Fl "-dumpReads"
 .Op Fl "-removeHomopolymers"
 .Op Fl "-logToScreen"
- 
+
+.It Fl a Ar LAYOUT_TYPE Fl "\^\-layoutAlgorithm" Ar LAYOUT_TYPE
+The Graphviz layout algorithm to be used when rendering graphs.
 .It Fl b Ar INT Fl "\^\-numBins" Ar INT
 The number of colour bins for the output graph. Default is to have as many colours as there are different values for the coverage of Nodes in the graph.
 .It Fl c Ar COLOUR_TYPE Fl "\^\-graphColour" Ar COLOUR_TYPE
@@ -76,6 +94,8 @@ The minimim length of the direct repeat to search for [Default: 23]
 The Maximum length of the direct repeat to search for [Default: 47] 
 .It Fl "\^\-dumpReads" Ar ""
 Prints all of the reads to file after the search is completed
+.It Fl f Ar INT  Fl "\^\-covCutoff" Ar INT           
+Defines the minimim number of reads that a putative CRISPR must contain to be considered real. [Default: 10]
 .It Fl h Ar ""  Fl "\^\-help" Ar ""           
 Output basic usage informtion to screen
 .It Fl l Ar INT Fl "\^\-logLevel" Ar INT
