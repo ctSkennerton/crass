@@ -393,30 +393,16 @@ int WorkHorse::mungeDRs(void)
             mDR2GIDMap[dcg_iter->first] = NULL;
             purge_counter++;
         }
-        else 
+        else if (numberOfReadsInGroup(dcg_iter->second) < mOpts->covCutoff) 
         {
-            // test to remove groups that have a small number of reads
-            DR_ClusterIterator grouped_drs_iter = (dcg_iter->second)->begin();
-            size_t number_of_reads_in_group = 0;
-            while (grouped_drs_iter != (dcg_iter->second)->end()) 
-            {
-               number_of_reads_in_group += mReads[*grouped_drs_iter]->size();
-                ++grouped_drs_iter;
-            }
-            // if the number of reads is low kill the group
-            if ((int)number_of_reads_in_group < mOpts->covCutoff) 
-            {
-                logInfo("Purging Group " << dcg_iter->first<<" as it contains less than "<< mOpts->covCutoff <<"reads", 4);
-
-                delete dcg_iter->second;
-                dcg_iter->second = NULL;
-                mDR2GIDMap[dcg_iter->first] = NULL;
-                purge_counter++;
-            }
+            logInfo("Purging Group " << dcg_iter->first<<" as it contains less than "<< mOpts->covCutoff <<"reads", 4);
+            
+            delete dcg_iter->second;
+            dcg_iter->second = NULL;
+            mDR2GIDMap[dcg_iter->first] = NULL;
+            purge_counter++;
         }
-        
-        // log the cluster if needed
-        if(isLogging(4))
+        else if(isLogging(4))
         {
             DR_ClusterIterator dc_iter = (dcg_iter->second)->begin();
             if (dcg_iter->second != NULL) 
@@ -1421,6 +1407,17 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     
     return true;
 }
+int WorkHorse::numberOfReadsInGroup(DR_Cluster * currentGroup)
+{
+    DR_ClusterIterator grouped_drs_iter = currentGroup->begin();
+    size_t number_of_reads_in_group = 0;
+    while (grouped_drs_iter != currentGroup->end()) 
+    {
+        number_of_reads_in_group += mReads[*grouped_drs_iter]->size();
+        ++grouped_drs_iter;
+    }
+    return (int)number_of_reads_in_group;
+}
 
 bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std::string *  kmer, const std::string *  DR)
 {
@@ -1458,9 +1455,12 @@ bool WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmer
     std::string top_kmer;    
     std::map<std::string, bool> top_kmer_map;
     
-    if ((int)(kmer_CountMap->size()) < num2Get) {
+    if ((int)(kmer_CountMap->size()) < num2Get) 
+    {
         return false;
-    } else {
+    } 
+    else 
+    {
         for (int i = 1; i <= num2Get; i++) 
         {
             std::map<std::string, int>::iterator map_iter = kmer_CountMap->begin();
@@ -1485,10 +1485,7 @@ bool WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmer
             tkm_iter++;
         }
         return true;
-
     }
-    //int iterations = ((int)(kmer_CountMap->size()) < num2Get ) ? (int)kmer_CountMap->size() : num2Get;
-    
 }
 
 bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap)

@@ -106,7 +106,7 @@ class WorkHorse {
         int mungeDRs(void);                         			// cluster potential DRs and make node managers
         bool clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
         bool parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int * nextFreeGID);
-
+        int numberOfReadsInGroup(DR_Cluster * currentGroup);
         bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string * kmer, const std::string * DR);
         bool getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
         

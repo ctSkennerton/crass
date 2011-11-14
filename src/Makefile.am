@@ -16,7 +16,7 @@ WuManber.cpp WuManber.h\
 LoggerSimp.cpp LoggerSimp.h\
 SeqUtils.cpp SeqUtils.h\
 CrisprNode.cpp CrisprNode.h\
-NodeManager.cpp NodeManager.cpp\
+NodeManager.cpp NodeManager.h\
 libcrispr.cpp libcrispr.h\
 WorkHorse.cpp WorkHorse.h\
 SpacerInstance.cpp SpacerInstance.h\
@@ -25,7 +25,8 @@ SmithWaterman.cpp SmithWaterman.h\
 StringCheck.cpp StringCheck.h\
 kseq.h\
 GraphDrawingDefines.h\
-crassDefines.h
+crassDefines.h\
+StlExt.h
 
 if ASSEMBLY_WRAPPER
 crass_SOURCES += CrassXML.cpp CrassXML.h\
