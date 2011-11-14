@@ -1,3 +1,468 @@
-27/8/11
-    The ReadHolder class has been changed so that all members are now private.
-    Access to these members is available through getters and setters
+Mon Nov 14 21:29:12 2011 +1000    ctSkennerton
+    Resolved issue #14, changed a flow control in WorkHorse so that the iterator is not pointing to a NULL object
+
+Mon Nov 14 16:30:09 2011 +1000    ctSkennerton
+    fixed a bug where the header files were not packaged up in 'make dist'
+
+Sun Nov 13 21:55:05 2011 +1000    ctSkennerton
+    Update to the man file and added a latex documentation file
+
+Sun Nov 13 03:37:49 2011 +1000    ctSkennerton
+    New compile time option to disable assembly wrapper, which will also remove the dependancy for Xerces-c
+
+Wed Nov 9 23:28:05 2011 +1000    ctSkennerton
+    Fixed a bug where the resources folder was not being included when the user types 'make dist'
+
+Wed Nov 9 14:32:33 2011 +1000    ctSkennerton
+    Added new test to remove reads that contain a small number of reads, which should help filter out some of the false positive groups
+
+Wed Nov 9 10:45:04 2011 +1000    ctSkennerton
+    Fixed an issue in bubble removal whereby nodes would pass a test if they contained two edges of the same type, even though they should have failed as they would lack the corresponding opposite edge type
+
+Wed Nov 9 10:13:51 2011 +1000    ctSkennerton
+    Fixed issue #6, changed an else if to if statement in clearBubbles that seems to have resolved the issue
+
+Tue Nov 8 23:38:57 2011 +1000    ctSkennerton
+    oops, now outputs the correct linker flags
+
+Tue Nov 8 23:04:03 2011 +1000    ctSkennerton
+    updated the build so that Xerces-c is checked during configure
+
+Mon Nov 7 22:55:50 2011 +1000    ctSkennerton
+    Fixed issue #2, dynamic memory allocations are now properly freed in WuManber destructor
+
+Mon Nov 7 22:47:26 2011 +1000    ctSkennerton
+    Fixed issue #11.  The value of B is now set dynamically in WuManber
+
+Mon Nov 7 22:06:27 2011 +1000    ctSkennerton
+    fixed issue 3, the output reads file now can produce fast format and is generally more faithful to the input format style
+
+Mon Nov 7 02:37:24 2011 +1000    ctSkennerton
+    fixed issue #8, errors thrown in AssemblyWrapper are now properly caught
+
+Sun Nov 6 23:14:13 2011 +1000    ctSkennerton
+    fixed issue #7, CrassXML constructor and destructor now contain all the variables of the updated DTD
+
+Sat Nov 5 22:49:04 2011 +1000    ctSkennerton
+    basic assembly wrapper is complete for cap3 and velvet
+
+Fri Nov 4 10:52:09 2011 +1000    Michael.Imelfort
+    XML is done!
+
+Fri Nov 4 10:26:52 2011 +1000    ctSkennerton
+    deleting some files to fix mike up
+
+Wed Nov 2 23:45:26 2011 +1000    ctSkennerton
+    removed some legacy files no longer being used
+
+Wed Nov 2 23:42:06 2011 +1000    ctSkennerton
+    fixed conflicts with assemblyWrapper
+
+Wed Nov 2 17:00:12 2011 +1000    Michael.Imelfort
+    Working on the XML some more!
+
+Wed Nov 2 16:07:06 2011 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Wed Nov 2 15:34:37 2011 +1000    Michael.Imelfort
+    Merge branch 'master' of github.com:ctSkennerton/crass into merge2
+
+Wed Nov 2 15:30:38 2011 +1000    Michael.Imelfort
+    A dtd for our XML output
+
+Wed Nov 2 15:30:22 2011 +1000    Michael.Imelfort
+    oops
+
+Wed Nov 2 15:29:55 2011 +1000    Michael.Imelfort
+    Modifications to make a parser
+
+Wed Nov 2 15:29:01 2011 +1000    Michael.Imelfort
+    XML parser
+
+Wed Nov 2 11:41:17 2011 +1000    ctSkennerton
+    fixed pedantic error with the assembly long options struct
+
+Wed Nov 2 11:18:26 2011 +1000    ctSkennerton
+    fix to segfault when there are not enough kmers in a DR
+
+Sun Oct 30 15:13:54 2011 +1000    ctSkennerton
+    added in new user options and tweaked the way configure works
+
+Sat Oct 29 22:27:15 2011 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Sat Oct 29 22:26:09 2011 +1000    ctSkennerton
+    changed the way that multiple files are parsed
+
+Sat Oct 29 21:09:42 2011 +1000    ctSkennerton
+    fix #include bug
+
+Sat Oct 29 20:57:28 2011 +1000    ctSkennerton
+    update the version number
+
+Sat Oct 29 20:42:10 2011 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Fri Oct 28 16:44:28 2011 +1000    Michael.Imelfort
+    Graph is done biatch!
+
+Thu Oct 27 23:34:24 2011 +1000    ctSkennerton
+    basic assembly wrapper implemented
+
+Thu Oct 27 15:12:54 2011 +1000    Michael.Imelfort
+    Makes purdier graphs. Now to make contigs
+
+Wed Oct 26 09:19:13 2011 +1000    Michael.Imelfort
+    YAY!
+
+Tue Oct 25 20:37:15 2011 +1000    ctSkennerton
+    small code clean up in NodeManager
+
+Tue Oct 25 20:06:47 2011 +1000    ctSkennerton
+    basic bubble resolution in place but untested
+
+Tue Oct 25 16:53:19 2011 +1000    Michael.Imelfort
+    compiles after merge
+
+Tue Oct 25 16:50:52 2011 +1000    Michael.Imelfort
+    Merge remote branch 'origin'
+
+Tue Oct 25 16:40:18 2011 +1000    Michael.Imelfort
+    bleg
+
+Tue Oct 25 16:39:34 2011 +1000    Michael.Imelfort
+    bleg
+
+Tue Oct 25 16:30:07 2011 +1000    Michael.Imelfort
+    bleg
+
+Tue Oct 25 16:25:06 2011 +1000    Michael.Imelfort
+    fork cleaning added
+
+Tue Oct 25 14:27:23 2011 +1000    ctSkennerton
+    added back in configure and makefiles for systems that don't have GNU autoconf
+
+Tue Oct 25 13:25:57 2011 +1000    ctSkennerton
+    removed unused parameter to addReadHolder function
+
+Tue Oct 25 13:12:29 2011 +1000    ctSkennerton
+    fixed a counter that wasn't being reset properly in long read search
+
+Tue Oct 25 12:38:57 2011 +1000    ctSkennerton
+    updated some logic to deal with the split from short to long reads and with reads that are just too short
+
+Tue Oct 25 10:53:18 2011 +1000    ctSkennerton
+    made a few changes to the build settings
+
+Tue Oct 25 09:12:57 2011 +1000    Michael.Imelfort
+    Commit for connor
+
+Mon Oct 17 16:46:39 2011 +1000    Michael.Imelfort
+    More bug fixes. Breaks DR into groups gooder now.
+
+Thu Oct 13 16:40:48 2011 +1000    Michael.Imelfort
+    Still working on the recursive call. fixed a few more bugs
+
+Thu Oct 13 02:02:18 2011 +1000    Michael.Imelfort
+    Fixing bugs in DR start sites which is affecting the clustering of DRs gross
+
+Tue Oct 11 14:24:56 2011 +1000    Michael.Imelfort
+    removed #pragme marks
+
+Tue Oct 11 14:24:37 2011 +1000    Michael.Imelfort
+    removed #pragma marks
+
+Tue Oct 11 14:20:52 2011 +1000    Michael.Imelfort
+    Removed the guys who are autobuilt anyway
+
+Tue Oct 11 13:57:56 2011 +1000    ctSkennerton
+    over to you mike...
+
+Wed Sep 28 09:34:10 2011 +1000    ctSkennerton
+    fixed bug which caused edges not to be created properly
+
+Wed Sep 21 21:57:05 2011 +1000    ctSkennerton
+    more small fixes to partial DR matching
+
+Wed Sep 21 17:22:41 2011 +1000    ctSkennerton
+    fixed a bug in smith waterman code which was causing extra nodes to be cut
+
+Mon Sep 19 15:09:51 2011 +1000    ctSkennerton
+    fixed some bugs in the graph creation, now the graph looks MUCH cleaner
+
+Sat Sep 17 00:48:46 2011 +1000    ctSkennerton
+    walking works but cleaning doesn't
+
+Wed Sep 14 23:21:15 2011 +1000    ctSkennerton
+    improvements to long read search.  new sanity check after first iteration to make sure that there was something found.
+
+Tue Sep 13 20:00:58 2011 +1000    ctSkennerton
+    A raft of improvements!
+
+Mon Sep 12 22:40:18 2011 +1000    ctSkennerton
+    added some extra sanity checks to option processing and to long read search
+
+Mon Sep 12 11:08:52 2011 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Mon Sep 12 11:07:39 2011 +1000    Michael.Imelfort
+    oops
+
+Mon Sep 12 11:01:37 2011 +1000    ctSkennerton
+    resolved conflicts between versions
+
+Mon Sep 12 10:57:01 2011 +1000    ctSkennerton
+    some miscellaneous refactoring
+
+Mon Sep 12 10:40:23 2011 +1000    Michael.Imelfort
+    Added this ps to mkae purdy arrows
+
+Mon Sep 12 10:38:39 2011 +1000    Michael.Imelfort
+    Added heat mappystuff
+
+Sun Sep 11 22:21:28 2011 +1000    ctSkennerton
+    fixed substr bug in scan right function
+
+Sun Sep 11 13:10:39 2011 +1000    ctSkennerton
+    large code refactor, Crispr and ReadHolder classes are merged, many small bugs fixed
+
+Fri Sep 9 23:55:11 2011 +1000    Michael.Imelfort
+    Added this guy to help colour graphviz plots
+
+Wed Sep 7 15:52:56 2011 +1000    ctSkennerton
+    commit some graph updates
+
+Wed Sep 7 13:00:38 2011 +1000    ctSkennerton
+    small code clean up
+
+Wed Sep 7 11:10:40 2011 +1000    ctSkennerton
+    Merge branch 'master' into Graph
+
+Wed Sep 7 11:09:00 2011 +1000    ctSkennerton
+    very simple graph building now works
+
+Wed Sep 7 10:42:21 2011 +1000    Michael.Imelfort
+    More bug fixes
+
+Tue Sep 6 16:29:39 2011 +1000    Michael.Imelfort
+    Fixed some stuff. Made the make process more paranoid.
+
+Wed Aug 31 09:01:58 2011 +1000    ctSkennerton
+    tracking down bugs and logging sensible information
+
+Tue Aug 30 11:47:15 2011 +1000    ctSkennerton
+    changes to the way user input is taken plus some other misc changes.
+
+Mon Aug 29 17:13:08 2011 +1000    ctSkennerton
+    big fix with type conversion from int to float
+
+Mon Aug 29 17:04:03 2011 +1000    ctSkennerton
+    added extra checking to low complexity repeat filtering to account for Ns
+
+Mon Aug 29 16:40:40 2011 +1000    ctSkennerton
+    bug fix in short read search
+
+Mon Aug 29 08:55:58 2011 +1000    ctSkennerton
+    over to you mike...
+
+Sun Aug 28 21:46:04 2011 +1000    ctSkennerton
+    removed some non essential autoconf cache stuff
+
+Sun Aug 28 12:32:00 2011 +1000    ctSkennerton
+    minor changes to help messages and usage
+
+Sat Aug 27 23:08:02 2011 +1000    ctSkennerton
+    removing Genome.cpp since the files have been replaced
+
+Sat Aug 27 23:05:09 2011 +1000    ctSkennerton
+    removed some rouge code
+
+Sat Aug 27 22:59:18 2011 +1000    ctSkennerton
+    can now remove homopolymers from reads using simple run length encoding algorithm.  very good for 454 or ion torrent data
+
+Sat Aug 27 11:10:37 2011 +1000    ctSkennerton
+    updated changelog
+
+Sat Aug 27 10:58:29 2011 +1000    ctSkennerton
+    expanded the read holder class, new getters and setters and the members are now private
+
+Sun Aug 21 02:20:44 2011 +1000    ctSkennerton
+    more properly integrated in the Crispr class from CRT
+
+Sat Aug 20 18:55:44 2011 +1000    ctSkennerton
+    made a few small changes to configure
+
+Sat Aug 20 18:02:49 2011 +1000    ctSkennerton
+    I do believe that the long read algorithm is now complete
+
+Fri Aug 19 20:29:37 2011 +1000    ctSkennerton
+    cleaned up the source code a bit.  Variable names are now uniform across most of the code
+
+Fri Aug 19 17:28:47 2011 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Fri Aug 19 15:57:02 2011 +1000    Michael.Imelfort
+    for conz
+
+Thu Aug 18 23:07:04 2011 +1000    ctSkennerton
+    strange set fault error
+
+Thu Aug 18 22:32:31 2011 +1000    ctSkennerton
+    fixed memory leaks in the genome finder
+
+Thu Aug 18 19:55:30 2011 +1000    ctSkennerton
+    begun process of changing logging based on DUBUG preprocessor statement
+
+Thu Aug 18 19:25:03 2011 +1000    ctSkennerton
+    Merge branch 'Genome'
+
+Thu Aug 18 19:18:47 2011 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Thu Aug 18 16:44:18 2011 +1000    Michael.Imelfort
+    it works!
+
+Thu Aug 18 16:44:06 2011 +1000    Michael.Imelfort
+    Tokenise the strings
+
+Wed Aug 10 20:40:29 2011 +1000    ctSkennerton
+    Updated README and man file to reflect recent changes
+
+Tue Aug 9 22:41:38 2011 +1000    ctSkennerton
+    quick bug fix
+
+Tue Aug 9 22:09:59 2011 +1000    ctSkennerton
+    porting CRT finished, basic subcommands implemented
+
+Tue Aug 9 22:02:58 2011 +1000    ctSkennerton
+    genome finding works as well as CRT
+
+Sun Aug 7 21:51:24 2011 +1000    ctSkennerton
+    minor refactoring of the genome finder
+
+Sun Aug 7 21:18:11 2011 +1000    ctSkennerton
+    big fix where the repeat length was not being updated and changed some string comparisons into enums
+
+Sun Aug 7 20:50:08 2011 +1000    ctSkennerton
+    porting CRT for use in genomes
+
+Mon Jul 18 15:52:29 2011 +1000    Michael.Imelfort
+    More work done on the groupings.
+
+Sat Jul 16 17:48:22 2011 +1000    ctSkennerton
+    some minor changes to workhorse and added some extra logic to libcrispr
+
+Fri Jul 15 18:39:01 2011 +1000    ctSkennerton
+    Merge branch 'hacked'
+
+Fri Jul 15 18:38:08 2011 +1000    ctSkennerton
+    final commit befor merge
+
+Fri Jul 15 16:16:52 2011 +1000    Michael.Imelfort
+    more on the score. Still looking better than connor whilst doit it.
+
+Tue Jul 12 22:18:47 2011 +1000    ctSkennerton
+    added in getopt long support and played with the man file
+
+Tue Jul 12 16:43:39 2011 +1000    ctSkennerton
+    removed the smith-waterman code -- moving to a new algorithm for obtaining the one true DR
+
+Sat Jul 9 16:24:19 2011 +1000    ctSkennerton
+    removed print statements and added file extensions to the output files
+
+Sat Jul 9 16:14:22 2011 +1000    ctSkennerton
+    dumps reads after clustering
+
+Fri Jul 8 21:50:42 2011 +1000    ctSkennerton
+    score doesn't work -- going back to experimental
+
+Fri Jul 8 14:46:27 2011 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Fri Jul 8 14:41:33 2011 +1000    Michael.Imelfort
+    modified scoring again...
+
+Thu Jul 7 14:09:27 2011 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Thu Jul 7 14:03:17 2011 +1000    Michael.Imelfort
+    more goodies added!
+
+Thu Jul 7 13:57:54 2011 +1000    ctSkennerton
+    double bleg
+
+Thu Jul 7 13:56:52 2011 +1000    ctSkennerton
+    bleg
+
+Fri Jul 1 16:47:14 2011 +1000    Michael.Imelfort
+    added new scoring, fixed the smith waterman code. looked good doing it.
+
+Fri Jul 1 13:57:47 2011 +1000    Michael.Imelfort
+    Merge branch 'master' of https://github.com/ctSkennerton/crass
+
+Fri Jul 1 12:09:21 2011 +1000    Michael.Imelfort
+    oi
+
+Fri Jul 1 12:04:21 2011 +1000    ctSkennerton
+    over to you mike!! NOW
+
+Fri Jul 1 12:03:38 2011 +1000    ctSkennerton
+    over to you mike
+
+Wed Jun 29 16:14:34 2011 +1000    ctSkennerton
+    added new logic to multipattern matcher and workhorse to deal with partial direct repeats
+
+Tue Jun 28 14:59:24 2011 +1000    ctSkennerton
+    added in simple partial pattern finding for multimatcher
+
+Mon Jun 27 15:53:05 2011 +1000    ctSkennerton
+    fixed type mismatch bug in multipattern matcher
+
+Mon Jun 27 11:51:54 2011 +1000    ctSkennerton
+    removed a double up bug in the multimatcher
+
+Sun Jun 26 19:57:32 2011 +1000    ctSkennerton
+    squashing bugs...
+
+Sun Jun 26 18:53:16 2011 +1000    ctSkennerton
+    now run through with bitap algorithm
+
+Sun Jun 26 18:30:59 2011 +1000    ctSkennerton
+    bug fixes!
+
+Sun Jun 26 13:30:44 2011 +1000    ctSkennerton
+    finnished updating the boyer moore search function
+
+Sun Jun 26 12:49:29 2011 +1000    ctSkennerton
+    adding in new logic for long reads
+
+Sat Jun 25 10:56:44 2011 +1000    ctSkennerton
+    bleg
+
+Sat Jun 25 10:56:05 2011 +1000    ctSkennerton
+    clustering and canonical DR finding code added
+
+Wed Jun 22 16:47:40 2011 +1000    Michael.Imelfort
+    Yo conz, made a clustering algo fo yo!
+
+Wed Jun 22 12:58:03 2011 +1000    ctSkennerton
+    yo mike!
+
+Tue Jun 21 12:57:08 2011 +1000    ctSkennerton
+    plugged into assembly objects.  Now puts reads into their DRlowlexi form!
+
+Sun Jun 19 22:53:06 2011 +1000    ctSkennerton
+    misc updates to readme
+
+Sun Jun 19 22:32:45 2011 +1000    ctSkennerton
+    updated the copyright
+
+Sun Jun 19 22:12:09 2011 +1000    ctSkennerton
+    test new repo
+
+Fri Jun 17 18:01:24 2011 +1000    ctSkennerton
+    add in the source files!!
+
+Fri Jun 17 17:15:30 2011 +1000    ctSkennerton
+    initial commit
+
