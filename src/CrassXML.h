@@ -84,7 +84,8 @@ class CrassXML
         //
         void parseCrassXMLFile(std::string XMLFile);
     void parseCrassXMLFile(std::string XMLFile, std::string& wantedGroup, std::string * directRepeat, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly);
-        std::string XMLCH_2_STR(const XMLCh* xmlch);
+        //std::string XMLCH_2_STR(const XMLCh* xmlch);
+    char * XMLCH_2_STR(const XMLCh* xmlch);
         xercesc::DOMElement * getWantedGroupFromRoot(xercesc::DOMElement * currentElement, std::string& wantedGroup, std::string * directRepeat);
         xercesc::DOMElement * parseGroupForAssembly(xercesc::DOMElement* currentElement);
         void parseAssemblyForContigIds(xercesc::DOMElement* currentElement, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly);

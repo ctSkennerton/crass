@@ -175,18 +175,8 @@ CrassXML::~CrassXML(void)
     {
         std::cerr << "Unknown exception encountered in TagNamesdtor" << std::endl;
     }
-    
-    try // Terminate Xerces
-    {
-      XMLPlatformUtils::Terminate();  // Terminate after release of memory
-    }
-    catch( xercesc::XMLException& e )
-    {
-      char* message = xercesc::XMLString::transcode( e.getMessage() );
 
-      std::cerr << "XML ttolkit teardown error: " << message << std::endl;
-      XMLString::release( &message );
-    }
+      XMLPlatformUtils::Terminate();  // Terminate after release of memory
 }
 
 void CrassXML::parseCrassXMLFile(std::string XMLFile)
@@ -195,7 +185,7 @@ void CrassXML::parseCrassXMLFile(std::string XMLFile)
     // why not!
     //
     
-    logInfo("Parsing from " << XMLFile, 1);
+    //logInfo("Parsing from " << XMLFile, 1);
     // Test to see if the file is ok.
     struct stat fileStatus;
     
@@ -269,7 +259,7 @@ void CrassXML::parseCrassXMLFile(std::string XMLFile, std::string& wantedGroup, 
     // why not!
     //
     
-    logInfo("Parsing from " << XMLFile, 1);
+    //logInfo("Parsing from " << XMLFile, 1);
 
 
 
@@ -285,10 +275,10 @@ void CrassXML::parseCrassXMLFile(std::string XMLFile, std::string& wantedGroup, 
         mConfigFileParser->parse( XMLFile.c_str() );
         
         // no need to free this pointer - owned by the parent parser object
-        DOMDocument* xmlDoc = mConfigFileParser->getDocument();
+        xercesc::DOMDocument * xmlDoc = mConfigFileParser->getDocument();
         
         // Get the top-level element: 
-        xercesc::DOMElement* elementRoot = xmlDoc->getDocumentElement();
+        xercesc::DOMElement * elementRoot = xmlDoc->getDocumentElement();
         if( !elementRoot ) throw(std::runtime_error( "empty XML document" ));
         
         // find our wanted group
@@ -433,24 +423,30 @@ void CrassXML::getSpacerIdForAssembly(xercesc::DOMElement* currentElement, std::
     }
 }
                
-std::string CrassXML::XMLCH_2_STR(const XMLCh* xmlch)
-{
-    //-----
-    // convert a XMCH* to a std::string in utf8
-    //
-    XMLTranscoder* utf8Transcoder;
-    XMLTransService::Codes failReason;
-    utf8Transcoder = XMLPlatformUtils::fgTransService->makeNewTranscoderFor("UTF-8", failReason, 16*1024);
-
-    XMLSize_t len = XMLString::stringLen(xmlch);
-    XMLByte* utf8 = new XMLByte(); // ?
-    XMLSize_t eaten;
-    XMLSize_t utf8Len = utf8Transcoder->transcodeTo(xmlch, len, utf8, len, eaten, XMLTranscoder::UnRep_Throw);
-
-    utf8[utf8Len] = '\0';
-    std::string str = (char*)utf8;
-    
-    delete utf8;
-    delete utf8Transcoder;
-    return str;
+//std::string CrassXML::XMLCH_2_STR(const XMLCh* xmlch)
+//{
+//    //-----
+//    // convert a XMCH* to a std::string in utf8
+//    //
+//    XMLTranscoder* utf8Transcoder;
+//    XMLTransService::Codes failReason;
+//    utf8Transcoder = XMLPlatformUtils::fgTransService->makeNewTranscoderFor("UTF-8", failReason, 16*1024);
+//
+//    XMLSize_t len = XMLString::stringLen(xmlch);
+//    XMLByte* utf8 = new XMLByte(); // ?
+//    XMLSize_t eaten;
+//    XMLSize_t utf8Len = utf8Transcoder->transcodeTo(xmlch, len, utf8, len, eaten, XMLTranscoder::UnRep_Throw);
+//
+//    utf8[utf8Len] = '\0';
+//    std::string str = (char*)utf8;
+//    
+//    delete utf8;
+//    delete utf8Transcoder;
+//    return str;
+//}
+//
+char * CrassXML::XMLCH_2_STR( const XMLCh* toTranscode ) 
+{  
+    return XMLString::transcode(toTranscode); 
 }
+
