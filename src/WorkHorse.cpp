@@ -56,7 +56,7 @@
 #include "StringCheck.h"
 #include "config.h"
 #ifdef PERFORM_CRASS_ASSEMBLY
-    #include "CrassXML.h"
+#include "CrassXML.h"
 #endif
 
 
@@ -67,10 +67,10 @@ bool sortDirectRepeatByLength( const std::string &a, const std::string &b)
 
 WorkHorse::~WorkHorse()
 {
-//    //-----
-//    // destructor
-//    //
-
+    //    //-----
+    //    // destructor
+    //    //
+    
     // clean up all the NodeManagers
     DR_ListIterator dr_iter = mDRs.begin();
     while(dr_iter != mDRs.end())
@@ -145,67 +145,84 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     //-----
     // wrapper for the various processes needed to assemble crisprs
     //
-//	CrassXML * CX = new CrassXML();
-//	CX->parseCrassXMLFile("/home/uqmimelf/working/crass/data/crass2.xml");
-//	delete CX;
-//	return 0;
+    //	CrassXML * CX = new CrassXML();
+    //	CX->parseCrassXMLFile("/home/uqmimelf/working/crass/data/crass2.xml");
+    //	delete CX;
+    //	return 0;
 	
 	logInfo("Parsing reads in " << (seqFiles.size()) << " files", 1);
 	if(parseSeqFiles(seqFiles))
 	{
-		return 1;
+		logError("FATAL ERROR: parseSeqFiles failed");
+        return 1;
 	}
 	
     // build the spacer end graph
 	if(buildGraph())
 	{
-		return 2;
+		logError("FATAL ERROR: buildGraph failed");
+        return 2;
 	}
 	
 #if DEBUG
 	// print debug graphs
 	if(renderDebugGraphs())
 	{
-		return 3;
+        logError("FATAL ERROR: renderDebugGraphs failed");
+        return 3;
 	}
 #endif
 	
 	// clean each spacer end graph
 	if(cleanGraph())
 	{
-		return 4;
+        logError("FATAL ERROR: cleanGraph failed");
+        return 4;
 	}
-
+    
+    
 	// make contigs
 	if(splitIntoContigs())
 	{
-		return 5;
+        logError("FATAL ERROR: splitIntoContigs failed");
+        return 5;
 	}
+    
+    //remove NodeManagers with low numbers of spacers
+    if (removeLowSpacerNodeManagers())
+    {
+        logError("FATAL ERROR: removeLowSpacerNodeManagers failed");
+        return 6;
+    }
 	
-	// dump the spacers to file
+    // dump the spacers to file
 	if(dumpSpacers())
 	{
-		return 6;
+        logError("FATAL ERROR: dumpSpacers failed");
+        return 7;
 	}
-
+    
     // print the reads to a file if requested
 	if(dumpReads(&mDR2GIDMap, false))
 	{
-		return 7;
+        logError("FATAL ERROR: dumpReads failed");
+        return 8;
 	}
 	
 #if DEBUG
 	// print clean graphs
 	if(renderDebugGraphs("Clean_"))
 	{
-		return 8;
+        logError("FATAL ERROR: renderDebugGraphs failed");
+        return 9;
 	}
 #endif
-
+    
 	// print spacer graphs
 	if(renderSpacerGraphs())
 	{
-		return 9;
+        logError("FATAL ERROR: renderSpacerGraphs failed");
+        return 10;
 	}
 	
 	printXML();
@@ -250,14 +267,14 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
             logInfo("Long read algorithm selected", 2);
             longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found);
             logInfo("Number of reads found: "<<this->numOfReads(), 2);
-
+            
         }
         else
         {
             logInfo("Short read algorithm selected", 2);
             shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
             logInfo("number of reads found so far: "<<this->numOfReads(), 2);
-
+            
         }
         // Check to see if we found anything, should return if we haven't
         if (patterns_lookup.empty()) 
@@ -297,7 +314,7 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     {
         logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
     }
-
+    
     return 0;
 }
 
@@ -312,6 +329,9 @@ int WorkHorse::buildGraph(void)
     {
         if(NULL != drg_iter->second)
         {            
+#ifdef DEBUG
+            logInfo("Creating NodeManager "<<drg_iter->first, 6);
+#endif
             mDRs[mTrueDRs[drg_iter->first]] = new NodeManager(mTrueDRs[drg_iter->first], mOpts);
             DR_ClusterIterator drc_iter = (drg_iter->second)->begin();
             while(drc_iter != (drg_iter->second)->end())
@@ -323,10 +343,8 @@ int WorkHorse::buildGraph(void)
                     mDRs[mTrueDRs[drg_iter->first]]->addReadHolder(*read_iter);
                     read_iter++;
                 }
-                
                 drc_iter++;
             }
-            // TODO: should check here if there is sufficient nodes in the graph to continue -- otherwise delete
         }
         drg_iter++;
     }
@@ -344,10 +362,57 @@ int WorkHorse::cleanGraph(void)
 	{
 		if(NULL != drg_iter->second)
 		{            
-			if((mDRs[mTrueDRs[drg_iter->first]])->cleanGraph())
-			{
-				return 1;
-			}
+#ifdef DEBUG
+            if (NULL == mDRs[mTrueDRs[drg_iter->first]])
+            {
+                logWarn("Before Clean Graph: NodeManager "<<drg_iter->first<<" is NULL",6);
+            }
+            else
+            {
+#endif
+                if((mDRs[mTrueDRs[drg_iter->first]])->cleanGraph())
+                {
+                    return 1;
+                }
+#ifdef DEBUG
+            }
+            if (NULL == mDRs[mTrueDRs[drg_iter->first]])
+            {
+                logWarn("After Clean Graph: NodeManager "<<drg_iter->first<<" is NULL",6);
+            }
+#endif
+		}
+		drg_iter++;
+	}
+	return 0;
+}
+
+int WorkHorse::removeLowSpacerNodeManagers(void)
+{
+    logInfo("Removing CRISPRs with low numbers of spacers", 1);
+	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+	while(drg_iter != mDR2GIDMap.end())
+	{
+		if(NULL != drg_iter->second)
+		{            
+#ifdef DEBUG
+            if (NULL == mDRs[mTrueDRs[drg_iter->first]])
+            {
+                logWarn("Before Low Spacer Removal: NodeManager "<<drg_iter->first<<" is NULL",6);
+            }
+            else
+            {
+#endif
+                if((mDRs[mTrueDRs[drg_iter->first]])->getSpacerCount(false) < mOpts->covCutoff) 
+                {
+                    logInfo("Deleting NodeManager "<<drg_iter->first<<" as it contained less than "<<mOpts->covCutoff<<" attached spacers",4);
+                    delete mDRs[mTrueDRs[drg_iter->first]];
+                    mDRs[mTrueDRs[drg_iter->first]] = NULL;
+                }
+#ifdef DEBUG
+            }
+#endif
+            
 		}
 		drg_iter++;
 	}
@@ -369,7 +434,7 @@ int WorkHorse::mungeDRs(void)
     logInfo("Reticulating splines...", 1);
     
     std::map<int, std::map<std::string, int> * > group_kmer_counts_map;
-
+    
     // go through all of the read holder objects
     ReadMapIterator read_map_iter = mReads.begin();
     while (read_map_iter != mReads.end()) 
@@ -377,7 +442,7 @@ int WorkHorse::mungeDRs(void)
         clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &group_kmer_counts_map);
         ++read_map_iter;
     }
-
+    
     logInfo("Reducing list of potential DRs (2): Purging singleton and low abundance clusters", 1);
     int purge_counter = 0;
     DR_Cluster_MapIterator dcg_iter = mDR2GIDMap.begin();
@@ -388,15 +453,6 @@ int WorkHorse::mungeDRs(void)
         {
             logInfo("Purging Group " << dcg_iter->first<<" as it contains a single DR variant", 4);
             // make this group point to null so that we won't go through it again
-            delete dcg_iter->second;
-            dcg_iter->second = NULL;
-            mDR2GIDMap[dcg_iter->first] = NULL;
-            purge_counter++;
-        }
-        else if (numberOfReadsInGroup(dcg_iter->second) < mOpts->covCutoff) 
-        {
-            logInfo("Purging Group " << dcg_iter->first<<" as it contains less than "<< mOpts->covCutoff <<"reads", 4);
-            
             delete dcg_iter->second;
             dcg_iter->second = NULL;
             mDR2GIDMap[dcg_iter->first] = NULL;
@@ -416,7 +472,7 @@ int WorkHorse::mungeDRs(void)
                 }
                 logInfo("-------------", 4);
             }
-
+            
         }
         dcg_iter++;
     }
@@ -429,9 +485,9 @@ int WorkHorse::mungeDRs(void)
     else 
     {
         logInfo(purge_counter<<" clusters were purged",2);
-
+        
     }
-
+    
     logInfo("Reducing list of potential DRs (3): Cluster refinement and true DR finding", 1);
     
     // go through all the counts for each group
@@ -457,7 +513,7 @@ int WorkHorse::mungeDRs(void)
                 mDR2GIDMap[group_count_iter->first] = NULL;
             }
         }
-
+        
         // delete the kmer count lists cause we're finsihed with them now
         if(NULL != group_count_iter->second)
         {
@@ -466,7 +522,7 @@ int WorkHorse::mungeDRs(void)
         }
         group_count_iter++;
     }
-
+    
     return 0;
 }
 
@@ -478,9 +534,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     
     logInfo("Parsing group: " << GID, 4);
     
-//++++++++++++++++++++++++++++++++++++++++++++++++
-// Find a Master DR for this group of DRs
-
+    //++++++++++++++++++++++++++++++++++++++++++++++++
+    // Find a Master DR for this group of DRs
+    
     // to store our DR which has all 5 kmers
     StringToken master_DR_token = -1;
     std::string master_DR_sequence = "**unset**";
@@ -523,7 +579,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         // otherwise keep searching
         dr_iter++;
     }
-
+    
     if(master_DR_token == -1)
     {
         // probably a dud. throw it out
@@ -536,12 +592,12 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     }
     
     logInfo("Identified: " << master_DR_sequence << " as a master potential DR", 4);
-
+    
     // now we have the n most abundant kmers and one DR which contains them all
     // time to rock and rrrroll!
-
-//++++++++++++++++++++++++++++++++++++++++++++++++
-// Initialise variables we'll need
+    
+    //++++++++++++++++++++++++++++++++++++++++++++++++
+    // Initialise variables we'll need
     // chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
     
@@ -588,9 +644,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         kmer_rcs_DR[i] = false;
         kmer_positions_ARRAY[i] = -1;
     }
-
-//++++++++++++++++++++++++++++++++++++++++++++++++
-// Set up the master DR's array and insert this guy into the main array
+    
+    //++++++++++++++++++++++++++++++++++++++++++++++++
+    // Set up the master DR's array and insert this guy into the main array
     
     // The offset of the start position of each potential DR 
     // when compared to the "true DR"
@@ -632,7 +688,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         // don't care about partials
         int dr_start_index = 0;
         int dr_end_index = 1;
-
+        
         // If you -1 from the master_DR_sequence.length() this loop will through an error as it will never be true
         while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(master_DR_sequence.length()) - 1))
         {
@@ -684,9 +740,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         }
         read_iter++;
     }
-//++++++++++++++++++++++++++++++++++++++++++++++++
-// now go thru all the other DRs in this group and add them into
-// the consensus array
+    //++++++++++++++++++++++++++++++++++++++++++++++++
+    // now go thru all the other DRs in this group and add them into
+    // the consensus array
     dr_iter = clustered_DRs->begin();
     while (dr_iter != clustered_DRs->end()) 
     {
@@ -750,7 +806,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                         mReads[*dr_iter] = NULL;
                         *dr_iter = st;
                     }
-
+                    
                     for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
                     {
                         isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), &((*nTopKmers)[i]), &tmp_DR);
@@ -778,7 +834,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                         }
                         positioning_kmer_index++;
                     }
-
+                    
                     if(found_kmer)
                     {
                         // note the position of this DR in the array
@@ -805,7 +861,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                             comparison_length = eff_zone_length;
                         else
                             comparison_length = eff_DR_length;
-
+                        
                         char cons_char = 'X';
                         int comp_end = zone_start_index + comparison_length;
                         double agress_with_zone = 0;
@@ -830,7 +886,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                             zone_start_index++;
                             this_DR_start_index++;
                         }
-
+                        
                         agress_with_zone /= comp_len;
                         if(agress_with_zone >= CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF)
                         {
@@ -888,7 +944,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                                 } while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (((int)(tmp_DR.length())) - 1));
                                 //}
                                 //else
-                                  //  logError("Everything is wrong (B)");
+                                //  logError("Everything is wrong (B)");
                                 read_iter++;
                             }
                         }
@@ -904,9 +960,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         }
         dr_iter++;
     }
-//++++++++++++++++++++++++++++++++++++++++++++++++
-// calculate consensus and diversity
-
+    //++++++++++++++++++++++++++++++++++++++++++++++++
+    // calculate consensus and diversity
+    
     // warning, A heavy!
     for(int j = 0; j < array_len; j++)
     {
@@ -931,7 +987,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     // trim these back a bit (if we trim too much we'll get it back right now anywho)
     dr_zone_start += CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
     dr_zone_end -= CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
-
+    
     // now use this information to find the true direct repeat
     // first work to the left
     while(dr_zone_start > 0)
@@ -958,7 +1014,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         	break;
         }
     }
-
+    
     // finally, make the true DR and check for consistency
     std::string true_DR = "";
     
@@ -967,7 +1023,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     int collapsed_pos = -1;
     std::map<char, int> collapsed_options;            // holds the chars we need to split on
     std::map<int, bool> refined_DR_ends;              // so we can update DR ends based on consensus
-
+    
     for(int i = dr_zone_start; i <= dr_zone_end; i++)
     {
         collapsed_pos++;
@@ -986,7 +1042,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             logInfo("Base:  Count:  Cov:",5);
 #endif
             float total_count = coverage_array[0][i] + coverage_array[1][i] + coverage_array[2][i] + coverage_array[3][i];
-
+            
             for(int k = 0; k < 4; k++)
             {
 #ifdef DEBUG
@@ -1075,7 +1131,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                     // If it aint in collapsed_options2 it aint super fantastic!
                     collapsed_options.clear();
                     collapsed_options = collapsed_options2;
-
+                    
                     // make the collapsed pos array specific and exit this loop
                     collapsed_pos += dr_zone_start;
                     i = dr_zone_end + 1;
@@ -1083,7 +1139,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             }
         }
     }
-
+    
     // check to make sure that the DR is not just some random long RE
     if((unsigned int)(true_DR.length()) > mOpts->highDRsize)
     {
@@ -1107,10 +1163,10 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         logInfo("Killed: {" << true_DR << "} cause' the consensus was too short...", 1);
         return false;
     }
-
-//++++++++++++++++++++++++++++++++++++++++++++++++
-// print out the consensus array 
-
+    
+    //++++++++++++++++++++++++++++++++++++++++++++++++
+    // print out the consensus array 
+    
     if(0 == collapsed_options.size())
     {
         // update the DR start and ends
@@ -1148,7 +1204,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             	if(i == dr_zone_end)
             		ss << "|,"; 
             }
-
+            
             for(int j = 0; j < 4; j++)
             {
                 ss << std::endl;
@@ -1174,10 +1230,10 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             logInfo(ss.str(), 3);
         }
     }
-
-//++++++++++++++++++++++++++++++++++++++++++++++++
-// clean up the mess we made
-
+    
+    //++++++++++++++++++++++++++++++++++++++++++++++++
+    // clean up the mess we made
+    
     delete[] consensus_array;
     delete[] conservation_array;
     for(int i = 0; i < 4; i++)
@@ -1185,9 +1241,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         delete[] coverage_array[i];
     }
     
-//++++++++++++++++++++++++++++++++++++++++++++++++
-// possibly split the DR group
-
+    //++++++++++++++++++++++++++++++++++++++++++++++++
+    // possibly split the DR group
+    
     if(collapsed_options.size() > 0)
     {
         // We need to build a bit of new infrastructure.
@@ -1205,7 +1261,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             logInfo("Mapping \""<< co_iter->first <<"\" to group: " << group, 1);
             co_iter++;
         }
-    
+        
         dr_iter = clustered_DRs->begin();
         while (dr_iter != clustered_DRs->end()) 
         {
@@ -1321,7 +1377,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                                 // next!
                                 fm_iter++;
                             }
-
+                            
                             // put the correct reads on the correct readlist
                             read_iter = mReads[*dr_iter]->begin();
                             while (read_iter != mReads[*dr_iter]->end()) 
@@ -1384,11 +1440,11 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     }
     else
     {
-//++++++++++++++++++++++++++++++++++++++++++++++++
-// repair all the startstops for each read in this group
-//
-// This function is recursive, so we'll only get here when we have found exactly one DR
-
+        //++++++++++++++++++++++++++++++++++++++++++++++++
+        // repair all the startstops for each read in this group
+        //
+        // This function is recursive, so we'll only get here when we have found exactly one DR
+        
         logInfo("Found DR: " << true_DR, 2);
         mTrueDRs[GID] = true_DR;
 		DR_ClusterIterator drc_iter = (mDR2GIDMap[GID])->begin();
@@ -1493,7 +1549,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     //-----
     // hash a DR!
     //
-
+    
     std::string DR = mStringCheck.getString(DRToken);
     int str_len = (int)DR.length();
     int off = str_len - CRASS_DEF_KMER_SIZE;
@@ -1540,7 +1596,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     //
     // the first and last part may be a little slow but the middle part can fly through...
     //
-
+    
     // make a 2d array for the kmers!
     char ** kmers = new char*[num_mers];
     for(int i = 0; i < num_mers; i++)
@@ -1553,9 +1609,9 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     {
         kmer_offsets[i] = i * -1; // Starts at [0, -1, -2, -3, -4, ...]
     }
-
+    
     int pos_counter = 0;
-
+    
     // a slow-ish first part
     while(pos_counter < CRASS_DEF_KMER_SIZE)
     {
@@ -1604,13 +1660,13 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     std::vector<std::string> homeless_kmers;
     std::map<int, int> group_count;
     std::map<std::string, int> local_kmer_CountMap;
-
+    
     int group = 0;
     for(int i = 0; i < num_mers; ++i)
     {
         // make it a string!
         kmers[i][CRASS_DEF_KMER_SIZE] = '\0';
-
+        
         std::string tmp_str(kmers[i]);
         tmp_str = laurenize(tmp_str);
         
@@ -1686,7 +1742,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
         (*(*groupKmerCountsMap)[group])[local_count_iter->first] += local_count_iter->second;
         local_count_iter++;
     }
-
+    
     // clean up
     delete [] kmer_offsets;
     for(int i = 0; i < num_mers; i++)
@@ -1757,7 +1813,10 @@ int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
         // make sure that our cluster is real
         if (drg_iter->second != NULL) 
         {
-            (mDRs[mTrueDRs[drg_iter->first]])->dumpReads((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str(), false, split);
+            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
+            {
+                (mDRs[mTrueDRs[drg_iter->first]])->dumpReads((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str(), false, split);
+            }
         }
         drg_iter++;
     }
@@ -1776,8 +1835,11 @@ int WorkHorse::dumpSpacers(void)
 	{
 		if(NULL != drg_iter->second)
 		{            
-			(mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers", false);
-		}
+			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
+            {
+                (mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers", false);
+		    }
+        }
 		drg_iter++;
 	}
 	return 0;
@@ -1814,33 +1876,36 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
 	//
 	// go through the DR2GID_map and make all reads in each group into nodes
     logInfo("Rendering debug graphs" , 1);
-
+    
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
     while(drg_iter != mDR2GIDMap.end())
     {
         if(NULL != drg_iter->second)
         {            
-            std::ofstream graph_file;
-            std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
-            std::string graph_file_name = graph_file_prefix + "_debug.gv";
-            graph_file.open(graph_file_name.c_str());
-            if (graph_file.good()) 
+            if (NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
-                mDRs[mTrueDRs[drg_iter->first]]->printDebugGraph(graph_file, mTrueDRs[drg_iter->first], false, false, false);
-#if RENDERING
-                // create a command string and call neato to make the image file
-                std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
-                if (system(cmd.c_str()))
+                std::ofstream graph_file;
+                std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
+                std::string graph_file_name = graph_file_prefix + "_debug.gv";
+                graph_file.open(graph_file_name.c_str());
+                if (graph_file.good()) 
                 {
-                    logError("Problem running neato when rendering debug graphs");
-                }
+                    mDRs[mTrueDRs[drg_iter->first]]->printDebugGraph(graph_file, mTrueDRs[drg_iter->first], false, false, false);
+#if RENDERING
+                    // create a command string and call neato to make the image file
+                    std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                    if (system(cmd.c_str()))
+                    {
+                        logError("Problem running neato when rendering debug graphs");
+                    }
 #endif
-            } 
-            else 
-            {
-                logError("Unable to create graph output file "<<graph_file_name);
+                } 
+                else 
+                {
+                    logError("Unable to create graph output file "<<graph_file_name);
+                }
+                graph_file.close();
             }
-            graph_file.close();
         }
         drg_iter++;
     }
@@ -1863,33 +1928,36 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
 	//
 	// go through the DR2GID_map and make all reads in each group into nodes
     logInfo("Rendering spacer graphs" , 1);
-
+    
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
     while(drg_iter != mDR2GIDMap.end())
     {
         if(NULL != drg_iter->second)
         {            
-            std::ofstream graph_file;
-            std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
-            std::string graph_file_name = graph_file_prefix + "_spacers.gv";
-            graph_file.open(graph_file_name.c_str());
-            if (graph_file.good()) 
+            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
-                mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription, true);
-#if RENDERING
-                // create a command string and call graphviz to make the image file
-                std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
-                if(system(cmd.c_str()))
+                std::ofstream graph_file;
+                std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
+                std::string graph_file_name = graph_file_prefix + "_spacers.gv";
+                graph_file.open(graph_file_name.c_str());
+                if (graph_file.good()) 
                 {
-                    logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
-                }
+                    mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription, true);
+#if RENDERING
+                    // create a command string and call graphviz to make the image file
+                    std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                    if(system(cmd.c_str()))
+                    {
+                        logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
+                    }
 #endif
-            } 
-            else 
-            {
-                logError("Unable to create graph output file "<<graph_file_name);
+                } 
+                else 
+                {
+                    logError("Unable to create graph output file "<<graph_file_name);
+                }
+                graph_file.close();
             }
-            graph_file.close();
         }
         drg_iter++;
     }
@@ -1917,8 +1985,11 @@ bool WorkHorse::printXML(std::string namePrefix)
 		// make sure that our cluster is real
 		if (drg_iter->second != NULL) 
 		{
-			(mDRs[mTrueDRs[drg_iter->first]])->printXML(&XML_file, drg_iter->first, false);
-		}
+			if(NULL != mDRs[mTrueDRs[drg_iter->first]])
+            {
+                (mDRs[mTrueDRs[drg_iter->first]])->printXML(&XML_file, drg_iter->first, false);
+		    }
+        }
 		drg_iter++;
 	}
 	

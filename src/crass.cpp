@@ -82,6 +82,12 @@ void usage(void)
 #else
     std::cout<<" 0"<<std::endl;
 #endif
+    std::cout<<"MEMCHECK =";
+#ifdef MEMCHECK
+    std::cout<<" 1"<<std::endl;
+#else
+    std::cout<<" 0"<<std::endl;
+#endif
     std::cout<<"ASSEMBER =";
 #ifdef PERFORM_CRASS_ASSEMBLY
     std::cout<<" 1"<<std::endl;
@@ -124,7 +130,7 @@ void usage(void)
     std::cout<< "--removeHomopolymers         Correct for homopolymer errors [default: no correction]"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"CRISPR Assembly Options:"<<std::endl;
-    std::cout<< "-f --covCutoff       <INT>   Remove groups with less than x reads [Default: "<<CRASS_DEF_COVCUTOFF<<"]"<<std::endl;
+    std::cout<< "-f --covCutoff       <INT>   Remove groups with less than x attached spacers [Default: "<<CRASS_DEF_COVCUTOFF<<"]"<<std::endl;
     std::cout<< "-k --kmerCount       <INT>   The number of the kmers that need to be"<<std::endl; 
     std::cout<< "                             shared for clustering [Default: "<<CRASS_DEF_K_CLUST_MIN<<"]"<<std::endl;
     std::cout<<std::endl;

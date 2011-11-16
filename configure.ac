@@ -2,7 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(crass, 0.0.10, c.skennerton@gmail.com)
+AC_INIT(crass, 0.0.11, c.skennerton@gmail.com)
+
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -13,7 +14,7 @@ AC_CONFIG_HEADER([config.h])
 AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
 AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
 AC_DEFINE([PACKAGE_MINOR_VERSION],[0],[Define the minor version of the package])
-AC_DEFINE([PACKAGE_REVISION],[10],[Define the revision of the package])
+AC_DEFINE([PACKAGE_REVISION],[11],[Define the revision of the package])
 
 # extra configure options
 #
@@ -33,6 +34,22 @@ AM_CONDITIONAL([DEBUG],[test x$debug = xtrue])
 
 if test x$debug = xtrue; then
     AC_DEFINE([DEBUG],[1],[define to 1 for debug statments])
+fi
+
+#VALGRIND FLAGS
+AC_ARG_ENABLE([memcheck],
+[AS_HELP_STRING([--enable-memcheck],
+[Set CFLAGS for valgrind])],
+[case "${enableval}" in
+yes) memcheck=true ;;
+no)  memcheck=false ;;
+*) AC_MSG_ERROR([bad value ${enableval} for --enable-memcheck]) ;;
+esac],[memcheck=false])
+
+AM_CONDITIONAL([MEMCHECK],[test x$memcheck = xtrue])
+
+if test x$memcheck = xtrue; then
+AC_DEFINE([MEMCHECK],[1],[define to 1 for valgrind statments])
 fi
 
 #SUPER_LOGGING
@@ -91,6 +108,10 @@ esac],[assembly=true])
 #
 
 # Checks for compilers.
+: ${CFLAGS=""}
+
+: ${CXXFLAGS=""}
+
 AC_PROG_CXX
 AC_PROG_CC
 
@@ -98,8 +119,10 @@ PERFORM_CRASS_ASSEMBLY=no
 #ASSEMBLY_WRAPPER=
 # Checks for libraries.
 if test $assembly = true; then
-    AX_XERCESC
-    if test $HAVE_LIBXERCES_C = no; then
+#AX_XERCESC
+    AX_LIB_XERCES
+#if test $HAVE_LIBXERCES_C = no; then
+if test $HAVE_XERCES = no; then
         echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
         echo "Cannot find Xerces-c library"
         echo "Your installation will not conatin"
@@ -122,8 +145,8 @@ if test $assembly = true; then
     fi
 fi
 #AC_SUBST(ASSEMBLY_WRAPPER)
-
 AM_CONDITIONAL([ASSEMBLY_WRAPPER], [test x$PERFORM_CRASS_ASSEMBLY = xyes])
+
 
 AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found])])
 # Checks for header files.
