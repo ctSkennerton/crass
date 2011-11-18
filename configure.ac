@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(crass, 0.0.11, c.skennerton@gmail.com)
+AC_INIT(crass, 0.0.12, c.skennerton@gmail.com)
 
 AM_INIT_AUTOMAKE
 
@@ -13,8 +13,8 @@ AC_CONFIG_HEADER([config.h])
 # custom defines for config.h
 AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
 AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
-AC_DEFINE([PACKAGE_MINOR_VERSION],[0],[Define the minor version of the package])
-AC_DEFINE([PACKAGE_REVISION],[11],[Define the revision of the package])
+AC_DEFINE([PACKAGE_MINOR_VERSION],[1],[Define the minor version of the package])
+AC_DEFINE([PACKAGE_REVISION],[0],[Define the revision of the package])
 
 # extra configure options
 #
@@ -78,9 +78,10 @@ AC_ARG_ENABLE([rendering],
 
 #check that graphviz is installed before defining RENDERING
 if test x$rendering = xtrue; then
-    AC_CHECK_PROGS([GV_PROGS], [neato dot circo fdp sfdp twopi], [no])
+    AC_CHECK_PROGS([GV_PROGS], [neato fdp sfdp dot circo twopi], [no])
     if test x$GV_PROGS != xno; then
         AC_DEFINE([RENDERING],[1],[Defines to 1 if image rendering is to be performed])
+        AC_DEFINE_UNQUOTED([DEFAULT_RENDERING_ALGORITHM],["${GV_PROGS}"],[Sets the Default Graphviz algorithm])
     else
         echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
         echo "None of the Graphviz executables could"
@@ -116,13 +117,10 @@ AC_PROG_CXX
 AC_PROG_CC
 
 PERFORM_CRASS_ASSEMBLY=no 
-#ASSEMBLY_WRAPPER=
 # Checks for libraries.
 if test $assembly = true; then
-#AX_XERCESC
     AX_LIB_XERCES
-#if test $HAVE_LIBXERCES_C = no; then
-if test $HAVE_XERCES = no; then
+    if test $HAVE_XERCES = no; then
         echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
         echo "Cannot find Xerces-c library"
         echo "Your installation will not conatin"
@@ -132,7 +130,6 @@ if test $HAVE_XERCES = no; then
         AC_CHECK_PROGS([ASSEMBLERS], [velvetg cap3], [no])
         if test ASSEMBLERS != no; then
             PERFORM_CRASS_ASSEMBLY=yes
-#ASSEMBLY_WRAPPER='CrassXML.$(OBJEXT) AssemblyWrapper.$(OBJEXT)'
             AC_DEFINE([PERFORM_CRASS_ASSEMBLY],[1],[Defines to 1 if your system configuration enables you to use the Crass assembler])
         else
             echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
@@ -144,7 +141,6 @@ if test $HAVE_XERCES = no; then
         fi
     fi
 fi
-#AC_SUBST(ASSEMBLY_WRAPPER)
 AM_CONDITIONAL([ASSEMBLY_WRAPPER], [test x$PERFORM_CRASS_ASSEMBLY = xyes])
 
 
@@ -164,57 +160,62 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset pow strchr strspn])
 
-# Checks for Graphviz program neato
-AC_CHECK_PROG([NEATO],[neato],[yes],[no])
-if test x$NEATO = xyes; then
-    AC_DEFINE([HAVE_NEATO],[1],[Defines to 1 if the program 'neato' is found in PATH])
-fi 
+# only perform the check if rendering
+if test x$rendering = xtrue; then
+    # Checks for Graphviz program neato
+    AC_CHECK_PROG([NEATO],[neato],[yes],[no])
+    if test x$NEATO = xyes; then
+        AC_DEFINE([HAVE_NEATO],[1],[Defines to 1 if the program 'neato' is found in PATH])
+    fi 
 
-# Checks for Graphviz program dot
-AC_CHECK_PROG([DOT],[dot],[yes],[no])
-if test x$DOT = xyes; then
-    AC_DEFINE([HAVE_DOT],[1],[Defines to 1 if the program 'dot' is found in PATH])
-fi 
+    # Checks for Graphviz program dot
+    AC_CHECK_PROG([DOT],[dot],[yes],[no])
+    if test x$DOT = xyes; then
+        AC_DEFINE([HAVE_DOT],[1],[Defines to 1 if the program 'dot' is found in PATH])
+    fi 
 
-# Checks for Graphviz program fdp
-AC_CHECK_PROG([FDP],[fdp],[yes],[no])
-if test x$FDP = xyes; then
-    AC_DEFINE([HAVE_FDP],[1],[Defines to 1 if the program 'fdp' is found in PATH])
-fi 
+    # Checks for Graphviz program fdp
+    AC_CHECK_PROG([FDP],[fdp],[yes],[no])
+    if test x$FDP = xyes; then
+        AC_DEFINE([HAVE_FDP],[1],[Defines to 1 if the program 'fdp' is found in PATH])
+    fi 
 
-# Checks for Graphviz program sfdp
-AC_CHECK_PROG([SFDP],[sfdp],[yes],[no])
-if test x$SFDP = xyes; then
-    AC_DEFINE([HAVE_SFDP],[1],[Defines to 1 if the program 'sfdp' is found in PATH])
-fi 
+    # Checks for Graphviz program sfdp
+    AC_CHECK_PROG([SFDP],[sfdp],[yes],[no])
+    if test x$SFDP = xyes; then
+        AC_DEFINE([HAVE_SFDP],[1],[Defines to 1 if the program 'sfdp' is found in PATH])
+    fi 
 
-# Checks for Graphviz program circo
-AC_CHECK_PROG([CIRCO],[circo],[yes],[no])
-if test x$CIRCO = xyes; then
-    AC_DEFINE([HAVE_CIRCO],[1],[Defines to 1 if the program 'circo' is found in PATH])
-fi 
+    # Checks for Graphviz program circo
+    AC_CHECK_PROG([CIRCO],[circo],[yes],[no])
+    if test x$CIRCO = xyes; then
+        AC_DEFINE([HAVE_CIRCO],[1],[Defines to 1 if the program 'circo' is found in PATH])
+    fi 
 
-# Checks for Graphviz program twopi
-AC_CHECK_PROG([TWOPI],[twopi],[yes],[no])
-if test x$FDP = xyes; then
-    AC_DEFINE([HAVE_TWOPI],[1],[Defines to 1 if the program 'twopi' is found in PATH])
-fi 
+    # Checks for Graphviz program twopi
+    AC_CHECK_PROG([TWOPI],[twopi],[yes],[no])
+    if test x$FDP = xyes; then
+        AC_DEFINE([HAVE_TWOPI],[1],[Defines to 1 if the program 'twopi' is found in PATH])
+    fi 
+fi
 
 
-# Checks for Cap3 assembler
-AC_CHECK_PROG([CAP],[cap3],[yes],[no])
-if test x$CAP = xyes; then
-    AC_DEFINE([HAVE_CAP3],[1],[Defines to 1 if the program 'cap3' is found in PATH])
-fi 
+if test $PERFORM_CRASS_ASSEMBLY = yes; then
+    # Checks for Cap3 assembler
+    AC_CHECK_PROG([CAP],[cap3],[yes],[no])
+    if test x$CAP = xyes; then
+        AC_DEFINE([HAVE_CAP3],[1],[Defines to 1 if the program 'cap3' is found in PATH])
+    fi 
 
-# Checks for both executables for velvet
-AC_CHECK_PROG([VELVET_G],[velvetg],[yes],[no])
-AC_CHECK_PROG([VELVET_H],[velveth],[yes],[no])
+    # Checks for both executables for velvet
+    AC_CHECK_PROG([VELVET_G],[velvetg],[yes],[no])
+    AC_CHECK_PROG([VELVET_H],[velveth],[yes],[no])
 
-if test x$VELVET_G = xyes; then
-    if test x$VELVET_H = xyes; then
-        AC_DEFINE([HAVE_VELVET],[1],[Defines to 1 if the program 'velvetg' and 'velveth' is found in PATH])
-    fi
-fi 
+    if test x$VELVET_G = xyes; then
+        if test x$VELVET_H = xyes; then
+            AC_DEFINE([HAVE_VELVET],[1],[Defines to 1 if the program 'velvetg' and 'velveth' is found in PATH])
+        fi
+    fi 
+fi
 
 AC_OUTPUT(Makefile src/Makefile man/Makefile)

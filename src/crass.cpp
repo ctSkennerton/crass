@@ -464,7 +464,12 @@ int main(int argc, char *argv[])
         CRASS_DEF_HOMOPOLYMER_SCALLING,         // average spacer scalling
         CRASS_DEF_HOMOPOLYMER_SCALLING,         // average direct repeat scalling
         false,                                  // perform scalling by default
+
+#ifdef RENDERING
+        DEFAULT_RENDERING_ALGORITHM,
+#else
         "dot",                                  // use dot as the default layout algorithm for rendering
+#endif
         false,                                  // do not use a long description for the nodes of the spacer graph
         CRASS_DEF_COVCUTOFF                     // Groups with less than 10 reads will be purged
     };

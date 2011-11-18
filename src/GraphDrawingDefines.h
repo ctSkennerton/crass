@@ -47,7 +47,7 @@
 
 #define CRASS_DEF_DEFAULT_SUB_GRAPH_TYPE 		"subgraph"           // the default type of graphviz graph to generate
 #define CRASS_DEF_GV_SPA_EDGE_LENGTH                2                   // length of arrows for edges in images
-#define CRASS_DEF_GV_SPA_SHAPE                 "rectangle"            // shape of nodes
+#define CRASS_DEF_GV_SPA_SHAPE                 "circle"            // shape of nodes
 #define CRASS_DEF_GV_SPA_PREFIX                 "sp_"               // prefix used when naming spacers for the image
 
 // --------------------------------------------------------------------

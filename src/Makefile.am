@@ -1,4 +1,4 @@
-AM_CXXFLAGS = -Werror -pedantic -Wall -g
+AM_CXXFLAGS = -Werror -pedantic -Wall
 
 AM_LDFLAGS = @XERCES_LDFLAGS@
 if ASSEMBLY_WRAPPER

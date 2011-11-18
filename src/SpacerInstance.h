@@ -47,8 +47,24 @@
 #include "CrisprNode.h"
 #include "StringCheck.h"
 
+class SpacerInstance;
 // we hash together string tokens to make a unique key for each spacer
 typedef unsigned int SpacerKey;
+
+enum SI_EdgeDirection {
+    REVERSE = 0,
+    FORWARD = 1
+};
+
+typedef struct{ 
+    SpacerInstance * edge; 
+    SI_EdgeDirection d; 
+} spacerEdgeStruct;
+typedef std::vector<SpacerInstance * > SpacerInstanceVector;
+typedef std::vector<SpacerInstance * >::iterator SpacerInstanceVector_Iterator;
+
+typedef std::vector<spacerEdgeStruct *> SpacerEdgeVector;
+typedef std::vector<spacerEdgeStruct *>::iterator SpacerEdgeVector_Iterator;
 
 inline SpacerKey makeSpacerKey(StringToken backST, StringToken frontST)
 {
@@ -63,20 +79,22 @@ inline SpacerKey makeSpacerKey(StringToken backST, StringToken frontST)
 }
 
 class SpacerInstance {
-    public:
+
+    
+public:
         SpacerInstance (void) {
             SI_SpacerSeqID = 0;
             SI_LeadingNode = NULL;
             SI_LastNode = NULL;
             SI_InstanceCount = 0;
-            mSpacerRank = 0;
-            mContigID = 0;
-            mAttached = false;
+            SI_SpacerRank = 0;
+            SI_ContigID = 0;
+            SI_Attached = false;
         }
         
         SpacerInstance (StringToken spacerID);
         SpacerInstance (StringToken spacerID, CrisprNode * leadingNode, CrisprNode * lastNode);
-        ~SpacerInstance () {}
+        ~SpacerInstance () {clearEdge();}
         
         //
         // get / set
@@ -86,25 +104,36 @@ class SpacerInstance {
         inline StringToken getID(void) { return SI_SpacerSeqID; }
         inline CrisprNode * getLeader(void) { return SI_LeadingNode; }
         inline CrisprNode * getLast(void) { return SI_LastNode; }
-        inline bool isAttached(void) { return mAttached; }
-        inline void setAttached(bool attached) { mAttached = attached; }
+        inline bool isAttached(void) { return SI_Attached; }
+        inline void setAttached(bool attached) { SI_Attached = attached; }
+        inline SpacerEdgeVector * getEdges(void) {return &SI_SpacerEdges;}
         
         //
         // contig functions
         //
-        inline int getContigID(void) { return mContigID; }
-        inline void setContigID(int CID) { mContigID = CID; }
-        inline int getSpacerRank(void) { return mSpacerRank; }
-        inline void setSpacerRank(int rank) { mSpacerRank = rank; }
+        inline int getContigID(void) { return SI_ContigID; }
+        inline void setContigID(int CID) { SI_ContigID = CID; }
+        inline int getSpacerRank(void) { return SI_SpacerRank; }
+        inline void setSpacerRank(int rank) { SI_SpacerRank = rank; }
+    
+        //
+        // edge functions/iterators
+        //
+        inline void addEdge(spacerEdgeStruct * s){SI_SpacerEdges.push_back(s);}
+    void clearEdge(void);
+        SpacerEdgeVector_Iterator begin(void) {return SI_SpacerEdges.begin();}
+        SpacerEdgeVector_Iterator end(void) {return SI_SpacerEdges.end();}
+
         
     private:
         StringToken SI_SpacerSeqID;               // the StringToken of this spacer
         CrisprNode * SI_LeadingNode;              // the first node of this spacer
         CrisprNode * SI_LastNode;                 // the last node
         unsigned int SI_InstanceCount;            // the number of times this exact instance has been seen
-        bool mAttached;							  // is this spacer attached?
-        int mSpacerRank;						  // how many spacers come off this guy?
-        int mContigID;							  // contig ID
+        bool SI_Attached;							  // is this spacer attached?
+        int SI_SpacerRank;						  // how many spacers come off this guy?
+        int SI_ContigID;							  // contig ID
+        SpacerEdgeVector SI_SpacerEdges;              // Pointers to the spacers that come off this spacer
 };
 
 

@@ -50,9 +50,9 @@ SpacerInstance::SpacerInstance(StringToken spacerID)
     SI_LeadingNode = NULL;
     SI_LastNode = NULL;
     SI_InstanceCount = 0;
-    mSpacerRank = 0;
-    mContigID = 0;
-    mAttached = false;
+    SI_SpacerRank = 0;
+    SI_ContigID = 0;
+    SI_Attached = false;
 }
 
 SpacerInstance::SpacerInstance(StringToken spacerID, CrisprNode * leadingNode, CrisprNode * lastNode)
@@ -61,9 +61,23 @@ SpacerInstance::SpacerInstance(StringToken spacerID, CrisprNode * leadingNode, C
     SI_LeadingNode = leadingNode;
     SI_LastNode = lastNode;
     SI_InstanceCount  = 1;
-    mSpacerRank = 0;
-    mContigID = 0;
-    mAttached = false;
+    SI_SpacerRank = 0;
+    SI_ContigID = 0;
+    SI_Attached = false;
+}
+
+void SpacerInstance::clearEdge(void)
+{
+    SpacerEdgeVector_Iterator iter = SI_SpacerEdges.begin();
+    while (iter != SI_SpacerEdges.end()) 
+    {
+        if (*iter != NULL) 
+        {
+            delete *iter;
+            *iter = NULL;
+        }
+        iter++;
+    }
 }
 
 

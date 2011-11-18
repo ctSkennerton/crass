@@ -116,12 +116,12 @@ class NodeManager {
 
 		bool addReadHolder(ReadHolder * RH);
 
-        NodeListIterator nodeBegin(void) { return mNodes.begin(); } 
-        NodeListIterator nodeEnd(void) { return mNodes.end(); }
+        NodeListIterator nodeBegin(void) { return NM_Nodes.begin(); } 
+        NodeListIterator nodeEnd(void) { return NM_Nodes.end(); }
         
     // get / set
     
-        inline StringCheck * getStringCheck(void) { return &mStringCheck; }
+        inline StringCheck * getStringCheck(void) { return &NM_StringCheck; }
 		void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
 		void findAllNodes(NodeVector * allNodes);
 		void findAllNodes(NodeVector * capNodes, NodeVector * otherNodes);
@@ -139,7 +139,8 @@ class NodeManager {
         void clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType);
     
     // Contigs
-        int splitIntoContigs(void);
+    void findSpacerForContig(SpacerInstanceVector * sv, int contigID);
+    int splitIntoContigs(void);
 		void findAllForwardAttachedNodes(NodeVector * nodes);
 		void setSpacerRanks(void);
         void clearContigs(void);
@@ -155,6 +156,8 @@ class NodeManager {
         void printDebugGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc);         // Print a graphviz style graph of the DRs and spacers
 		void printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc); 
         void printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc, bool showKey);         // Print a graphviz style graph of the FULL spacers
+        void printSpacerGraph(void);         // Print a graphviz style graph of the FULL spacers
+    
         void printSpacerKey(std::ostream &dataOut, int numSteps, int clusterNumber);         													// make a key for the spacer graph 	
         void dumpReads(std::string readsFileName, bool showDetached, bool split);												// dump reads to this file
         void printXML(std::ofstream * XMLFile, int GID, bool showDetached);						// print this node managers portion of the XML file 
@@ -172,16 +175,16 @@ class NodeManager {
         void setUpperAndLowerCoverage(void);
      
     // members
-        std::string mDirectRepeatSequence;  				// the sequence of this managers direct repeat
-        NodeList mNodes;                    				// list of CrisprNodes this manager manages
-        SpacerList mSpacers;                				// list of all the spacers
-        ReadList mReadList;                 				// list of readholders
-        StringCheck mStringCheck;           				// string check object for unique strings 
-        Rainbow mDebugRainbow;              				// the Rainbow class for making colours
-        Rainbow mSpacerRainbow;      				        // the Rainbow class for making colours
-        const options * mOpts;              				// pointer to the user options structure
-        int mNextContigID;									// next free contig ID (doubles as a counter)
-        ContigList mContigs; 								// our contigs
+        std::string NM_DirectRepeatSequence;  				// the sequence of this managers direct repeat
+        NodeList NM_Nodes;                    				// list of CrisprNodes this manager manages
+        SpacerList NM_Spacers;                				// list of all the spacers
+        ReadList NM_ReadList;                 				// list of readholders
+        StringCheck NM_StringCheck;           				// string check object for unique strings 
+        Rainbow NM_DebugRainbow;              				// the Rainbow class for making colours
+        Rainbow NM_SpacerRainbow;      				        // the Rainbow class for making colours
+        const options * NM_Opts;              				// pointer to the user options structure
+        int NM_NextContigID;									// next free contig ID (doubles as a counter)
+        ContigList NM_Contigs; 								// our contigs
 };
 
 
