@@ -64,13 +64,22 @@
 %%% The "real" document content comes below...
 
 \title{Crass:  The CRISPR assembler}
-\author{Connor Skennerton and Micheal Imelfort}
-%\date{} % Activate to display a given date or no date (if empty),
+\author{Connor Skennerton and Michael Imelfort}
+\date{18th November 2011} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
 \maketitle
 \tableofcontents
+\section{Quick Start}
+\begin{lstlisting}[basicstyle=\footnotesize]
+$ ./configure
+$ make
+$ make install
+
+$ ./crass [options] input_file{1, n}
+$ ./crass assemble [velvet|cap3] -i PATH -g INT -x xx.crispr -s INT[,INT] [options]
+\end{lstlisting}
 \section{Installation}
 Crass has been developed with the GNU build system for maximum compatibility across platforms.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
 \subsection{Prerequisites}
@@ -84,10 +93,10 @@ There are a number of optional features of Crass that require additional softwar
 
 \subsection{Compiling}
 On a GNU system simply:
-\begin{lstlisting}
-  ./configure
-  make
-  [sudo] make install
+\begin{lstlisting}[basicstyle=\footnotesize]
+$  ./configure
+$  make
+$  [sudo] make install
 \end{lstlisting}
 
 \subsubsection{Configure/Compiling Options}
@@ -98,20 +107,23 @@ Crass supports a number of compile-time options as well as the common options:
     \hline
     Option & Definition \\  \hline\hline
     enable-debug &   Setting this option will define the HAVE\_DEBUG preprocessor symbol.  When set it will change the scale of the log level from 1 - 4 to 1 - 10.  Note that when setting the log level above 4, Crass will print alot of information to the log file that is only nessessary when debugging the program.  Extra stages of Crass will also be performed such as printing debug graphs and the -ggdb CPPFLAG will be set.  Crass will probably run slower with enable-debug even if the log level is set low due to the extra operations that Crass performs.\\ \\
-    enable-rendering &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\ 
+   enable-verbose\_logging & This option is different from enable-debug as it changes what information is printed in the log statments.  enabling verbose logging will add the source file name, the function name and the line number for every log statement. \\ \\    
+enable-rendering &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\  \\
+   disable-assembly & Disables the assembly wrapper even if the Xerces library and suitable genome assemblers can be found.  Disabling the assembly wrapper willl change which souce files are compiled and as a result reduce the size of the executable. \\ 
+
     \hline
     \end{longtable}
 
 \section{Running Instructions}
 Crass has two separate commands for finding and for assembling CRISPRs:
- \begin{lstlisting}
- ./crass [options] input_file
- ./crass assemble assembler -g Group/CRISPR -x crass.crispr -s segments
+ \begin{lstlisting}[basicstyle=\footnotesize]
+$ ./crass [options] input_file
+$ ./crass assemble ASSEMBLER -i PATH -g INT -x xx.crispr -s INT[,INT] [options]
 \end{lstlisting}
 \subsection{Finding CRISPRs}
 Once installed the most minimal comand is 
-\begin{lstlisting}
-  ./crass input_file
+\begin{lstlisting}[basicstyle=\footnotesize]
+$  ./crass input_file
 \end{lstlisting}
 which leaves all of the user options at their default values.
 
@@ -123,21 +135,21 @@ Most of the basic options control the output style, for example the colours of t
     \begin{longtable}{  l   p{10cm} }
     \hline
     Option & Definition \\  \hline\hline
-    -a  --layoutAlgorithm &   When enable-rendering is set and you have Graphviz installed this option will become available and allow you to change the Graphviz layout engine.  The full range of layout engines is: neato, dot, fdp, sfdp, twopi, circo \\ \\
--c --graphColour & Changes the colour range for the output spacer graph.  There are four colour scales: red-blue, blue-red, green-red-blue, red-blue-green with the default being red-blue\\ \\
--d --minDR & The lower bound considered acceptable for the size of a direct repeat.  The default is 23bp\\ \\
--D --maxDR & The upper bound considered acceptable for the size of a direct repeat. The default is 47bp\\ \\
--f --covCutoff & This variable sets the minimum number of reads allowed for a putative CRISPR to be considered real and for the assembly to be attempted.  The default is 10 reads \\ \\
--h --help & Print the basic usage and version information. \\ \\
+    -a  -{}-layoutAlgorithm &   When enable-rendering is set and you have Graphviz installed this option will become available and allow you to change the Graphviz layout engine.  The full range of layout engines is: neato, dot, fdp, sfdp, twopi, circo \\ \\
+-c -{}-graphColour & Changes the colour range for the output spacer graph.  There are four colour scales: red-blue, blue-red, green-red-blue, red-blue-green with the default being red-blue\\ \\
+-d -{}-minDR & The lower bound considered acceptable for the size of a direct repeat.  The default is 23bp\\ \\
+-D -{}-maxDR & The upper bound considered acceptable for the size of a direct repeat. The default is 47bp\\ \\
+-f -{}-covCutoff & This variable sets the minimum number of spacers allowed for a putative CRISPR to be considered real and for the assembly to be attempted.  The default is 3  \\ \\
+-h -{}-help & Print the basic usage and version information. \\ \\
 
--l --logLevel & Sets the verbosity of the log file.  Under most circumstances the log level cannot go higher than 4, unless the enable-debug option is set during configuration, which will increase the maximum value to 10.  Note that above a level of 4 alot of the information will not be understandable to the user as most of these messages are specifically for us, the developers to track down bugs.  \\ \\
--L --longDescription & This changes  the names of the nodes in the spacer graph to include the sequence of the spacer.  The default is to just use the spacer ID\\ \\
---logToScreen & Does not produce a log file but instead prints the contents to screen.\\ \\
+-l -{}-logLevel & Sets the verbosity of the log file.  Under most circumstances the log level cannot go higher than 4, unless the enable-debug option is set during configuration, which will increase the maximum value to 10.  Note that above a level of 4 alot of the information will not be understandable to the user as most of these messages are specifically for us, the developers to track down bugs.  \\ \\
+-L -{}-longDescription & This changes  the names of the nodes in the spacer graph to include the sequence of the spacer.  The default is to just use the spacer ID\\ \\
+-{}-logToScreen & Does not produce a log file but instead prints the contents to screen.\\ \\
 
--o --outDir & Sets the output directory for files produced by Crass.  The default is the current directory\\ \\
--s --minSpacer & The lower bound considered acceptable for the size of a spacer sequence. Default is 26bp.\\ \\
--S --maxSpacer & The upper bound considered acceptable for the size of a spacer sequence. Default is 50bp.\\ \\
--V --version & Preints out program version information. \\
+-o -{}-outDir & Sets the output directory for files produced by Crass.  The default is the current directory\\ \\
+-s -{}-minSpacer & The lower bound considered acceptable for the size of a spacer sequence. Default is 26bp.\\ \\
+-S -{}-maxSpacer & The upper bound considered acceptable for the size of a spacer sequence. Default is 50bp.\\ \\
+-V -{}-version & Preints out program version information. \\
     \hline
  \end{longtable}
 \paragraph{Advanced Options}
@@ -145,12 +157,14 @@ Crass also contains a number of options for fine tunning various parts of the un
     \begin{longtable}{  l   p{10cm} }
     \hline
     Option & Definition \\  \hline\hline 
--b --numBins &  sets the number of colour bins used in the output spacer graph for visualising the coverage of spacers in a dataset.  By default the number of bins is equal to the range of the highest and lowest coverage for a CRISPR \\ \\
--k --kmerCount & Sets the number of kmers that need to be shared between putative direct repeats for them to be clustered together after the find stage.  Clustered direct repeats are eventually concatenated to form a 'true' direct repeat for a CRISPR; putative repeats that cannot be clustered are removed from consideration.  Change this variable if you feel that the clustering is too stringent and is breaking appart one CRISPR into multiple types.  The default number of kmers is 12, however the value should not be set below 6 as this would not be stringent enough\\ \\
--n --minNumRepeats & Changes the minimum number of repeated seed sequences needed in the long read search algorithm. The default is 3.\\ \\
--w --windowLength & When using the long read search algorithm, changes the window length for finding seed sequences; can be set between 6 - 9bp.  The default value is 8bp.\\ \\ 
--x --spacerScalling & Overide the default scalling of the spacer bounds (-s -S) set by --removeHomopolymers.  The default is 0.7, i.e. the size of the spacer bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.   \\ \\
--y --repeatScalling & Overide the default scalling of the direct repeat bounds (-d -D) set by --removeHomopolymers.  The default is 0.7, i.e. the size of the direct repeat bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.\\   
+-b -{}-numBins &  sets the number of colour bins used in the output spacer graph for visualising the coverage of spacers in a dataset.  By default the number of bins is equal to the range of the highest and lowest coverage for a CRISPR \\ \\
+-k -{}-kmerCount & Sets the number of kmers that need to be shared between putative direct repeats for them to be clustered together after the find stage.  Clustered direct repeats are eventually concatenated to form a 'true' direct repeat for a CRISPR; putative repeats that cannot be clustered are removed from consideration.  Change this variable if you feel that the clustering is too stringent and is breaking appart one CRISPR into multiple types.  The default number of kmers is 12, however the value should not be set below 6 as this would not be stringent enough\\ \\
+-n -{}-minNumRepeats & Changes the minimum number of repeated seed sequences needed in the long read search algorithm. The default is 3.\\ \\
+-{}-noScalling & This turns off the effects of (-x or -y) so that the bounds of the direct repeat and spacer (-d -D -s -S) given on the command line are interpreted literally when the -{}-removeHomopolymers option is set. \\ \\
+-{}-removeHomopolymers & This is an experimental feature of Crass where the search algorithms attempt to correct for homopolymer errors in reads.\\ \\ 
+-w -{}-windowLength & When using the long read search algorithm, changes the window length for finding seed sequences; can be set between 6 - 9bp.  The default value is 8bp.\\ \\ 
+-x -{}-spacerScalling & Overide the default scalling of the spacer bounds (-s -S) set by --removeHomopolymers.  The default is 0.7, i.e. the size of the spacer bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.   \\ \\
+-y -{}-repeatScalling & Overide the default scalling of the direct repeat bounds (-d -D) set by --removeHomopolymers.  The default is 0.7, i.e. the size of the direct repeat bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.\\ 
 \hline
     \end{longtable}
 \subsubsection{Output From Crass}
@@ -159,12 +173,12 @@ Once the CRISPR finder is done there will be a number of output output files.  F
 The graph file is important for you to visualise all of the spacer arrangments in your CRISPRs.  If your input was a metagenomic sample then it is likely that there will be multiple arrangments of spacers.  Each individual section will be numbered and this numbering is important to the Crass assembler.   
 \subsection{Assembling CRISPRs}
 CRISPRs from metagenomic data can/will have many spacer arrangements.  This makes them difficult for a regular genome assembler to resolve as they look for a single route through the graph.   The Crass assembler is a wrapper for other popular genome assemblers; currently there are wrappers for Velvet and Cap3.  I premise is that you, the user will look at the output from Crass to determine which of the paths to take through the spacer graph, which are listed as different 'contigs'. To perform the assembly you need to tell Crass the group number of the CRISPR from the finder stage (this will be in the file name), the .crispr file from Crass and the a comma separated list of the segments/contigs IDs for your group of interest.  The most minimal command is shown below: 
- \begin{lstlisting}
- ./crass assemble assembler -g Group -x crass.crispr -s segments
+ \begin{lstlisting}[basicstyle=\footnotesize]
+$ ./crass assemble ASSEMBLER -i PATH -g INT -x xx.crispr -s INT[,INT] [options]
 \end{lstlisting}
  If for example you run Crass of a metagenome and get 5 groups and you want to assemble contigs 1, 2, 5, 6, 10 from group 3 using velvet
- \begin{lstlisting}
- ./crass assemble velvet -g 3 -x crass.crispr -s 1,2,5,6,10
+ \begin{lstlisting}[basicstyle=\footnotesize]
+$ ./crass assemble velvet -g 3 -x crass.crispr -s 1,2,5,6,10
 \end{lstlisting}
 
 This will extract all of the reads that contain spacers from those contigs and use them as input to velvet which will do the assembly in the backgroud.  This is a 'dumb' process in the sense that if you provide contig IDs for multiple pathways the assembler will still try and succeed but this will undoubtibly cause breaks. 
@@ -172,7 +186,22 @@ This will extract all of the reads that contain spacers from those contigs and u
 \section{File Formats}
 \label{sec:Fileformats}
 \subsection{The CRISPR File (.crispr)}
+The .crispr file is an XML format to describe all aspects of a CRISPR loci.  The bulk of the file specification will not be discussed in this manual, however the basics will be talked about to give you some idea of what it is and how Crass uses it.
+\subsubsection{The Crass Assembler}
+\subsubsection{Specification Overview}
+\paragraph{The Metadata Section}
+\paragraph{The Assembly Section}
 
 \section{Practical Considerations}
-
+Crass has been designed primarily with use of Illumina data, however there is nothing stopping you from using it of data produced by other sequencing technologies such as 454, Sanger or Ion Torrent.  There are a few practical considerations when dealing with other data types.
+\subsection{Read Type and Quality}
+ Crass relies on exact string searching algorithms to find direct repeats in reads, which means that reads that are low quality will not produce good results.  Crass does contain a number of heuestic algorithms which try to overcome certain types of sequencing errors such as mismatches, although homopolymers require special attention (see below).  Although Crass can read fastq files it currently does not utilise quality data.  This is partly due to the inacuracy of quality scores of Illumina data, which was the original data that Crass was developed to process. 
+\subsubsection{Illumina Quality Scores}
+The quality scores in Illumina fastq files are VERY misleading.  In general low quality does not equal bad bases that would mismatch to a reference if one existed.  Because of this trimming Illumina data is not recomended and since Illumina data is already at the lower end of read lengths that Crass can process, your probably better off sticking in the raw dataset.
+\subsubsection{Sanger Data}
+Crass does work for Sanger data and should give good results due to the long read length and high quality.  Unlinke Illumina data it is advised that you quality trim the data to at least Q20.  The reason is one primarily of speed of execution time as longer reads will take longer to process.
+\subsubsection{Homopolymers}
+Due to the underlying algorithms used in Crass, homopolymers pose a real challenge when finding direct repeats.  To try and overcome this the -{}-removehomopolymers option tells Crass to correct these types of errors using a run-length encoding algorithm.  Basically all homopolymers are removed from the read as a preprocessing step and the 'squeezed' read is then used for direct repeat finding.  This feature is EXPERIMENTAL and at this stage does not provide optimal results.  The main issue is the rate of false positive matches is drastically increased when correcting for homopolymers so it is up to you whether you want to shift through the dud matches at the end to get out the CRISPRs that you want.  
+\subsection{Assembling}
+The Crass assembler is a simple wrapper for other genome assembly algorithms.  Currently there are only two wrappers available: cap3 and velvet.  The choice of assembler should be governed by the input data so for example if Crass was processing Sanger data, it would make more sense to use cap3 as the assembler.  This isn't to say that you shouldn't experiment with different assemblers to see what's best with your data.  Finally if you want to add a new wrapper to the list just send in a bug report.
 \end{document}

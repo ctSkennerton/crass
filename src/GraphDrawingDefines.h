@@ -108,6 +108,10 @@
     stream<<"\t"<<CRASS_DEF_DEFAULT_SUB_GRAPH_TYPE<<" cluster_"<<cLUSTERnUMBER<<"\t{\n\t\t\"KEY\" [ fillcolor = \"white\" shape = \"record\" label =<<table border=\"0\" cellborder=\"0\" cellpadding=\"0\" bgcolor=\"white\"><tr><td>KEY</td></tr>";\
 }
 
+#define gvKeyGroupHeader(stream, cLUSTERnUMBER, gROUPnAME){ \
+stream<<"\t"<<CRASS_DEF_DEFAULT_SUB_GRAPH_TYPE<<" cluster_"<<cLUSTERnUMBER<<"\t{\n\t\t\""<<gROUPnAME<<"\" [ fillcolor = \"white\" shape = \"record\" label =<<table border=\"0\" cellborder=\"0\" cellpadding=\"0\" bgcolor=\"white\"><tr><td>"<<gROUPnAME<<"</td></tr>";\
+}
+
 #define gvKeyEntry(stream, lABEL, cOLOUR){ \
     stream<<"<tr><td bgcolor=\"#" << cOLOUR << "\" align=\"center\" colspan=\"2\"><font color=\"white\">"<< lABEL <<"</font></td></tr>";\
 }

@@ -68,7 +68,6 @@ then reads containing direct repeats are then outputed for further analysis.
 .Op Fl y Ar REAL
 .Op Fl D Ar INT
 .Op Fl S Ar INT
-.Op Fl "-dumpReads"
 .Op Fl "-removeHomopolymers"
 .Op Fl "-logToScreen"
 
@@ -92,8 +91,6 @@ Three tone colouring with low coverage spacers in blue and high coverage spacers
 The minimim length of the direct repeat to search for [Default: 23] 
 .It Fl D Ar INT Fl "\^\-maxDR" Ar INT             
 The Maximum length of the direct repeat to search for [Default: 47] 
-.It Fl "\^\-dumpReads" Ar ""
-Prints all of the reads to file after the search is completed
 .It Fl f Ar INT  Fl "\^\-covCutoff" Ar INT           
 Defines the minimim number of reads that a putative CRISPR must contain to be considered real. [Default: 10]
 .It Fl h Ar ""  Fl "\^\-help" Ar ""           
@@ -124,6 +121,44 @@ The length of the window size for searching a genome.  Must be between 6 - 9 [De
 A decimal number that represents the reduction in size of the spacer when the --removeHomopolymers option is set [Default: 0.7]
 .It Fl y Ar REAL Fl "\^\-repeatScalling" Ar REAL
 A decimal number that represents the reduction in size of the direct repeat when the --removeHomopolymers option is set [Default: 0.7]
+
+.It  
+.Nm
+assemble
+ASSEMBLER
+.Op Fl hV
+.Op Fl o Ar PATH
+.Op Fl l Ar INT
+.Fl i Ar PATH
+.Fl g Ar INT
+.Fl x Ar PATH
+.Fl s Ar INT[,INT]
+.Pp 
+where ASSEMBLER is one of the following if they are installed:
+.Pp
+velvet
+cap3
+
+.It Fl g Ar INT Fl "\^\-group" Ar INT            
+The group number of the CRISPR that you want to assemble
+.It Fl h Ar ""  Fl "\^\-help" Ar ""           
+Output basic usage informtion to screen
+.It Fl i Ar PATH  Fl "\^\-inDir" Ar PATH          
+The name of the input directory
+.\".It Fl l Ar INT Fl "\^\-logLevel" Ar INT
+.\"The level of verbosity to ouput in the
+.\".Nm 
+.\"log file 
+.\".It Fl "-logToScreen" Ar ""
+.\"Print all logging information to stdout rather than a file
+.It Fl o Ar PATH  Fl "\^\-outDir" Ar PATH          
+The name of the output directory [Default: inDir]
+.It Fl s Ar INT[,INT] Fl "\^\-segments" Ar INT[,INT]
+A comma separated list of numbered segments to assemble from the specified group
+.It Fl V   Ar ""  Fl "\^\-version" Ar ""        
+Print version and copy right information
+.It Fl x Ar FILE Fl "\^\-xml" Ar FILE
+The .crispr xml output file created by crass
 .El
 
 
@@ -145,12 +180,30 @@ Fasta file of all reads from a cluster created when the --dumpReads option is se
 .El                      
 .Sh DIAGNOSTICS       \" May not be needed
 .Ex -std 
-.\" .Bl -diag
-.\" .It Diagnostic Tag
-.\" Diagnostic informtion here.
-.\" .It Diagnostic Tag
-.\" Diagnostic informtion here.
-.\" .El
+.Bl -diag
+.It 1
+Error in command line processing.
+.It 2
+Parsing the input files failed.
+.It 3
+Graph Building Failed.
+.It 4
+Failure when rendering the debug graphs
+.It 5
+Failure when cleaning the graphs
+.It 6
+Error when the contigs are being made from the spacer graphs
+.It 7
+Failure when removing low coverage graphs
+.It 8
+Error when writing the spacer dictionary to file
+.It 9
+Error when writing the reads for each CRISPR
+.It 10
+Error when rendering the cleaned degub graphs
+.It 11
+Failure to write the final spacer graphs
+.El
 .Sh SEE ALSO 
 .Xr grep 1  
 .\".Xr c 1 ,

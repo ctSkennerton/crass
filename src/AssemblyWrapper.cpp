@@ -58,6 +58,16 @@
 
 KSEQ_INIT(gzFile, gzread)
 
+void assemblyVersionInfo(void) 
+{
+    std::cout<<std::endl<<PACKAGE_FULL_NAME<<" ("<<PACKAGE_NAME<<")"<<std::endl<<"version "<<PACKAGE_MAJOR_VERSION<<" subversion "<<PACKAGE_MINOR_VERSION<<" revison "<<PACKAGE_REVISION<<" ("<<PACKAGE_VERSION<<")"<<std::endl<<std::endl;
+    std::cout<<"---------------------------------------------------------------"<<std::endl;
+    std::cout<<"Copyright (C) 2011 Connor Skennerton & Michael Imelfort"<<std::endl;
+    std::cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<std::endl;
+    std::cout<<"This is free software, and you are welcome to redistribute it"<<std::endl;
+    std::cout<<"under certain conditions: See the source for more details"<<std::endl;
+    std::cout<<"---------------------------------------------------------------"<<std::endl;
+}
 
 void assemblyUsage(void)
 {
@@ -72,16 +82,20 @@ void assemblyUsage(void)
 #endif
     std::cout<<std::endl;
     std::cout<< "-h --help                    This help message"<<std::endl;
-    std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_LOGGING<<"]"<<std::endl;
     std::cout<< "-V --version                 Program and version information"<<std::endl;
+#if 0
+    std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_LOGGING<<"]"<<std::endl;
     std::cout<< "--logToScreen                Print the logging information to screen rather than a file"<<std::endl;
+#endif
     std::cout<< "-g --group           <INT>   ID of the group that you want to assemble"<<std::endl;
     std::cout<< "-s --segments        <LIST>  A comma separated list of numbered segments to assemble from the specified group"<<std::endl;
     std::cout<< "-x --xml             <FILE>  xml output file created by crass"<<std::endl;
     std::cout<< "-i --inDir           <DIR>   input directory for the assembly [default: .]"<<std::endl;    
+#if 0
     std::cout<< "-p --pairedEnd               Set if you want paired end assembly.  The crass assembler will check for unmatched"<<std::endl;
     std::cout<<"                              pairs and add them into the input file."<<std::endl;
     std::cout<< "-I --insertSize      <INT>   size of the insert for paired end assembly"<<std::endl;
+#endif
     std::cout<< "-o --outDir          <DIR>   name of the directory for the assembly output files"<<std::endl;
 
 
@@ -246,6 +260,8 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
                 }
                 case 'V':
                 {
+                    assemblyVersionInfo();
+                    exit(1);
                     break;
                 }
                 case 'x':
@@ -304,6 +320,24 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
                 }
             }
         }
+        // make sure that the required flags are set
+        if (opts.xmlFileName.empty()) 
+        {
+            throw (std::runtime_error("You must specify an xml file with -x"));
+        }
+        if (!(opts.group)) 
+        {
+            throw (std::runtime_error("You must specify a group number with -g"));
+        }
+        if (opts.segments.empty()) 
+        {
+            throw (std::runtime_error("You must specify a list of contigs with -s"));
+        }
+        if (opts.inputDirName.empty()) 
+        {
+            throw (std::runtime_error("You must specify an input directory with -i"));
+        }
+
     } 
     catch (std::exception& e) 
     {
@@ -311,6 +345,7 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
         exit(1);
     }
 
+    
     return optind;
 }
 
@@ -388,7 +423,7 @@ void generateTmpAssemblyFile(std::string fileName, std::set<std::string>& wanted
 }
 
 
-void velvetWrapper( int hashLength, assemblyOptions& opts, std::string& tmpFileName)
+int velvetWrapper( int hashLength, assemblyOptions& opts, std::string& tmpFileName)
 {
     // get the hash length from the DR
     
@@ -413,13 +448,13 @@ void velvetWrapper( int hashLength, assemblyOptions& opts, std::string& tmpFileN
     catch (std::exception& e) 
     {
         std::cerr<<PACKAGE_NAME<<" [ERROR]: "<<e.what()<<std::endl;
-        exit(1);
+        return 1;
     }  
-
+    return 0;
     
 }
 
-void capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileName)
+int capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileName)
 {
     // cap3 doesn't control the output directory so we need to move 
     // the tmp_file to the output directory
@@ -455,12 +490,13 @@ void capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileNa
     catch (std::exception& e) 
     {
         std::cerr<<PACKAGE_NAME<<" [ERROR]: "<<e.what()<<std::endl;
-        exit(1);
+        return 1;
     }
+    return 0;
 }
 
 
-void assemblyMain(int argc, char * argv[])
+int assemblyMain(int argc, char * argv[])
 {
     if (argc == 1) 
     {
@@ -511,19 +547,20 @@ void assemblyMain(int argc, char * argv[])
     tmp_file_name += "_tmp.fa";
     
     generateTmpAssemblyFile(group_read_file, segments, opts, tmp_file_name);
-    
+    int return_value;
     switch (wantedAssembler) 
     {
         case velvet:
             // velvet wrapper
-            velvetWrapper(calculateOverlapLength((int)direct_repeat.length()), opts, tmp_file_name);
+            return_value = velvetWrapper(calculateOverlapLength((int)direct_repeat.length()), opts, tmp_file_name);
             break;
          case cap3:
             // cap3 wrapper
-            capWrapper(calculateOverlapLength((int)direct_repeat.length()), opts, tmp_file_name);
+           return_value = capWrapper(calculateOverlapLength((int)direct_repeat.length()), opts, tmp_file_name);
             break;
         default:
             // assembler not known throw error
             break;
     }
+    return return_value;
 }

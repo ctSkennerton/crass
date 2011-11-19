@@ -126,7 +126,6 @@ void usage(void)
     std::cout<< "                             when the --removeHomopolymers option is set [Default: "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<"]"<<std::endl;
     std::cout<< "--noScalling                 Use the given spacer and direct repeat ranges when --removeHomopolymers is set. "<<std::endl;
     std::cout<< "                             The default is to scale the numbers by "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" or by values set using -x or -y"<<std::endl;
-    std::cout<< "--dumpReads                  Print reads containing CRISPR to file after the find stage"<<std::endl;
     std::cout<< "--removeHomopolymers         Correct for homopolymer errors [default: no correction]"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"CRISPR Assembly Options:"<<std::endl;
@@ -368,8 +367,7 @@ int processOptions(int argc, char *argv[], options *opts)
                 scalling = true;
                 break;
             case 0:
-                if( strcmp( "dumpReads", long_options[index].name ) == 0 ) opts->detect = true;
-                else if ( strcmp( "removeHomopolymers", long_options[index].name ) == 0 ) opts->removeHomopolymers = true;
+                if ( strcmp( "removeHomopolymers", long_options[index].name ) == 0 ) opts->removeHomopolymers = true;
                 else if ( strcmp( "logToScreen", long_options[index].name ) == 0 ) opts->logToScreen = true;
                 else if ( strcmp( "noScalling", long_options[index].name ) == 0 ) opts->dontPerformScalling = true;
                 break;
@@ -437,15 +435,14 @@ int main(int argc, char *argv[])
     }
 #ifdef PERFORM_CRASS_ASSEMBLY
    
-    if (strcmp(argv[1], "assemble") == 0) {
+    if (strcmp(argv[1], "assemble") == 0) 
+    {
         // our user wants to do an assembly so let's load up the assembler main function
-        assemblyMain(argc - 1 , argv + 1);
-        return 0;
+        return assemblyMain(argc - 1 , argv + 1);
     }
 #endif
     /* application of default options */
     options opts = {
-        false,                                  // exit after first find
         CRASS_DEF_DEFAULT_LOGGING,              // logging minimum by default
         false,                                  // output stats report
         CRASS_DEF_MIN_DR_SIZE,                  // minimum direct repeat size

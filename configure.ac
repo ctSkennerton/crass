@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(crass, 0.0.12, c.skennerton@gmail.com)
+AC_INIT(crass, 0.1.0, c.skennerton@gmail.com)
 
 AM_INIT_AUTOMAKE
 

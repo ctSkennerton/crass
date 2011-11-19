@@ -121,7 +121,6 @@
 
 
 typedef struct {
-    bool                detect;                                             // print reads and exit after find
     int                 logLevel;                                           // level of verbosity allowed in the log file
     bool                reportStats;                                        // print a starts report currently not used
     unsigned int        lowDRsize;                                          // the lower size limit for a direct repeat

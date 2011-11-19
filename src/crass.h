@@ -67,7 +67,6 @@ static struct option long_options [] = {
     {"outDir", required_argument, NULL, 'o'},
     {"help", no_argument, NULL, 'h'},
     {"reportStats", no_argument, NULL, 'r'},
-    {"dumpReads", no_argument, NULL, 0},
     {"windowLength", required_argument, NULL, 'w'},
     {"minNumRepeats", required_argument, NULL, 'n'},
     {"logToScreen", no_argument, NULL, 0},

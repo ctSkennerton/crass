@@ -1417,7 +1417,7 @@ void NodeManager::printXML(std::ofstream * XMLFile, int GID, bool showDetached)
         if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
         {
             std::string spacer = NM_StringCheck.getString(SI->getID());
-            (*XMLFile) << "\t\t\t\t<spacer seq=\""<<spacer<<"\" spid=\"SP"<<SI->getID()<<"\" />\n";
+            (*XMLFile) << "\t\t\t\t<spacer seq=\""<<spacer<<"\" spid=\"SP"<<SI->getID()<<"\" cov=\""<<SI->getCount()<< "\" />\n";
         }
 		spacer_iter++;
 	}
@@ -1719,7 +1719,7 @@ void NodeManager::printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * c
     }
 }
 
-void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc, bool showKey)
+void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc)
 {
     //-----
     // Print a graphviz style graph of the DRs and spacers
@@ -1788,46 +1788,19 @@ void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, boo
             }
         }   
         spi_iter++;
-    }
-    
-    
-        if(showKey)
-            std::cout<<"TODO: Fix the key"<<std::endl;
-            //printSpacerKey(dataOut, 10, current_contig_ID);
-//        
-//        // now we need to go through and print out all the edges that are between contigs
-//        std::vector<std::pair<SpacerInstance *, SpacerInstance*> >::iterator bsv_iter = between_contig_edges.begin();
-//        while (bsv_iter != between_contig_edges.end()) 
-//        {
-//            std::stringstream se;
-//            std::stringstream ss;
-//            if(longDesc)
-//            {
-//                se << CRASS_DEF_GV_SPA_PREFIX << (bsv_iter->first)->getID() << "_" << NM_StringCheck.getString(bsv_iter->first->getID());
-//                ss << CRASS_DEF_GV_SPA_PREFIX << (bsv_iter->second)->getID() << "_" << NM_StringCheck.getString(bsv_iter->second->getID());
-//            }
-//            else
-//            {
-//                se << CRASS_DEF_GV_SPA_PREFIX << (bsv_iter->first)->getID();
-//                ss << CRASS_DEF_GV_SPA_PREFIX << (bsv_iter->second)->getID();
-//            }
-//            
-//            gvSpEdge(dataOut, se.str(), ss.str());
-//            bsv_iter++;
-//        }
-        
+    }        
     gvGraphFooter(dataOut);
 }
     
 
 
-void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, int clusterNumber)
+void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, std::string groupNumber)
 {
     //-----
     // Print a graphviz style graph of the DRs and spacers
     //
-	
-	gvKeyHeader(dataOut, clusterNumber);
+	static int cluster_number = 0;
+	gvKeyGroupHeader(dataOut, cluster_number, groupNumber);
 	double ul = NM_SpacerRainbow.getUpperLimit();
 	double ll = NM_SpacerRainbow.getLowerLimit();
 	double step_size = (ul - ll) / (numSteps - 1);
@@ -1840,4 +1813,5 @@ void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, int cluste
 		gvKeyEntry(dataOut, ss.str(), NM_SpacerRainbow.getColour(this_step));
 	}
 	gvKeyFooter(dataOut);
+    cluster_number++;
 }

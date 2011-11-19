@@ -154,14 +154,14 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	if(parseSeqFiles(seqFiles))
 	{
 		logError("FATAL ERROR: parseSeqFiles failed");
-        return 1;
+        return 2;
 	}
 	
     // build the spacer end graph
 	if(buildGraph())
 	{
 		logError("FATAL ERROR: buildGraph failed");
-        return 2;
+        return 3;
 	}
 	
 #if DEBUG
@@ -169,7 +169,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	if(renderDebugGraphs())
 	{
         logError("FATAL ERROR: renderDebugGraphs failed");
-        return 3;
+        return 4;
 	}
 #endif
 	
@@ -177,7 +177,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	if(cleanGraph())
 	{
         logError("FATAL ERROR: cleanGraph failed");
-        return 4;
+        return 5;
 	}
     
     
@@ -185,28 +185,28 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	if(splitIntoContigs())
 	{
         logError("FATAL ERROR: splitIntoContigs failed");
-        return 5;
+        return 6;
 	}
     
     //remove NodeManagers with low numbers of spacers
     if (removeLowSpacerNodeManagers())
     {
         logError("FATAL ERROR: removeLowSpacerNodeManagers failed");
-        return 6;
+        return 7;
     }
 	
     // dump the spacers to file
 	if(dumpSpacers())
 	{
         logError("FATAL ERROR: dumpSpacers failed");
-        return 7;
+        return 8;
 	}
     
     // print the reads to a file if requested
 	if(dumpReads(&mDR2GIDMap, false))
 	{
         logError("FATAL ERROR: dumpReads failed");
-        return 8;
+        return 9;
 	}
 	
 #if DEBUG
@@ -214,7 +214,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	if(renderDebugGraphs("Clean_"))
 	{
         logError("FATAL ERROR: renderDebugGraphs failed");
-        return 9;
+        return 10;
 	}
 #endif
     
@@ -222,7 +222,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	if(renderSpacerGraphs())
 	{
         logError("FATAL ERROR: renderSpacerGraphs failed");
-        return 10;
+        return 11;
 	}
 	
 	printXML();
@@ -1929,6 +1929,20 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
 	// go through the DR2GID_map and make all reads in each group into nodes
     logInfo("Rendering spacer graphs" , 1);
     
+    // make a single file with all of the keys for the groups
+    std::ofstream key_file;
+    
+    std::stringstream key_file_name;
+    key_file_name << mOpts->output_fastq<<PACKAGE_NAME << "_"<<mTimeStamp<<"_keys.gv";
+    key_file.open(key_file_name.str().c_str());
+
+    if (!key_file) 
+    {
+        logError("Cannot open the key file");
+        return 1;
+    }
+
+    gvGraphHeader(key_file, "Keys");
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
     while(drg_iter != mDR2GIDMap.end())
     {
@@ -1937,30 +1951,37 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
             if(NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
                 std::ofstream graph_file;
+
+                
                 std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
                 std::string graph_file_name = graph_file_prefix + "_spacers.gv";
                 graph_file.open(graph_file_name.c_str());
                 if (graph_file.good()) 
                 {
-                    mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription, true);
+                    mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription);
+                    mDRs[mTrueDRs[drg_iter->first]]->printSpacerKey(key_file, 10, namePrefix + to_string(drg_iter->first));
 #if RENDERING
                     // create a command string and call graphviz to make the image file
                     std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
                     if(system(cmd.c_str()))
                     {
                         logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
+                        return 1;
                     }
 #endif
                 } 
                 else 
                 {
                     logError("Unable to create graph output file "<<graph_file_name);
+                    return 1;
                 }
                 graph_file.close();
             }
         }
         drg_iter++;
     }
+    gvGraphFooter(key_file);
+    key_file.close();
     return 0;
 }
 

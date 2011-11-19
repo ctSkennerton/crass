@@ -16,6 +16,7 @@
 <!ELEMENT spacer EMPTY>
 <!ATTLIST spacer seq CDATA #REQUIRED>
 <!ATTLIST spacer spid CDATA #REQUIRED>
+<!ATTLIST spacer cov CDATA #IMPLIED>
 <!ELEMENT flankers (flanker*)>
 <!ELEMENT flanker EMPTY>
 <!ATTLIST flanker seq CDATA #REQUIRED>

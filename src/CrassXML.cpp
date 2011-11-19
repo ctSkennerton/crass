@@ -112,6 +112,8 @@ CrassXML::CrassXML(void)
     ATTR_gid = XMLString::transcode("gid");
     ATTR_seq = XMLString::transcode("seq");
     ATTR_spid = XMLString::transcode("spid");
+    ATTR_cov = XMLString::transcode("cov");
+
     ATTR_totcnt = XMLString::transcode("totcnt");
     ATTR_type = XMLString::transcode("type");
     ATTR_url = XMLString::transcode("url");
@@ -164,6 +166,8 @@ CrassXML::~CrassXML(void)
         XMLString::release( &ATTR_gid );
         XMLString::release( &ATTR_seq );
         XMLString::release( &ATTR_spid );
+        XMLString::release( &ATTR_cov );
+
         XMLString::release( &ATTR_totcnt );
         XMLString::release( &ATTR_type );
         XMLString::release( &ATTR_url );

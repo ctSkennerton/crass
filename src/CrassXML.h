@@ -109,6 +109,7 @@ class CrassXML
         XMLCh* ATTR_gid;
         XMLCh* ATTR_seq;
         XMLCh* ATTR_spid;
+        XMLCh* ATTR_cov;
         XMLCh* ATTR_totcnt;
         XMLCh* ATTR_type;
         XMLCh* ATTR_url;

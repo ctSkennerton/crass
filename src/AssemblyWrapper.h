@@ -60,6 +60,8 @@ typedef struct{
 
 } assemblyOptions;
 
+void assemblyVersionInfo(void); 
+
 void assemblyUsage(void);
 
 int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts);
@@ -70,11 +72,11 @@ void parseSegmentString(std::string& segmentString, std::set<std::string>& segme
 
 void generateTmpAssemblyFile(std::string fileName, std::set<std::string>& wantedContigs, assemblyOptions& opts, std::string& tmpFileName);
 
-void velvetWrapper(int hashLength, assemblyOptions& opts, std::string& tmpFileName);
+int velvetWrapper(int hashLength, assemblyOptions& opts, std::string& tmpFileName);
 
-void capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileName);
+int capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileName);
 
-void assemblyMain(int argc, char * argv[]);
+int assemblyMain(int argc, char * argv[]);
 
 
 // templated function to split a string on delimeters and return it in a container of class T
