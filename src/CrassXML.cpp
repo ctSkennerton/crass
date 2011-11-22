@@ -69,7 +69,7 @@ CrassXML::CrassXML(void)
       // throw exception here to return ERROR_XERCES_INIT
     }
     mConfigFileParser = new XercesDOMParser;
-    
+    CX_DocElem = NULL;
     
     // USE sed
     // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%TAG_\1 = XMLString::transcode(\"\1\");%" | sort | uniq
@@ -126,7 +126,10 @@ CrassXML::~CrassXML(void)
 {
     // Free memory
     delete mConfigFileParser;
-    
+    if (CX_DocElem != NULL) 
+    {
+        CX_DocElem->release();
+    }
     try // Free memory
     {
         
@@ -449,8 +452,173 @@ void CrassXML::getSpacerIdForAssembly(xercesc::DOMElement* currentElement, std::
 //    return str;
 //}
 //
-char * CrassXML::XMLCH_2_STR( const XMLCh* toTranscode ) 
-{  
-    return XMLString::transcode(toTranscode); 
+
+
+
+
+// ---------------------------------------------------------------------------
+//  main
+// ---------------------------------------------------------------------------
+
+DOMElement * CrassXML::createDOMDocument(std::string& rootElement, std::string& versionNumber, int& errorNumber )   
+{
+    DOMImplementation* impl =  DOMImplementationRegistry::getDOMImplementation(STR_2_XMLCH("Core"));
+    
+    if (impl != NULL)
+    {
+        try
+        {
+            CX_DocElem = impl->createDocument(
+                                                    0,                    // root element namespace URI.
+                                                    STR_2_XMLCH(rootElement),         // root element name
+                                                    0);                   // document type object (DTD).
+            if (CX_DocElem != NULL) 
+            {
+                DOMElement* rootElem = CX_DocElem->getDocumentElement();
+                rootElem->setAttribute(STR_2_XMLCH("version"), STR_2_XMLCH(versionNumber));
+                errorNumber = 0;
+                return rootElem;
+            }
+        }
+        catch (const OutOfMemoryException&)
+        {
+            XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
+            errorNumber =  5;
+        }
+        catch (const DOMException& e)
+        {
+            XERCES_STD_QUALIFIER cerr << "DOMException code is:  " << e.code << XERCES_STD_QUALIFIER endl;
+            errorNumber =  2;
+        }
+        catch (...)
+        {
+            XERCES_STD_QUALIFIER cerr << "An error occurred creating the document" << XERCES_STD_QUALIFIER endl;
+            errorNumber =  3;
+        }
+    }  // (inpl != NULL)
+    else
+    {
+        XERCES_STD_QUALIFIER cerr << "Requested implementation is not supported" << XERCES_STD_QUALIFIER endl;
+        errorNumber =  4;
+    }
+    return NULL;
+}
+
+xercesc::DOMElement * CrassXML::addMetaData(std::string& notes, DOMElement * parentNode)
+{
+    DOMElement * meta_data_elem = CX_DocElem->createElement(STR_2_XMLCH("metadata"));
+    DOMText * meta_data_notes = CX_DocElem->createTextNode(STR_2_XMLCH(notes));
+    meta_data_elem->appendChild(meta_data_notes);
+    parentNode->appendChild(meta_data_elem);
+    
+    return meta_data_elem;
+    
+}
+xercesc::DOMElement * CrassXML::addGroup(std::string& gID, std::string& drConsensus, DOMElement * parentNode)
+{
+    DOMElement * group = CX_DocElem->createElement(STR_2_XMLCH("group"));
+    
+    // Set the attributes of the group
+    group->setAttribute(STR_2_XMLCH("gid"), STR_2_XMLCH(gID));
+    group->setAttribute(STR_2_XMLCH("drseq"), STR_2_XMLCH(drConsensus));
+    
+    // add the group to the parent (root element)
+    parentNode->appendChild(group);
+    return group;
+}
+xercesc::DOMElement * CrassXML::addData(xercesc::DOMElement * parentNode)
+{
+    // create the data node with spacer and drs as child elements 
+    DOMElement * data = CX_DocElem->createElement(STR_2_XMLCH("data"));
+    DOMElement * drs = CX_DocElem->createElement(STR_2_XMLCH("drs"));
+    DOMElement * spacers = CX_DocElem->createElement(STR_2_XMLCH("spacers"));
+    data->appendChild(drs);
+    data->appendChild(spacers);
+    parentNode->appendChild(data);
+    return data;
+}
+xercesc::DOMElement * CrassXML::addAssembly(xercesc::DOMElement * parentNode)
+{
+    DOMElement * assembly = CX_DocElem->createElement(STR_2_XMLCH("assembly"));
+    parentNode->appendChild(assembly);
+    return assembly;
+}
+void CrassXML::addDirectRepeat(std::string& drid, std::string& seq, DOMElement * parentNode)
+{
+    DOMElement * dr = CX_DocElem->createElement(STR_2_XMLCH("dr"));
+    dr->setAttribute(STR_2_XMLCH("seq"), STR_2_XMLCH(seq));
+    dr->setAttribute(STR_2_XMLCH("drid"), STR_2_XMLCH(drid));
+    parentNode->appendChild(dr);
+}
+void CrassXML::addSpacer(std::string& seq, std::string& spid, DOMElement * parentNode)
+{
+    DOMElement * sp = CX_DocElem->createElement(STR_2_XMLCH("spacer"));
+    sp->setAttribute(STR_2_XMLCH("seq"), STR_2_XMLCH(seq));
+    sp->setAttribute(STR_2_XMLCH("spid"), STR_2_XMLCH(spid));
+    parentNode->appendChild(sp);
+}
+xercesc::DOMElement * CrassXML::createFlankers(xercesc::DOMElement * parentNode)
+{
+    DOMElement * flankers = CX_DocElem->createElement(STR_2_XMLCH("flankers"));
+    parentNode->appendChild(flankers);
+    return flankers;
+}
+void CrassXML::addFlanker(std::string& seq, std::string& flid, xercesc::DOMElement * parentNode)
+{
+    DOMElement * flanker = CX_DocElem->createElement(STR_2_XMLCH("flanker"));
+    flanker->setAttribute(STR_2_XMLCH("seq"), STR_2_XMLCH(seq));
+    flanker->setAttribute(STR_2_XMLCH("flid"), STR_2_XMLCH(flid));
+    parentNode->appendChild(flanker);
+}
+xercesc::DOMElement * CrassXML::addContig(std::string& cid, DOMElement * parentNode)
+{
+    DOMElement * contig = CX_DocElem->createElement(STR_2_XMLCH("contig"));
+    contig->setAttribute(STR_2_XMLCH("cid"), STR_2_XMLCH(cid));
+    parentNode->appendChild(contig);
+    return contig;
+}
+void CrassXML::createConsensus(std::string& concensus, xercesc::DOMElement * parentNode)
+{
+    DOMElement * concensus_elem = CX_DocElem->createElement(STR_2_XMLCH("concensus"));
+    DOMText * concensus_text = CX_DocElem->createTextNode(STR_2_XMLCH(concensus));
+    concensus_elem->appendChild(concensus_text);
+    parentNode->appendChild(concensus_elem);
+}
+xercesc::DOMElement * CrassXML::addSpacerToContig(std::string& spid, DOMElement * parentNode)
+{
+    DOMElement * cspacer = CX_DocElem->createElement(STR_2_XMLCH("cspacer"));
+    cspacer->setAttribute(STR_2_XMLCH("spid"), STR_2_XMLCH(spid));
+    parentNode->appendChild(cspacer);
+    return cspacer;
+}
+xercesc::DOMElement * CrassXML::createSpacers(std::string& tag, xercesc::DOMElement * cspacer)
+{
+    DOMElement * spacers = CX_DocElem->createElement(STR_2_XMLCH(tag));
+    cspacer->appendChild(spacers);
+    return spacers;
+}
+
+xercesc::DOMElement * CrassXML::createFlankers(std::string& tag, xercesc::DOMElement * parentNode)
+{
+    DOMElement * flankers = CX_DocElem->createElement(STR_2_XMLCH(tag));
+    parentNode->appendChild(flankers);
+    return flankers;
+}
+
+void CrassXML::addSpacer(std::string& tag, std::string& spid, std::string& drid, std::string& drconf, DOMElement * parentNode)
+{
+    DOMElement * fs = CX_DocElem->createElement(STR_2_XMLCH(tag));
+    fs->setAttribute(STR_2_XMLCH("drid"), STR_2_XMLCH(drid));
+    fs->setAttribute(STR_2_XMLCH("drconf"), STR_2_XMLCH(drconf));
+    fs->setAttribute(STR_2_XMLCH("spid"), STR_2_XMLCH(spid));
+    parentNode->appendChild(fs);
+}
+void CrassXML::addFlanker(std::string& tag, std::string& flid, std::string& drconf, std::string& directjoin, xercesc::DOMElement * parentNode)
+{
+    DOMElement * bf = CX_DocElem->createElement(STR_2_XMLCH(tag));
+    bf->setAttribute(STR_2_XMLCH("flid"), STR_2_XMLCH(flid));
+    bf->setAttribute(STR_2_XMLCH("drconf"), STR_2_XMLCH(drconf));
+    bf->setAttribute(STR_2_XMLCH("directjoin"), STR_2_XMLCH(directjoin));
+    parentNode->appendChild(bf);
 }
 

@@ -1,3 +1,18 @@
+Sat Nov 19 19:14:36 2011 +1000    ctSkennerton
+    Fixed issue #22 and #9.  Finally prepared to call this the official version 0.1.0 after successful tests on metagenomic data
+
+Fri Nov 18 15:23:38 2011 +1000    ctSkennerton
+    Massive commit.  Fixed issues #1 and #12
+
+Wed Nov 16 22:35:05 2011 +1000    ctSkennerton
+    Fixed issue #1,  the call to XMLPlatformUtils::Terminate() cannot be surrounded by a try {...}catch(){...} block
+
+Wed Nov 16 19:51:51 2011 +1000    ctSkennerton
+    Fix should resolve issue #13 and #15 although more testing will need to be done to figure out if crass is specific enough
+
+Mon Nov 14 21:31:42 2011 +1000    ctSkennerton
+    changed the version number to 0.0.10
+
 Mon Nov 14 21:29:12 2011 +1000    ctSkennerton
     Resolved issue #14, changed a flow control in WorkHorse so that the iterator is not pointing to a NULL object
 
