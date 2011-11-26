@@ -1,3 +1,21 @@
+Sat Nov 26 19:34:09 2011 +1000    ctSkennerton
+    fix index file after merge
+
+Sat Nov 26 19:00:32 2011 +1000    ctSkennerton
+    Merge branch 'xml_writer'
+
+Sat Nov 26 18:59:40 2011 +1000    ctSkennerton
+    The .crispr file is now made internally with xerces by adding to the DOM tree.  The created xml file passes online validators!
+
+Fri Nov 25 00:32:38 2011 +1000    ctSkennerton
+    doc updates
+
+Tue Nov 22 16:12:31 2011 +1000    Michael.Imelfort
+    No NO!  B = 3!
+
+Tue Nov 22 15:32:36 2011 +1000    ctSkennerton
+    most of the getter and setter methods are in place
+
 Sat Nov 19 19:14:36 2011 +1000    ctSkennerton
     Fixed issue #22 and #9.  Finally prepared to call this the official version 0.1.0 after successful tests on metagenomic data
 
