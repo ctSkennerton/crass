@@ -93,7 +93,12 @@
 #define CRASS_DEF_DEF_PATTERN_LOOKUP_EXT        "crass_direct_repeats.txt"
 #define CRASS_DEF_DEF_SPACER_LOOKUP_EXT         "crass_spacers.txt"
 #define CRASS_DEF_CRISPR_EXT					".crispr"
+// --------------------------------------------------------------------
+// XML
+// --------------------------------------------------------------------
 #define CRASS_DEF_CRISPR_HEADER					"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<crass_assem version=\"1.0\">\n"
+#define CRASS_DEF_ROOT_ELEMENT                  "crass_assem"
+#define CRASS_DEF_XML_VERSION                   "1.0"
 #define CRASS_DEF_CRISPR_FOOTER					"</crass_assem>\n"
 // --------------------------------------------------------------------
 // GRAPH BUILDING
@@ -103,7 +108,9 @@
 // --------------------------------------------------------------------
  // USER OPTION STRUCTURE
 // --------------------------------------------------------------------
+#define CRASS_DEF_STATS_REPORT                  false               // should we create a stats report
 #define CRASS_DEF_STATS_REPORT_DELIM            "\t"                // delimiter string for stats report
+#define CRASS_DEF_OUTPUT_DIR                    "./"                // default output directory
 #define CRASS_DEF_MIN_DR_SIZE                   23                  // minimum direct repeat size
 #define CRASS_DEF_MAX_DR_SIZE                   45                  // maximum direct repeat size
 #define CRASS_DEF_MIN_SPACER_SIZE               26                  // minimum spacer size
@@ -117,8 +124,13 @@
 #endif
 
 #define CRASS_DEF_DEFAULT_LOGGING               1
+#define CRASS_DEF_LOGTOSCREEN                   false               // should we log to screen or to file
+#define CRASS_DEF_REMOVE_HOMOPOLYMERS           false               // should we remove homopolymers
+#define CRASS_DEF_NO_SCALLING                   false               // perform scalling by default
 #define CRASS_DEF_HOMOPOLYMER_SCALLING          (0.70)              // the scalling for the spacers and direct repeats when remove homopolymers is set
-
+#define CRASS_DEF_NUM_OF_BINS                   -1                  // the number of bins to create
+#define CRASS_DEF_GRAPH_COLOUR                  RED_BLUE            // default colour scale for the graphs
+#define CRASS_DEF_SPACER_LONG_DESC              false               // use a long desc of the spacer in the output graph
 
 typedef struct {
     int                 logLevel;                                           // level of verbosity allowed in the log file

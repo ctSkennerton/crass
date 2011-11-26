@@ -53,10 +53,23 @@
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
 #include <xercesc/util/TransService.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/util/XMLString.hpp>
+#include <xercesc/util/OutOfMemoryException.hpp>
+
+#include <xercesc/framework/StdOutFormatTarget.hpp>
+#include <xercesc/framework/LocalFileFormatTarget.hpp>
+
 #include <string>
 #include <stdexcept>
 #include <set>
 #include <list>
+
+#if defined(XERCES_NEW_IOSTREAMS)
+#include <iostream>
+#else
+#include <iostream.h>
+#endif
 // local includes
 #include "crassDefines.h"
 
@@ -68,6 +81,51 @@ enum {
    ERROR_EMPTY_DOCUMENT
 };
 
+// ---------------------------------------------------------------------------
+//  This is a simple class that lets us do easy (though not terribly efficient)
+//  trancoding of char* data to XMLCh data.
+// ---------------------------------------------------------------------------
+class XStr
+{
+    public :
+    // -----------------------------------------------------------------------
+    //  Constructors and Destructor
+    // -----------------------------------------------------------------------
+    XStr(const char* const toTranscode)
+    {
+        // Call the private transcoding method
+        fUnicodeForm = xercesc::XMLString::transcode(toTranscode);
+    }
+    XStr(const std::string& toTranscode)
+    {
+        // Call the private transcoding method
+        fUnicodeForm = xercesc::XMLString::transcode(toTranscode.c_str());
+    }
+    ~XStr()
+    {
+        xercesc::XMLString::release(&fUnicodeForm);
+    }
+    
+    
+    // -----------------------------------------------------------------------
+    //  Getter methods
+    // -----------------------------------------------------------------------
+    const XMLCh* unicodeForm() const
+    {
+        return fUnicodeForm;
+    }
+    
+    private :
+    // -----------------------------------------------------------------------
+    //  Private data members
+    //
+    //  fUnicodeForm
+    //      This is the Unicode XMLCh format of the string.
+    // -----------------------------------------------------------------------
+    XMLCh*   fUnicodeForm;
+};
+
+
 class CrassXML 
 {
     public:
@@ -78,25 +136,130 @@ class CrassXML
         //
         // Generic get and set
         //
+        inline XMLCh* getCid(void) { return ATTR_cid;} ;
+        inline XMLCh* getConfcnt(void) { return ATTR_confcnt;} ;
+        inline XMLCh* getDirectjoin(void) { return ATTR_directjoin;} ;
+        inline XMLCh* getDrconf(void) { return ATTR_drconf;} ;
+        inline XMLCh* getDrid(void) { return ATTR_drid;} ;
+        inline XMLCh* getDrseq(void) { return ATTR_drseq;} ;
+        inline XMLCh* getFlid(void) { return ATTR_flid;} ;
+        inline XMLCh* getGid(void) { return ATTR_gid;} ;
+        inline XMLCh* getSeq(void) { return ATTR_seq;} ;
+        inline XMLCh* getSpid(void) { return ATTR_spid;} ;
+        inline XMLCh* getCov(void) { return ATTR_cov;} ;
+        inline XMLCh* getTotcnt(void) { return ATTR_totcnt;} ;
+        inline XMLCh* getType(void) { return ATTR_type;} ;
+        inline XMLCh* getUrl(void) { return ATTR_url;} ;
+        inline XMLCh* getVersion(void) { return ATTR_version;} ;
         
+        inline XMLCh* getAssembly(void) { return TAG_assembly;} ;
+        inline XMLCh* getBf(void) { return TAG_bf;} ;
+        inline XMLCh* getBflankers(void) { return TAG_bflankers;} ;
+        inline XMLCh* getBs(void) { return TAG_bs;} ;
+        inline XMLCh* getBspacers(void) { return TAG_bspacers;} ;
+        inline XMLCh* getConsensus(void) { return TAG_consensus;} ;
+        inline XMLCh* getContig(void) { return TAG_contig;} ;
+        inline XMLCh* getCrass_assem(void) { return TAG_crass_assem;} ;
+        inline XMLCh* getCspacer(void) { return TAG_cspacer;} ;
+        inline XMLCh* getData(void) { return TAG_data;} ;
+        inline XMLCh* getDr(void) { return TAG_dr;} ;
+        inline XMLCh* getDrs(void) { return TAG_drs;} ;
+        inline XMLCh* getFf(void) { return TAG_ff;} ;
+        inline XMLCh* getFflankers(void) { return TAG_fflankers;} ;
+        inline XMLCh* getFile(void) { return TAG_file;} ;
+        inline XMLCh* getFlanker(void) { return TAG_flanker;} ;
+        inline XMLCh* getFlankers(void) { return TAG_flankers;} ;
+        inline XMLCh* getFs(void) { return TAG_fs;} ;
+        inline XMLCh* getFspacers(void) { return TAG_fspacers;} ;
+        inline XMLCh* getGroup(void) { return TAG_group;} ;
+        inline XMLCh* getLog(void) { return TAG_log;} ;
+        inline XMLCh* getMetadata(void) { return TAG_metadata;} ;
+        inline XMLCh* getNotes(void) { return TAG_notes;} ;
+        inline XMLCh* getSpacer(void) { return TAG_spacer;} ;
+        inline XMLCh* getSpacers(void) { return TAG_spacers;} ;
         //
         // Working functions
         //
         void parseCrassXMLFile(std::string XMLFile);
-    void parseCrassXMLFile(std::string XMLFile, std::string& wantedGroup, std::string * directRepeat, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly);
+        void parseCrassXMLFile(std::string XMLFile, std::string& wantedGroup, std::string * directRepeat, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly);
         //std::string XMLCH_2_STR(const XMLCh* xmlch);
-    char * XMLCH_2_STR(const XMLCh* xmlch);
+        
+        inline char * XMLCH_2_STR( const XMLCh* toTranscode ) 
+        {  
+            return xercesc::XMLString::transcode(toTranscode); 
+        }
+        
+        inline XMLCh * STR_2_XMLCH( const std::string& toTranscode ) 
+        {  
+            return xercesc::XMLString::transcode(toTranscode.c_str()); 
+        }
         xercesc::DOMElement * getWantedGroupFromRoot(xercesc::DOMElement * currentElement, std::string& wantedGroup, std::string * directRepeat);
         xercesc::DOMElement * parseGroupForAssembly(xercesc::DOMElement* currentElement);
         void parseAssemblyForContigIds(xercesc::DOMElement* currentElement, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly);
         void getSpacerIdForAssembly(xercesc::DOMElement* currentElement, std::list<std::string>& spacersForAssembly);
+        
+        //DOMDocument Creation returns root node
+        xercesc::DOMElement * createDOMDocument(std::string& rootElement, std::string& versionNumber, int& errorNumber );
+        xercesc::DOMElement * createDOMDocument(const char * rootElement, const char * versionNumber, int& errorNumber );
+        
+        // add a <metadata> tag to <group> with notes
+        xercesc::DOMElement * addMetaData(std::string notes, xercesc::DOMElement * parentNode);
+        
+        // add in extra files to this group such as a reads file
+        void addFileToMetadata(std::string type, std::string url, xercesc::DOMElement * parentNode);
+        
+        // add a <group> to <crass_assem>
+        xercesc::DOMElement * addGroup(std::string& gID, std::string& drConsensus, xercesc::DOMElement * parentNode);
+        
+        // add the <data> to <group>
+        xercesc::DOMElement * addData(xercesc::DOMElement * parentNode);
+        
+        // add the <assembly> to <group>
+        xercesc::DOMElement * addAssembly(xercesc::DOMElement * parentNode);
+        
+        // add a direct repeat to the <data> (<dr>)
+        void addDirectRepeat(std::string& drid, std::string& seq, xercesc::DOMElement * dataNode);
+        
+        // add a spcaer to the <data> (<spacer>)
+        void addSpacer(std::string& seq, std::string& spid, xercesc::DOMElement * dataNode);
+        
+        // create a <flankers> tag in <data>
+        xercesc::DOMElement * createFlankers(xercesc::DOMElement * parentNode);
+        
+        // add a <flanker> to the <data> section (<flanker>)
+        void addFlanker(std::string& seq, std::string& flid, xercesc::DOMElement * dataNode);
+        
+        // add a <contig> to an <assembly>
+        xercesc::DOMElement * addContig(std::string& cid, xercesc::DOMElement * parentNode);
+        
+        // add the concensus sequence to the contig (creates <concensus>)
+        void createConsensus(std::string& concensus, xercesc::DOMElement * parentNode);
+        
+        // add a spacer to a contig (<cspacer> tag)
+        xercesc::DOMElement * addSpacerToContig(std::string& spid, xercesc::DOMElement * parentNode);
+        
+        // use to create a backward spacers (<bspacers>) or forward spacers (<fspacers>) element by changing the value of tag
+        xercesc::DOMElement * createSpacers(std::string tag);
+        
+        // use to create a backward flankers (<bflankers>) or forward flankers (<fflankers>) element by changing the value of tag
+        xercesc::DOMElement * createFlankers(std::string tag);
+
+        // use to add either a backward spacer (<bs>) or forward spacer (<fs>) by changing the value of tag
+        void addSpacer(std::string tag, std::string& spid, std::string& drid, std::string& drconf, xercesc::DOMElement * parentNode);
+        
+        // use to add either a backward flanker (<bf>) or forward flanker (<ff>) by changing the value of tag
+        void addFlanker(std::string tag, std::string& flid, std::string& drconf, std::string& directjoin, xercesc::DOMElement * parentNode);
+        
+    
         //
         // File IO / printing
         //
-
+        bool printDOMToFile(std::string outFileName );
+        bool printDOMToScreen(void);
     
     private:
         xercesc::XercesDOMParser * mConfigFileParser;			// parsing object
+        xercesc::DOMDocument * CX_DocElem;
         // grep ATTLIST crass.dtd | sed -e "s%[^ ]* [^ ]* \([^ ]*\) .*%XMLCh\* ATTR_\1;%" | sort | uniq
         // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%XMLCh\* TAG_\1;%" | sort | uniq
         XMLCh* ATTR_cid;

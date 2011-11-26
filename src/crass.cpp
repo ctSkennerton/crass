@@ -444,30 +444,30 @@ int main(int argc, char *argv[])
     /* application of default options */
     options opts = {
         CRASS_DEF_DEFAULT_LOGGING,              // logging minimum by default
-        false,                                  // output stats report
+        CRASS_DEF_STATS_REPORT,                 // output stats report
         CRASS_DEF_MIN_DR_SIZE,                  // minimum direct repeat size
         CRASS_DEF_MAX_DR_SIZE,                  // maximum direct repeat size
         CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
         CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
-        "./",                                   // output file directory
+        CRASS_DEF_OUTPUT_DIR,                   // output file directory
         CRASS_DEF_STATS_REPORT_DELIM,           // delimiter string for stats report
         CRASS_DEF_K_CLUST_MIN,                  // the number of the kmers that need to be shared for clustering
         CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH, // the search window length
         CRASS_DEF_DEFAULT_MIN_NUM_REPEATS,      // mininum number of repeats for long read algorithm 
-        false,                                  // should we log to screen
-        false,                                  // should we remove homopolymers in reads
-        -1,                                     // default for the number of bins of colours to create
-        RED_BLUE,                               // default colour type of the graph
+        CRASS_DEF_LOGTOSCREEN,                  // should we log to screen
+        CRASS_DEF_REMOVE_HOMOPOLYMERS,          // should we remove homopolymers in reads
+        CRASS_DEF_NUM_OF_BINS,                  // default for the number of bins of colours to create
+        CRASS_DEF_GRAPH_COLOUR,                 // default colour type of the graph
         CRASS_DEF_HOMOPOLYMER_SCALLING,         // average spacer scalling
         CRASS_DEF_HOMOPOLYMER_SCALLING,         // average direct repeat scalling
-        false,                                  // perform scalling by default
+        CRASS_DEF_NO_SCALLING,                  // perform scalling by default
 
 #ifdef RENDERING
         DEFAULT_RENDERING_ALGORITHM,
 #else
-        "dot",                                  // use dot as the default layout algorithm for rendering
+        "unset",                                // set dummy value if not rendering
 #endif
-        false,                                  // do not use a long description for the nodes of the spacer graph
+        CRASS_DEF_SPACER_LONG_DESC,             // do not use a long description for the nodes of the spacer graph
         CRASS_DEF_COVCUTOFF                     // Groups with less than 10 reads will be purged
     };
 
@@ -500,7 +500,7 @@ int main(int argc, char *argv[])
     else 
     {
         // create a time stamp for the log file
-        logFileName = opts.output_fastq+ "crass."+timestamp+".log";
+        logFileName = opts.output_fastq + PACKAGE_NAME +"."+timestamp+".log";
         
     }
     
@@ -521,7 +521,13 @@ int main(int argc, char *argv[])
     }
     logTimeStamp();
     
-    WorkHorse * mHorse = new WorkHorse(&opts, timestamp);
+    std::string cmd_line;
+    for (int i = 0; i < argc; ++i) {
+        cmd_line += argv[i];
+        cmd_line += ' ';
+    }
+    
+    WorkHorse * mHorse = new WorkHorse(&opts, timestamp,cmd_line);
     int error_code = mHorse->doWork(seq_files);
     delete mHorse;
     return error_code;

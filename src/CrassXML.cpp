@@ -69,7 +69,7 @@ CrassXML::CrassXML(void)
       // throw exception here to return ERROR_XERCES_INIT
     }
     mConfigFileParser = new XercesDOMParser;
-    
+    CX_DocElem = NULL;
     
     // USE sed
     // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%TAG_\1 = XMLString::transcode(\"\1\");%" | sort | uniq
@@ -126,7 +126,10 @@ CrassXML::~CrassXML(void)
 {
     // Free memory
     delete mConfigFileParser;
-    
+    if (CX_DocElem != NULL) 
+    {
+        CX_DocElem->release();
+    }
     try // Free memory
     {
         
@@ -426,31 +429,371 @@ void CrassXML::getSpacerIdForAssembly(xercesc::DOMElement* currentElement, std::
         }
     }
 }
-               
-//std::string CrassXML::XMLCH_2_STR(const XMLCh* xmlch)
-//{
-//    //-----
-//    // convert a XMCH* to a std::string in utf8
-//    //
-//    XMLTranscoder* utf8Transcoder;
-//    XMLTransService::Codes failReason;
-//    utf8Transcoder = XMLPlatformUtils::fgTransService->makeNewTranscoderFor("UTF-8", failReason, 16*1024);
-//
-//    XMLSize_t len = XMLString::stringLen(xmlch);
-//    XMLByte* utf8 = new XMLByte(); // ?
-//    XMLSize_t eaten;
-//    XMLSize_t utf8Len = utf8Transcoder->transcodeTo(xmlch, len, utf8, len, eaten, XMLTranscoder::UnRep_Throw);
-//
-//    utf8[utf8Len] = '\0';
-//    std::string str = (char*)utf8;
-//    
-//    delete utf8;
-//    delete utf8Transcoder;
-//    return str;
-//}
-//
-char * CrassXML::XMLCH_2_STR( const XMLCh* toTranscode ) 
-{  
-    return XMLString::transcode(toTranscode); 
+
+DOMElement * CrassXML::createDOMDocument(std::string& rootElement, std::string& versionNumber, int& errorNumber )   
+{
+    DOMImplementation* impl =  DOMImplementationRegistry::getDOMImplementation(STR_2_XMLCH("Core"));
+    
+    if (impl != NULL)
+    {
+        try
+        {
+            CX_DocElem = impl->createDocument(
+                                                    0,                    // root element namespace URI.
+                                                    STR_2_XMLCH(rootElement),         // root element name
+                                                    0);                   // document type object (DTD).
+            if (CX_DocElem != NULL) 
+            {
+                DOMElement* rootElem = CX_DocElem->getDocumentElement();
+                rootElem->setAttribute(STR_2_XMLCH("version"), STR_2_XMLCH(versionNumber));
+                errorNumber = 0;
+                return rootElem;
+            }
+        }
+        catch (const OutOfMemoryException&)
+        {
+            XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
+            errorNumber =  5;
+        }
+        catch (const DOMException& e)
+        {
+            XERCES_STD_QUALIFIER cerr << "DOMException code is:  " << e.code << XERCES_STD_QUALIFIER endl;
+            errorNumber =  2;
+        }
+        catch (...)
+        {
+            XERCES_STD_QUALIFIER cerr << "An error occurred creating the document" << XERCES_STD_QUALIFIER endl;
+            errorNumber =  3;
+        }
+    }  // (inpl != NULL)
+    else
+    {
+        XERCES_STD_QUALIFIER cerr << "Requested implementation is not supported" << XERCES_STD_QUALIFIER endl;
+        errorNumber =  4;
+    }
+    return NULL;
 }
+
+DOMElement * CrassXML::createDOMDocument(const char * rootElement, const char * versionNumber, int& errorNumber )   
+{
+    DOMImplementation* impl =  DOMImplementationRegistry::getDOMImplementation(STR_2_XMLCH("Core"));
+    
+    if (impl != NULL)
+    {
+        try
+        {
+            CX_DocElem = impl->createDocument(
+                                              0,                    // root element namespace URI.
+                                              STR_2_XMLCH(rootElement),         // root element name
+                                              0);                   // document type object (DTD).
+            if (CX_DocElem != NULL) 
+            {
+                DOMElement* rootElem = CX_DocElem->getDocumentElement();
+                rootElem->setAttribute(STR_2_XMLCH("version"), STR_2_XMLCH(versionNumber));
+                errorNumber = 0;
+                return rootElem;
+            }
+        }
+        catch (const OutOfMemoryException&)
+        {
+            XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
+            errorNumber =  5;
+        }
+        catch (const DOMException& e)
+        {
+            XERCES_STD_QUALIFIER cerr << "DOMException code is:  " << e.code << XERCES_STD_QUALIFIER endl;
+            errorNumber =  2;
+        }
+        catch (...)
+        {
+            XERCES_STD_QUALIFIER cerr << "An error occurred creating the document" << XERCES_STD_QUALIFIER endl;
+            errorNumber =  3;
+        }
+    }  // (inpl != NULL)
+    else
+    {
+        XERCES_STD_QUALIFIER cerr << "Requested implementation is not supported" << XERCES_STD_QUALIFIER endl;
+        errorNumber =  4;
+    }
+    return NULL;
+}
+
+xercesc::DOMElement * CrassXML::addMetaData(std::string notes, DOMElement * parentNode)
+{
+    DOMElement * meta_data_elem = CX_DocElem->createElement(STR_2_XMLCH("metadata"));
+    DOMElement * notes_elem = CX_DocElem->createElement(STR_2_XMLCH("notes"));
+    DOMText * meta_data_notes = CX_DocElem->createTextNode(STR_2_XMLCH(notes));
+    notes_elem->appendChild(meta_data_notes);
+    meta_data_elem->appendChild(notes_elem);
+    parentNode->appendChild(meta_data_elem);
+    
+    return meta_data_elem;
+    
+}
+void CrassXML::addFileToMetadata(std::string type, std::string url, DOMElement * parentNode)
+{
+    DOMElement * file = CX_DocElem->createElement(STR_2_XMLCH("file"));
+    file->setAttribute(STR_2_XMLCH("type"), STR_2_XMLCH(type));
+    file->setAttribute(STR_2_XMLCH("url"), STR_2_XMLCH(url));
+    parentNode->appendChild(file);
+}
+xercesc::DOMElement * CrassXML::addGroup(std::string& gID, std::string& drConsensus, DOMElement * parentNode)
+{
+    DOMElement * group = CX_DocElem->createElement(STR_2_XMLCH("group"));
+    
+    // Set the attributes of the group
+    group->setAttribute(STR_2_XMLCH("gid"), STR_2_XMLCH(gID));
+    group->setAttribute(STR_2_XMLCH("drseq"), STR_2_XMLCH(drConsensus));
+    
+    // add the group to the parent (root element)
+    parentNode->appendChild(group);
+    return group;
+}
+xercesc::DOMElement * CrassXML::addData(xercesc::DOMElement * parentNode)
+{
+    // create the data node with spacer and drs as child elements 
+    DOMElement * data = CX_DocElem->createElement(STR_2_XMLCH("data"));
+    DOMElement * drs = CX_DocElem->createElement(STR_2_XMLCH("drs"));
+    DOMElement * spacers = CX_DocElem->createElement(STR_2_XMLCH("spacers"));
+    data->appendChild(drs);
+    data->appendChild(spacers);
+    parentNode->appendChild(data);
+    return data;
+}
+xercesc::DOMElement * CrassXML::addAssembly(xercesc::DOMElement * parentNode)
+{
+    DOMElement * assembly = CX_DocElem->createElement(STR_2_XMLCH("assembly"));
+    parentNode->appendChild(assembly);
+    return assembly;
+}
+void CrassXML::addDirectRepeat(std::string& drid, std::string& seq, DOMElement * parentNode)
+{
+    DOMElement * dr = CX_DocElem->createElement(STR_2_XMLCH("dr"));
+    dr->setAttribute(STR_2_XMLCH("seq"), STR_2_XMLCH(seq));
+    dr->setAttribute(STR_2_XMLCH("drid"), STR_2_XMLCH(drid));
+    parentNode->appendChild(dr);
+}
+void CrassXML::addSpacer(std::string& seq, std::string& spid, DOMElement * parentNode)
+{
+    DOMElement * sp = CX_DocElem->createElement(STR_2_XMLCH("spacer"));
+    sp->setAttribute(STR_2_XMLCH("seq"), STR_2_XMLCH(seq));
+    sp->setAttribute(STR_2_XMLCH("spid"), STR_2_XMLCH(spid));
+    parentNode->appendChild(sp);
+}
+xercesc::DOMElement * CrassXML::createFlankers(xercesc::DOMElement * parentNode)
+{
+    DOMElement * flankers = CX_DocElem->createElement(STR_2_XMLCH("flankers"));
+    parentNode->appendChild(flankers);
+    return flankers;
+}
+void CrassXML::addFlanker(std::string& seq, std::string& flid, xercesc::DOMElement * parentNode)
+{
+    DOMElement * flanker = CX_DocElem->createElement(STR_2_XMLCH("flanker"));
+    flanker->setAttribute(STR_2_XMLCH("seq"), STR_2_XMLCH(seq));
+    flanker->setAttribute(STR_2_XMLCH("flid"), STR_2_XMLCH(flid));
+    parentNode->appendChild(flanker);
+}
+xercesc::DOMElement * CrassXML::addContig(std::string& cid, DOMElement * parentNode)
+{
+    DOMElement * contig = CX_DocElem->createElement(STR_2_XMLCH("contig"));
+    contig->setAttribute(STR_2_XMLCH("cid"), STR_2_XMLCH(cid));
+    parentNode->appendChild(contig);
+    return contig;
+}
+void CrassXML::createConsensus(std::string& concensus, xercesc::DOMElement * parentNode)
+{
+    DOMElement * concensus_elem = CX_DocElem->createElement(STR_2_XMLCH("concensus"));
+    DOMText * concensus_text = CX_DocElem->createTextNode(STR_2_XMLCH(concensus));
+    concensus_elem->appendChild(concensus_text);
+    parentNode->appendChild(concensus_elem);
+}
+xercesc::DOMElement * CrassXML::addSpacerToContig(std::string& spid, DOMElement * parentNode)
+{
+    DOMElement * cspacer = CX_DocElem->createElement(STR_2_XMLCH("cspacer"));
+    cspacer->setAttribute(STR_2_XMLCH("spid"), STR_2_XMLCH(spid));
+    parentNode->appendChild(cspacer);
+    return cspacer;
+}
+xercesc::DOMElement * CrassXML::createSpacers(std::string tag)
+{
+    DOMElement * spacers = CX_DocElem->createElement(STR_2_XMLCH(tag));
+    //cspacer->appendChild(spacers);
+    return spacers;
+}
+
+xercesc::DOMElement * CrassXML::createFlankers(std::string tag)
+{
+    DOMElement * flankers = CX_DocElem->createElement(STR_2_XMLCH(tag));
+    //parentNode->appendChild(flankers);
+    return flankers;
+}
+
+void CrassXML::addSpacer(std::string tag, std::string& spid, std::string& drid, std::string& drconf, DOMElement * parentNode)
+{
+    DOMElement * fs = CX_DocElem->createElement(STR_2_XMLCH(tag));
+    fs->setAttribute(STR_2_XMLCH("drid"), STR_2_XMLCH(drid));
+    fs->setAttribute(STR_2_XMLCH("drconf"), STR_2_XMLCH(drconf));
+    fs->setAttribute(STR_2_XMLCH("spid"), STR_2_XMLCH(spid));
+    parentNode->appendChild(fs);
+}
+void CrassXML::addFlanker(std::string tag, std::string& flid, std::string& drconf, std::string& directjoin, xercesc::DOMElement * parentNode)
+{
+    DOMElement * bf = CX_DocElem->createElement(STR_2_XMLCH(tag));
+    bf->setAttribute(STR_2_XMLCH("flid"), STR_2_XMLCH(flid));
+    bf->setAttribute(STR_2_XMLCH("drconf"), STR_2_XMLCH(drconf));
+    bf->setAttribute(STR_2_XMLCH("directjoin"), STR_2_XMLCH(directjoin));
+    parentNode->appendChild(bf);
+}
+
+//
+ // File IO / Printing
+//
+
+bool CrassXML::printDOMToFile(std::string outFileName )
+{
+    bool retval;
+    
+    try
+    {
+        // get a serializer, an instance of DOMLSSerializer
+        XMLCh tempStr[3] = {chLatin_L, chLatin_S, chNull};
+        DOMImplementation *impl          = DOMImplementationRegistry::getDOMImplementation(tempStr);
+        DOMLSSerializer   *theSerializer = ((DOMImplementationLS*)impl)->createLSSerializer();
+        DOMLSOutput       *theOutputDesc = ((DOMImplementationLS*)impl)->createLSOutput();
+        
+        // set user specified output encoding
+        theOutputDesc->setEncoding(STR_2_XMLCH("ISO8859-1"));
+        
+
+        DOMConfiguration* serializerConfig=theSerializer->getDomConfig();
+        
+        // set feature if the serializer supports the feature/mode
+        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTSplitCdataSections, true))
+            serializerConfig->setParameter(XMLUni::fgDOMWRTSplitCdataSections, true);
+        
+        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true))
+            serializerConfig->setParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true);
+        
+        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
+            serializerConfig->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
+        
+        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTBOM, false))
+            serializerConfig->setParameter(XMLUni::fgDOMWRTBOM, false);
+        
+        //
+        // Plug in a format target to receive the resultant
+        // XML stream from the serializer.
+        //
+        // StdOutFormatTarget prints the resultant XML stream
+        // to stdout once it receives any thing from the serializer.
+        //
+        XMLFormatTarget *myFormTarget;
+        myFormTarget = new LocalFileFormatTarget(outFileName.c_str());
+        //myFormTarget=new StdOutFormatTarget();
+        
+        theOutputDesc->setByteStream(myFormTarget);
+
+        theSerializer->write(CX_DocElem, theOutputDesc);
+        
+        theOutputDesc->release();
+        theSerializer->release();
+        
+        //
+        // Filter, formatTarget and error handler
+        // are NOT owned by the serializer.
+        //
+        delete myFormTarget;
+        retval = true;
+        
+    }
+    catch (const OutOfMemoryException&)
+    {
+        XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
+        retval = false;
+    }
+    catch (XMLException& e)
+    {
+        XERCES_STD_QUALIFIER cerr << "An error occurred during creation of output transcoder. Msg is:"
+        << XERCES_STD_QUALIFIER endl
+        << XMLCH_2_STR(e.getMessage()) << XERCES_STD_QUALIFIER endl;
+        retval = false;
+    }
+
+return retval;
+
+}
+
+bool CrassXML::printDOMToScreen(void )
+{
+    bool retval;
+    
+    try
+    {
+        // get a serializer, an instance of DOMLSSerializer
+        XMLCh tempStr[3] = {chLatin_L, chLatin_S, chNull};
+        DOMImplementation *impl          = DOMImplementationRegistry::getDOMImplementation(tempStr);
+        DOMLSSerializer   *theSerializer = ((DOMImplementationLS*)impl)->createLSSerializer();
+        DOMLSOutput       *theOutputDesc = ((DOMImplementationLS*)impl)->createLSOutput();
+        
+        // set user specified output encoding
+        theOutputDesc->setEncoding(STR_2_XMLCH("ISO8859-1"));
+        
+        
+        DOMConfiguration* serializerConfig=theSerializer->getDomConfig();
+        
+        // set feature if the serializer supports the feature/mode
+        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTSplitCdataSections, true))
+            serializerConfig->setParameter(XMLUni::fgDOMWRTSplitCdataSections, true);
+        
+        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true))
+            serializerConfig->setParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true);
+        
+        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
+            serializerConfig->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
+        
+        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTBOM, false))
+            serializerConfig->setParameter(XMLUni::fgDOMWRTBOM, false);
+        
+        //
+        // Plug in a format target to receive the resultant
+        // XML stream from the serializer.
+        //
+        // StdOutFormatTarget prints the resultant XML stream
+        // to stdout once it receives any thing from the serializer.
+        //
+        XMLFormatTarget *myFormTarget;
+        myFormTarget=new StdOutFormatTarget();
+        
+        theOutputDesc->setByteStream(myFormTarget);
+        
+        theSerializer->write(CX_DocElem, theOutputDesc);
+        
+        theOutputDesc->release();
+        theSerializer->release();
+        
+        //
+        // Filter, formatTarget and error handler
+        // are NOT owned by the serializer.
+        //
+        delete myFormTarget;
+        retval = true;
+        
+    }
+    catch (const OutOfMemoryException&)
+    {
+        XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
+        retval = false;
+    }
+    catch (XMLException& e)
+    {
+        XERCES_STD_QUALIFIER cerr << "An error occurred during creation of output transcoder. Msg is:"
+        << XERCES_STD_QUALIFIER endl
+        << XMLCH_2_STR(e.getMessage()) << XERCES_STD_QUALIFIER endl;
+        retval = false;
+    }
+    
+    return retval;
+    
+}
+
 
