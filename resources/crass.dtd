@@ -23,7 +23,7 @@
 <!ELEMENT metadata (notes?,file*)>
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT file EMPTY>
-<!ATTLIST file type "image|sequence" #REQUIRED>
+<!ATTLIST file type (image|sequence|log|data) #REQUIRED>
 <!ATTLIST file url CDATA #REQUIRED>
 <!ELEMENT assembly (contig+)>
 <!ELEMENT contig (consensus*,cspacer+)>

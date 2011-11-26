@@ -56,6 +56,7 @@
 #include "StringCheck.h"
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
+#include "StlExt.h"
 
 NodeManager::NodeManager(std::string drSeq, const options * userOpts)
 {
@@ -1563,6 +1564,126 @@ void NodeManager::printXML(std::ofstream * XMLFile, int GID, bool showDetached)
     }
 	(*XMLFile) << "\t</group>\n"; 
 }
+
+// Spacer dictionaries
+void NodeManager::addSpacersToDOM(CrassXML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
+{
+    SpacerListIterator spacer_iter = NM_Spacers.begin();
+    while(spacer_iter != NM_Spacers.end())
+    {
+        SpacerInstance * SI = spacer_iter->second;
+        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+        {
+            std::string spacer = NM_StringCheck.getString(SI->getID());
+            std::string spid = "SP" + to_string(SI->getID());
+            xmlDoc->addSpacer(spacer, spid, parentNode);
+        }
+        spacer_iter++;
+    }
+}
+
+void NodeManager::printAssemblyToDOM(CrassXML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
+{
+    
+    int current_contig_num = 0;
+    while (current_contig_num < NM_NextContigID) 
+    {
+        current_contig_num++;
+        std::string cid = "C" + to_string(current_contig_num);
+        xercesc::DOMElement * contig_elem = xmlDoc->addContig(cid, parentNode);
+
+        SpacerListIterator spacer_iter = NM_Spacers.begin();
+        while(spacer_iter != NM_Spacers.end())
+        {
+            SpacerInstance * SI = spacer_iter->second;
+            if (SI->getContigID() == current_contig_num) 
+            {
+                if( showDetached || SI->isAttached())
+                {
+
+                    std::string spacer = NM_StringCheck.getString(SI->getID());
+                    std::string spid = "SP" + to_string(SI->getID());
+                    xercesc::DOMElement * cspacer = xmlDoc->addSpacerToContig(spid, contig_elem);
+
+                    //bool ff = false;
+                    //bool bf = false;
+                    bool fs = false;
+                    bool bs = false;
+                    
+                    xercesc::DOMElement * fspacers = NULL;
+                    xercesc::DOMElement * bspacers = NULL;
+
+                    SpacerEdgeVector_Iterator sp_iter = SI->begin();
+                    while (sp_iter != SI->end()) 
+                    {
+                        if ((*sp_iter)->edge->isAttached()) 
+                        {
+                            std::string edge_spid = "SP" + to_string((*sp_iter)->edge->getID());
+                            std::string drid = "DR1";
+                            std::string drconf = "0";
+                            
+                            switch ((*sp_iter)->d) 
+                            {
+                                case FORWARD:
+                                {
+                                    if (fs) 
+                                    {
+                                        // we've already created <fspacers>
+                                        // add spacer
+                                        xmlDoc->addSpacer("fs", edge_spid, drid, drconf, fspacers);
+                                    } 
+                                    else 
+                                    {
+                                        // create <fspacers>
+                                        fspacers = xmlDoc->createSpacers("fspacers");
+                                        xmlDoc->addSpacer("fs", edge_spid, drid, drconf, fspacers);
+                                        fs = true;
+                                    }
+                                    break;
+                                }
+                                case REVERSE:
+                                {
+                                    if (bs) 
+                                    {
+                                        // we've already created <fspacers>
+                                        // add spacer
+                                        xmlDoc->addSpacer("bs", edge_spid, drid, drconf, bspacers);
+                                    } 
+                                    else 
+                                    {
+                                        // create <bspacers>
+                                        bspacers = xmlDoc->createSpacers("bspacers");
+                                        xmlDoc->addSpacer("bs", edge_spid, drid, drconf, bspacers);
+                                        bs = true;
+                                    }
+                                    break;
+                                }
+                                default:
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        ++sp_iter;
+                    }
+                    if (bspacers != NULL) 
+                    {
+                        cspacer->appendChild(bspacers);
+
+                    }
+                    if (fspacers != NULL) 
+                    {
+                        cspacer->appendChild(fspacers);
+
+                    }
+                }
+            }
+            spacer_iter++;
+        }
+    }
+
+}
+
 
 // Spacer dictionaries
 void NodeManager::dumpSpacerDict(std::string spacerFileName, bool showDetached)
