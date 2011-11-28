@@ -96,7 +96,6 @@ CrassXML::CrassXML(void)
     TAG_fs = XMLString::transcode("fs");
     TAG_fspacers = XMLString::transcode("fspacers");
     TAG_group = XMLString::transcode("group");
-    TAG_log = XMLString::transcode("log");
     TAG_metadata = XMLString::transcode("metadata");
     TAG_notes = XMLString::transcode("notes");
     TAG_spacer = XMLString::transcode("spacer");
@@ -150,7 +149,6 @@ CrassXML::~CrassXML(void)
         XMLString::release( &TAG_fs );
         XMLString::release( &TAG_fspacers );
         XMLString::release( &TAG_group );
-        XMLString::release( &TAG_log );
         XMLString::release( &TAG_metadata );
         XMLString::release( &TAG_notes );
         XMLString::release( &TAG_spacer );
@@ -235,11 +233,7 @@ void CrassXML::parseCrassXMLFile(std::string XMLFile)
             {
                 // Found node which is an Element. Re-cast node as element
                 DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-                if( XMLString::equals(currentElement->getTagName(), TAG_log))
-                {
-                    // log section
-                }
-                else if (XMLString::equals(currentElement->getTagName(), TAG_group))
+                if (XMLString::equals(currentElement->getTagName(), TAG_group))
                 {
                     // new group
                     std::cout << XMLCH_2_STR(currentElement->getTagName()) << std::endl;
@@ -327,11 +321,7 @@ xercesc::DOMElement * CrassXML::getWantedGroupFromRoot(xercesc::DOMElement * cur
         {
             // Found node which is an Element. Re-cast node as element
             xercesc::DOMElement* element = dynamic_cast< xercesc::DOMElement* >( current_node );
-            if( XMLString::equals(element->getTagName(), TAG_log))
-            {
-                // log section
-            }
-            else if (XMLString::equals(element->getTagName(), TAG_group))
+			if (XMLString::equals(element->getTagName(), TAG_group))
             {
                 // new group
                 // test if it's one that we want
