@@ -1,7 +1,6 @@
 <!DOCTYPE crass_assem [
 <!ELEMENT crass_assem (log*,group+)>
 <!ATTLIST crass_assem version CDATA "1.0">
-<!ELEMENT log (#PCDATA)>
 <!ELEMENT group (data+,metadata*,assembly+)>
 <!ATTLIST group gid CDATA #REQUIRED>
 <!ATTLIST group drseq CDATA #REQUIRED>
@@ -24,7 +23,7 @@
 <!ELEMENT metadata (notes?,file*)>
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT file EMPTY>
-<!ATTLIST file type "image|sequence" #REQUIRED>
+<!ATTLIST file type "image|sequence|data" #REQUIRED>
 <!ATTLIST file url CDATA #REQUIRED>
 <!ELEMENT assembly (contig+)>
 <!ELEMENT contig (consensus*,cspacer+)>
@@ -45,11 +44,13 @@
 <!ELEMENT bflankers (bf)>
 <!ELEMENT bf EMPTY>
 <!ATTLIST bf flid CDATA #REQUIRED>
+<!ATTLIST bf drid CDATA #IMPLIED>
 <!ATTLIST bf drconf (0|1) "0">
 <!ATTLIST bf directjoin (0|1) "0">
 <!ELEMENT fflankers (bf)>
 <!ELEMENT ff EMPTY>
 <!ATTLIST ff flid CDATA #REQUIRED>
+<!ATTLIST ff drid CDATA #IMPLIED>
 <!ATTLIST ff drconf (0|1) "0">
 <!ATTLIST ff directjoin (0|1) "0">
 ]>
