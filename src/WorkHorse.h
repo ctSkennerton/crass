@@ -50,9 +50,7 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 #include "StringCheck.h"
-#ifdef PERFORM_CRASS_ASSEMBLY
-    #include "CrassXML.h"
-#endif
+#include "CrassXML.h"
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
@@ -72,12 +70,13 @@ bool sortDirectRepeatByLength( const std::string &a, const std::string &b);
 
 class WorkHorse {
     public:
-        WorkHorse (const options * opts, std::string timestamp) 
+    WorkHorse (const options * opts, std::string timestamp, std::string commandLine) 
         { 
             mOpts = opts; 
             mAveReadLength = 0;
             mStringCheck.setName("WH");
             mTimeStamp = timestamp;
+            mCommandLine = commandLine;
         }
         ~WorkHorse();
         
@@ -126,8 +125,12 @@ class WorkHorse {
         int renderDebugGraphs(std::string namePrefix);
         int renderSpacerGraphs(void);							// render debug graphs
         int renderSpacerGraphs(std::string namePrefix);
+        bool checkFileOrError(const char * fileName);
+    
         bool printXML(void) { return printXML(mOpts->output_fastq + "crass_" + mTimeStamp); } // print all the assembly gossip to XML
         bool printXML(std::string namePrefix);
+        bool addDataToDOM(CrassXML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
+        bool addMetadataToDOM(CrassXML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
         
     // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
@@ -137,7 +140,7 @@ class WorkHorse {
         float mAveReadLength;                       // the average seen read length
         StringCheck mStringCheck;                   // Place to swap strings for tokens
         std::string mTimeStamp;						// hold the timestmp so we can make filenames
-        
+        std::string mCommandLine;                   // holds the exact command line string for logging purposes
         // global variables used to cluster and munge DRs
         std::map<int, bool> mGroupMap;				// list of valid group IDs
         DR_Cluster_Map mDR2GIDMap;					// map a DR (StringToken) to a GID

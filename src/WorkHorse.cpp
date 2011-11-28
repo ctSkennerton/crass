@@ -42,7 +42,9 @@
 #include <zlib.h>  
 #include <fstream>
 #include <algorithm>
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
 // local includes
 #include "WorkHorse.h"
 #include "libcrispr.h"
@@ -145,10 +147,6 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     //-----
     // wrapper for the various processes needed to assemble crisprs
     //
-    //	CrassXML * CX = new CrassXML();
-    //	CX->parseCrassXMLFile("/home/uqmimelf/working/crass/data/crass2.xml");
-    //	delete CX;
-    //	return 0;
 	
 	logInfo("Parsing reads in " << (seqFiles.size()) << " files", 1);
 	if(parseSeqFiles(seqFiles))
@@ -1918,7 +1916,7 @@ int WorkHorse::renderSpacerGraphs(void)
 	// Print the cleaned? spacer graph
 	//
     // use the default name
-	return renderSpacerGraphs("Group_");
+	return renderSpacerGraphs("Spacers_");
 }
 
 int WorkHorse::renderSpacerGraphs(std::string namePrefix)
@@ -1985,37 +1983,271 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
     return 0;
 }
 
+bool WorkHorse::checkFileOrError(const char * fileName)
+{
+    try {
+        // Test to see if the file is ok.
+        struct stat inputDirStatus;
+        int xStat = stat(fileName, &inputDirStatus);
+        // stat failed
+        switch (xStat) 
+        {
+            case -1:
+            {
+                switch (errno)
+                {
+                    case ENOENT:
+                    {
+                        throw ( std::runtime_error("Path to file does not exist, or path is an empty string.") );
+                        break;
+                    }
+                    case ELOOP:
+                    {
+                        throw ( std::runtime_error("Too many symbolic links encountered while traversing the path to file."));
+                        break;
+                    }
+                    case EACCES:
+                    {
+                        throw ( std::runtime_error("You do not have permission to access the file."));
+                        break;
+                    }
+                    default:
+                    {
+                        throw (std::runtime_error("An error occured when reading the file"));
+                        break;
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                return true;
+                break;
+            }
+        }
+    } catch (std::exception& e) {
+        std::cerr << e.what()<<std::endl;
+        logError(e.what());
+        return false;
+
+    }
+}
+
+
 bool WorkHorse::printXML(std::string namePrefix)
 {
 	// print all the assembly gossip to XML
 	namePrefix += CRASS_DEF_CRISPR_EXT;
 	logInfo("Writing XML output to \"" << namePrefix << "\"", 1);
 	
-	// open the XML file and write the header information
-    std::ofstream XML_file;
-    XML_file.open(namePrefix.c_str());
-    if (XML_file.good()) 
-    {
-    	XML_file << CRASS_DEF_CRISPR_HEADER;
-    }
+    CrassXML * xml_doc = new CrassXML();
+    int error_num;
+    xercesc::DOMElement * root_element = xml_doc->createDOMDocument(CRASS_DEF_ROOT_ELEMENT, CRASS_DEF_XML_VERSION, error_num);
     
-    // print all the inside information
-    DR_Cluster_MapIterator drg_iter =  mDR2GIDMap.begin();
-	while (drg_iter != mDR2GIDMap.end()) 
-	{
-		// make sure that our cluster is real
-		if (drg_iter->second != NULL) 
-		{
-			if(NULL != mDRs[mTrueDRs[drg_iter->first]])
+    if (root_element && !error_num) 
+    {
+        // go through the node managers and print the group info 
+        // print all the inside information
+        DR_Cluster_MapIterator drg_iter =  mDR2GIDMap.begin();
+        while (drg_iter != mDR2GIDMap.end()) 
+        {
+            // make sure that our cluster is real
+            if (drg_iter->second != NULL) 
             {
-                (mDRs[mTrueDRs[drg_iter->first]])->printXML(&XML_file, drg_iter->first, false);
-		    }
+                if(NULL != mDRs[mTrueDRs[drg_iter->first]])
+                {
+                    std::string gid_as_string = "G" + to_string(drg_iter->first);
+                    xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, mTrueDRs[drg_iter->first], root_element);
+                    
+                    
+                    /*
+                     * <data> section
+                     */
+                    addDataToDOM(xml_doc, group_elem, drg_iter->first);
+
+                    /*
+                     * <metadata> section
+                     */
+                    addMetadataToDOM(xml_doc, group_elem, drg_iter->first);
+                    
+                    /*
+                     * <assembly> section
+                     */
+                    xercesc::DOMElement * assem_elem = xml_doc->addAssembly(group_elem);
+                    (mDRs[mTrueDRs[drg_iter->first]])->printAssemblyToDOM(xml_doc, assem_elem, false);
+                    
+                }
+            }
+            drg_iter++;
         }
-		drg_iter++;
-	}
-	
-	// close the XML file
-	XML_file << CRASS_DEF_CRISPR_FOOTER;
-	XML_file.close();
+        xml_doc->printDOMToFile(namePrefix);
+    } 
+    else
+    {
+        return 1;
+    }
+    delete xml_doc;
 	return 0;
 }
+
+bool WorkHorse::addDataToDOM(CrassXML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
+{
+    try 
+    {
+        xercesc::DOMElement * data_elem = xmlDoc->addData(groupElement);
+        xercesc::DOMNodeList * data_children = data_elem->getChildNodes();
+        for (XMLSize_t i = 0; i < data_children->getLength(); i++) 
+        {
+            xercesc::DOMNode* current_node = data_children->item(i);
+            if( current_node->getNodeType() &&  current_node->getNodeType() == xercesc::DOMNode::ELEMENT_NODE ) // is element 
+            {
+                // Found node which is an Element. Re-cast node as element
+                xercesc::DOMElement* element = dynamic_cast< xercesc::DOMElement* >( current_node );
+                if( xercesc::XMLString::equals(element->getTagName(), xmlDoc->getDrs()))
+                {
+                    // TODO: current implementation in Crass only supports a single DR for a group
+                    // in the future this will change, but for now ok to keep as a constant
+                    std::string drid = "DR1";
+                    xmlDoc->addDirectRepeat(drid, mTrueDRs[groupNumber], element);
+                }
+                else if (xercesc::XMLString::equals(element->getTagName(), xmlDoc->getSpacers()))
+                {
+                    // print out all the spacers for this group
+                    (mDRs[mTrueDRs[groupNumber]])->addSpacersToDOM(xmlDoc, element, false);
+                    
+                }
+                // TODO: Crass does not implement flankers yet
+                else if (xercesc::XMLString::equals(element->getTagName(), xmlDoc->getFlankers()))
+                {
+                    // print out all the flankers for this group
+                }
+            }
+        }
+    }
+    catch( xercesc::XMLException& e )
+    {
+        char* message = xercesc::XMLString::transcode( e.getMessage() );
+        std::ostringstream errBuf;
+        errBuf << "Error parsing file: " << message << std::flush;
+        xercesc::XMLString::release( &message );
+        return 1;
+    }
+    return 0;
+}
+
+bool WorkHorse::addMetadataToDOM(CrassXML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
+{
+    std::stringstream notes;
+    notes << PACKAGE_NAME <<" ("<<PACKAGE_VERSION<<") run on "<<mTimeStamp<<" with command: ";
+    notes <<mCommandLine;
+    xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
+    
+    std::string file_name;
+    // add in files if they exist
+    if (!mOpts->logToScreen) 
+    {
+        // we whould have a log file
+        file_name = mOpts->output_fastq + PACKAGE_NAME + "." + mTimeStamp + ".log";
+        if (checkFileOrError(file_name.c_str())) 
+        {
+            xmlDoc->addFileToMetadata("log", file_name, metadata_elem);
+        }
+        else
+        {
+            logError("Could not find the log file at "<<file_name<<" but I think it should be there... wierd");
+        }
+    }
+    
+    
+#ifdef DEBUG
+    // check for debuging .gv files
+    file_name = mOpts->output_fastq + "Group_"; 
+    std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_debug.gv";
+    if (checkFileOrError((file_name + file_sufix).c_str())) 
+    {
+        xmlDoc->addFileToMetadata("data", (file_name + file_sufix), metadata_elem);
+    } 
+    else 
+    {
+        logError("Could not find the Debug .gv file at "<< file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+    }
+    
+    // and now for the cleaned .gv
+    file_name = mOpts->output_fastq + "Clean_";
+    if (checkFileOrError((file_name + file_sufix).c_str())) 
+    {
+        xmlDoc->addFileToMetadata("data", (file_name + file_sufix), metadata_elem);
+    } 
+    else 
+    {
+        logError("Could not find the Debug .gv file at "<<file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+
+    }
+    
+#endif
+    
+#ifdef RENDERING
+    // check for image files
+#ifdef DEBUG
+    file_name = mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".eps";
+    if (checkFileOrError(file_name.c_str())) 
+    {
+        xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
+    } 
+    else 
+    {
+        logError("Could not find the Debug .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+    }
+    
+    file_name = mOpts->output_fastq + "Clean_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".eps";
+    
+    if (checkFileOrError(file_name.c_str())) 
+    {
+        xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
+    } 
+    else 
+    {
+        logError("Could not find the cleaned debug .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+    }
+#endif
+    
+    file_name = mOpts->output_fastq + "Spacers_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".eps";
+    if (checkFileOrError(file_name.c_str())) 
+    {
+        xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
+    } 
+    else 
+    {
+        logError("Could not find the Spacer .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+    }
+
+#endif
+    
+    // check the sequence file
+    file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".fa";
+    if (checkFileOrError(file_name.c_str())) 
+    {
+        xmlDoc->addFileToMetadata("sequence", file_name, metadata_elem);
+    } 
+    else 
+    {
+        logError("Could not find the fasta file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+    }
+    
+    
+    // check the spacer dictionary 
+    file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".spacers";
+    if (checkFileOrError(file_name.c_str())) 
+    {
+        xmlDoc->addFileToMetadata("data", file_name, metadata_elem);
+    } 
+    else 
+    {
+        logError("Could not find the spacer dictionary file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+    }
+    return 0;
+    
+}
+
+
+

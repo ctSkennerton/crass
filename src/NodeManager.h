@@ -58,6 +58,7 @@
 #include "ReadHolder.h"
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
+#include "CrassXML.h"
 
 // typedefs
 typedef std::map<StringToken, CrisprNode *> NodeList;
@@ -160,9 +161,14 @@ class NodeManager {
     
         void printSpacerKey(std::ostream &dataOut, int numSteps, std::string groupNumber);         													// make a key for the spacer graph 	
         void dumpReads(std::string readsFileName, bool showDetached, bool split);												// dump reads to this file
-        void printXML(std::ofstream * XMLFile, int GID, bool showDetached);						// print this node managers portion of the XML file 
         
-	// Spacer dictionaries
+    // XML
+        void printXML(std::ofstream * XMLFile, int GID, bool showDetached);						// print this node managers portion of the XML file 
+        void addSpacersToDOM(CrassXML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
+        void printAssemblyToDOM(CrassXML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
+
+
+    // Spacer dictionaries
 		void dumpSpacerDict(std::string spacerFileName, bool showDetached);
 
     private:

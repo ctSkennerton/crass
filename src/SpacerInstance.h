@@ -120,7 +120,7 @@ public:
         // edge functions/iterators
         //
         inline void addEdge(spacerEdgeStruct * s){SI_SpacerEdges.push_back(s);}
-    void clearEdge(void);
+        void clearEdge(void);
         SpacerEdgeVector_Iterator begin(void) {return SI_SpacerEdges.begin();}
         SpacerEdgeVector_Iterator end(void) {return SI_SpacerEdges.end();}
 
