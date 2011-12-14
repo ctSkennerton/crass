@@ -506,7 +506,7 @@ int assemblyMain(int argc, char * argv[])
     }
     
     assemblyOptions opts;
-    ASSEMBLERS wantedAssembler;
+    ASSEMBLERS wantedAssembler = unset;
 
 #ifdef HAVE_VELVET
     if (strcmp(argv[1], "velvet") == 0) 
@@ -524,6 +524,12 @@ int assemblyMain(int argc, char * argv[])
     }
 #endif
     
+    if(unset == wantedAssembler)
+    {
+        std::cout << "**ERROR: No valid assemblers installed" << std::endl;
+        return 43;
+    }
+
     processAssemblyOptions(argc - 1, argv + 1, opts);
     
     std::set<std::string> segments;
@@ -547,7 +553,7 @@ int assemblyMain(int argc, char * argv[])
     tmp_file_name += "_tmp.fa";
     
     generateTmpAssemblyFile(group_read_file, segments, opts, tmp_file_name);
-    int return_value;
+    int return_value = 42;
     switch (wantedAssembler) 
     {
         case velvet:
@@ -564,3 +570,4 @@ int assemblyMain(int argc, char * argv[])
     }
     return return_value;
 }
+

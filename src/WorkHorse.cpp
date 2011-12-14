@@ -2189,7 +2189,7 @@ bool WorkHorse::addMetadataToDOM(CrassXML * xmlDoc, xercesc::DOMElement * groupE
 #ifdef RENDERING
     // check for image files
 #ifdef DEBUG
-    file_name = mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".eps";
+    file_name = mOpts->output_fastq + "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
     if (checkFileOrError(file_name.c_str())) 
     {
         xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
@@ -2199,7 +2199,7 @@ bool WorkHorse::addMetadataToDOM(CrassXML * xmlDoc, xercesc::DOMElement * groupE
         logError("Could not find the Debug .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
     }
     
-    file_name = mOpts->output_fastq + "Clean_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".eps";
+    file_name = mOpts->output_fastq + "Clean_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
     
     if (checkFileOrError(file_name.c_str())) 
     {
@@ -2209,9 +2209,9 @@ bool WorkHorse::addMetadataToDOM(CrassXML * xmlDoc, xercesc::DOMElement * groupE
     {
         logError("Could not find the cleaned debug .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
     }
-#endif
+#endif // DEBUG
     
-    file_name = mOpts->output_fastq + "Spacers_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".eps";
+    file_name = mOpts->output_fastq + "Spacers_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
     if (checkFileOrError(file_name.c_str())) 
     {
         xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
