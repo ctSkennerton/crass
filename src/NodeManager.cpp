@@ -987,10 +987,11 @@ void NodeManager::findAllForwardAttachedNodes(NodeVector * nodes)
     }
 }
 
-void NodeManager::setSpacerRanks(void)
+int NodeManager::setSpacerRanks(bool makeEdges)
 {
     //-----
     // For all forward nodes, count the number of ongoing spacers
+	// mkae spacer edges if told to do so
     //
     SpacerListIterator spacers_iter = NM_Spacers.begin();
     while(spacers_iter != NM_Spacers.end()) 
@@ -1021,21 +1022,24 @@ void NodeManager::setSpacerRanks(void)
 						{
 							// bingo!
 							rank++;
-                            
-                            // we can add an edge for these two spacers
-                            SpacerInstance * next_spacer = NM_Spacers[makeSpacerKey((el_iter->first)->getID(), (qel_iter->first)->getID())];
-                            
-                            // add the forward edge to the next spacer
-                            spacerEdgeStruct * new_edge = new spacerEdgeStruct();
-                            new_edge->edge = next_spacer;
-                            new_edge->d = FORWARD;
-                            (spacers_iter->second)->addEdge(new_edge);
-                            
-                            // add the corresponding reverse edge to the current spacer
-                            spacerEdgeStruct * new_edge2 = new spacerEdgeStruct();
-                            new_edge2->edge = spacers_iter->second;
-                            new_edge2->d = REVERSE;
-                            next_spacer->addEdge(new_edge2);
+      
+							if(makeEdges)
+							{
+								// we can add an edge for these two spacers
+								SpacerInstance * next_spacer = NM_Spacers[makeSpacerKey((el_iter->first)->getID(), (qel_iter->first)->getID())];
+								
+								// add the forward edge to the next spacer
+								spacerEdgeStruct * new_edge = new spacerEdgeStruct();
+								new_edge->edge = next_spacer;
+								new_edge->d = FORWARD;
+								(spacers_iter->second)->addEdge(new_edge);
+								
+								// add the corresponding reverse edge to the current spacer
+								spacerEdgeStruct * new_edge2 = new spacerEdgeStruct();
+								new_edge2->edge = spacers_iter->second;
+								new_edge2->d = REVERSE;
+								next_spacer->addEdge(new_edge2);
+							}
 						}
 						el_iter++;
 					}
@@ -1050,6 +1054,7 @@ void NodeManager::setSpacerRanks(void)
         (spacers_iter->second)->setSpacerRank(rank);
         spacers_iter++;
     }
+    return 0;
 }
 
 void NodeManager::findSpacerForContig(SpacerInstanceVector * sv, int contigID)
@@ -1077,7 +1082,7 @@ int NodeManager::splitIntoContigs(void)
     //
     
     // make sure these flags are up to date
-    setSpacerRanks(); 
+	setSpacerRanks(false); 
     
     // get all of  the node lists
     std::queue<SpacerInstance *> walking_queue;

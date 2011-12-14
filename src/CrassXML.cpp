@@ -180,8 +180,35 @@ CrassXML::~CrassXML(void)
     {
         std::cerr << "Unknown exception encountered in TagNamesdtor" << std::endl;
     }
+    
+    std::vector<XMLCh*>::iterator X_iter = XML_transcodes.begin();
+    while(X_iter != XML_transcodes.end())
+    {
+        try // Free memory
+        {
+            XMLString::release( &(*X_iter) );
+        }
+        catch( ... )
+        {
+            std::cerr << "Unknown exception encountered in TagNamesdtor" << std::endl;
+        }
+        X_iter++;
+    }
+    std::vector<char*>::iterator C_iter = CHAR_transcodes.begin();
+    while(C_iter != CHAR_transcodes.end())
+    {
+        try // Free memory
+        {
+            XMLString::release( &(*C_iter) );
+        }
+        catch( ... )
+        {
+            std::cerr << "Unknown exception encountered in TagNamesdtor" << std::endl;
+        }
+        C_iter++;
+    }
 
-      XMLPlatformUtils::Terminate();  // Terminate after release of memory
+    XMLPlatformUtils::Terminate();  // Terminate after release of memory
 }
 
 void CrassXML::parseCrassXMLFile(std::string XMLFile)

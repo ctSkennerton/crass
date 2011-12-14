@@ -65,6 +65,14 @@ LoggerSimp::LoggerSimp() {}
 LoggerSimp::~LoggerSimp(){
     if(mFileOpen)
         mInstance->closeLogFile();
+    if(mTmpFH != NULL)
+    {
+    	delete mTmpFH;
+    }
+    if(mGlobalHandle != NULL)
+    {
+    	delete mGlobalHandle;
+    }
     if(mInstance != NULL)
     {
         delete mInstance;
@@ -227,11 +235,11 @@ void LoggerSimp::openLogFile(void)
     //-----
     // opens the log file
     //
-    std::ofstream * fh = mInstance->getFhandle();
-    fh = new std::ofstream(getLogFile().c_str(), std::ios::app);
+	mTmpFH = mInstance->getFhandle();
+	mTmpFH = new std::ofstream(getLogFile().c_str(), std::ios::app);
     mInstance->setFileOpen(true);
     std::streambuf * buff = mInstance->getBuff();
-    buff = fh->rdbuf();
+    buff = mTmpFH->rdbuf();
     mGlobalHandle = new std::iostream(buff);
 }
 

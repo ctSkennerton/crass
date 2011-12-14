@@ -64,6 +64,7 @@
 #include <stdexcept>
 #include <set>
 #include <list>
+#include <vector>
 
 #if defined(XERCES_NEW_IOSTREAMS)
 #include <iostream>
@@ -184,15 +185,26 @@ class CrassXML
         void parseCrassXMLFile(std::string XMLFile, std::string& wantedGroup, std::string * directRepeat, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly);
         //std::string XMLCH_2_STR(const XMLCh* xmlch);
         
-        inline char * XMLCH_2_STR( const XMLCh* toTranscode ) 
-        {  
-            return xercesc::XMLString::transcode(toTranscode); 
+        char * XMLCH_2_STR( const XMLCh* toTranscode ) 
+        {
+        	//-----
+        	// transcode on the fly, make sure to keep the values so we can release
+        	//
+        	char* ret_val = xercesc::XMLString::transcode(toTranscode); 
+        	CHAR_transcodes.push_back(ret_val);
+            return ret_val;
         }
         
-        inline XMLCh * STR_2_XMLCH( const std::string& toTranscode ) 
+        XMLCh * STR_2_XMLCH( const std::string& toTranscode ) 
         {  
-            return xercesc::XMLString::transcode(toTranscode.c_str()); 
+        	//-----
+        	// transcode on the fly, make sure to keep the values so we can release
+        	//
+        	XMLCh * ret_val = xercesc::XMLString::transcode(toTranscode.c_str()); 
+            XML_transcodes.push_back(ret_val);
+            return ret_val;
         }
+        
         xercesc::DOMElement * getWantedGroupFromRoot(xercesc::DOMElement * currentElement, std::string& wantedGroup, std::string * directRepeat);
         xercesc::DOMElement * parseGroupForAssembly(xercesc::DOMElement* currentElement);
         void parseAssemblyForContigIds(xercesc::DOMElement* currentElement, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly);
@@ -260,6 +272,11 @@ class CrassXML
     private:
         xercesc::XercesDOMParser * mConfigFileParser;			// parsing object
         xercesc::DOMDocument * CX_DocElem;
+        
+        // we need to keep track of what it is we are transcoding so we can release at the end
+        std::vector<XMLCh*> XML_transcodes;
+        std::vector<char*> CHAR_transcodes;
+        
         // grep ATTLIST crass.dtd | sed -e "s%[^ ]* [^ ]* \([^ ]*\) .*%XMLCh\* ATTR_\1;%" | sort | uniq
         // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%XMLCh\* TAG_\1;%" | sort | uniq
         XMLCh* ATTR_cid;

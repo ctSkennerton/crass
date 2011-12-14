@@ -143,7 +143,7 @@ class NodeManager {
     void findSpacerForContig(SpacerInstanceVector * sv, int contigID);
     int splitIntoContigs(void);
 		void findAllForwardAttachedNodes(NodeVector * nodes);
-		void setSpacerRanks(void);
+		int setSpacerRanks(bool makeEdges);
         void clearContigs(void);
         void contigiseForwardSpacers(std::queue<SpacerInstance *> * walkingQueue, SpacerInstance * SI);
         bool getForwardSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI);
