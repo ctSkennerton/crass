@@ -658,8 +658,15 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     		ss_iter++;
     		int start_cut = (*ss_iter) + 1;
     		ss_iter++;
-    		int length = *ss_iter - start_cut;
-            *retStr = RH_Seq.substr(start_cut, length);
+    		if(ss_iter < RH_StartStops.end())
+    		{
+                *retStr = RH_Seq.substr(start_cut, *ss_iter - start_cut);
+    		}
+    		else
+    		{
+    			// only one DR in thie whole guy!
+    			*retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
+    		}
     		RH_NextSpacerStart = 3;
             return true;
     	}

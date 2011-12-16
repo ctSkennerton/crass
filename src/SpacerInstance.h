@@ -60,6 +60,14 @@ typedef struct{
     SpacerInstance * edge; 
     SI_EdgeDirection d; 
 } spacerEdgeStruct;
+
+inline std::string saySpacerEdgeDirectionLikeAHuman(SI_EdgeDirection d)
+{
+	if(d == REVERSE) { return "REVERSE"; }
+	return "FORWARD";
+}
+
+
 typedef std::vector<SpacerInstance * > SpacerInstanceVector;
 typedef std::vector<SpacerInstance * >::iterator SpacerInstanceVector_Iterator;
 
@@ -87,7 +95,6 @@ public:
             SI_LeadingNode = NULL;
             SI_LastNode = NULL;
             SI_InstanceCount = 0;
-            SI_SpacerRank = 0;
             SI_ContigID = 0;
             SI_Attached = false;
         }
@@ -106,24 +113,35 @@ public:
         inline CrisprNode * getLast(void) { return SI_LastNode; }
         inline bool isAttached(void) { return SI_Attached; }
         inline void setAttached(bool attached) { SI_Attached = attached; }
-        inline SpacerEdgeVector * getEdges(void) {return &SI_SpacerEdges;}
         
         //
         // contig functions
         //
         inline int getContigID(void) { return SI_ContigID; }
         inline void setContigID(int CID) { SI_ContigID = CID; }
-        inline int getSpacerRank(void) { return SI_SpacerRank; }
-        inline void setSpacerRank(int rank) { SI_SpacerRank = rank; }
-    
+        inline int getSpacerRank(void) { return SI_SpacerEdges.size(); }
+
+        //
+        // graph functions
+        //
+        bool isViable(void);
+        bool isFur(void);
+        void detachFromSpacerGraph(void);
+        bool detachSpecificSpacer(SpacerInstance * target);
+
         //
         // edge functions/iterators
         //
-        inline void addEdge(spacerEdgeStruct * s){SI_SpacerEdges.push_back(s);}
+        inline void addEdge(spacerEdgeStruct * s) { SI_SpacerEdges.push_back(s); }
         void clearEdge(void);
         SpacerEdgeVector_Iterator begin(void) {return SI_SpacerEdges.begin();}
         SpacerEdgeVector_Iterator end(void) {return SI_SpacerEdges.end();}
-
+        inline SpacerEdgeVector * getEdges(void) {return &SI_SpacerEdges;}
+        
+        //
+        // File /IO
+        //
+        void printContents(void);
         
     private:
         StringToken SI_SpacerSeqID;               // the StringToken of this spacer
@@ -131,7 +149,6 @@ public:
         CrisprNode * SI_LastNode;                 // the last node
         unsigned int SI_InstanceCount;            // the number of times this exact instance has been seen
         bool SI_Attached;							  // is this spacer attached?
-        int SI_SpacerRank;						  // how many spacers come off this guy?
         int SI_ContigID;							  // contig ID
         SpacerEdgeVector SI_SpacerEdges;              // Pointers to the spacers that come off this spacer
 };

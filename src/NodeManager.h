@@ -140,10 +140,12 @@ class NodeManager {
         void clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType);
     
     // Contigs
-    void findSpacerForContig(SpacerInstanceVector * sv, int contigID);
-    int splitIntoContigs(void);
+        void findSpacerForContig(SpacerInstanceVector * sv, int contigID);
+		int cleanSpacerGraph(void);
+		void removeSpacerBubbles(void);
+		int splitIntoContigs(void);
 		void findAllForwardAttachedNodes(NodeVector * nodes);
-		int setSpacerRanks(bool makeEdges);
+		int buildSpacerGraph(void);
         void clearContigs(void);
         void contigiseForwardSpacers(std::queue<SpacerInstance *> * walkingQueue, SpacerInstance * SI);
         bool getForwardSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI);
@@ -156,8 +158,10 @@ class NodeManager {
     // Printing / IO
         void printDebugGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc);         // Print a graphviz style graph of the DRs and spacers
 		void printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc); 
-        void printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc);         // Print a graphviz style graph of the FULL spacers
+        void printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc, bool showSingles);         // Print a graphviz style graph of the FULL spacers
         void printSpacerGraph(void);         // Print a graphviz style graph of the FULL spacers
+        std::string getSpacerGraphLabel(SpacerInstance * spacer, bool longDesc);
+
     
         void printSpacerKey(std::ostream &dataOut, int numSteps, std::string groupNumber);         													// make a key for the spacer graph 	
         void dumpReads(std::string readsFileName, bool showDetached, bool split);												// dump reads to this file
@@ -169,6 +173,7 @@ class NodeManager {
 
 
     // Spacer dictionaries
+        void printAllSpacers(void);
 		void dumpSpacerDict(std::string spacerFileName, bool showDetached);
 
     private:

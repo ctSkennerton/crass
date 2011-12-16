@@ -197,6 +197,13 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         return 50;
 	}
 	
+	// clean spacer graphs
+	if(cleanSpacerGraphs())
+	{
+        logError("FATAL ERROR: cleanSpacerGraphs failed");
+        return 51;
+	}
+	
 	// make contigs
 	if(splitIntoContigs())
 	{
@@ -1857,7 +1864,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
 int WorkHorse::makeSpacerGraphs(void)
 {
 	//-----
-	// build the spacer graph
+	// build the spacer graphs
 	//
     // go through the DR2GID_map and make all reads in each group into nodes
     DR_ListIterator dr_iter = mDRs.begin();
@@ -1866,13 +1873,35 @@ int WorkHorse::makeSpacerGraphs(void)
         if(NULL != dr_iter->second)
         {
         	logInfo("Making spacer graph for DR: " << dr_iter->first, 1);
-        	if((dr_iter->second)->setSpacerRanks(true))
+        	if((dr_iter->second)->buildSpacerGraph())
         		return 1;
         }
         dr_iter++;
     }
     return 0;
 }
+
+int WorkHorse::cleanSpacerGraphs(void)
+{
+	//-----
+	// clean the spacer graphs
+	//
+    // go through the DR2GID_map and make all reads in each group into nodes
+    DR_ListIterator dr_iter = mDRs.begin();
+    while(dr_iter != mDRs.end())
+    {
+        if(NULL != dr_iter->second)
+        {
+        	logInfo("Cleaning spacer graph for DR: " << dr_iter->first, 1);
+        	//(dr_iter->second)->printAllSpacers();
+        	if((dr_iter->second)->cleanSpacerGraph())
+        		return 1;
+        }
+        dr_iter++;
+    }
+    return 0;
+}
+
 
 //**************************************
 // contig making
@@ -2077,7 +2106,7 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
                 graph_file.open(graph_file_name.c_str());
                 if (graph_file.good()) 
                 {
-                    mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription);
+                    mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription, mOpts->showSingles);
                     mDRs[mTrueDRs[drg_iter->first]]->printSpacerKey(key_file, 10, namePrefix + to_string(drg_iter->first));
 #if RENDERING
                     // create a command string and call graphviz to make the image file

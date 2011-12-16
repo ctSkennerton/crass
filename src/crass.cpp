@@ -132,6 +132,7 @@ void usage(void)
     std::cout<< "-f --covCutoff       <INT>   Remove groups with less than x attached spacers [Default: "<<CRASS_DEF_COVCUTOFF<<"]"<<std::endl;
     std::cout<< "-k --kmerCount       <INT>   The number of the kmers that need to be"<<std::endl; 
     std::cout<< "                             shared for clustering [Default: "<<CRASS_DEF_K_CLUST_MIN<<"]"<<std::endl;
+    std::cout<< "-K --cNodeKmerLen    <INT>   Length of the kmers used to make crispr nodes [Default: "<<CRASS_DEF_NODE_KMER_SIZE<<"]"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"Graph Output Options: "<<std::endl;
 #ifdef RENDERING
@@ -161,7 +162,8 @@ void usage(void)
     std::cout<<"-c --graphColour     <TYPE>   Defines the range of colours to use for the output graph"<<std::endl;
     std::cout<<"                              the different types available are:"<<std::endl;
     std::cout<<"                              red-blue, blue-red, green-red-blue, red-blue-green"<<std::endl;
-    std::cout<<"-L --longDescription          set if you want the spacer sequence printed along with the ID in the spacer graph. [Default: false]"<<std::endl;
+    std::cout<<"-L --longDescription          Set if you want the spacer sequence printed along with the ID in the spacer graph. [Default: false]"<<std::endl;
+    std::cout<<"-G --showSingles              Set if you want to print singleton spacers in the spacer graph . [Default: false]"<<std::endl;
 }
 
 void versionInfo(void) 
@@ -193,7 +195,7 @@ int processOptions(int argc, char *argv[], options *opts)
     int c;
     int index;
     bool scalling = false;
-    while( (c = getopt_long(argc, argv, "ab:c:d:D:f:hk:l:Ln:o:rs:S:Vw:x:y:", long_options, &index)) != -1 ) 
+    while( (c = getopt_long(argc, argv, "a:b:c:d:D:f:Ghk:K:l:Ln:o:rs:S:Vw:x:y:", long_options, &index)) != -1 ) 
     {
         switch(c) 
         {
@@ -273,6 +275,9 @@ int processOptions(int argc, char *argv[], options *opts)
             case 'f':
                 from_string<int>(opts->covCutoff, optarg, std::dec);
                 break;
+            case 'G':
+            	opts->showSingles= true;
+                break;
             case 'h': 
                 versionInfo(); 
                 usage();
@@ -285,6 +290,9 @@ int processOptions(int argc, char *argv[], options *opts)
                     std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for kmer clustering cannot be "<<opts->kmer_size<<" changing to "<<CRASS_DEF_K_CLUST_MIN<<std::endl;
                     opts->kmer_size = CRASS_DEF_K_CLUST_MIN;
                 }
+                break;
+            case 'K': 
+                from_string<int>(opts->cNodeKmerLength, optarg, std::dec);
                 break;
             case 'l': 
                 from_string<int>(opts->logLevel, optarg, std::dec);
@@ -468,6 +476,8 @@ int main(int argc, char *argv[])
         "unset",                                // set dummy value if not rendering
 #endif
         CRASS_DEF_SPACER_LONG_DESC,             // do not use a long description for the nodes of the spacer graph
+        CRASS_DEF_SPACER_SHOW_SINGLES,			// show singles in graph printing
+        CRASS_DEF_NODE_KMER_SIZE,				// kmer size for building crispr nodes
         CRASS_DEF_COVCUTOFF                     // Groups with less than 10 reads will be purged
     };
 

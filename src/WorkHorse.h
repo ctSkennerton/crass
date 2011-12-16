@@ -114,6 +114,7 @@ class WorkHorse {
         // spacer graphs
         //**************************************
         int makeSpacerGraphs(void);
+        int cleanSpacerGraphs(void);
         
         //**************************************
         // contig making
