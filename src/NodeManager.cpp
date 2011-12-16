@@ -1071,13 +1071,12 @@ int NodeManager::cleanSpacerGraph(void)
 	//-----
 	// Clean up the spacer graph
 	//
-	std::cout << "Cleanering!" << std::endl;
 	int round  = 0;
     bool cleaned_some = true;
     while(cleaned_some)
     {
     	round++;
-    	std::cout << round << std::endl;
+    	logInfo("Cleaning round: " << round, 2);
     	cleaned_some = false;
     	
     	// remove fur
@@ -1114,7 +1113,6 @@ int NodeManager::cleanSpacerGraph(void)
         
         // remove bubbles
         removeSpacerBubbles();
-        
     }
 	return 0;
 }

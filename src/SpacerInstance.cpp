@@ -97,7 +97,6 @@ bool SpacerInstance::isFur(void)
 	{
 		if((*edge_iter)->edge->getSpacerRank() > 2)
 		{
-			std::cout << "SP_" << SI_SpacerSeqID << " marked as fur" << std::endl;
 			return true;
 		}
 		edge_iter++;
@@ -130,7 +129,6 @@ bool SpacerInstance::isViable(void)
 			return true;
 		edge_iter++;
 	}
-	std::cout << "SP_" << SI_SpacerSeqID << " marked non viable" << std::endl;
 	return false;
 }
 
