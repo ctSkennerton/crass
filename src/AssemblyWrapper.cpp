@@ -560,6 +560,7 @@ int assemblyMain(int argc, char * argv[])
             break;
         default:
             // assembler not known throw error
+            return_value = 1;
             break;
     }
     return return_value;

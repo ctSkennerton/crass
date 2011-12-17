@@ -136,47 +136,49 @@ class CrassXML
         //
         // Generic get and set
         //
-        inline XMLCh* getCid(void) { return ATTR_cid;} ;
-        inline XMLCh* getConfcnt(void) { return ATTR_confcnt;} ;
-        inline XMLCh* getDirectjoin(void) { return ATTR_directjoin;} ;
-        inline XMLCh* getDrconf(void) { return ATTR_drconf;} ;
-        inline XMLCh* getDrid(void) { return ATTR_drid;} ;
-        inline XMLCh* getDrseq(void) { return ATTR_drseq;} ;
-        inline XMLCh* getFlid(void) { return ATTR_flid;} ;
-        inline XMLCh* getGid(void) { return ATTR_gid;} ;
-        inline XMLCh* getSeq(void) { return ATTR_seq;} ;
-        inline XMLCh* getSpid(void) { return ATTR_spid;} ;
-        inline XMLCh* getCov(void) { return ATTR_cov;} ;
-        inline XMLCh* getTotcnt(void) { return ATTR_totcnt;} ;
-        inline XMLCh* getType(void) { return ATTR_type;} ;
-        inline XMLCh* getUrl(void) { return ATTR_url;} ;
-        inline XMLCh* getVersion(void) { return ATTR_version;} ;
-        
-        inline XMLCh* getAssembly(void) { return TAG_assembly;} ;
-        inline XMLCh* getBf(void) { return TAG_bf;} ;
-        inline XMLCh* getBflankers(void) { return TAG_bflankers;} ;
-        inline XMLCh* getBs(void) { return TAG_bs;} ;
-        inline XMLCh* getBspacers(void) { return TAG_bspacers;} ;
-        inline XMLCh* getConsensus(void) { return TAG_consensus;} ;
-        inline XMLCh* getContig(void) { return TAG_contig;} ;
-        inline XMLCh* getCrass_assem(void) { return TAG_crass_assem;} ;
-        inline XMLCh* getCspacer(void) { return TAG_cspacer;} ;
-        inline XMLCh* getData(void) { return TAG_data;} ;
-        inline XMLCh* getDr(void) { return TAG_dr;} ;
-        inline XMLCh* getDrs(void) { return TAG_drs;} ;
-        inline XMLCh* getFf(void) { return TAG_ff;} ;
-        inline XMLCh* getFflankers(void) { return TAG_fflankers;} ;
-        inline XMLCh* getFile(void) { return TAG_file;} ;
-        inline XMLCh* getFlanker(void) { return TAG_flanker;} ;
-        inline XMLCh* getFlankers(void) { return TAG_flankers;} ;
-        inline XMLCh* getFs(void) { return TAG_fs;} ;
-        inline XMLCh* getFspacers(void) { return TAG_fspacers;} ;
-        inline XMLCh* getGroup(void) { return TAG_group;} ;
-        inline XMLCh* getLog(void) { return TAG_log;} ;
-        inline XMLCh* getMetadata(void) { return TAG_metadata;} ;
-        inline XMLCh* getNotes(void) { return TAG_notes;} ;
-        inline XMLCh* getSpacer(void) { return TAG_spacer;} ;
-        inline XMLCh* getSpacers(void) { return TAG_spacers;} ;
+        // grep ATTLIST crass.dtd | perl -ne 's/[^ ]* [^ ]* ([^ ]*) .*/\1/ ;chomp; my $original = $_; s/\b(\w)/\U$1/g; print "inline XMLCh * get$_(void) { return ATTR_$original; };\n";' | sort | uniq
+        // grep ELEMENT crass.dtd | perl -ne 's/[^ ]* ([^ ]*) .*/\1/ ;chomp; my $original = $_; s/\b(\w)/\U$1/g; print "inline XMLCh * get$_(void) { return TAG_$original; };\n";' |sort | uniq
+
+        inline XMLCh * getCid(void){return ATTR_cid;};
+        inline XMLCh * getConfcnt(void){return ATTR_confcnt;};
+        inline XMLCh * getCov(void){return ATTR_cov;};
+        inline XMLCh * getDirectjoin(void){return ATTR_directjoin;};
+        inline XMLCh * getDrconf(void){return ATTR_drconf;};
+        inline XMLCh * getDrid(void){return ATTR_drid;};
+        inline XMLCh * getDrseq(void){return ATTR_drseq;};
+        inline XMLCh * getFlid(void){return ATTR_flid;};
+        inline XMLCh * getGid(void){return ATTR_gid;};
+        inline XMLCh * getSeq(void){return ATTR_seq;};
+        inline XMLCh * getSpid(void){return ATTR_spid;};
+        inline XMLCh * getTotcnt(void){return ATTR_totcnt;};
+        inline XMLCh * getType(void){return ATTR_type;};
+        inline XMLCh * getUrl(void){return ATTR_url;};
+        inline XMLCh * getVersion(void){return ATTR_version;};
+            
+        inline XMLCh * getAssembly(void){return TAG_assembly;};
+        inline XMLCh * getBf(void){return TAG_bf;};
+        inline XMLCh * getBflankers(void){return TAG_bflankers;};
+        inline XMLCh * getBs(void){return TAG_bs;};
+        inline XMLCh * getBspacers(void){return TAG_bspacers;};
+        inline XMLCh * getConsensus(void){return TAG_consensus;};
+        inline XMLCh * getContig(void){return TAG_contig;};
+        inline XMLCh * getCrass_assem(void){return TAG_crass_assem;};
+        inline XMLCh * getCspacer(void){return TAG_cspacer;};
+        inline XMLCh * getData(void){return TAG_data;};
+        inline XMLCh * getDr(void){return TAG_dr;};
+        inline XMLCh * getDrs(void){return TAG_drs;};
+        inline XMLCh * getFf(void){return TAG_ff;};
+        inline XMLCh * getFflankers(void){return TAG_fflankers;};
+        inline XMLCh * getFile(void){return TAG_file;};
+        inline XMLCh * getFlanker(void){return TAG_flanker;};
+        inline XMLCh * getFlankers(void){return TAG_flankers;};
+        inline XMLCh * getFs(void){return TAG_fs;};
+        inline XMLCh * getFspacers(void){return TAG_fspacers;};
+        inline XMLCh * getGroup(void){return TAG_group;};
+        inline XMLCh * getMetadata(void){return TAG_metadata;};
+        inline XMLCh * getNotes(void){return TAG_notes;};
+        inline XMLCh * getSpacer(void){return TAG_spacer;};
+        inline XMLCh * getSpacers(void){return TAG_spacers;};
         //
         // Working functions
         //
