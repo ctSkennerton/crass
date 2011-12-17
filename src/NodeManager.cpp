@@ -196,11 +196,11 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     // Given a spacer string, cut kmers from each end and make crispr nodes
     //
     // now cut kmers on either side and add the pair into the node manager 
-    if (workingString.length() < CRASS_DEF_NODE_KMER_SIZE)
+    if ((int)workingString.length() < NM_Opts->cNodeKmerLength)
         return;
     
-    std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
-    std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
+    std::string first_kmer = workingString.substr(0, NM_Opts->cNodeKmerLength);
+    std::string second_kmer = workingString.substr(workingString.length() - NM_Opts->cNodeKmerLength, NM_Opts->cNodeKmerLength );
     
     CrisprNode * first_kmer_node;
     CrisprNode * second_kmer_node;
@@ -285,10 +285,10 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
 
 void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
 {
-    if (workingString.length() < CRASS_DEF_NODE_KMER_SIZE)
+    if ((int)workingString.length() < NM_Opts->cNodeKmerLength)
         return;
     
-    std::string second_kmer = workingString.substr(workingString.length() - CRASS_DEF_NODE_KMER_SIZE, CRASS_DEF_NODE_KMER_SIZE );
+    std::string second_kmer = workingString.substr(workingString.length() - NM_Opts->cNodeKmerLength, NM_Opts->cNodeKmerLength );
     CrisprNode * second_kmer_node;
     
     // check to see if these kmers are already stored
@@ -323,10 +323,10 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
 
 void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
 {
-    if (workingString.length() < CRASS_DEF_NODE_KMER_SIZE)
+    if ((int)workingString.length() < NM_Opts->cNodeKmerLength)
         return;
     
-    std::string first_kmer = workingString.substr(0, CRASS_DEF_NODE_KMER_SIZE);
+    std::string first_kmer = workingString.substr(0, NM_Opts->cNodeKmerLength);
     CrisprNode * first_kmer_node;
     
     // check to see if these kmers are already stored
@@ -775,7 +775,6 @@ int NodeManager::cleanGraph(void)
     nv_iter = nv_other.begin();
     while(nv_iter != nv_other.end())
     {
-        
         switch ((*nv_iter)->getTotalRank()) 
         {
             case 2:
@@ -987,10 +986,11 @@ void NodeManager::findAllForwardAttachedNodes(NodeVector * nodes)
     }
 }
 
-void NodeManager::setSpacerRanks(void)
+int NodeManager::buildSpacerGraph(void)
 {
     //-----
     // For all forward nodes, count the number of ongoing spacers
+	// make spacer edges if told to do so
     //
     SpacerListIterator spacers_iter = NM_Spacers.begin();
     while(spacers_iter != NM_Spacers.end()) 
@@ -999,7 +999,6 @@ void NodeManager::setSpacerRanks(void)
         CrisprNode * rq_leader_node = (spacers_iter->second)->getLeader();
         CrisprNode * rq_last_node = (spacers_iter->second)->getLast();
         
-        int rank = 0;
         if(rq_last_node->isAttached() && rq_leader_node->isAttached())
         {
         	// mark this guy as attached
@@ -1020,22 +1019,19 @@ void NodeManager::setSpacerRanks(void)
 						if((el_iter->first)->isAttached())
 						{
 							// bingo!
-							rank++;
-                            
-                            // we can add an edge for these two spacers
-                            SpacerInstance * next_spacer = NM_Spacers[makeSpacerKey((el_iter->first)->getID(), (qel_iter->first)->getID())];
-                            
-                            // add the forward edge to the next spacer
-                            spacerEdgeStruct * new_edge = new spacerEdgeStruct();
-                            new_edge->edge = next_spacer;
-                            new_edge->d = FORWARD;
-                            (spacers_iter->second)->addEdge(new_edge);
-                            
-                            // add the corresponding reverse edge to the current spacer
-                            spacerEdgeStruct * new_edge2 = new spacerEdgeStruct();
-                            new_edge2->edge = spacers_iter->second;
-                            new_edge2->d = REVERSE;
-                            next_spacer->addEdge(new_edge2);
+							SpacerInstance * next_spacer = NM_Spacers[makeSpacerKey((el_iter->first)->getID(), (qel_iter->first)->getID())];
+							// we can add an edge for these two spacers
+							// add the forward edge to the next spacer
+							spacerEdgeStruct * new_edge = new spacerEdgeStruct();
+							new_edge->edge = next_spacer;
+							new_edge->d = FORWARD;
+							(spacers_iter->second)->addEdge(new_edge);
+							
+							// add the corresponding reverse edge to the current spacer
+							spacerEdgeStruct * new_edge2 = new spacerEdgeStruct();
+							new_edge2->edge = spacers_iter->second;
+							new_edge2->d = REVERSE;
+							next_spacer->addEdge(new_edge2);
 						}
 						el_iter++;
 					}
@@ -1047,9 +1043,9 @@ void NodeManager::setSpacerRanks(void)
         {
         	(spacers_iter->second)->setAttached(false);	
         }
-        (spacers_iter->second)->setSpacerRank(rank);
         spacers_iter++;
     }
+    return 0;
 }
 
 void NodeManager::findSpacerForContig(SpacerInstanceVector * sv, int contigID)
@@ -1070,14 +1066,154 @@ void NodeManager::findSpacerForContig(SpacerInstanceVector * sv, int contigID)
     }
 }
 
+int NodeManager::cleanSpacerGraph(void)
+{
+	//-----
+	// Clean up the spacer graph
+	//
+	int round  = 0;
+    bool cleaned_some = true;
+    while(cleaned_some)
+    {
+    	round++;
+    	logInfo("Cleaning round: " << round, 2);
+    	cleaned_some = false;
+    	
+    	// remove fur
+        SpacerListIterator sp_iter = NM_Spacers.begin();
+        while(sp_iter != NM_Spacers.end())
+        {
+            if((sp_iter->second)->isAttached())
+            {
+				if(sp_iter->second->isFur())
+				{
+					//std::cout << "a: " << sp_iter->second << std::endl;
+					sp_iter->second->detachFromSpacerGraph();
+					cleaned_some = true;
+				}
+            }
+        	sp_iter++;
+        }
+        
+        // remove non-viable nodes
+        sp_iter = NM_Spacers.begin();
+        while(sp_iter != NM_Spacers.end())
+        {
+            if((sp_iter->second)->isAttached())
+            {
+				if(!sp_iter->second->isViable())
+				{
+					//std::cout << "b: " << sp_iter->second << std::endl;
+					sp_iter->second->detachFromSpacerGraph();
+					cleaned_some = true;
+				}
+            }
+            sp_iter++;
+        }
+        
+        // remove bubbles
+        removeSpacerBubbles();
+    }
+	return 0;
+}
+
+void NodeManager::removeSpacerBubbles(void)
+{
+	//-----
+	// remove bubbles from the spacer graph
+	//
+	std::map<SpacerKey, SpacerInstance *> bubble_map;
+	SpacerInstanceVector detach_list;
+	SpacerListIterator sp_iter = NM_Spacers.begin();
+	while(sp_iter != NM_Spacers.end())
+	{
+		if((sp_iter->second)->isAttached())
+		{
+			// we only car about rank 2 or over nodes
+			if(2 <= (sp_iter->second)->getSpacerRank())
+			{
+				// first make a list of the forward and backward spacers
+				SpacerEdgeVector_Iterator edge_iter = (sp_iter->second)->begin();
+				SpacerInstanceVector f_spacers, r_spacers;
+				while(edge_iter != (sp_iter->second)->end())
+				{
+					if((*edge_iter)->d == REVERSE)
+						r_spacers.push_back((*edge_iter)->edge);
+					else
+						f_spacers.push_back((*edge_iter)->edge);
+					edge_iter++;
+				}
+				
+				// now make a list of spacer keys 
+				SpacerInstanceVector_Iterator r_edge_iter = r_spacers.begin();
+				while(r_edge_iter != r_spacers.end())
+				{
+					SpacerInstanceVector_Iterator f_edge_iter =  f_spacers.begin();
+					while(f_edge_iter != f_spacers.end())
+					{
+						// make a key
+						SpacerKey tmp_key = makeSpacerKey((*r_edge_iter)->getID(), (*f_edge_iter)->getID());
+						// check if we've seen this key before
+						std::map<SpacerKey, SpacerInstance *>::iterator bm_iter = bubble_map.find(tmp_key);
+						if(bm_iter == bubble_map.end())
+						{
+							// first time
+							bubble_map[tmp_key] = sp_iter->second;
+						}
+						else
+						{
+							// bubble! -- check the coverages!
+							if(bubble_map[tmp_key]->getCount() < (sp_iter->second)->getCount())
+							{
+								// stored guy has lower coverage!
+								detach_list.push_back(bubble_map[tmp_key]);
+								bubble_map[tmp_key] = sp_iter->second;
+							}
+							else if((sp_iter->second)->getCount() < bubble_map[tmp_key]->getCount())
+							{
+								// new guy has lower coverage!
+								detach_list.push_back(sp_iter->second);
+							}
+							else
+							{
+								// coverages are equal, kill the one with the lower rank
+								if(bubble_map[tmp_key]->getSpacerRank() < (sp_iter->second)->getSpacerRank())
+								{
+									// stored guy has lower coverage!
+									detach_list.push_back(bubble_map[tmp_key]);
+									bubble_map[tmp_key] = sp_iter->second;
+								}
+								else
+								{
+									// new guy has lower or equal coverage!
+									detach_list.push_back(sp_iter->second);
+								}
+							}
+						}
+						f_edge_iter++;
+					}
+					r_edge_iter++;
+				}
+			}
+		}
+		sp_iter++;
+	}
+	        
+	// detach all on the detach list!
+	SpacerInstanceVector_Iterator dl_iter = detach_list.begin();
+	while(dl_iter != detach_list.end())
+	{
+		(*dl_iter)->detachFromSpacerGraph();
+		dl_iter++;
+	}
+	
+}
+
 int NodeManager::splitIntoContigs(void)
 {
     //-----
     // split the group into contigs 
     //
-    
-    // make sure these flags are up to date
-    setSpacerRanks(); 
     
     // get all of  the node lists
     std::queue<SpacerInstance *> walking_queue;
@@ -1391,180 +1527,6 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
 	}
 }
 
-void NodeManager::printXML(std::ofstream * XMLFile, int GID, bool showDetached)
-{
-	//-----
-	// print this nodemanagers portion of the XML file
-	//
-	// please forgive me
-	//
-	(*XMLFile) << "\t<group gid=\"G"<<GID<<"\" drseq=\""<<NM_DirectRepeatSequence<<"\">\n";
-	
-	// first print the data section
-	(*XMLFile) << "\t\t<data>\n";
-	
-	//DRs
-	// at this stage, there is only 1 DR per group, but this may change...
-	(*XMLFile) << "\t\t\t<drs>\n";
-	(*XMLFile) << "\t\t\t\t<dr seq=\""<<NM_DirectRepeatSequence<<"\" drid=\"DR1\" />\n";
-	(*XMLFile) << "\t\t\t</drs>\n";
-	
-	// spacers
-	(*XMLFile) << "\t\t\t<spacers>\n";
-    SpacerListIterator spacer_iter = NM_Spacers.begin();
-    while(spacer_iter != NM_Spacers.end())
-    {
-        SpacerInstance * SI = spacer_iter->second;
-        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
-        {
-            std::string spacer = NM_StringCheck.getString(SI->getID());
-            (*XMLFile) << "\t\t\t\t<spacer seq=\""<<spacer<<"\" spid=\"SP"<<SI->getID()<<"\" cov=\""<<SI->getCount()<< "\" />\n";
-        }
-		spacer_iter++;
-	}
-	(*XMLFile) << "\t\t\t</spacers>\n";
-    
-    // flankers
-    // not implemented
-    
-	(*XMLFile) << "\t\t</data>\n";
-    
-	// then print the assembly section
-	int current_contig_ID = 0;
-    if(NM_NextContigID > 0)
-    {
-    	(*XMLFile) << "\t\t<assembly>\n";
-    	while(current_contig_ID < NM_NextContigID)
-    	{
-    		current_contig_ID++;
-    		std::stringstream ss_sg_title;
-    		(*XMLFile) << "\t\t\t\t<contig cid=\"C"<<current_contig_ID<<"\">\n";
-            
-    	    
-    	    NodeListIterator nl_iter = nodeBegin();
-    	    // first loop to print out the nodes
-    	    while (nl_iter != nodeEnd()) 
-    	    {
-    	        // check whether we should print
-    	        if((nl_iter->second)->isAttached())
-    	        {
-    	            // we only care about forward nodes
-    	            if((nl_iter->second)->isForward())
-    	            {
-    	                // get all the forward Inner edges
-    	                edgeList * el = (nl_iter->second)->getEdges(CN_EDGE_FORWARD);
-    	                edgeListIterator el_iter = el->begin();
-    	                while(el_iter != el->end())
-    	                {
-    	                    if((el_iter->first)->isAttached())
-    	                    {
-    	                        // get the spacer for this guy
-    	                        SpacerKey sk = makeSpacerKey((nl_iter->second)->getID(), (el_iter->first)->getID());
-    	                        if(NM_Spacers.find(sk) != NM_Spacers.end())
-    	                        {
-    	                            // make the nodes
-    	                            SpacerInstance * current_spacer = NM_Spacers[sk];
-    	                            if(current_spacer->getContigID() == current_contig_ID)
-    	                            {
-    	                            	
-    	                        		(*XMLFile) << "\t\t\t\t\t<cspacer spid=\"SP"<<current_spacer->getID()<<"\">\n";
-    	                        	    CrisprNode * leader = nl_iter->second;
-    	                        	    CrisprNode * last = el_iter->first;
-    	                        	    edgeList * el_near,  *el_far;
-    	                        	    edgeListIterator el_near_iter, el_far_iter; 
-    	                        	    bool found_b = false;
-    	                        	    bool found_f = false;
-    	                        	    // do the backward edges
-										el_near = leader->getEdges(CN_EDGE_JUMPING_B);
-										el_near_iter = el_near->begin();
-										while(el_near_iter != el_near->end())
-										{
-											if(((*el_near_iter).first)->isAttached())
-											{
-												el_far = ((*el_near_iter).first)->getEdges(CN_EDGE_BACKWARD);
-												el_far_iter = el_far->begin();
-												while(el_far_iter != el_far->end())
-												{
-													if(((*el_far_iter).first)->isAttached())
-													{
-														// lo and behold, we finally have a spacer
-														if(!found_b)
-														{
-															(*XMLFile) << "\t\t\t\t\t\t<bspacers>\n";
-															found_b = true;
-														}
-														// get the spacer
-														SpacerKey sk2 = makeSpacerKey(((*el_near_iter).first)->getID(), (*el_far_iter).first->getID());
-														SpacerInstance * tmp_spacer = NM_Spacers[sk2];
-														
-														// print the spacer
-														(*XMLFile) << "\t\t\t\t\t\t\t<bs spid=\"SP"<< tmp_spacer->getID() <<"\" drid=\"DR1\" drconf=\"0\" />\n";
-													}
-													el_far_iter++;
-												}
-											}
-											el_near_iter++;
-										}
-										if(found_b)
-										{
-											(*XMLFile) << "\t\t\t\t\t\t</bspacers>\n";
-											found_b = false;
-										}
-    	                        	    
-    	                        	    // do the forward edges
-										el_near = last->getEdges(CN_EDGE_JUMPING_F);
-										el_near_iter = el_near->begin();
-										while(el_near_iter != el_near->end())
-										{
-											if(((*el_near_iter).first)->isAttached())
-											{
-												el_far = ((*el_near_iter).first)->getEdges(CN_EDGE_FORWARD);
-												el_far_iter = el_far->begin();
-												while(el_far_iter != el_far->end())
-												{
-													if(((*el_far_iter).first)->isAttached())
-													{
-														// lo and behold, we finally have a spacer
-														if(!found_f)
-														{
-															(*XMLFile) << "\t\t\t\t\t\t<fspacers>\n";
-															found_f = true;
-														}
-														// get the spacer
-														SpacerKey sk2 = makeSpacerKey(((*el_near_iter).first)->getID(), (*el_far_iter).first->getID());
-														SpacerInstance * tmp_spacer = NM_Spacers[sk2];
-														
-														// print the spacer
-														(*XMLFile) << "\t\t\t\t\t\t\t<fs spid=\"SP"<< tmp_spacer->getID() <<"\" drid=\"DR1\" drconf=\"0\" />\n";
-													}
-													el_far_iter++;
-												}
-											}
-											el_near_iter++;
-										}
-										if(found_f)
-										{
-											(*XMLFile) << "\t\t\t\t\t\t</fspacers>\n";
-											found_b = false;
-										}
-										
-    	                        		(*XMLFile) << "\t\t\t\t\t</cspacer>\n";
-    	                            }
-    	                        }
-    	                    }
-    	                    el_iter++;
-    	                }
-    	            }
-    	        }
-    	        nl_iter++;
-    	    }
-    		(*XMLFile) << "\t\t\t\t</contig>\n";
-    	}
-    	(*XMLFile) << "\t\t</assembly>\n";
-    }
-	(*XMLFile) << "\t</group>\n"; 
-}
-
 // Spacer dictionaries
 void NodeManager::addSpacersToDOM(CrassXML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
 {
@@ -1840,34 +1802,24 @@ void NodeManager::printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * c
     }
 }
 
-void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc)
+void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc, bool showSingles)
 {
     //-----
     // Print a graphviz style graph of the DRs and spacers
     //
     setSpacerColourLimits();
-    
-    
-    
     gvGraphHeader(dataOut, title);
             
     SpacerListIterator spi_iter = NM_Spacers.begin();
     while (spi_iter != NM_Spacers.end()) 
     {
-        if ((spi_iter->second)->isAttached()) 
+        if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
         {
             // print the graphviz nodes
-            std::stringstream ss;
-            if(longDesc)
-                ss << CRASS_DEF_GV_SPA_PREFIX << (spi_iter->second)->getID() << "_" << NM_StringCheck.getString((spi_iter->second)->getID());
-            else
-                ss << CRASS_DEF_GV_SPA_PREFIX << (spi_iter->second)->getID();
-            ss << "_C"<<(spi_iter->second)->getContigID();
-            std::string label = ss.str();
+            std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
+
             // print the node attribute
             gvSpacer(dataOut,label,NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
-            
-
         }
         spi_iter++;
     }
@@ -1875,35 +1827,21 @@ void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, boo
     spi_iter = NM_Spacers.begin();
     while (spi_iter != NM_Spacers.end()) 
     {
-        if ((spi_iter->second)->isAttached()) 
+        if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
         {
             // print the graphviz nodes
-            std::stringstream ss;
-            if(longDesc)
-                ss << CRASS_DEF_GV_SPA_PREFIX << (spi_iter->second)->getID() << "_" << NM_StringCheck.getString((spi_iter->second)->getID());
-            else
-                ss << CRASS_DEF_GV_SPA_PREFIX << (spi_iter->second)->getID();
-            ss << "_C"<<(spi_iter->second)->getContigID();
-            std::string label = ss.str();
+            std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
             // print the node attribute
             // now print the edges
             SpacerEdgeVector_Iterator edge_iter = (spi_iter->second)->begin();
             while (edge_iter != (spi_iter->second)->end()) 
             {
-                if (((*edge_iter)->edge)->isAttached() && (*edge_iter)->d == FORWARD) 
+                if (((*edge_iter)->edge)->isAttached() && (*edge_iter)->d == FORWARD && (showSingles || (0 != ((*edge_iter)->edge)->getSpacerRank()))) 
                 {
                     
                     // get the label for our edge
                     // print the graphviz nodes
-                    std::stringstream se;
-                    if(longDesc)
-                        se << CRASS_DEF_GV_SPA_PREFIX << ((*edge_iter)->edge)->getID() << "_" << NM_StringCheck.getString(((*edge_iter)->edge)->getID());
-                    else
-                        se << CRASS_DEF_GV_SPA_PREFIX << ((*edge_iter)->edge)->getID();
-                    se << "_C"<<((*edge_iter)->edge)->getContigID();
-                    std::string edge_label = se.str();
-                    gvSpEdge(dataOut, label, edge_label);
-                    
+                    gvSpEdge(dataOut, label, getSpacerGraphLabel((*edge_iter)->edge, longDesc));
                 }
                 edge_iter++;
             }
@@ -1913,7 +1851,35 @@ void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, boo
     gvGraphFooter(dataOut);
 }
     
+std::string NodeManager::getSpacerGraphLabel(SpacerInstance * spacer, bool longDesc)
+{
+	//-----
+	// Get the label for a spacer when printing the spacer graph
+	//
+	std::stringstream se;
+	if(longDesc)
+	{
+		se << CRASS_DEF_GV_SPA_PREFIX << spacer->getID() << "_" << NM_StringCheck.getString(spacer->getID()) << "_" << spacer->getCount();
+	}
+	else
+	{
+		se << CRASS_DEF_GV_SPA_PREFIX << spacer->getID() << "_" << spacer->getCount();
+	}
+	se << "_C" << spacer->getContigID();
+	return se.str();
+}
 
+void NodeManager::printAllSpacers(void)
+{
+    SpacerListIterator sp_iter = NM_Spacers.begin();
+    
+    // first we build up the contents of the walking queue
+    while(sp_iter != NM_Spacers.end())
+    {
+        (sp_iter->second)->printContents(); 
+        sp_iter++;
+    }
+}
 
 void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, std::string groupNumber)
 {

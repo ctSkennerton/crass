@@ -40,6 +40,7 @@
 #include "SpacerInstance.h"
 #include "CrisprNode.h"
 #include "StringCheck.h"
+#include "LoggerSimp.h"
 
 SpacerInstance::SpacerInstance(StringToken spacerID) 
 {
@@ -50,7 +51,6 @@ SpacerInstance::SpacerInstance(StringToken spacerID)
     SI_LeadingNode = NULL;
     SI_LastNode = NULL;
     SI_InstanceCount = 0;
-    SI_SpacerRank = 0;
     SI_ContigID = 0;
     SI_Attached = false;
 }
@@ -61,13 +61,15 @@ SpacerInstance::SpacerInstance(StringToken spacerID, CrisprNode * leadingNode, C
     SI_LeadingNode = leadingNode;
     SI_LastNode = lastNode;
     SI_InstanceCount  = 1;
-    SI_SpacerRank = 0;
     SI_ContigID = 0;
     SI_Attached = false;
 }
 
 void SpacerInstance::clearEdge(void)
 {
+	//-----
+	// Clear all edges
+	//
     SpacerEdgeVector_Iterator iter = SI_SpacerEdges.begin();
     while (iter != SI_SpacerEdges.end()) 
     {
@@ -80,6 +82,140 @@ void SpacerInstance::clearEdge(void)
     }
 }
 
+bool SpacerInstance::isFur(void)
+{
+	//-----
+	// Check to see if the spacer is a cap joined onto a non-cap
+	//
+	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
+	
+	// zero rank spacers are viable by default
+	if(1 != getSpacerRank())
+		return false;
+			
+	while(edge_iter != SI_SpacerEdges.end())
+	{
+		if((*edge_iter)->edge->getSpacerRank() > 2)
+		{
+			return true;
+		}
+		edge_iter++;
+	}
+	return false;
+}
+
+
+bool SpacerInstance::isViable(void)
+{
+	//-----
+	// Check to see if the spacer has forward AND reverse edges
+	// return true or false accordingly
+	//
+	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
+	
+	// zero rank spacers are viable by default
+	if(getSpacerRank() < 2)
+		return true;
+			
+	bool has_forward = false;
+	bool has_reverse = false;
+	while(edge_iter != SI_SpacerEdges.end())
+	{
+		if((*edge_iter)->d == REVERSE)
+			has_reverse = true;
+		else
+			has_forward = true;
+		if(has_reverse && has_forward)
+			return true;
+		edge_iter++;
+	}
+	return false;
+}
+
+void SpacerInstance::detachFromSpacerGraph(void)
+{
+	//-----
+	// remove this spacer from the graph
+	//
+	if(0 == getSpacerRank())
+		return;
+	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
+	while(edge_iter != SI_SpacerEdges.end())
+	{
+		// delete the return edge
+		//std::cout << "c: " << this << " : " << (*edge_iter)->edge << " : " << std::endl;
+		if(!(*edge_iter)->edge->detachSpecificSpacer(this))
+		{
+			return;
+		}
+        
+		// free the memory!
+		if (*edge_iter != NULL) 
+        {
+            delete *edge_iter;
+            *edge_iter = NULL;
+        }
+		edge_iter++;
+	}
+	
+	// no edges left here
+	SI_SpacerEdges.clear();
+}
+
+bool SpacerInstance::detachSpecificSpacer(SpacerInstance * target)
+{
+	//-----
+	// remove this spacer from the graph
+	//
+	if(0 == getSpacerRank())
+	{
+		logError("Trying to remove edge from zero rank spacer");
+		return false;
+	}
+	
+	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
+
+	while(edge_iter != SI_SpacerEdges.end())
+	{
+		// we need to find the target edge
+		if((*edge_iter)->edge == target)
+		{
+			//std::cout << "rev: " << target << " : " << this << std::endl;
+			// free the memory
+	        if (*edge_iter != NULL) 
+	        {
+	            delete *edge_iter;
+	            *edge_iter = NULL;
+	        }
+	        
+	        // remove from the vector
+	        SI_SpacerEdges.erase(edge_iter);
+	        return true;
+		}
+		
+		edge_iter++;
+	}
+	
+	logError("Could not find target: " << target);
+	return false;
+}
+
+void SpacerInstance::printContents(void)
+{
+	//-----
+	// print the contents of all the contents
+	//
+	
+	std::cout << "-------------------------------\n" << this << std::endl;
+	std::cout << "ST: " << SI_SpacerSeqID << " LEADER: " << SI_LeadingNode << " LAST: " << SI_LastNode << std::endl;
+	std::cout << "IC: " << SI_InstanceCount << " ATT? " << SI_Attached << " CID: " << SI_ContigID << std::endl;
+	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
+	while(edge_iter != SI_SpacerEdges.end())
+	{
+		std::cout << " --> " << (*edge_iter)->edge << " : " << (*edge_iter)->d << std::endl;
+		edge_iter++;
+	}
+}
 
 
 

@@ -111,6 +111,12 @@ class WorkHorse {
         bool getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
         
         //**************************************
+        // spacer graphs
+        //**************************************
+        int makeSpacerGraphs(void);
+        int cleanSpacerGraphs(void);
+        
+        //**************************************
         // contig making
         //**************************************
         int splitIntoContigs(void);

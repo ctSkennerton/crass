@@ -93,7 +93,9 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength, const
         if(read_counter > CRASS_DEF_MAX_READS_FOR_DECISION)
             break;
     }
+    kseq_destroy(seq); // destroy seq
     gzclose(fp);
+   
     
     *aveReadLength = total_base / read_counter;
     logInfo("Average read length (of the first "<< CRASS_DEF_MAX_READS_FOR_DECISION<<" reads): "<< *aveReadLength, 2);
@@ -145,9 +147,6 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
             tmp_holder->setQual(seq->qual.s);
         }
         
-        //tmp_holder->setHeader(seq->name.s);
-        //tmp_holder->setSequence(seq->seq.s);
-        
         bool match_found = false;
 
         if (opts.removeHomopolymers)
@@ -174,6 +173,7 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
         if (searchEnd < 0) 
         {
             logWarn("Read: "<<tmp_holder->getHeader()<<" length is less than "<<opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength + 1<<"bp",4);
+            delete tmp_holder;
             continue;
         }
         
@@ -502,6 +502,8 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
                 tmp_holder->startStopsAdd(start_pos, DR_end);
                 addReadHolder(mReads, mStringCheck, tmp_holder);
             }
+            else
+                delete tmp_holder;
         }
         else
         {
@@ -699,20 +701,28 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
             logInfo(k<<" : "<<tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength(), 10);
 #endif
             // look at the character just past the end of the last repeat
-            switch( tmp_holder->getSeqCharAt(tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength()))
+			// make sure our indicies make some sense!
+            if((tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength()) >= (unsigned int)tmp_holder->getSeqLength())
+            {	
+            	k = DR_index_end;
+            }
+            else
             {
-                case 'A':
-                    char_count_A++;
-                    break;
-                case 'C':
-                    char_count_C++;
-                    break;
-                case 'G':
-                    char_count_G++;
-                    break;
-                case 'T':
-                    char_count_T++;
-                    break;
+				switch( tmp_holder->getSeqCharAt(tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength()))
+				{
+					case 'A':
+						char_count_A++;
+						break;
+					case 'C':
+						char_count_C++;
+						break;
+					case 'G':
+						char_count_G++;
+						break;
+					case 'T':
+						char_count_T++;
+						break;
+				}
             }
         }
         

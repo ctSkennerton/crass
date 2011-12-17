@@ -44,11 +44,13 @@
 <!ELEMENT bflankers (bf)>
 <!ELEMENT bf EMPTY>
 <!ATTLIST bf flid CDATA #REQUIRED>
+<!ATTLIST bf drid CDATA #IMPLIED>
 <!ATTLIST bf drconf (0|1) "0">
 <!ATTLIST bf directjoin (0|1) "0">
 <!ELEMENT fflankers (bf)>
 <!ELEMENT ff EMPTY>
 <!ATTLIST ff flid CDATA #REQUIRED>
+<!ATTLIST ff drid CDATA #IMPLIED>
 <!ATTLIST ff drconf (0|1) "0">
 <!ATTLIST ff directjoin (0|1) "0">
 ]>

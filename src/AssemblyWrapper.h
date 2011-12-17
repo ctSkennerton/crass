@@ -42,6 +42,7 @@
 #include <fstream>
 
 enum ASSEMBLERS {
+    unset,
     velvet,
     cap3
     };

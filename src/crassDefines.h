@@ -103,8 +103,8 @@
 // --------------------------------------------------------------------
 // GRAPH BUILDING
 // --------------------------------------------------------------------
-#define CRASS_DEF_NODE_KMER_SIZE                7                  // size of the kmer that defines a crispr node
-#define CRASS_DEF_MAX_CLEANING                  2                   // the maximum length that a branch can be befor it's cleaned
+#define CRASS_DEF_NODE_KMER_SIZE                7                   // size of the kmer that defines a crispr node
+#define CRASS_DEF_MAX_CLEANING                  2                   // the maximum length that a branch can be before it's cleaned
 // --------------------------------------------------------------------
  // USER OPTION STRUCTURE
 // --------------------------------------------------------------------
@@ -131,6 +131,7 @@
 #define CRASS_DEF_NUM_OF_BINS                   -1                  // the number of bins to create
 #define CRASS_DEF_GRAPH_COLOUR                  RED_BLUE            // default colour scale for the graphs
 #define CRASS_DEF_SPACER_LONG_DESC              false               // use a long desc of the spacer in the output graph
+#define CRASS_DEF_SPACER_SHOW_SINGLES			false				// do not show singles by default
 
 typedef struct {
     int                 logLevel;                                           // level of verbosity allowed in the log file
@@ -153,6 +154,8 @@ typedef struct {
     bool                dontPerformScalling;                                // turn all scalling off for the user to define variables
     std::string         layoutAlgorithm;                                    // the graphviz layout algorithm to use 
     bool                longDescription;                                    // print a long description for the final spacer graph
+    bool 				showSingles;										// print singletons when making the spacer graph
+    int 				cNodeKmerLength;									// length of the kmers making up a crisprnode
     int                 covCutoff;                                          // The lower bounds of acceptable numbers of reads that a group can have
 } options;
 

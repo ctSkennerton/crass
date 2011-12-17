@@ -96,7 +96,6 @@ CrassXML::CrassXML(void)
     TAG_fs = XMLString::transcode("fs");
     TAG_fspacers = XMLString::transcode("fspacers");
     TAG_group = XMLString::transcode("group");
-    TAG_log = XMLString::transcode("log");
     TAG_metadata = XMLString::transcode("metadata");
     TAG_notes = XMLString::transcode("notes");
     TAG_spacer = XMLString::transcode("spacer");
@@ -153,7 +152,6 @@ CrassXML::~CrassXML(void)
         XMLString::release( &TAG_fs );
         XMLString::release( &TAG_fspacers );
         XMLString::release( &TAG_group );
-        XMLString::release( &TAG_log );
         XMLString::release( &TAG_metadata );
         XMLString::release( &TAG_notes );
         XMLString::release( &TAG_spacer );
@@ -182,8 +180,35 @@ CrassXML::~CrassXML(void)
     {
         std::cerr << "Unknown exception encountered in TagNamesdtor" << std::endl;
     }
+    
+    std::vector<XMLCh*>::iterator X_iter = XML_transcodes.begin();
+    while(X_iter != XML_transcodes.end())
+    {
+        try // Free memory
+        {
+            XMLString::release( &(*X_iter) );
+        }
+        catch( ... )
+        {
+            std::cerr << "Unknown exception encountered in TagNamesdtor" << std::endl;
+        }
+        X_iter++;
+    }
+    std::vector<char*>::iterator C_iter = CHAR_transcodes.begin();
+    while(C_iter != CHAR_transcodes.end())
+    {
+        try // Free memory
+        {
+            XMLString::release( &(*C_iter) );
+        }
+        catch( ... )
+        {
+            std::cerr << "Unknown exception encountered in TagNamesdtor" << std::endl;
+        }
+        C_iter++;
+    }
 
-      XMLPlatformUtils::Terminate();  // Terminate after release of memory
+    XMLPlatformUtils::Terminate();  // Terminate after release of memory
 }
 
 void CrassXML::parseCrassXMLFile(std::string XMLFile)
@@ -238,11 +263,7 @@ void CrassXML::parseCrassXMLFile(std::string XMLFile)
             {
                 // Found node which is an Element. Re-cast node as element
                 DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-                if( XMLString::equals(currentElement->getTagName(), TAG_log))
-                {
-                    // log section
-                }
-                else if (XMLString::equals(currentElement->getTagName(), TAG_group))
+                if (XMLString::equals(currentElement->getTagName(), TAG_group))
                 {
                     // new group
                     std::cout << XMLCH_2_STR(currentElement->getTagName()) << std::endl;
@@ -330,11 +351,7 @@ xercesc::DOMElement * CrassXML::getWantedGroupFromRoot(xercesc::DOMElement * cur
         {
             // Found node which is an Element. Re-cast node as element
             xercesc::DOMElement* element = dynamic_cast< xercesc::DOMElement* >( current_node );
-            if( XMLString::equals(element->getTagName(), TAG_log))
-            {
-                // log section
-            }
-            else if (XMLString::equals(element->getTagName(), TAG_group))
+			if (XMLString::equals(element->getTagName(), TAG_group))
             {
                 // new group
                 // test if it's one that we want

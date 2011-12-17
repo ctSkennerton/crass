@@ -95,6 +95,7 @@ private:
     
     std::ofstream * mFileHandle;                                         // for writing to files
     std::streambuf *mBuff;                                               // for holding rbuffs
+    std::ofstream * mTmpFH;											     // semi-tmp fh
     
     std::string mLogFile;                                                // this is the file we'll be writing out to
     int mLogLevel;                                                  // which logging level are we at?
