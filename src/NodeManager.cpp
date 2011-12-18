@@ -1267,7 +1267,6 @@ bool NodeManager::walkFromCross(SpacerInstanceList * crossNodes)
                         current_contig_nodes.push_back(walk_elem->first());
                         
                         // push the cross node onto a vector
-                        std::cout<<"NEW_CROSS2: "<<(walk_elem->second())->getID()<<std::endl;
                         crossNodes->push_back(walk_elem->second());
                     }
                     //current_contig_nodes.push_back(walk_elem->first());
@@ -1275,9 +1274,7 @@ bool NodeManager::walkFromCross(SpacerInstanceList * crossNodes)
                     NM_NextContigID++;
                 }
                 else 
-                {
-                    std::cout<<"NEW_CROSS: "<<((*edge_iter)->edge)->getID()<<std::endl;
-                    
+                {                    
                     // means that the edge is a cross node so push it back on to the list
                     crossNodes->push_back((*edge_iter)->edge);
                 }

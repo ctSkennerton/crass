@@ -197,7 +197,6 @@ int processOptions(int argc, char *argv[], options *opts)
     bool scalling = false;
     while( (c = getopt_long(argc, argv, "a:b:c:d:D:f:Ghk:K:l:Ln:o:rs:S:Vw:x:y:", long_options, &index)) != -1 ) 
     {
-        std::cout<<(char)c<<std::endl;
         switch(c) 
         {
             case 'a':
