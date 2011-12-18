@@ -436,7 +436,6 @@ int processOptions(int argc, char *argv[], options *opts)
 //**************************************
 int main(int argc, char *argv[]) 
 {
-    
     if(argc == 1) 
     {
         usage();

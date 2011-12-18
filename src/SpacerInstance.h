@@ -41,6 +41,7 @@
 
 // system includes
 #include <iostream>
+#include <list>
 
 // local includes
 #include "crassDefines.h"
@@ -70,6 +71,11 @@ inline std::string saySpacerEdgeDirectionLikeAHuman(SI_EdgeDirection d)
 
 typedef std::vector<SpacerInstance * > SpacerInstanceVector;
 typedef std::vector<SpacerInstance * >::iterator SpacerInstanceVector_Iterator;
+
+typedef std::list<SpacerInstance * > SpacerInstanceList;
+typedef std::list<SpacerInstance * >::iterator SpacerInstanceList_Iterator;
+
+typedef std::pair<SpacerInstance *, SpacerInstance *> SpacerInstancePair;
 
 typedef std::vector<spacerEdgeStruct *> SpacerEdgeVector;
 typedef std::vector<spacerEdgeStruct *>::iterator SpacerEdgeVector_Iterator;
@@ -119,7 +125,7 @@ public:
         //
         inline int getContigID(void) { return SI_ContigID; }
         inline void setContigID(int CID) { SI_ContigID = CID; }
-        inline int getSpacerRank(void) { return SI_SpacerEdges.size(); }
+        inline int getSpacerRank(void) { return (int)SI_SpacerEdges.size(); }
 
         //
         // graph functions

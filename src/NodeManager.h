@@ -83,13 +83,12 @@ typedef std::map<int, SpacerVector *>::iterator ContigListIterator;
 #define makeKey(i,j) (i*100000)+j
 
 class WalkingManager {
-    CrisprNodePair WM_WalkingElem;
-    bool WM_Direction;
-    EDGE_TYPE WM_Wanted_Edge_Type;
+    SpacerInstancePair WM_WalkingElem;
+    SI_EdgeDirection WM_Wanted_Edge_Type;
     
 	public:
 	
-		WalkingManager(CrisprNode * firstNode, CrisprNode * secondNode, EDGE_TYPE incommingEdge)
+		WalkingManager(SpacerInstance * firstNode, SpacerInstance * secondNode, SI_EdgeDirection incommingEdge)
 		{
 			WM_WalkingElem.first = firstNode;
 			WM_WalkingElem.second = secondNode;
@@ -99,14 +98,19 @@ class WalkingManager {
 		~WalkingManager(void){}
 	
 	
-		CrisprNode * getFirstNode(void) { return WM_WalkingElem.first; }
-		CrisprNode * getSecondNode(void) { return WM_WalkingElem.second; }
-		CrisprNodePair getWalkingElem(void) { return WM_WalkingElem; }
-		EDGE_TYPE getEdgeType(void) { return WM_Wanted_Edge_Type; }
-		void setFirstNode(CrisprNode * fn) { WM_WalkingElem.first = fn; }
-		void setSecontNode(CrisprNode * sn) { WM_WalkingElem.second = sn; }
-		void setWalkingElem(CrisprNodePair np) { WM_WalkingElem = np; }
-		void setWantedEdge(EDGE_TYPE e) { WM_Wanted_Edge_Type = e; }
+		SpacerInstance * getFirstNode(void) { return WM_WalkingElem.first; }
+		SpacerInstance * getSecondNode(void) { return WM_WalkingElem.second; }
+        SpacerInstance * first(void) { return WM_WalkingElem.first; }
+        SpacerInstance * second(void) { return WM_WalkingElem.second; }
+    
+		SpacerInstancePair getWalkingElem(void) { return WM_WalkingElem; }
+		SI_EdgeDirection getEdgeType(void) { return WM_Wanted_Edge_Type; }
+		void setFirstNode(SpacerInstance * fn) { WM_WalkingElem.first = fn; }
+		void setSecondNode(SpacerInstance * sn) { WM_WalkingElem.second = sn; }
+		void setWalkingElem(SpacerInstancePair np) { WM_WalkingElem = np; }
+		void setWantedEdge(SI_EdgeDirection e) { WM_Wanted_Edge_Type = e; }
+    
+    SpacerInstance * shift(SpacerInstance * newNode);
 };
 
 class NodeManager {
@@ -131,15 +135,17 @@ class NodeManager {
         int getSpacerCount( bool showDetached);
 
     // Walking
-		void walk(void);
-		bool getEdge(WalkingManager * walkElem, CrisprNode * node, EDGE_TYPE * et);
-		bool stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprNode ** detatchDelay);
-		
+        bool getSpacerEdgeFromCap(WalkingManager * walkElem, SpacerInstance * nextSpacer);
+        bool getSpacerEdgeFromCross(WalkingManager * walkElem, SpacerInstance * nextSpacer);
+        bool stepThroughSpacerPath(WalkingManager * walkElem, SpacerInstance ** previousNode);
+        bool walkFromCross(SpacerInstanceList * crossNodes);
+
     // Cleaning
         int cleanGraph(void);
         void clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType);
     
     // Contigs
+        void getAllSpacerCaps(SpacerInstanceVector * sv);
         void findSpacerForContig(SpacerInstanceVector * sv, int contigID);
 		int cleanSpacerGraph(void);
 		void removeSpacerBubbles(void);
@@ -183,6 +189,7 @@ class NodeManager {
         void addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
         void addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
         void addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
+        void setContigIDForSpacers(SpacerInstanceVector * currentContigNodes);
         void setUpperAndLowerCoverage(void);
      
     // members
@@ -194,7 +201,7 @@ class NodeManager {
         Rainbow NM_DebugRainbow;              				// the Rainbow class for making colours
         Rainbow NM_SpacerRainbow;      				        // the Rainbow class for making colours
         const options * NM_Opts;              				// pointer to the user options structure
-        int NM_NextContigID;									// next free contig ID (doubles as a counter)
+        int NM_NextContigID;								// next free contig ID (doubles as a counter)
         ContigList NM_Contigs; 								// our contigs
 };
 

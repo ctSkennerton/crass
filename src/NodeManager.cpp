@@ -58,6 +58,15 @@
 #include "Rainbow.h"
 #include "StlExt.h"
 
+
+SpacerInstance * WalkingManager::shift(SpacerInstance * newNode)
+{
+    SpacerInstance * old_node = WM_WalkingElem.first;
+    WM_WalkingElem.first = WM_WalkingElem.second;
+    WM_WalkingElem.second = newNode;
+    return old_node;
+}
+
 NodeManager::NodeManager(std::string drSeq, const options * userOpts)
 {
     //-----
@@ -366,182 +375,7 @@ void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workin
 
 // Walking
 
-void NodeManager::walk(void)
-{
-    // get the cap nodes
-    NodeVector cap_nodes;
-    findCapNodes(&cap_nodes);
-    
-    CrisprNode * detatch_delay = NULL;
-    NodeVector detatch_list;
-    
-    WalkingManager * walk_elem = new WalkingManager();
-    
-    for (int max_step_cutoff = 1; max_step_cutoff <= CRASS_DEF_MAX_CLEANING; max_step_cutoff++) 
-    {
-        std::cout<<"min step cutoff: "<<max_step_cutoff<<std::endl;
-        NodeVector::iterator cap_node_iter = cap_nodes.begin();
-        
-        while (cap_node_iter != cap_nodes.end()) 
-        {
-            int walk_steps = 0;
-            EDGE_TYPE wanted_edge;
-            if (getEdge(walk_elem, *cap_node_iter, &wanted_edge)) 
-            {
-                do {                    
-                    if (NULL != detatch_delay) 
-                    {
-                        detatch_list.push_back(detatch_delay);
-                    }
-                    if (walk_steps > max_step_cutoff) 
-                    {
-                        break;
-                    }
-                    std::cout<<"Current node: "<<(walk_elem->getFirstNode())->getID()<<" -- "<< (walk_elem->getSecondNode())->getID()<<std::endl;
-                    walk_steps++;
-                    
-                } while (stepForType(walk_elem, &wanted_edge, &detatch_delay));
-                std::cout<<"Nodes traversed in this walk: "<<walk_steps<<std::endl;
-                
-                if (walk_steps <= max_step_cutoff) 
-                {
-                    std::cout<<"Detatching nodes: ";
-                    // detach nodes
-                    NodeVector::iterator detach_vec_iter = detatch_list.begin();
-                    while (detach_vec_iter != detatch_list.end()) 
-                    {
-                        std::cout<<(*detach_vec_iter)->getID()<<",";
-                        (*detach_vec_iter)->detachNode();
-                        detach_vec_iter++;
-                    }
-                    std::cout<<std::endl;
-                } 
-                // clear node vector
-                detatch_list.clear();
-            }
-            cap_node_iter++;
-        }
-    }
-    
-    
-}
 
-bool NodeManager::getEdge(WalkingManager * walkElem, CrisprNode * currNode, EDGE_TYPE * et)
-{
-    // initaliser for the walking element 
-    // from the cap node get the only edge and set that in the walking element
-    
-    
-    // if there is a single forward jumping edge or single backward
-    // jumping edge the node is a dead branch and needs to be cleaned
-    if (((currNode)->getEdges(CN_EDGE_JUMPING_F))->size() == 1)
-    {
-        currNode->detachNode();
-        return false;
-    }
-    
-    else if((currNode->getEdges(CN_EDGE_JUMPING_B)->size()) == 1)
-    {
-        currNode->detachNode();
-        return false;
-    }
-    
-    // so if there is a single inner edge we've got our walking 
-    // element but now we need to get the jumping edge equivelent
-    else if((currNode->getEdges(CN_EDGE_FORWARD)->size()) == 1)
-    {
-        walkElem->setWantedEdge(CN_EDGE_JUMPING_F);
-        *et = CN_EDGE_FORWARD;
-    }
-    
-    else if((currNode->getEdges(CN_EDGE_BACKWARD)->size()) == 1)
-    {
-        walkElem->setWantedEdge(CN_EDGE_JUMPING_B);
-        *et = CN_EDGE_BACKWARD;
-    }
-    else
-    {
-        logError("Trying to initialize a walking element using a node that is not a cap");
-        return false;
-    }    
-    
-    // get the second node for the walking element
-    edgeListIterator edge_iter = (currNode->getEdges(*et))->begin();
-    walkElem->setFirstNode(currNode);
-    walkElem->setSecontNode(edge_iter->first);
-    
-    
-    //
-    return true;
-}
-
-bool NodeManager::stepForType(WalkingManager * walkElem, EDGE_TYPE * et, CrisprNode ** detatchDelay)
-{
-    // get all of the edges for our wanted edge type from the second node in the walking element
-    edgeList * edge = (walkElem->getSecondNode())->getEdges(walkElem->getEdgeType());
-    
-    switch (edge->size()) {
-        case 1:
-            // there is only a single edge for the wanted type so we have a linear length
-            break;
-            
-        default:
-            // there is more than a single edge therefore we have a cross node
-            break;
-    }
-    
-    if (edge->size() == 1) 
-    {
-        edgeListIterator edge_iter = edge->begin();
-        // if the node is attached
-        if (edge_iter->second) 
-        {
-            // add the first node of the current walking element to the detach delay pointer
-            *detatchDelay = walkElem->getFirstNode();
-            
-            // add the new node to the walking element
-            walkElem->setFirstNode(edge_iter->first);
-            // want opposite of what came in
-            switch (*et) 
-            {
-                case CN_EDGE_BACKWARD:
-                    walkElem->setWantedEdge(CN_EDGE_JUMPING_B);
-                    *et = CN_EDGE_JUMPING_B;
-                    return true;
-                    break;
-                case CN_EDGE_FORWARD:
-                    walkElem->setWantedEdge(CN_EDGE_JUMPING_F);
-                    *et = CN_EDGE_JUMPING_F;
-                    return true;
-                    break;
-                case CN_EDGE_JUMPING_B:
-                    walkElem->setWantedEdge(CN_EDGE_BACKWARD);
-                    *et = CN_EDGE_BACKWARD;
-                    return true;
-                    break;
-                case CN_EDGE_JUMPING_F:
-                    walkElem->setWantedEdge(CN_EDGE_FORWARD);
-                    *et = CN_EDGE_FORWARD;
-                    return true;
-                    break;
-                default:
-                    logError("Could not set a new wanted edge for the walking element");
-                    return false;
-                    break;
-            }
-        } 
-        else 
-        {
-            // pointing to an unattached node what do i do?
-            return false;
-        }
-    } 
-    else 
-    {
-        // cross node should break?
-        return false;
-    }
-}
 
 void NodeManager::findCapNodes(NodeVector * capNodes)
 {
@@ -663,6 +497,112 @@ int NodeManager::findCapsAt(NodeVector * capNodes, bool searchForward, bool isIn
     }
     return (int)capNodes->size();
 }
+
+
+bool NodeManager::getSpacerEdgeFromCap(WalkingManager * walkElem, SpacerInstance * currentSpacer)
+{
+    if (currentSpacer->getSpacerRank() == 1) 
+    {
+        SpacerEdgeVector_Iterator iter = currentSpacer->begin();
+        
+        while (iter != currentSpacer->end()) 
+        {
+            if (((*iter)->edge)->isAttached()) 
+            {
+                if (0 == ((*iter)->edge)->getContigID()) 
+                {
+                    walkElem->setSecondNode((*iter)->edge);
+                    walkElem->setFirstNode(currentSpacer);
+                    walkElem->setWantedEdge((*iter)->d);
+                } 
+                else 
+                {
+                    currentSpacer->setContigID(((*iter)->edge)->getContigID());
+                    return false;
+                }
+            } 
+            else 
+            {
+                return false;
+            }
+            iter++;
+        }
+    }
+    else 
+    {
+        return false;
+    }
+    return true;
+}
+
+bool NodeManager::getSpacerEdgeFromCross(WalkingManager * walkElem, SpacerInstance * currentSpacer )
+{
+    // check that the edge is a path node
+    if (currentSpacer->getSpacerRank() == 2) 
+    {
+        SpacerEdgeVector_Iterator iter = currentSpacer->begin();
+        
+        while (iter != currentSpacer->end()) 
+        {
+            if (((*iter)->edge)->isAttached()) 
+            {
+                if (0 == ((*iter)->edge)->getContigID()) 
+                {
+                    walkElem->setSecondNode((*iter)->edge);
+                    walkElem->setFirstNode(currentSpacer);
+                    walkElem->setWantedEdge((*iter)->d);
+                } 
+            } 
+            else 
+            {
+                return false;
+            }
+            iter++;
+        }
+    }
+    else 
+    {
+        return false;
+    }
+    return true;
+}
+
+bool NodeManager::stepThroughSpacerPath(WalkingManager * walkElem, SpacerInstance ** previousNode)
+{
+    switch ((walkElem->second())->getSpacerRank()) 
+    {
+        case 2:
+        {
+            // path node?
+            // check to see if the other edge is going in the same direction as wantedDirection
+            SpacerEdgeVector_Iterator iter = (walkElem->second())->begin();
+            while (iter != (walkElem->second())->end()) 
+            {
+                // make sure the edge is attached, in the right direction, not the incomming edge and not assigned to a contig already
+                if ((*iter)->edge->isAttached()  && 
+                    ((*iter)->d == walkElem->getEdgeType()) && 
+                    ((*iter)->edge->getID() != walkElem->first()->getID()) && 
+                    ((*iter)->edge->getContigID() == 0)) 
+                {
+                    *previousNode = walkElem->shift((*iter)->edge);
+                    return true;
+                } 
+                iter++;
+            }
+            break;
+        }
+        case 1:
+            //
+        default:
+        {
+            return false;
+            // cross node
+            break;
+        }
+    }
+    return false;
+}
+
 
 // Cleaning
 int NodeManager::cleanGraph(void)
@@ -1048,6 +988,23 @@ int NodeManager::buildSpacerGraph(void)
     return 0;
 }
 
+void NodeManager::getAllSpacerCaps(SpacerInstanceVector * sv)
+{
+    SpacerListIterator sp_iter = NM_Spacers.begin();
+    while (sp_iter != NM_Spacers.end()) 
+    {
+        if((sp_iter->second)->isAttached() )
+        {
+            if ((sp_iter->second)->getSpacerRank() == 1) 
+            {
+                sv->push_back(sp_iter->second);
+            }
+        }
+        sp_iter++;
+    }
+}
+
+
 void NodeManager::findSpacerForContig(SpacerInstanceVector * sv, int contigID)
 {
     SpacerListIterator sp_iter = NM_Spacers.begin();
@@ -1215,217 +1172,134 @@ int NodeManager::splitIntoContigs(void)
     // split the group into contigs 
     //
     
-    // get all of  the node lists
-    std::queue<SpacerInstance *> walking_queue;
-    SpacerListIterator sp_iter = NM_Spacers.begin();
     
-    // first we build up the contents of the walking queue
-    while(sp_iter != NM_Spacers.end())
-    {
-        // we only care about spacers which are not yet allocated to a contig
-        // the rank is the forward rank. so it's less than the node rank
-    	if((sp_iter->second)->isAttached() && 0 == (sp_iter->second)->getContigID())
-    	{
-    		int spacer_rank = (sp_iter->second)->getSpacerRank();
-			SpacerInstance * prev_spacer;
-			switch (spacer_rank)
-			{
-				case 0:
-					// singleton or end cap
-					if(!getPrevSpacer(&prev_spacer, sp_iter->second))
-					{
-						// singleton
-						NM_NextContigID++;
-						(sp_iter->second)->setContigID(NM_NextContigID);
-						walking_queue.push(sp_iter->second);
-					}
-					break;
-				case 1:
-					// path node or start cap
-					if(!getPrevSpacer(&prev_spacer, sp_iter->second))
-					{
-						// start cap!
-						NM_NextContigID++;
-						(sp_iter->second)->setContigID(NM_NextContigID);
-						walking_queue.push(sp_iter->second);
-					} // else  ignore path nodes for now
-					break;
-				default:
-					// a cross node!
-					NM_NextContigID++;
-					(sp_iter->second)->setContigID(NM_NextContigID);
-					contigiseForwardSpacers(&walking_queue, sp_iter->second);
-					break;
-			}
-    	}
-        sp_iter++;
-    }
+    // get all of the cap nodes
+    SpacerInstanceVector start_walk_nodes;
+    getAllSpacerCaps(&start_walk_nodes);
     
-    // now go through the walking queue
-    while (!walking_queue.empty())
+    SpacerInstanceList cross_nodes;
+    
+    WalkingManager * walk_elem = new WalkingManager();
+    // walk from the cap nodes to a cross node
+    SpacerInstanceVector_Iterator cap_node_iter = start_walk_nodes.begin();
+    while (cap_node_iter != start_walk_nodes.end())
     {
-        SpacerInstance * current_spacer = walking_queue.front();
-        SpacerInstance * forward_spacer;
-        walking_queue.pop();
-        if(getForwardSpacer(&forward_spacer, current_spacer))
+        SpacerInstanceVector current_contig_spacers;
+        NM_NextContigID++;
+        if (getSpacerEdgeFromCap(walk_elem,*cap_node_iter))
         {
-			if(forward_spacer->getContigID() == 0)
-			{
-				int CID = current_spacer->getContigID();
-				forward_spacer->setContigID(CID);
-				walking_queue.push(forward_spacer);
-			}
-        }
+            SpacerInstance * previous_spacer = NULL;
+            
+            //current_contig_spacers.push_back(*cap_node_iter);
+            do { 
+                if (NULL != previous_spacer) 
+                {
+                    
+                    current_contig_spacers.push_back(previous_spacer);
+                } 
+            } while (stepThroughSpacerPath(walk_elem, &previous_spacer));
+            
+            // if we get to this point then it means that we reached a cross node or the end of a path
+            // the first node in the walking elem would be in the current contig
+            
+            current_contig_spacers.push_back(walk_elem->first());
+            
+            if ((walk_elem->second())->getSpacerRank() == 1) 
+            {
+                // end of path
+                current_contig_spacers.push_back(walk_elem->second());
+            } 
+            else 
+            {
+                // push the cross node onto a vector
+                std::cout<<(walk_elem->second())->getID()<<std::endl;
+                cross_nodes.push_back(walk_elem->second());
+            }
+            
+            // assign the nodes the same contig id as the cap -- but not the cross node
+            setContigIDForSpacers(&current_contig_spacers);
+        } 
+        cap_node_iter++;
     }
+    walkFromCross(&cross_nodes);
+
+    delete walk_elem;
     
 	logInfo("Made: " << NM_NextContigID << " spacer contig(s)", 1);
     return 0;
 }
 
-bool NodeManager::getForwardSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI)
+bool NodeManager::walkFromCross(SpacerInstanceList * crossNodes)
 {
-    //-----
-    // get the first found spacer in from of this one 
-    //
-    CrisprNode * rq_node = SI->getLast();
-    
-    // the first step is to find all forward spacers
-    edgeList * qel = rq_node->getEdges(CN_EDGE_JUMPING_F);
-    edgeListIterator qel_iter = qel->begin();
-    while(qel_iter != qel->end())
-    {
-        if((qel_iter->first)->isAttached() && (qel_iter->first)->isForward())
+    WalkingManager * walk_elem = new WalkingManager();
+    SpacerInstanceList_Iterator cross_node_iter = crossNodes->begin();
+    while (cross_node_iter != crossNodes->end()) 
+    {    
+        (*cross_node_iter)->setContigID(NM_NextContigID++);
+        // walk along those edges as long as possible making sure that the first edge is not a 
+        // cross node and that the nodes don't already have a contig id
+        SpacerEdgeVector_Iterator edge_iter = (*cross_node_iter)->begin();
+        while (edge_iter != (*cross_node_iter)->end()) 
         {
-            // a forward attached node. Now check for inner edges.
-            edgeList * el = (qel_iter->first)->getEdges(CN_EDGE_FORWARD);
-            edgeListIterator el_iter = el->begin();
-            while(el_iter != el->end())
+            // go through all the edges of the cross node that do not have a contig id
+            if (((*edge_iter)->edge->isAttached()) && (0 == (*edge_iter)->edge->getContigID())) 
             {
-                if((el_iter->first)->isAttached())
+                if( getSpacerEdgeFromCross(walk_elem, (*edge_iter)->edge))
                 {
-                    SpacerInstance * forward_spacer = NM_Spacers[makeSpacerKey((qel_iter->first)->getID(), (el_iter->first)->getID())];
-                    if(forward_spacer->isAttached())
-                    {
-                        switch(forward_spacer->getSpacerRank())
+                    SpacerInstanceVector current_contig_nodes;
+                    SpacerInstance * previous_node = NULL;
+                    // edge is a path node so walk
+                    do {
+                        if (NULL != previous_node) 
                         {
-							case 0:
-                            case 1:
-                                // forward is a cap or path spacer
-								*retSpacer = forward_spacer;
-								return true;
-                                break;
-                            default:
-                                // forward is not a path 
-                            	return false;
-                                break;
+                            current_contig_nodes.push_back(previous_node);
                         }
+                    } while (stepThroughSpacerPath(walk_elem, &previous_node));
+                    
+                    if ((walk_elem->second())->getSpacerRank() == 1 && (walk_elem->second())->isAttached()) 
+                    {
+                        // end of path
+                        current_contig_nodes.push_back(walk_elem->second());
+                    } 
+                    else if ((walk_elem->second())->getContigID() == 0 && (walk_elem->second())->isAttached())
+                    {
+                        // add the first node into the list of current contig
+                        current_contig_nodes.push_back(walk_elem->first());
+                        
+                        // push the cross node onto a vector
+                        std::cout<<"NEW_CROSS2: "<<(walk_elem->second())->getID()<<std::endl;
+                        crossNodes->push_back(walk_elem->second());
                     }
+                    //current_contig_nodes.push_back(walk_elem->first());
+                    setContigIDForSpacers(&current_contig_nodes);
+                    NM_NextContigID++;
                 }
-                el_iter++;
+                else 
+                {
+                    std::cout<<"NEW_CROSS: "<<((*edge_iter)->edge)->getID()<<std::endl;
+                    
+                    // means that the edge is a cross node so push it back on to the list
+                    crossNodes->push_back((*edge_iter)->edge);
+                }
             }
+            ++edge_iter;
         }
-        qel_iter++;
+        cross_node_iter++;
     }
+    delete walk_elem;
+    return true;
     
-    return false;
 }
 
-bool NodeManager::getPrevSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI)
-{
-    //-----
-    // get the first found spacer behind this guy
-    //
-    CrisprNode * rq_node = SI->getLeader();
-    // the first step is to find all forward spacers
-    edgeList * qel = rq_node->getEdges(CN_EDGE_JUMPING_B);
-    edgeListIterator qel_iter = qel->begin();
-    while(qel_iter != qel->end())
-    {
-        if((qel_iter->first)->isAttached() && !(qel_iter->first)->isForward())
-        {
-            // a forward attached node. Now check for inner edges.
-            edgeList * el = (qel_iter->first)->getEdges(CN_EDGE_BACKWARD);
-            edgeListIterator el_iter = el->begin();
-            while(el_iter != el->end())
-            {
-                if((el_iter->first)->isAttached())
-                {
-                    SpacerInstance * previous_spacer = NM_Spacers[makeSpacerKey((qel_iter->first)->getID(), (el_iter->first)->getID())];
-                    if(previous_spacer->isAttached())
-                    {
-                        switch(previous_spacer->getSpacerRank())
-                        {
-                            case 1:
-                                // forward is a path spacer
-                            	*retSpacer = previous_spacer;
-                            	return true;
-                                break;
-                            default:
-                                // forward is not a path 
-                            	return false;
-                                break;
-                        }
-                    }
-                }
-                el_iter++;
-            }
-        }
-        qel_iter++;
-    }
-    return false;
-}
 
-void NodeManager::contigiseForwardSpacers(std::queue<SpacerInstance *> * walkingQueue, SpacerInstance * SI)
+void NodeManager::setContigIDForSpacers(SpacerInstanceVector * currentContigNodes)
 {
-    //-----
-    // expects to be passed a crossSpacer and a walking queue to mess with
-    //
-    CrisprNode * rq_node = SI->getLast();
-    
-    // the first step is to find all forward spacers
-    edgeList * qel = rq_node->getEdges(CN_EDGE_JUMPING_F);
-    edgeListIterator qel_iter = qel->begin();
-    while(qel_iter != qel->end())
+    SpacerInstanceVector_Iterator iter = currentContigNodes->begin();
+    while (iter != currentContigNodes->end()) 
     {
-        if((qel_iter->first)->isAttached() && (qel_iter->first)->isForward())
-        {
-            // a forward attached node. Now check for inner edges.
-            edgeList * el = (qel_iter->first)->getEdges(CN_EDGE_FORWARD);
-            edgeListIterator el_iter = el->begin();
-            while(el_iter != el->end())
-            {
-                if((el_iter->first)->isAttached())
-                {
-                    SpacerInstance * forward_spacer = NM_Spacers[makeSpacerKey((qel_iter->first)->getID(), (el_iter->first)->getID())];
-                    if(forward_spacer->getContigID() == 0)
-                    {
-                        // a cross node!
-                        NM_NextContigID++;
-                        logInfo("Assigning : other CD : " << SI->getID() << " : " << forward_spacer->getID() << " : " << NM_NextContigID, 1);
-                        forward_spacer->setContigID(NM_NextContigID);
-                        int rank = forward_spacer->getSpacerRank();
-                        switch(rank)
-                        {
-                            case 0:
-                                // end of the line
-                                break;
-                            case 1:
-                                // forward is a path spacer
-                                walkingQueue->push(forward_spacer);
-                                break;
-                            default:
-                                // we have a cross joined onto a cross. recurse
-                                contigiseForwardSpacers(walkingQueue, forward_spacer);
-                                break;
-                        }
-                    }
-                }
-                el_iter++;
-            }
-        }
-        qel_iter++;
+        (*iter)->setContigID(NM_NextContigID);
+        iter++;
     }
-    
 }
 
 // Printing / IO
