@@ -11,7 +11,7 @@
 .Nd the CRISPR Assembler.
 .Sh SYNOPSIS             
 .Nm
-.Op Fl abcdfhklnoswxyDSV
+.Op Fl abcdfhklnoswxyDGKSV
 .Op Fl "-dumpReads"
 .Op Fl "-removeHomopolymers"
 .Op Fl "-logToScreen"
@@ -67,6 +67,8 @@ then reads containing direct repeats are then outputed for further analysis.
 .Op Fl x Ar REAL
 .Op Fl y Ar REAL
 .Op Fl D Ar INT
+.Op Fl G Ar ""
+.Op Fl K Ar INT
 .Op Fl S Ar INT
 .Op Fl "-removeHomopolymers"
 .Op Fl "-logToScreen"
@@ -93,6 +95,8 @@ The minimim length of the direct repeat to search for [Default: 23]
 The Maximum length of the direct repeat to search for [Default: 47] 
 .It Fl f Ar INT  Fl "\^\-covCutoff" Ar INT           
 Defines the minimim number of reads that a putative CRISPR must contain to be considered real. [Default: 10]
+.It Fl G Ar ""  Fl "\^\-showSingletons" Ar ""
+Set to show unattached spacers in the graph output  
 .It Fl h Ar ""  Fl "\^\-help" Ar ""           
 Output basic usage informtion to screen
 .It Fl l Ar INT Fl "\^\-logLevel" Ar INT
@@ -103,6 +107,8 @@ log file
 Print all logging information to stdout rather than a file
 .It Fl k Ar INT Fl "\^\-kmerCount" Ar INT            
 The number of kmers at two direct repeats must share to be considered part of the same cluster [Default: 12]
+.It Fl K Ar INT Fl "\^\-graphNodeLen" Ar INT            
+The length of the kmer used to define a node in the graph.  The lower the number the more connected the graph will be but also increases the chance of false positive edges [Default: 7]
 .It Fl n Ar INT Fl "\^\-minNumRepeats" Ar INT            
 The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real' [Default: 3]
 .It Fl "-noScalling" Ar ""

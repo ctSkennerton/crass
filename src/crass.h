@@ -79,6 +79,8 @@ static struct option long_options [] = {
     {"longDescription",no_argument,NULL,'L'},
     {"noScalling",required_argument,NULL,'0'},
     {"covCutoff",required_argument,NULL,'f'},
+    {"showSingltons",no_argument,NULL,'G'},
+    {"graphNodeLen",required_argument,NULL,'K'},
     {NULL, no_argument, NULL, 0}
 };
 

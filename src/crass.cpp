@@ -132,7 +132,7 @@ void usage(void)
     std::cout<< "-f --covCutoff       <INT>   Remove groups with less than x attached spacers [Default: "<<CRASS_DEF_COVCUTOFF<<"]"<<std::endl;
     std::cout<< "-k --kmerCount       <INT>   The number of the kmers that need to be"<<std::endl; 
     std::cout<< "                             shared for clustering [Default: "<<CRASS_DEF_K_CLUST_MIN<<"]"<<std::endl;
-    std::cout<< "-K --cNodeKmerLen    <INT>   Length of the kmers used to make crispr nodes [Default: "<<CRASS_DEF_NODE_KMER_SIZE<<"]"<<std::endl;
+    std::cout<< "-K --graphNodeLen    <INT>   Length of the kmers used to make crispr nodes [Default: "<<CRASS_DEF_NODE_KMER_SIZE<<"]"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"Graph Output Options: "<<std::endl;
 #ifdef RENDERING
@@ -163,7 +163,7 @@ void usage(void)
     std::cout<<"                              the different types available are:"<<std::endl;
     std::cout<<"                              red-blue, blue-red, green-red-blue, red-blue-green"<<std::endl;
     std::cout<<"-L --longDescription          Set if you want the spacer sequence printed along with the ID in the spacer graph. [Default: false]"<<std::endl;
-    std::cout<<"-G --showSingles              Set if you want to print singleton spacers in the spacer graph . [Default: false]"<<std::endl;
+    std::cout<<"-G --showSingltons            Set if you want to print singleton spacers in the spacer graph . [Default: false]"<<std::endl;
 }
 
 void versionInfo(void) 
