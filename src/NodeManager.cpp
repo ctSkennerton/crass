@@ -960,18 +960,26 @@ int NodeManager::buildSpacerGraph(void)
 						{
 							// bingo!
 							SpacerInstance * next_spacer = NM_Spacers[makeSpacerKey((el_iter->first)->getID(), (qel_iter->first)->getID())];
-							// we can add an edge for these two spacers
-							// add the forward edge to the next spacer
-							spacerEdgeStruct * new_edge = new spacerEdgeStruct();
-							new_edge->edge = next_spacer;
-							new_edge->d = FORWARD;
-							(spacers_iter->second)->addEdge(new_edge);
 							
-							// add the corresponding reverse edge to the current spacer
-							spacerEdgeStruct * new_edge2 = new spacerEdgeStruct();
-							new_edge2->edge = spacers_iter->second;
-							new_edge2->d = REVERSE;
-							next_spacer->addEdge(new_edge2);
+                            if (next_spacer == spacers_iter->second) {
+                                logError("Spacer "<<spacers_iter->second << " with id "<< (spacers_iter->second)->getID()<< " has an edge to itself... aborting edge "<<next_spacer <<" : "<< spacers_iter->second);
+                            } 
+                            else 
+                            {
+                                // we can add an edge for these two spacers
+                                // add the forward edge to the next spacer
+                                spacerEdgeStruct * new_edge = new spacerEdgeStruct();
+                                new_edge->edge = next_spacer;
+                                new_edge->d = FORWARD;
+                                (spacers_iter->second)->addEdge(new_edge);
+                                
+                                // add the corresponding reverse edge to the current spacer
+                                spacerEdgeStruct * new_edge2 = new spacerEdgeStruct();
+                                new_edge2->edge = spacers_iter->second;
+                                new_edge2->d = REVERSE;
+                                next_spacer->addEdge(new_edge2);
+                            }
+
 						}
 						el_iter++;
 					}
@@ -1211,8 +1219,7 @@ int NodeManager::splitIntoContigs(void)
             } 
             else 
             {
-                // push the cross node onto a vector
-                std::cout<<(walk_elem->second())->getID()<<std::endl;
+                // push the cross node onto a list
                 cross_nodes.push_back(walk_elem->second());
             }
             
