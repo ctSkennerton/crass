@@ -1,6 +1,6 @@
-<!DOCTYPE crass_assem [
-<!ELEMENT crass_assem (group+)>
-<!ATTLIST crass_assem version CDATA "1.0">
+<!DOCTYPE crispr [
+<!ELEMENT crispr (group+)>
+<!ATTLIST crispr version CDATA "1.0">
 <!ELEMENT group (data+,metadata*,assembly+)>
 <!ATTLIST group gid CDATA #REQUIRED>
 <!ATTLIST group drseq CDATA #REQUIRED>
