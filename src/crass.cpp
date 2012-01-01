@@ -134,7 +134,7 @@ void usage(void)
     std::cout<< "                             shared for clustering [Default: "<<CRASS_DEF_K_CLUST_MIN<<"]"<<std::endl;
     std::cout<< "-K --graphNodeLen    <INT>   Length of the kmers used to make crispr nodes [Default: "<<CRASS_DEF_NODE_KMER_SIZE<<"]"<<std::endl;
     std::cout<<std::endl;
-    std::cout<<"Graph Output Options: "<<std::endl;
+    std::cout<<"Output Options: "<<std::endl;
 #ifdef RENDERING
     std::cout<<"-a --layoutAlgorithm  <TYPE>  Graphviz layout algorithm to use for printing spacer graphs. The following are available:"<<std::endl;
     #ifdef HAVE_NEATO
@@ -163,7 +163,13 @@ void usage(void)
     std::cout<<"                              the different types available are:"<<std::endl;
     std::cout<<"                              red-blue, blue-red, green-red-blue, red-blue-green"<<std::endl;
     std::cout<<"-L --longDescription          Set if you want the spacer sequence printed along with the ID in the spacer graph. [Default: false]"<<std::endl;
-    std::cout<<"-G --showSingltons            Set if you want to print singleton spacers in the spacer graph . [Default: false]"<<std::endl;
+    std::cout<<"-G --showSingltons            Set if you want to print singleton spacers in the spacer graph [Default: false]"<<std::endl;
+#ifdef DEBUG
+    std::cout<<"--noDebugGraph                Stops creation of debug .gv files even if the DEBUG preprocessor macro is set [Default: false]"<<std::endl;
+#endif
+#ifdef RENDERING
+    std::cout<<"--noRendering                 Stops rendering of .gv files even if the RENDERING preprocessor macro is set [Default: false]"<<std::endl;
+#endif
 }
 
 void versionInfo(void) 
@@ -378,6 +384,12 @@ int processOptions(int argc, char *argv[], options *opts)
                 if ( strcmp( "removeHomopolymers", long_options[index].name ) == 0 ) opts->removeHomopolymers = true;
                 else if ( strcmp( "logToScreen", long_options[index].name ) == 0 ) opts->logToScreen = true;
                 else if ( strcmp( "noScalling", long_options[index].name ) == 0 ) opts->dontPerformScalling = true;
+#ifdef RENDERING 
+                else if (strcmp( "noRendering", long_options[index].name ) == 0 ) opts->noRendering = true;
+#endif  
+#ifdef DEBUG
+                else if (strcmp( "noDebugGraph", long_options[index].name ) == 0 ) opts->noDebugGraph = true;
+#endif
                 break;
             default: 
                 versionInfo(); 
@@ -449,36 +461,38 @@ int main(int argc, char *argv[])
     }
 #endif
     /* application of default options */
-    options opts = {
-        CRASS_DEF_DEFAULT_LOGGING,              // logging minimum by default
-        CRASS_DEF_STATS_REPORT,                 // output stats report
-        CRASS_DEF_MIN_DR_SIZE,                  // minimum direct repeat size
-        CRASS_DEF_MAX_DR_SIZE,                  // maximum direct repeat size
-        CRASS_DEF_MIN_SPACER_SIZE,              // minimum spacer size
-        CRASS_DEF_MAX_SPACER_SIZE,              // maximum spacer size
-        CRASS_DEF_OUTPUT_DIR,                   // output file directory
-        CRASS_DEF_STATS_REPORT_DELIM,           // delimiter string for stats report
-        CRASS_DEF_K_CLUST_MIN,                  // the number of the kmers that need to be shared for clustering
-        CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH, // the search window length
-        CRASS_DEF_DEFAULT_MIN_NUM_REPEATS,      // mininum number of repeats for long read algorithm 
-        CRASS_DEF_LOGTOSCREEN,                  // should we log to screen
-        CRASS_DEF_REMOVE_HOMOPOLYMERS,          // should we remove homopolymers in reads
-        CRASS_DEF_NUM_OF_BINS,                  // default for the number of bins of colours to create
-        CRASS_DEF_GRAPH_COLOUR,                 // default colour type of the graph
-        CRASS_DEF_HOMOPOLYMER_SCALLING,         // average spacer scalling
-        CRASS_DEF_HOMOPOLYMER_SCALLING,         // average direct repeat scalling
-        CRASS_DEF_NO_SCALLING,                  // perform scalling by default
-
-#ifdef RENDERING
-        DEFAULT_RENDERING_ALGORITHM,
-#else
-        "unset",                                // set dummy value if not rendering
+    options opts;
+    opts.logLevel = CRASS_DEF_DEFAULT_LOGGING;                        // level of verbosity allowed in the log file
+    opts.reportStats = CRASS_DEF_STATS_REPORT;                        // print a starts report currently not used
+    opts.lowDRsize = CRASS_DEF_MIN_DR_SIZE;                           // the lower size limit for a direct repeat
+    opts.highDRsize = CRASS_DEF_MAX_DR_SIZE;                          // the upper size limit for a direct repeat
+    opts.lowSpacerSize = CRASS_DEF_MIN_SPACER_SIZE;                   // the lower limit for a spacer
+    opts.highSpacerSize = CRASS_DEF_MAX_SPACER_SIZE;                  // the upper size limit for a spacer
+    opts.output_fastq = CRASS_DEF_OUTPUT_DIR;                         // the output directory for the output files
+    opts.delim = CRASS_DEF_STATS_REPORT_DELIM;                        // delimiter used in stats report currently not used
+    opts.kmer_size = CRASS_DEF_K_CLUST_MIN;                           // number of kmers needed to be shared to add to a cluser
+    opts.searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH; // option 'w'used in long read search only
+    opts.minNumRepeats = CRASS_DEF_DEFAULT_MIN_NUM_REPEATS;           // option 'n'used in long read search only
+    opts.logToScreen = CRASS_DEF_LOGTOSCREEN;                         // log to std::cout rather than to the log file
+    opts.removeHomopolymers = CRASS_DEF_REMOVE_HOMOPOLYMERS;          // correct for homopolymer errors
+    opts.coverageBins = CRASS_DEF_NUM_OF_BINS;                        // The number of bins of colours
+    opts.graphColourType = CRASS_DEF_GRAPH_COLOUR;                    // the colour type of the graph
+    opts.averageSpacerScalling = CRASS_DEF_HOMOPOLYMER_SCALLING;      // decimal for reduction in the spacer size
+    opts.averageDrScalling = CRASS_DEF_HOMOPOLYMER_SCALLING;          // decimal for the reduction in the direct repeat size
+    opts.dontPerformScalling = CRASS_DEF_NO_SCALLING;                 // turn all scalling off for the user to define variables
+    opts.longDescription = CRASS_DEF_SPACER_LONG_DESC;                // print a long description for the final spacer graph
+    opts.showSingles = CRASS_DEF_SPACER_SHOW_SINGLES;                 // print singletons when making the spacer graph
+    opts.cNodeKmerLength = CRASS_DEF_NODE_KMER_SIZE;                  // length of the kmers making up a crisprnode
+#ifdef DEBUG
+    opts.noDebugGraph = false;                                        // Even if DEBUG preprocessor macro is set do not produce debug graph files
 #endif
-        CRASS_DEF_SPACER_LONG_DESC,             // do not use a long description for the nodes of the spacer graph
-        CRASS_DEF_SPACER_SHOW_SINGLES,			// show singles in graph printing
-        CRASS_DEF_NODE_KMER_SIZE,				// kmer size for building crispr nodes
-        CRASS_DEF_COVCUTOFF                     // Groups with less than 10 reads will be purged
-    };
+#ifdef RENDERING
+    opts.layoutAlgorithm = DEFAULT_RENDERING_ALGORITHM;               // the graphviz layout algorithm to use
+    opts.noRendering = false;                                         // Even if RENDERING preprocessor macro is set do not produce any rendered images
+#else
+    opts.layoutAlgorithm = "unset";
+#endif
+    opts.covCutoff = CRASS_DEF_COVCUTOFF;
 
     int opt_idx = processOptions(argc, argv, &opts);
 

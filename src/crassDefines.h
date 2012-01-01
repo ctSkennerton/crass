@@ -156,7 +156,14 @@ typedef struct {
     bool                longDescription;                                    // print a long description for the final spacer graph
     bool 				showSingles;										// print singletons when making the spacer graph
     int 				cNodeKmerLength;									// length of the kmers making up a crisprnode
+#ifdef DEBUG
+    bool                noDebugGraph;                                       // Even if DEBUG preprocessor macro is set do not produce debug graph files
+#endif
+#ifdef RENDERING
+    bool                noRendering;                                        // Even if RENDERING preprocessor macro is set do not produce any rendered images
+#endif
     int                 covCutoff;                                          // The lower bounds of acceptable numbers of reads that a group can have
+
 } options;
 
 // --------------------------------------------------------------------
