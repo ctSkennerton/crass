@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(crass, 0.1.2, c.skennerton@gmail.com)
+AC_INIT(crass, 0.1.3, c.skennerton@gmail.com)
 
 AM_INIT_AUTOMAKE
 
@@ -14,7 +14,7 @@ AC_CONFIG_HEADER([config.h])
 AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
 AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
 AC_DEFINE([PACKAGE_MINOR_VERSION],[1],[Define the minor version of the package])
-AC_DEFINE([PACKAGE_REVISION],[2],[Define the revision of the package])
+AC_DEFINE([PACKAGE_REVISION],[3],[Define the revision of the package])
 
 # extra configure options
 #
@@ -116,29 +116,27 @@ esac],[assembly=true])
 AC_PROG_CXX
 AC_PROG_CC
 
+AX_LIB_XERCES
+if test $HAVE_XERCES = no; then
+AC_MSG_ERROR([Cannot find Xerces-c])
+else
+AM_CONDITIONAL([XERCES_FOUND], [test $HAVE_XERCES = yes])
+fi
+
 PERFORM_CRASS_ASSEMBLY=no 
 # Checks for libraries.
 if test $assembly = true; then
-    AX_LIB_XERCES
-    if test $HAVE_XERCES = no; then
+    AC_CHECK_PROGS([ASSEMBLERS], [velvetg cap3], [no])
+    if test ASSEMBLERS != no; then
+        PERFORM_CRASS_ASSEMBLY=yes
+        AC_DEFINE([PERFORM_CRASS_ASSEMBLY],[1],[Defines to 1 if your system configuration enables you to use the Crass assembler])
+    else
         echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
-        echo "Cannot find Xerces-c library"
+        echo "No genome assemblers were found"
+        echo "in your PATH!"
         echo "Your installation will not conatin"
         echo "the Crass assembler!"
         echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
-    else
-        AC_CHECK_PROGS([ASSEMBLERS], [velvetg cap3], [no])
-        if test ASSEMBLERS != no; then
-            PERFORM_CRASS_ASSEMBLY=yes
-            AC_DEFINE([PERFORM_CRASS_ASSEMBLY],[1],[Defines to 1 if your system configuration enables you to use the Crass assembler])
-        else
-            echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
-            echo "No genome assemblers were found"
-            echo "in your PATH!"
-            echo "Your installation will not conatin"
-            echo "the Crass assembler!"
-            echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
-        fi
     fi
 fi
 AM_CONDITIONAL([ASSEMBLY_WRAPPER], [test x$PERFORM_CRASS_ASSEMBLY = xyes])

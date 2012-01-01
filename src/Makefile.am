@@ -1,9 +1,8 @@
 AM_CXXFLAGS = -Werror -pedantic -Wall
 
 AM_LDFLAGS = @XERCES_LDFLAGS@
-if ASSEMBLY_WRAPPER
-    LIBS += -lxerces-c
-endif
+LIBS += -lxerces-c
+
 if DEBUG
     AM_CXXFLAGS += -ggdb
 endif
@@ -36,11 +35,11 @@ StringCheck.cpp StringCheck.h\
 kseq.h\
 GraphDrawingDefines.h\
 crassDefines.h\
-StlExt.h
+StlExt.h\
+CrassXML.cpp CrassXML.h
 
 if ASSEMBLY_WRAPPER
 crass_SOURCES +=\
-CrassXML.cpp CrassXML.h\
 AssemblyWrapper.cpp AssemblyWrapper.h
 endif
 

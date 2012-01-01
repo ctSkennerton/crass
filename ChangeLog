@@ -1,3 +1,72 @@
+Sun Jan 1 17:51:21 2012 +1000    ctSkennerton
+    updated documentation to include new options
+
+Sun Jan 1 17:49:55 2012 +1000    ctSkennerton
+    fixed issue #25 plus a number of other small memory fixes
+
+Sun Jan 1 17:40:28 2012 +1000    ctSkennerton
+    quick patch to solve a seg fault where spacers have edges to themselves.  At the moment if such an issue arrises the edge is not made -- might not be the best solution however it will do for now
+
+Sun Jan 1 17:37:40 2012 +1000    ctSkennerton
+    got through issue #16.  The crisper DTD is a bit more general
+
+Sun Jan 1 17:22:28 2012 +1000    ctSkennerton
+    added two extra options to control output if DEBUG or RENDERING symbols are set
+
+Mon Dec 19 00:40:53 2011 +1000    ctSkennerton
+    a few documentation updates
+
+Mon Dec 19 00:13:15 2011 +1000    ctSkennerton
+    removed some rouge print statements and incremented the version number
+
+Mon Dec 19 00:09:11 2011 +1000    ctSkennerton
+    contig numbering now makes sense for the new graph building
+
+Sat Dec 17 13:21:26 2011 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Sat Dec 17 13:20:28 2011 +1000    ctSkennerton
+    commit before merging
+
+Fri Dec 16 14:54:37 2011 +1000    Michael.Imelfort
+    removed some naggy print statements
+
+Fri Dec 16 14:48:33 2011 +1000    Michael.Imelfort
+    1. Spacer cleaning is done! 2. added more user opts
+
+Wed Dec 14 16:14:44 2011 +1000    Michael.Imelfort
+    Fixed 7,000,000 memory leaks. 2 remain. Also started cutting out the spacer graph stuff into separate functions in preparation for sp graph cleaning...
+
+Wed Dec 14 11:16:50 2011 +1000    Michael.Imelfort
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Wed Dec 14 01:16:29 2011 +0000    minillinim
+    Fixed a few bugs residing in the debugging options
+
+Wed Dec 14 01:13:42 2011 +0000    minillinim
+    removed
+
+Wed Dec 14 01:13:12 2011 +0000    minillinim
+    Need to remove these guys from tree
+
+Mon Nov 28 16:34:42 2011 +1000    Michael.Imelfort
+    removed files that are unneeded
+
+Mon Nov 28 16:32:56 2011 +1000    Michael.Imelfort
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Mon Nov 28 16:24:14 2011 +1000    Michael.Imelfort
+    oi
+
+Mon Nov 28 16:23:34 2011 +1000    Michael.Imelfort
+    Fixed a dtd
+
+Mon Nov 28 16:22:26 2011 +1000    Michael.Imelfort
+    idkjkdswq
+
+Sat Nov 26 19:38:21 2011 +1000    ctSkennerton
+    update to 0.1.1 with latest changes
+
 Sat Nov 26 19:34:09 2011 +1000    ctSkennerton
     fix index file after merge
 
