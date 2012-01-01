@@ -161,7 +161,8 @@ Most of the basic options control the output style, for example the colours of t
 -l -{}-logLevel & Sets the verbosity of the log file.  Under most circumstances the log level cannot go higher than 4, unless the enable-debug option is set during configuration, which will increase the maximum value to 10.  Note that above a level of 4 alot of the information will not be understandable to the user as most of these messages are specifically for us, the developers to track down bugs.  \\ \\
 -L -{}-longDescription & This changes  the names of the nodes in the spacer graph to include the sequence of the spacer.  The default is to just use the spacer ID\\ \\
 -{}-logToScreen & Does not produce a log file but instead prints the contents to screen.\\ \\
-
+-{}-noDebugGraph & When the DEBUG preprocessor symbol is defined this option will become available.  When set it prevents the output of any of the debugging .gv files being produced \\ \\
+-{}-noRendering & When the RENDERING preprocessor symbol is defined this option will become available.  When set it prevents the generation of rendered images from the intermeadiate debugging graphs (if DEBUG preprocessor symbol is set) and the final graphs.\\ \\
 -o -{}-outDir & Sets the output directory for files produced by Crass.  The default is the current directory\\ \\
 -s -{}-minSpacer & The lower bound considered acceptable for the size of a spacer sequence. Default is 26bp.\\ \\
 -S -{}-maxSpacer & The upper bound considered acceptable for the size of a spacer sequence. Default is 50bp.\\ \\

@@ -15,6 +15,8 @@
 .Op Fl "-dumpReads"
 .Op Fl "-removeHomopolymers"
 .Op Fl "-logToScreen"
+.Op Fl "-noDebugGraph"
+.Op Fl "-noRendering"
 .Ao Em sequence_files Ac
 
 .Nm
@@ -72,6 +74,8 @@ then reads containing direct repeats are then outputed for further analysis.
 .Op Fl S Ar INT
 .Op Fl "-removeHomopolymers"
 .Op Fl "-logToScreen"
+.Op Fl "-noDebugGraph"
+.Op Fl "-noRendering"
 
 .It Fl a Ar LAYOUT_TYPE Fl "\^\-layoutAlgorithm" Ar LAYOUT_TYPE
 The Graphviz layout algorithm to be used when rendering graphs.
@@ -111,6 +115,10 @@ The number of kmers at two direct repeats must share to be considered part of th
 The length of the kmer used to define a node in the graph.  The lower the number the more connected the graph will be but also increases the chance of false positive edges [Default: 7]
 .It Fl n Ar INT Fl "\^\-minNumRepeats" Ar INT            
 The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real' [Default: 3]
+.It Fl "-noDebugGraph" Ar ""
+Available only when the DEBUG preoprocessor macro is set. Stops generation of debuging .gv files being produced [Default: false] 
+.It Fl "-noRendering" Ar ""
+Available only when the RENDERING preoprocessor macro is set. Stops generation of image files being produced [Default: false] 
 .It Fl "-noScalling" Ar ""
 Use the given spacer and direct repeat ranges when --removeHomopolymers is set.  The default is to use the scale these values based on the values of -x and -y. 
 .It Fl o Ar LOCATION  Fl "\^\-outDir" Ar LOCATION          
