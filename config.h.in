@@ -1,0 +1,173 @@
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* define to 1 for debug statments */
+#undef DEBUG
+
+/* Sets the Default Graphviz algorithm */
+#undef DEFAULT_RENDERING_ALGORITHM
+
+/* Defines to 1 if the program 'cap3' is found in PATH */
+#undef HAVE_CAP3
+
+/* Defines to 1 if the program 'circo' is found in PATH */
+#undef HAVE_CIRCO
+
+/* Defines to 1 if the program 'dot' is found in PATH */
+#undef HAVE_DOT
+
+/* Define to 1 if you have the <fcntl.h> header file. */
+#undef HAVE_FCNTL_H
+
+/* Defines to 1 if the program 'fdp' is found in PATH */
+#undef HAVE_FDP
+
+/* Define to 1 if you have the <getopt.h> header file. */
+#undef HAVE_GETOPT_H
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `z' library (-lz). */
+#undef HAVE_LIBZ
+
+/* Define to 1 if you have the <limits.h> header file. */
+#undef HAVE_LIMITS_H
+
+/* Define to 1 if your system has a GNU libc compatible `malloc' function, and
+   to 0 otherwise. */
+#undef HAVE_MALLOC
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `memset' function. */
+#undef HAVE_MEMSET
+
+/* Defines to 1 if the program 'neato' is found in PATH */
+#undef HAVE_NEATO
+
+/* Define to 1 if you have the `pow' function. */
+#undef HAVE_POW
+
+/* Define if you have POSIX threads libraries and header files. */
+#undef HAVE_PTHREAD
+
+/* Have PTHREAD_PRIO_INHERIT. */
+#undef HAVE_PTHREAD_PRIO_INHERIT
+
+/* Define to 1 if your system has a GNU libc compatible `realloc' function,
+   and to 0 otherwise. */
+#undef HAVE_REALLOC
+
+/* Defines to 1 if the program 'sfdp' is found in PATH */
+#undef HAVE_SFDP
+
+/* Define to 1 if stdbool.h conforms to C99. */
+#undef HAVE_STDBOOL_H
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the `strchr' function. */
+#undef HAVE_STRCHR
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strspn' function. */
+#undef HAVE_STRSPN
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Defines to 1 if the program 'twopi' is found in PATH */
+#undef HAVE_TWOPI
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Defines to 1 if the program 'velvetg' and 'velveth' is found in PATH */
+#undef HAVE_VELVET
+
+/* Define to 1 if the system has the type `_Bool'. */
+#undef HAVE__BOOL
+
+/* define to 1 for valgrind statments */
+#undef MEMCHECK
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define the full name of the package */
+#undef PACKAGE_FULL_NAME
+
+/* Define the major version of the package */
+#undef PACKAGE_MAJOR_VERSION
+
+/* Define the minor version of the package */
+#undef PACKAGE_MINOR_VERSION
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define the revision of the package */
+#undef PACKAGE_REVISION
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Defines to 1 if your system configuration enables you to use the Crass
+   assembler */
+#undef PERFORM_CRASS_ASSEMBLY
+
+/* Define to necessary symbol if this constant uses a non-standard name on
+   your system. */
+#undef PTHREAD_CREATE_JOINABLE
+
+/* Defines to 1 if image rendering is to be performed */
+#undef RENDERING
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* define to 1 for verbose logging statments */
+#undef SUPER_LOGGING
+
+/* Version number of package */
+#undef VERSION
+
+/* Define to empty if `const' does not conform to ANSI C. */
+#undef const
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
+#endif
+
+/* Define to rpl_malloc if the replacement function should be used. */
+#undef malloc
+
+/* Define to rpl_realloc if the replacement function should be used. */
+#undef realloc
+
+/* Define to `unsigned int' if <sys/types.h> does not define. */
+#undef size_t

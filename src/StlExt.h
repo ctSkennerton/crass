@@ -35,6 +35,8 @@
 //              A B R A C A D A B R A 
 //
 // --------------------------------------------------------------------
+#ifndef STLEXT_H
+#define STLEXT_H 
 #include <sstream>
 #include <map>
 #include <algorithm>
@@ -86,3 +88,4 @@ void mapToVector(std::map<T1, T2>& map, std::vector<T3>& vector)
         iter++;
     }
 }
+#endif

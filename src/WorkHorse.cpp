@@ -175,12 +175,16 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	}
 	
 #if DEBUG
-	// print debug graphs
-	if(renderDebugGraphs())
-	{
-        logError("FATAL ERROR: renderDebugGraphs failed");
-        return 4;
-	}
+	if (!mOpts->noDebugGraph) // this option will only exist if DEBUG is set anyway
+    {
+        // print debug graphs
+        if(renderDebugGraphs())
+        {
+            logError("FATAL ERROR: renderDebugGraphs failed");
+            return 4;
+        }
+    }
+
 #endif
 	
 	// clean each spacer end graph
@@ -233,12 +237,16 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	}
 	
 #if DEBUG
-	// print clean graphs
-	if(renderDebugGraphs("Clean_"))
-	{
-        logError("FATAL ERROR: renderDebugGraphs failed");
-        return 10;
-	}
+	if (!mOpts->noDebugGraph) 
+    {
+        // print clean graphs
+        if(renderDebugGraphs("Clean_"))
+        {
+            logError("FATAL ERROR: renderDebugGraphs failed");
+            return 10;
+        }
+    }
+
 #endif
     
 	// print spacer graphs
@@ -624,15 +632,15 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         logInfo("Could not identify a master DR", 4);
         if(NULL != clustered_DRs)
         {
-        	std::cout << clustered_DRs << " : " << mDR2GIDMap[GID] << std::endl;  
         	delete clustered_DRs;
         	clustered_DRs = NULL;
+            mDR2GIDMap.erase(GID);
         }
-        if(NULL != mDR2GIDMap[GID])
-        {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
-        }
+//        if(NULL != mDR2GIDMap[GID])
+//        {
+//        	//delete mDR2GIDMap[GID];
+//        	//mDR2GIDMap[GID] = NULL;
+//        }
         return false;
     }
     
@@ -649,9 +657,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     // first we need a 4 * array_len
     int ** coverage_array = new int*[4];
     
+    int array_len = ((int)3*mAveReadLength > 1200) ? (int)3*mAveReadLength : 1200;
+    
     // fill it up!
-	// MI: hack, this guy was getting too short!
-    int array_len = 1200;//3 * (int)mAveReadLength;
     for(int i = 0; i < 4; i++)
     {
         int * tmp_array = new int[array_len];
@@ -1328,15 +1336,21 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     // clean up the mess we made
     
     if(NULL != consensus_array)
-    	delete[] consensus_array;
+    {
+        delete[] consensus_array;
+    }
     if(NULL != conservation_array)
-    	delete[] conservation_array;
+    {
+        delete[] conservation_array;
+    }
     if(coverage_array != NULL)
     {
 		for(int i = 0; i < 4; i++)
 		{
 			if(NULL != coverage_array[i])
-				delete[] coverage_array[i];
+            {
+                delete[] coverage_array[i];
+            }
 		}
 		delete[] coverage_array;
 		coverage_array = NULL;
@@ -1553,13 +1567,21 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
 		DR_ClusterIterator drc_iter = (mDR2GIDMap[GID])->begin();
 		while(drc_iter != (mDR2GIDMap[GID])->end())
 		{
-			// go through each read
-			ReadListIterator read_iter = mReads[*drc_iter]->begin();
-			while (read_iter != mReads[*drc_iter]->end()) 
-			{
-				(*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
-				read_iter++;
-			}
+			if (DR_offset_map[*drc_iter] == -1 ) 
+            {
+                logError("Repeat "<< *drc_iter<<" in Group "<<GID <<" has no offset in DR_offset_map");
+            } 
+            else 
+            {
+                // go through each read
+                ReadListIterator read_iter = mReads[*drc_iter]->begin();
+                while (read_iter != mReads[*drc_iter]->end()) 
+                {
+                    (*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
+                    read_iter++;
+                }
+            }
+
 			drc_iter++;
 		}
     }
@@ -2040,11 +2062,14 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
                 {
                     mDRs[mTrueDRs[drg_iter->first]]->printDebugGraph(graph_file, mTrueDRs[drg_iter->first], false, false, false);
 #if RENDERING
-                    // create a command string and call neato to make the image file
-                    std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
-                    if (system(cmd.c_str()))
+                    if (!mOpts->noRendering) 
                     {
-                        logError("Problem running neato when rendering debug graphs");
+                        // create a command string and call neato to make the image file
+                        std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                        if (system(cmd.c_str()))
+                        {
+                            logError("Problem running neato when rendering debug graphs");
+                        }
                     }
 #endif
                 } 
@@ -2109,12 +2134,15 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
                     mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription, mOpts->showSingles);
                     mDRs[mTrueDRs[drg_iter->first]]->printSpacerKey(key_file, 10, namePrefix + to_string(drg_iter->first));
 #if RENDERING
-                    // create a command string and call graphviz to make the image file
-                    std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
-                    if(system(cmd.c_str()))
+                    if (!mOpts->noRendering) 
                     {
-                        logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
-                        return 1;
+                        // create a command string and call graphviz to make the image file
+                        std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                        if(system(cmd.c_str()))
+                        {
+                            logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
+                            return 1;
+                        }
                     }
 #endif
                 } 

@@ -143,7 +143,7 @@ void SpacerInstance::detachFromSpacerGraph(void)
 	while(edge_iter != SI_SpacerEdges.end())
 	{
 		// delete the return edge
-		//std::cout << "c: " << this << " : " << (*edge_iter)->edge << " : " << std::endl;
+		//std::cout << "c: " << this << " : " << (*edge_iter)->edge << std::endl;
 		if(!(*edge_iter)->edge->detachSpecificSpacer(this))
 		{
 			return;

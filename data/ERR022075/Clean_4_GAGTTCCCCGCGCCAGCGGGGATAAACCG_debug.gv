@@ -1,0 +1,46 @@
+digraph GAGTTCCCCGCGCCAGCGGGGATAAACCG {
+node_3 [ color = "#fc001b", fillcolor="#fc001b", style= filled, shape=circle];
+node_4 [ color = "#fc001b", fillcolor="#fc001b", style= filled, shape=circle];
+node_5 [ color = "#d70073", fillcolor="#d70073", style= filled, shape=circle];
+node_8 [ color = "#7300d7", fillcolor="#7300d7", style= filled, shape=circle];
+node_9 [ color = "#5500e8", fillcolor="#5500e8", style= filled, shape=circle];
+node_11 [ color = "#8f00c2", fillcolor="#8f00c2", style= filled, shape=circle];
+node_13 [ color = "#3700f5", fillcolor="#3700f5", style= filled, shape=circle];
+node_14 [ color = "#3700f5", fillcolor="#3700f5", style= filled, shape=circle];
+node_15 [ color = "#1b00fc", fillcolor="#1b00fc", style= filled, shape=circle];
+node_19 [ color = "#aa00aa", fillcolor="#aa00aa", style= filled, shape=circle];
+node_21 [ color = "#c2008f", fillcolor="#c2008f", style= filled, shape=circle];
+node_27 [ color = "#aa00aa", fillcolor="#aa00aa", style= filled, shape=circle];
+node_28 [ color = "#0000ff", fillcolor="#0000ff", style= filled, shape=circle];
+node_30 [ color = "#0000ff", fillcolor="#0000ff", style= filled, shape=circle];
+node_33 [ color = "#ff0000", fillcolor="#ff0000", style= filled, shape=circle];
+node_36 [ color = "#3700f5", fillcolor="#3700f5", style= filled, shape=circle];
+node_59 [ color = "#c2008f", fillcolor="#c2008f", style= filled, shape=circle];
+node_74 [ color = "#fc001b", fillcolor="#fc001b", style= filled, shape=circle];
+node_77 [ color = "#c2008f", fillcolor="#c2008f", style= filled, shape=circle];
+node_78 [ color = "#e80055", fillcolor="#e80055", style= filled, shape=circle];
+node_87 [ color = "#8f00c2", fillcolor="#8f00c2", style= filled, shape=circle];
+node_88 [ color = "#aa00aa", fillcolor="#aa00aa", style= filled, shape=circle];
+node_91 [ color = "#aa00aa", fillcolor="#aa00aa", style= filled, shape=circle];
+node_3 -> node_4 [ len=2, style=dashed ];
+node_4 -> node_5 [ len=2 ];
+node_5 -> node_19 [ len=2, style=dashed ];
+node_8 -> node_9 [ len=2 ];
+node_9 -> node_11 [ len=2, style=dashed ];
+node_11 -> node_36 [ len=2 ];
+node_13 -> node_14 [ len=2, style=dashed ];
+node_14 -> node_15 [ len=2 ];
+node_15 -> node_8 [ len=2, style=dashed ];
+node_19 -> node_13 [ len=2 ];
+node_27 -> node_28 [ len=2 ];
+node_28 -> node_30 [ len=2, style=dashed ];
+node_33 -> node_3 [ len=2 ];
+node_36 -> node_59 [ len=2, style=dashed ];
+node_59 -> node_74 [ len=2 ];
+node_77 -> node_78 [ len=2 ];
+node_78 -> node_21 [ len=2, style=dashed ];
+node_87 -> node_88 [ len=2 ];
+node_88 -> node_77 [ len=2, style=dashed ];
+node_91 -> node_87 [ len=2, style=dashed ];
+
+}
