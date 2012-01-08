@@ -119,6 +119,8 @@ public:
         inline CrisprNode * getLast(void) { return SI_LastNode; }
         inline bool isAttached(void) { return SI_Attached; }
         inline void setAttached(bool attached) { SI_Attached = attached; }
+        inline bool isFlanker(void){return SI_isFlanker;}
+        inline void setFlanker(bool f){SI_isFlanker = f;}
         
         //
         // contig functions
@@ -157,6 +159,7 @@ public:
         bool SI_Attached;							  // is this spacer attached?
         int SI_ContigID;							  // contig ID
         SpacerEdgeVector SI_SpacerEdges;              // Pointers to the spacers that come off this spacer
+        bool SI_isFlanker;                          // set if this spacer instance is considered a flanker or not
 };
 
 
