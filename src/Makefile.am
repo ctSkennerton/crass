@@ -36,7 +36,8 @@ kseq.h\
 GraphDrawingDefines.h\
 crassDefines.h\
 StlExt.h\
-CrassXML.cpp CrassXML.h
+CrassXML.cpp CrassXML.h \
+StatsManager.h
 
 if ASSEMBLY_WRAPPER
 crass_SOURCES +=\

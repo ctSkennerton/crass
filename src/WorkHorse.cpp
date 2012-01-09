@@ -222,6 +222,11 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         return 7;
     }
 	
+    if (generateFlankers()) {
+        logError("FATAL ERROR: generateFlankers failed");
+        return 70;
+    }
+    
     // dump the spacers to file
 	if(dumpSpacers())
 	{
@@ -1924,7 +1929,27 @@ int WorkHorse::cleanSpacerGraphs(void)
     return 0;
 }
 
-
+int WorkHorse::generateFlankers(void)
+{
+	//-----
+	// Wrapper for graph cleaning
+	//
+	// create a spacer dictionary
+	logInfo("Detecting Flanker sequences", 1);
+	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+	while(drg_iter != mDR2GIDMap.end())
+	{
+		if(NULL != drg_iter->second)
+		{            
+			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
+            {
+                (mDRs[mTrueDRs[drg_iter->first]])->generateFlankers();
+		    }
+        }
+		drg_iter++;
+	}
+	return 0;
+}
 //**************************************
 // contig making
 //**************************************
@@ -2273,32 +2298,33 @@ bool WorkHorse::addDataToDOM(CrassXML * xmlDoc, xercesc::DOMElement * groupEleme
     try 
     {
         xercesc::DOMElement * data_elem = xmlDoc->addData(groupElement);
-        xercesc::DOMNodeList * data_children = data_elem->getChildNodes();
-        for (XMLSize_t i = 0; i < data_children->getLength(); i++) 
+        if ((mDRs[mTrueDRs[groupNumber]])->haveAnyFlankers()) {
+            std::cout<<"got some flankers"<<std::endl;
+            xmlDoc->createFlankers(data_elem);
+        }
+        
+        for (xercesc::DOMElement * currentElement = data_elem->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) 
         {
-            xercesc::DOMNode* current_node = data_children->item(i);
-            if( current_node->getNodeType() &&  current_node->getNodeType() == xercesc::DOMNode::ELEMENT_NODE ) // is element 
+            if( xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->getDrs()))
             {
-                // Found node which is an Element. Re-cast node as element
-                xercesc::DOMElement* element = dynamic_cast< xercesc::DOMElement* >( current_node );
-                if( xercesc::XMLString::equals(element->getTagName(), xmlDoc->getDrs()))
-                {
-                    // TODO: current implementation in Crass only supports a single DR for a group
-                    // in the future this will change, but for now ok to keep as a constant
-                    std::string drid = "DR1";
-                    xmlDoc->addDirectRepeat(drid, mTrueDRs[groupNumber], element);
-                }
-                else if (xercesc::XMLString::equals(element->getTagName(), xmlDoc->getSpacers()))
-                {
-                    // print out all the spacers for this group
-                    (mDRs[mTrueDRs[groupNumber]])->addSpacersToDOM(xmlDoc, element, false);
-                    
-                }
-                // TODO: Crass does not implement flankers yet
-                else if (xercesc::XMLString::equals(element->getTagName(), xmlDoc->getFlankers()))
-                {
-                    // print out all the flankers for this group
-                }
+                // TODO: current implementation in Crass only supports a single DR for a group
+                // in the future this will change, but for now ok to keep as a constant
+                std::string drid = "DR1";
+                xmlDoc->addDirectRepeat(drid, mTrueDRs[groupNumber], currentElement);
+            }
+            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->getSpacers()))
+            {
+                // print out all the spacers for this group
+                (mDRs[mTrueDRs[groupNumber]])->addSpacersToDOM(xmlDoc, currentElement, false);
+                
+            }
+            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->getFlankers()))
+            {
+                // should only get in here if there are flankers for the group
+
+                // print out all the flankers for this group
+                (mDRs[mTrueDRs[groupNumber]])->addFlankersToDOM(xmlDoc, currentElement, false);
+
             }
         }
     }

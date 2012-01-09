@@ -103,6 +103,7 @@ public:
             SI_InstanceCount = 0;
             SI_ContigID = 0;
             SI_Attached = false;
+            SI_isFlanker = false;
         }
         
         SpacerInstance (StringToken spacerID);
@@ -117,7 +118,14 @@ public:
         inline StringToken getID(void) { return SI_SpacerSeqID; }
         inline CrisprNode * getLeader(void) { return SI_LeadingNode; }
         inline CrisprNode * getLast(void) { return SI_LastNode; }
-        inline bool isAttached(void) { return SI_Attached; }
+        inline bool isAttached(void) 
+        { 
+            if ((SI_LeadingNode->isAttached() && SI_LastNode->isAttached() ^ SI_Attached))
+            {
+                std::cout<<"Spacer "<<SI_SpacerSeqID<<" has asynchronous attached state"<<std::endl;  
+            }
+            return SI_Attached;
+        }
         inline void setAttached(bool attached) { SI_Attached = attached; }
         inline bool isFlanker(void){return SI_isFlanker;}
         inline void setFlanker(bool f){SI_isFlanker = f;}

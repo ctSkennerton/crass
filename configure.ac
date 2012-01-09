@@ -4,7 +4,7 @@
 AC_PREREQ(2.61)
 AC_INIT(crass, 0.1.3, c.skennerton@gmail.com)
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/crass.cpp])
