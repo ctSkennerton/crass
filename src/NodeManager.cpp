@@ -76,6 +76,7 @@ NodeManager::NodeManager(std::string drSeq, const options * userOpts)
     NM_Opts = userOpts;
     NM_StringCheck.setName("NM_" + drSeq);
     NM_NextContigID = 0;
+    
 }
 
 NodeManager::~NodeManager(void)
@@ -1262,6 +1263,7 @@ bool NodeManager::walkFromCross(SpacerInstanceList * crossNodes)
             {
                 if( getSpacerEdgeFromCross(walk_elem, (*edge_iter)->edge))
                 {
+
                     SpacerInstanceVector current_contig_nodes;
                     SpacerInstance * previous_node = NULL;
                     // edge is a path node so walk
@@ -1421,13 +1423,27 @@ void NodeManager::addSpacersToDOM(CrassXML * xmlDoc, xercesc::DOMElement * paren
     while(spacer_iter != NM_Spacers.end())
     {
         SpacerInstance * SI = spacer_iter->second;
-        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+        if((showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached())) && !(SI->isFlanker()))
         {
             std::string spacer = NM_StringCheck.getString(SI->getID());
             std::string spid = "SP" + to_string(SI->getID());
             xmlDoc->addSpacer(spacer, spid, parentNode);
         }
         spacer_iter++;
+    }
+}
+
+void NodeManager::addFlankersToDOM(CrassXML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
+{
+    SpacerInstanceVector_Iterator iter;
+    for (iter = NM_FlankerNodes.begin(); iter != NM_FlankerNodes.end(); iter++) {
+        SpacerInstance * SI = *iter;
+        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+        {
+            std::string spacer = NM_StringCheck.getString(SI->getID());
+            std::string flid = "FL" + to_string(SI->getID());
+            xmlDoc->addFlanker(spacer, flid, parentNode);
+        }
     }
 }
 
@@ -1451,60 +1467,97 @@ void NodeManager::printAssemblyToDOM(CrassXML * xmlDoc, xercesc::DOMElement * pa
                 {
 
                     std::string spacer = NM_StringCheck.getString(SI->getID());
-                    std::string spid = "SP" + to_string(SI->getID());
-                    xercesc::DOMElement * cspacer = xmlDoc->addSpacerToContig(spid, contig_elem);
+                    std::string id = (SI->isFlanker()) ? "FL" + to_string(SI->getID()) : "SP" + to_string(SI->getID());
+                    
+                    xercesc::DOMElement * cspacer = xmlDoc->addSpacerToContig(id, contig_elem);
 
-                    //bool ff = false;
-                    //bool bf = false;
+                    bool ff = false;
+                    bool bf = false;
                     bool fs = false;
                     bool bs = false;
                     
                     xercesc::DOMElement * fspacers = NULL;
                     xercesc::DOMElement * bspacers = NULL;
-
+                    xercesc::DOMElement * fflankers = NULL;
+                    xercesc::DOMElement * bflankers = NULL;
                     SpacerEdgeVector_Iterator sp_iter = SI->begin();
                     while (sp_iter != SI->end()) 
                     {
                         if ((*sp_iter)->edge->isAttached()) 
                         {
-                            std::string edge_spid = "SP" + to_string((*sp_iter)->edge->getID());
+
+                            std::string edge_id = (SI->isFlanker()) ? "FL" + to_string((*sp_iter)->edge->getID()) : "SP" + to_string((*sp_iter)->edge->getID());
                             std::string drid = "DR1";
                             std::string drconf = "0";
-                            
+                            std::string directjoin = "0";
                             switch ((*sp_iter)->d) 
                             {
                                 case FORWARD:
                                 {
-                                    if (fs) 
-                                    {
-                                        // we've already created <fspacers>
-                                        // add spacer
-                                        xmlDoc->addSpacer("fs", edge_spid, drid, drconf, fspacers);
-                                    } 
-                                    else 
-                                    {
-                                        // create <fspacers>
-                                        fspacers = xmlDoc->createSpacers("fspacers");
-                                        xmlDoc->addSpacer("fs", edge_spid, drid, drconf, fspacers);
-                                        fs = true;
+                                    if ((*sp_iter)->edge->isFlanker()) {
+                                        if (ff) 
+                                        {
+                                            // we've already created <fflankers>
+                                            // add spacer
+                                            xmlDoc->addFlanker("ff", edge_id, drconf, directjoin, fflankers);//("fs", edge_spid, drid, drconf, fspacers);
+                                        } 
+                                        else 
+                                        {
+                                            // create <fflankers>
+                                            fflankers = xmlDoc->createFlankers("fflankers");
+                                            xmlDoc->addFlanker("ff", edge_id, drconf, directjoin, fflankers);//("fs", edge_spid, drid, drconf, fspacers);
+                                            ff = true;
+                                        }
+                                    } else {
+                                        if (fs) 
+                                        {
+                                            // we've already created <fspacers>
+                                            // add spacer
+                                            xmlDoc->addSpacer("fs", edge_id, drid, drconf, fspacers);
+                                        } 
+                                        else 
+                                        {
+                                            // create <fspacers>
+                                            fspacers = xmlDoc->createSpacers("fspacers");
+                                            xmlDoc->addSpacer("fs", edge_id, drid, drconf, fspacers);
+                                            fs = true;
+                                        }
                                     }
+
                                     break;
                                 }
                                 case REVERSE:
                                 {
-                                    if (bs) 
-                                    {
-                                        // we've already created <fspacers>
-                                        // add spacer
-                                        xmlDoc->addSpacer("bs", edge_spid, drid, drconf, bspacers);
-                                    } 
-                                    else 
-                                    {
-                                        // create <bspacers>
-                                        bspacers = xmlDoc->createSpacers("bspacers");
-                                        xmlDoc->addSpacer("bs", edge_spid, drid, drconf, bspacers);
-                                        bs = true;
+                                    if ((*sp_iter)->edge->isFlanker()) {
+                                        if (bf) 
+                                        {
+                                            // we've already created <bflankers>
+                                            // add spacer
+                                            xmlDoc->addFlanker("bf", edge_id, drconf, directjoin, bflankers);//("bs", edge_id, drid, drconf, bspacers);
+                                        } 
+                                        else 
+                                        {
+                                            // create <bflankers>
+                                            bflankers = xmlDoc->createFlankers("bflankers");
+                                            xmlDoc->addFlanker("bf", edge_id, drconf, directjoin, bflankers);//("bs", edge_id, drid, drconf, bspacers);
+                                            bf = true;
+                                        }
+                                    } else {
+                                        if (bs) 
+                                        {
+                                            // we've already created <fspacers>
+                                            // add spacer
+                                            xmlDoc->addSpacer("bs", edge_id, drid, drconf, bspacers);
+                                        } 
+                                        else 
+                                        {
+                                            // create <bspacers>
+                                            bspacers = xmlDoc->createSpacers("bspacers");
+                                            xmlDoc->addSpacer("bs", edge_id, drid, drconf, bspacers);
+                                            bs = true;
+                                        }
                                     }
+
                                     break;
                                 }
                                 default:
@@ -1524,6 +1577,16 @@ void NodeManager::printAssemblyToDOM(CrassXML * xmlDoc, xercesc::DOMElement * pa
                     {
                         cspacer->appendChild(fspacers);
 
+                    }
+                    if (bflankers != NULL) 
+                    {
+                        cspacer->appendChild(bflankers);
+                        
+                    }
+                    if (fflankers != NULL) 
+                    {
+                        cspacer->appendChild(fflankers);
+                        
                     }
                 }
             }
@@ -1706,7 +1769,12 @@ void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, boo
             std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
 
             // print the node attribute
-            gvSpacer(dataOut,label,NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
+            if ((spi_iter->second)->isFlanker()) {
+                gvFlanker(dataOut, label, NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
+            } else {
+                gvSpacer(dataOut,label,NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
+
+            }
         }
         spi_iter++;
     }
@@ -1746,11 +1814,21 @@ std::string NodeManager::getSpacerGraphLabel(SpacerInstance * spacer, bool longD
 	std::stringstream se;
 	if(longDesc)
 	{
-		se << CRASS_DEF_GV_SPA_PREFIX << spacer->getID() << "_" << NM_StringCheck.getString(spacer->getID()) << "_" << spacer->getCount();
+		if (spacer->isFlanker()) {
+            se<< CRASS_DEF_GV_FL_PREFIX;
+        } else {
+            se << CRASS_DEF_GV_SPA_PREFIX;
+        }
+        se << spacer->getID() << "_" << NM_StringCheck.getString(spacer->getID()) << "_" << spacer->getCount();
 	}
 	else
 	{
-		se << CRASS_DEF_GV_SPA_PREFIX << spacer->getID() << "_" << spacer->getCount();
+        if (spacer->isFlanker()) {
+            se<< CRASS_DEF_GV_FL_PREFIX;
+        } else {
+            se << CRASS_DEF_GV_SPA_PREFIX;
+        }
+        se << spacer->getID() << "_" << spacer->getCount();
 	}
 	se << "_C" << spacer->getContigID();
 	return se.str();
@@ -1788,4 +1866,54 @@ void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, std::strin
 	}
 	gvKeyFooter(dataOut);
     cluster_number++;
+}
+
+// Flankers
+
+void NodeManager::generateFlankers(bool showDetached)
+{
+    // First populate the stats manager with the remaining spacers
+    SpacerListIterator spacer_iter = NM_Spacers.begin();
+    while(spacer_iter != NM_Spacers.end())
+    {
+        SpacerInstance * SI = spacer_iter->second;
+        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+        {
+            std::string spacer = NM_StringCheck.getString(SI->getID());
+            NM_SpacerLenStat.add(spacer.length());
+        }
+        spacer_iter++;
+    }
+    
+    // do some maths
+    double stdev = NM_SpacerLenStat.standardDeviation();
+    int mean = (int)NM_SpacerLenStat.mean();
+    int lower_bound = mean - (stdev*1.5);
+    int upper_bound = mean + (stdev*1.5);
+    
+    // if there is no variation then there is no flankers
+    if (stdev > 1 ) 
+    {
+        logInfo("Ave SP Length: "<<mean<<" Deviation: "<<stdev<<" UB: "<<upper_bound<<" LB: "<<lower_bound, 3);
+        // call a spacer a 'flanker' if it's length is more than 1 standard deviation from the mean length
+        spacer_iter = NM_Spacers.begin();
+        while(spacer_iter != NM_Spacers.end())
+        {
+            SpacerInstance * SI = spacer_iter->second;
+ 
+            if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+            {
+                int spacer_length = (int)(NM_StringCheck.getString(SI->getID())).length();
+                if (spacer_length > upper_bound || spacer_length < lower_bound) {
+                    SI->setFlanker(true);
+                    NM_FlankerNodes.push_back(SI);
+                }
+            }
+            spacer_iter++;
+        }
+    }
+    else 
+    {
+        logInfo("not enough length variation to detect flankers", 3);
+    }
 }

@@ -53,6 +53,7 @@ SpacerInstance::SpacerInstance(StringToken spacerID)
     SI_InstanceCount = 0;
     SI_ContigID = 0;
     SI_Attached = false;
+    SI_isFlanker = false;
 }
 
 SpacerInstance::SpacerInstance(StringToken spacerID, CrisprNode * leadingNode, CrisprNode * lastNode)
@@ -63,6 +64,7 @@ SpacerInstance::SpacerInstance(StringToken spacerID, CrisprNode * leadingNode, C
     SI_InstanceCount  = 1;
     SI_ContigID = 0;
     SI_Attached = false;
+    SI_isFlanker = false;
 }
 
 void SpacerInstance::clearEdge(void)

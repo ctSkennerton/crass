@@ -59,6 +59,8 @@
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
 #include "CrassXML.h"
+#include "StatsManager.h"
+
 
 // typedefs
 typedef std::map<StringToken, CrisprNode *> NodeList;
@@ -133,6 +135,7 @@ class NodeManager {
 		int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
         EDGE_TYPE getOppositeEdgeType(EDGE_TYPE currentEdgeType);
         int getSpacerCount( bool showDetached);
+        inline bool haveAnyFlankers(void){return (0 != NM_FlankerNodes.size());}
 
     // Walking
         bool getSpacerEdgeFromCap(WalkingManager * walkElem, SpacerInstance * nextSpacer);
@@ -175,12 +178,16 @@ class NodeManager {
     // XML
         void printXML(std::ofstream * XMLFile, int GID, bool showDetached);						// print this node managers portion of the XML file 
         void addSpacersToDOM(CrassXML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
+        void addFlankersToDOM(CrassXML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
         void printAssemblyToDOM(CrassXML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
 
 
     // Spacer dictionaries
         void printAllSpacers(void);
 		void dumpSpacerDict(std::string spacerFileName, bool showDetached);
+    
+    // Flankers
+        void generateFlankers(bool showDetached=false);
 
     private:
 		
@@ -203,6 +210,8 @@ class NodeManager {
         const options * NM_Opts;              				// pointer to the user options structure
         int NM_NextContigID;								// next free contig ID (doubles as a counter)
         ContigList NM_Contigs; 								// our contigs
+        StatsManager<std::vector<size_t> > NM_SpacerLenStat;   // Keep a check on all of the spacer lengths for deciding whecher thay are a flanker or not
+        SpacerInstanceVector NM_FlankerNodes;               // a list of spacers that are also flankers -- used only in the print functions
 };
 
 

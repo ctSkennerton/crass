@@ -41,6 +41,7 @@
 #define CRASS_DEF_GV_DEFULT_COLOUR              "grey"              // colour when no coverage is available 
 #define CRASS_DEF_GV_EDGE_LENGTH                2                   // length of arrows for edges in images
 #define CRASS_DEF_GV_NODE_SHAPE                 "circle"            // shape of nodes
+#define CRASS_DEF_GV_FLANKER_SHAPE              "diamond"           // shape for the flankers
 #define CRASS_DEF_GV_NODE_PREFIX                "node_"             // prefix used when naming nodes for the image
 #define CRASS_DEF_GV_NODE_FILL                  "filled"            // should our nodes be filled with colour
 #define CRASS_DEF_DEFAULT_GRAPH_TYPE            "digraph"           // the default type of graphviz graph to generate
@@ -49,6 +50,7 @@
 #define CRASS_DEF_GV_SPA_EDGE_LENGTH                2                   // length of arrows for edges in images
 #define CRASS_DEF_GV_SPA_SHAPE                 "circle"            // shape of nodes
 #define CRASS_DEF_GV_SPA_PREFIX                 "sp_"               // prefix used when naming spacers for the image
+#define CRASS_DEF_GV_FL_PREFIX                  "fl_"               // prefix used when naming flankers for the image
 
 // --------------------------------------------------------------------
 // GRAPH DRAWING MACROS
@@ -90,6 +92,11 @@
 #define gvSpacer(stream,id1,color){\
     stream<<"\t\t" << id1<<" [ color = \"#"<<color<<"\", fillcolor=\"#"<<color<<"\", style= "<<CRASS_DEF_GV_NODE_FILL<<\
                                                 ", shape="<< CRASS_DEF_GV_SPA_SHAPE<<"];"<<std::endl;\
+}
+
+#define gvFlanker(stream,id1,color){\
+stream<<"\t\t" << id1<<" [ color = \"#"<<color<<"\", fillcolor=\"#"<<color<<"\", style= "<<CRASS_DEF_GV_NODE_FILL<<\
+", shape="<< CRASS_DEF_GV_FLANKER_SHAPE<<"];"<<std::endl;\
 }
 
 #define gvSpEdge(stream,id1,id2){\

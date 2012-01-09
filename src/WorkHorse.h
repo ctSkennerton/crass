@@ -115,7 +115,7 @@ class WorkHorse {
         //**************************************
         int makeSpacerGraphs(void);
         int cleanSpacerGraphs(void);
-        
+        int generateFlankers(void);
         //**************************************
         // contig making
         //**************************************
