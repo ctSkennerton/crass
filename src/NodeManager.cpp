@@ -532,7 +532,11 @@ bool NodeManager::getSpacerEdgeFromCap(WalkingManager * walkElem, SpacerInstance
     {
         return false;
     }
-    return true;
+    if (walkElem->first() == NULL || walkElem->second() == NULL) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 bool NodeManager::getSpacerEdgeFromCross(WalkingManager * walkElem, SpacerInstance * currentSpacer )
@@ -551,6 +555,7 @@ bool NodeManager::getSpacerEdgeFromCross(WalkingManager * walkElem, SpacerInstan
                     walkElem->setSecondNode((*iter)->edge);
                     walkElem->setFirstNode(currentSpacer);
                     walkElem->setWantedEdge((*iter)->d);
+                    return true;
                 } 
             } 
             else 
@@ -564,7 +569,11 @@ bool NodeManager::getSpacerEdgeFromCross(WalkingManager * walkElem, SpacerInstan
     {
         return false;
     }
-    return true;
+    if (walkElem->first() == NULL || walkElem->second() == NULL) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 bool NodeManager::stepThroughSpacerPath(WalkingManager * walkElem, SpacerInstance ** previousNode)
