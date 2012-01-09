@@ -57,7 +57,7 @@ public:
 
 template <class T >
 typename T::value_type StatsManager<T>::mean() {
-    return (std::accumulate(container.begin(), container.end(), static_cast<typename T::value_type>(0))/static_cast<typename T::value_type>(container.size()));
+    return (std::accumulate(container.begin(), container.end(), static_cast<typename T::value_type>(0))/container.size());
 }
 
 template <class T>
@@ -84,13 +84,14 @@ typename T::value_type StatsManager<T>::mode(void) {
 
 template <class T>
 double StatsManager<T>::standardDeviation(void) {
-    typename T::value_type average = mean();
+    double average = static_cast<double>( mean());
     std::vector<double> temp;
     typename T::iterator iter;
     for (iter = container.begin(); iter != container.end(); iter++) {
-        temp.push_back(pow(static_cast<double>((*iter - average)), 2));
+        double i = static_cast<double>(*iter) - average;
+        temp.push_back(i*i);
     }
-    return sqrt(std::accumulate(temp.begin(), temp.end(), 0/temp.size()));
+    return std::sqrt(std::accumulate(temp.begin(), temp.end(), static_cast<double>(0))/temp.size() );
 
     
 }
