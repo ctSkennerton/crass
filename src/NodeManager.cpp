@@ -1761,9 +1761,6 @@ void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, boo
     {
         if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
         {
-            if ((spi_iter->second)->isFlanker()) {
-                std::cout<<"THIS IS A FLANKER"<<std::endl;
-            }
             // print the graphviz nodes
             std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
 
@@ -1886,24 +1883,33 @@ void NodeManager::generateFlankers(bool showDetached)
     
     // do some maths
     double stdev = NM_SpacerLenStat.standardDeviation();
-    size_t mean = NM_SpacerLenStat.mean();
-    size_t lower_bound = mean - stdev;
-    size_t upper_bound = mean + stdev;
+    int mean = (int)NM_SpacerLenStat.mean();
+    int lower_bound = mean - (stdev*1.5);
+    int upper_bound = mean + (stdev*1.5);
     
-    // call a spacer a 'flanker' if it's length is more than 1 standard deviation from the mean length
-    spacer_iter = NM_Spacers.begin();
-    while(spacer_iter != NM_Spacers.end())
+    // if there is no variation then there is no flankers
+    if (stdev > 1 ) 
     {
-        SpacerInstance * SI = spacer_iter->second;
-        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+        logInfo("Ave SP Length: "<<mean<<" Deviation: "<<stdev<<" UB: "<<upper_bound<<" LB: "<<lower_bound, 3);
+        // call a spacer a 'flanker' if it's length is more than 1 standard deviation from the mean length
+        spacer_iter = NM_Spacers.begin();
+        while(spacer_iter != NM_Spacers.end())
         {
-            size_t spacer_length = (NM_StringCheck.getString(SI->getID())).length();
-            if (spacer_length > upper_bound || spacer_length < lower_bound) {
-                SI->setFlanker(true);
-                NM_FlankerNodes.push_back(SI);
+            SpacerInstance * SI = spacer_iter->second;
+ 
+            if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+            {
+                int spacer_length = (int)(NM_StringCheck.getString(SI->getID())).length();
+                if (spacer_length > upper_bound || spacer_length < lower_bound) {
+                    SI->setFlanker(true);
+                    NM_FlankerNodes.push_back(SI);
+                }
             }
+            spacer_iter++;
         }
-        spacer_iter++;
     }
-
+    else 
+    {
+        logInfo("not enough length variation to detect flankers", 3);
+    }
 }

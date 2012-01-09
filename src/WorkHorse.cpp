@@ -1943,6 +1943,7 @@ int WorkHorse::generateFlankers(void)
 		{            
 			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
+                logInfo("Assigning flankers for NodeManager "<<drg_iter->first, 3);
                 (mDRs[mTrueDRs[drg_iter->first]])->generateFlankers();
 		    }
         }
@@ -2299,7 +2300,6 @@ bool WorkHorse::addDataToDOM(CrassXML * xmlDoc, xercesc::DOMElement * groupEleme
     {
         xercesc::DOMElement * data_elem = xmlDoc->addData(groupElement);
         if ((mDRs[mTrueDRs[groupNumber]])->haveAnyFlankers()) {
-            std::cout<<"got some flankers"<<std::endl;
             xmlDoc->createFlankers(data_elem);
         }
         
