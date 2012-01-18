@@ -491,8 +491,8 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
             if (readsFound.find(tmp_holder->getHeader()) == readsFound.end())
             {
 #ifdef DEBUG
-                logInfo("new read recruited: "<<tmp_holder->getHeader(), 7);
-                logInfo(tmp_holder->getSeq(), 8);
+                logInfo("new read recruited: "<<tmp_holder->getHeader(), 9);
+                logInfo(tmp_holder->getSeq(), 10);
 #endif
                 unsigned int DR_end = (unsigned int)start_pos + (unsigned int)found_repeat.length();
                 if(DR_end >= (unsigned int)read.length())
