@@ -1568,12 +1568,17 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         //
         // This function is recursive, so we'll only get here when we have found exactly one DR
         
-        logInfo("Found DR: " << true_DR, 2);
-        mTrueDRs[GID] = true_DR;
-		DR_ClusterIterator drc_iter = (mDR2GIDMap[GID])->begin();
-		while(drc_iter != (mDR2GIDMap[GID])->end())
-		{
-			if (DR_offset_map[*drc_iter] == -1 ) 
+        // make sure that the true DR is in its laurenized form
+        std::string laurenized_true_dr = laurenize(true_DR);
+        bool rev_comp = (laurenized_true_dr != true_DR) ? true : false;
+
+        logInfo("Found DR: " << laurenized_true_dr, 2);
+        
+        mTrueDRs[GID] = laurenized_true_dr;
+        DR_ClusterIterator drc_iter = (mDR2GIDMap[GID])->begin();
+        while(drc_iter != (mDR2GIDMap[GID])->end())
+        {
+            if (DR_offset_map[*drc_iter] == -1 ) 
             {
                 logError("Repeat "<< *drc_iter<<" in Group "<<GID <<" has no offset in DR_offset_map");
             } 
@@ -1584,14 +1589,17 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
                     (*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
+                    // reverse complement sequence if the true DR is not in its laurenized form
+                    if (rev_comp) 
+                    {
+                        (*read_iter)->reverseComplementSeq();
+                    }
                     read_iter++;
                 }
             }
-
-			drc_iter++;
-		}
+            drc_iter++;
+        }
     }
-    
     return true;
 }
 int WorkHorse::numberOfReadsInGroup(DR_Cluster * currentGroup)
