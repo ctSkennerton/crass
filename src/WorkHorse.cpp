@@ -1015,9 +1015,10 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
                     }
                     else
                     {
-                        std::cout<<"TODO: kill this guy here"<<std::endl;
+                        // std::cout<<"TODO: kill this guy here"<<std::endl;
                         // TODO
                         // should probably kill this guy here. He couldn't be added to the array
+                        // pretty sure that we want to kill dr_iter
                     }
                 }
             }
