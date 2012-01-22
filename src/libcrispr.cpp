@@ -98,7 +98,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength, const
    
     
     *aveReadLength = total_base / read_counter;
-    logInfo("Average read length (of the first "<< CRASS_DEF_MAX_READS_FOR_DECISION<<" reads): "<< *aveReadLength, 2);
+    logInfo("Average read length (of the first "<< read_counter<<" reads): "<< *aveReadLength, 2);
     
     // long reads defined by having at least two spacers 4DR + 2SP
     unsigned int long_read_cutoff = (4*opts.lowDRsize) + (2*opts.lowSpacerSize);
@@ -125,10 +125,9 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
     // initialize seq
     seq = kseq_init(fp);
     //ReadHolder * tmp_holder = new ReadHolder();
-    // read sequence  
+    // read sequence 
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
-        
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<std::endl;
@@ -1013,30 +1012,20 @@ void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tm
 
 
     std::string dr_lowlexi = tmpReadholder->DRLowLexi();
-    //logInfo(dr_lowlexi, 8);
+#ifdef DEBUG
+    logInfo("Direct repeat: "<<dr_lowlexi, 10);
+#endif
     StringToken st = mStringCheck->getToken(dr_lowlexi);
+
     if(0 == st)
     {
         // new guy
         st = mStringCheck->addString(dr_lowlexi);
         (*mReads)[st] = new ReadList();
     }
+#ifdef DEBUG
+    logInfo("String Token: "<<st, 10);
+#endif
     (*mReads)[st]->push_back(tmpReadholder);
 }
-
-//
-//
-//// turn our map into a vector using just the keys
-//void map2Vector(lookupTable& patternsHash, std::vector<std::string>& patterns)
-//{
-//    
-//    lookupTable::iterator iter = patternsHash.begin();
-//    while (iter != patternsHash.end()) 
-//    {
-//        patterns.push_back(iter->first);
-//        iter++;
-//    }
-//}
-
-
 
