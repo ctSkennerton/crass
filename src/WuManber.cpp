@@ -196,7 +196,7 @@ string WuManber::Search( size_t TextLength, const char *Text, WuVector &patterns
                     {  // we found the end of the pattern, so match found
                         
                         //this formula works but I have no idea why. found by trial and error
-                        start_pos = ix - m + 1;
+                        start_pos = (int)( ix - m + 1);
                         return patterns[ (*iter).ix ];
                     }
                 }

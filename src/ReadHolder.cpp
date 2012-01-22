@@ -106,7 +106,7 @@ unsigned int ReadHolder::getAverageSpacerLength()
 		if(*(RH_StartStops.begin()) == 0)
 		{
 			// starts on a DR
-			stored_len = tmp_string.length();
+			stored_len = (int)tmp_string.length();
 		}
 		// else stored_len == 0
 		
@@ -115,7 +115,7 @@ unsigned int ReadHolder::getAverageSpacerLength()
 		{
 			num_spacers++;
 			sum += stored_len;
-			stored_len = tmp_string.length();
+			stored_len = (int)tmp_string.length();
 		}
 		
 		// check to make sure that the read doesn't end on a spacer
