@@ -1,19 +1,24 @@
-AM_CXXFLAGS = -Werror -pedantic -Wall
 
-
-if DEBUG
-    AM_CXXFLAGS += -ggdb -O2
-endif
-if MEMCHECK
-    AM_CXXFLAGS +=  -g -O0
-endif
 
 
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
 # the previous manual Makefile
 bin_PROGRAMS = crass
+
 INCLUDES = -I$(top_srcdir)/src/libcrispr
 crass_LDADD = $(top_builddir)/src/libcrispr/libcrispr.la
+
+crass_CXXFLAGS = -Werror -pedantic -Wall
+crass_LDFLAGS = @zlib_flags@
+
+if DEBUG
+    crass_CXXFLAGS += -ggdb -O2
+endif
+if MEMCHECK
+    crass_CXXFLAGS +=  -g -O0
+endif
+
+
 crass_SOURCES =\
 PatternMatcher.cpp PatternMatcher.h\
 Rainbow.cpp Rainbow.h\

@@ -2,19 +2,30 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(crass, 0.1.5, c.skennerton@gmail.com)
+AC_INIT(crass, 0.2.0, c.skennerton@gmail.com)
+
+AC_CONFIG_AUX_DIR(build)
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_SRCDIR([src/crass/crass.cpp])
+AC_CONFIG_HEADER([config.h])
 
 AM_INIT_AUTOMAKE([foreign])
-
-AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR([src/crass.cpp])
-AC_CONFIG_HEADER([config.h])
+LT_INIT
+LT_LANG([C++])
 
 # custom defines for config.h
 AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
 AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
-AC_DEFINE([PACKAGE_MINOR_VERSION],[1],[Define the minor version of the package])
-AC_DEFINE([PACKAGE_REVISION],[5],[Define the revision of the package])
+AC_DEFINE([PACKAGE_MINOR_VERSION],[2],[Define the minor version of the package])
+AC_DEFINE([PACKAGE_REVISION],[0],[Define the revision of the package])
+
+
+AC_DEFINE([CRISPRTOOLS_PACKAGE_FULL_NAME],["Crisprtools"],[Define the full name of the package])
+AC_DEFINE([CRISPRTOOLS_PACKAGE_NAME],["Crisprtools"],[Define the full name of the package])
+AC_DEFINE([CRISPRTOOLS_PACKAGE_VERSION],["0.1.0"],[Define the full name of the package])
+AC_DEFINE([CRISPRTOOLS_PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
+AC_DEFINE([CRISPRTOOLS_PACKAGE_MINOR_VERSION],[1],[Define the minor version of the package])
+AC_DEFINE([CRISPRTOOLS_PACKAGE_REVISION],[0],[Define the revision of the package])
 
 # extra configure options
 #
@@ -75,11 +86,39 @@ AC_ARG_ENABLE([rendering],
         no)  rendering=false ;;
         *) AC_MSG_ERROR([bad value ${enableval} for --enable-rendering]) ;;
     esac],[rendering=false])
-
+# check for assembly
+AC_ARG_ENABLE([assembly],
+    [AS_HELP_STRING([--disable-assembly],
+        [Enables images being drawn in the output files])],
+        [case "${enableval}" in
+            yes) assembly=true ;;
+            no)  assembly=false ;;
+            *) AC_MSG_ERROR([bad value ${enableval} for --disable-assembly]) ;;
+        esac],[assembly=true])
+    
 #check that graphviz is installed before defining RENDERING
+GV_LIBS=
+GV_BOOL=false
 if test x$rendering = xtrue; then
     AC_CHECK_PROGS([GV_PROGS], [neato fdp sfdp dot circo twopi], [no])
+    #check that graphviz is installed before defining RENDERING
+    AC_CHECK_LIB([gvc],[gvContext],
+                 [GV_LIBS="-lgvc $GV_LIBS" 
+                  GV_BOOL=true
+                 AC_DEFINE([HAVE_LIBGVC],[1],[Defines to one if the gvc library (-lgvc) is found])],
+                 [GV_BOOL=false])
+    AC_CHECK_LIB([cdt],[dtopen],
+                 [GV_LIBS="-lcdt $GV_LIBS"
+                  GV_BOOL=true
+                  AC_DEFINE([HAVE_LIBCDT],[1],[Defines to one if the cdt library (-lcdt) is found])],
+                 [GV_BOOL=false])
+    AC_CHECK_LIB([graph],[agnode],
+                 [GV_LIBS="-lgraph $GV_LIBS"
+                  GV_BOOL=true
+                  AC_DEFINE([HAVE_LIBGRAPH],[1],[Defines to one if the graph library (-lgraph) is found])],
+                 [GV_BOOL=false])
     if test x$GV_PROGS != xno; then
+        
         AC_DEFINE([RENDERING],[1],[Defines to 1 if image rendering is to be performed])
         AC_DEFINE_UNQUOTED([DEFAULT_RENDERING_ALGORITHM],["${GV_PROGS}"],[Sets the Default Graphviz algorithm])
     else
@@ -91,27 +130,21 @@ if test x$rendering = xtrue; then
         echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
     fi
 fi
+AM_CONDITIONAL([FOUND_GRAPHVIZ_LIBRARIES],[test $GV_BOOL = true])
+AC_SUBST(GV_LIBS)
 
-# check for assembly
-AC_ARG_ENABLE([assembly],
-[AS_HELP_STRING([--disable-assembly],
-[Enables images being drawn in the output files])],
-[case "${enableval}" in
-yes) assembly=true ;;
-no)  assembly=false ;;
-*) AC_MSG_ERROR([bad value ${enableval} for --disable-assembly]) ;;
-esac],[assembly=true])
-
-    
 
 # Checks for different libs, headers, functions & programs
 #
 #
 
 # Checks for compilers.
-: ${CFLAGS=""}
-
-: ${CXXFLAGS=""}
+OLD_CLAGS= CFLAGS
+OLD_CXXFLAGS = CXXFLAGS
+AC_SUBST(OLD_CLAGS)
+AC_SUBST(OLD_CXXFLAGS)
+CFLAGS=
+CXXFLAGS=
 
 AC_PROG_CXX
 AC_PROG_CC
@@ -141,8 +174,12 @@ if test $assembly = true; then
 fi
 AM_CONDITIONAL([ASSEMBLY_WRAPPER], [test x$PERFORM_CRASS_ASSEMBLY = xyes])
 
-
-AC_CHECK_LIB([z],[gzread],,[AC_MSG_ERROR([zlib not found])])
+zlib_flags=
+AC_CHECK_LIB([z],[gzread],
+             [zlib_flags="-lz"
+              AC_DEFINE([HAVE_ZLIB],[1],[Defines to 1 if the z library (-lz) is found])],
+             [AC_MSG_ERROR([zlib not found])])
+AC_SUBST(zlib_flags)
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h unistd.h getopt.h])
@@ -216,4 +253,4 @@ if test $PERFORM_CRASS_ASSEMBLY = yes; then
     fi 
 fi
 
-AC_OUTPUT(Makefile src/Makefile man/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/libcrispr/Makefile src/crass/Makefile src/crisprtools/Makefile man/Makefile)

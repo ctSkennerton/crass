@@ -111,7 +111,7 @@ int mergeMain (int argc, char ** argv)
                                 if ( mt.find(gid) != mt.end()) {
                                     // this group id has been seen before
                                     std::cout<<"Group IDs in the two files conflict "<<gid<<" seen more than once."<<std::endl;
-                                    std::cout<<"Try using -s to avoid this or use "<<PACKAGE_NAME<<" sanitise to fix these conflicts"<<std::endl;
+                                    std::cout<<"Try using -s to avoid this or use "<<CRISPRTOOLS_PACKAGE_NAME<<" sanitise to fix these conflicts"<<std::endl;
                                     
                                 } else {
                                     // add in to the set
@@ -144,7 +144,7 @@ int mergeMain (int argc, char ** argv)
 
 void mergeUsage(void)
 {
-	std::cout<<PACKAGE_NAME<<" merge [-hso] file1.crispr file2.crispr [1,n]"<<std::endl;
+	std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" merge [-hso] file1.crispr file2.crispr [1,n]"<<std::endl;
 	std::cout<<"Options:"<<std::endl;
 	std::cout<<"-h					print this handy help message"<<std::endl;
     std::cout<<"-o FILE             output file  [default: crisprtools_merged.crispr]" <<std::endl; 

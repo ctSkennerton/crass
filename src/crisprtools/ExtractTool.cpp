@@ -429,7 +429,7 @@ int extractMain (int argc, char ** argv)
 
 void extractUsage (void)
 {
-	std::cout<<PACKAGE_NAME<<" extract [-ghyxsdf] file.crispr"<<std::endl;
+	std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" extract [-ghyxsdf] file.crispr"<<std::endl;
 	std::cout<<"Options:"<<std::endl;
 	std::cout<<"-h					print this handy help message"<<std::endl;
     std::cout<<"-o DIR              output file directory  [default: .]" <<std::endl; 

@@ -338,7 +338,7 @@ int sanitiseMain (int argc, char ** argv)
 
 void sanitiseUsage(void)
 {
-    std::cout<<PACKAGE_NAME<<" sanitise [-ohcsdf] file.crispr"<<std::endl;
+    std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" sanitise [-ohcsdf] file.crispr"<<std::endl;
 	std::cout<<"Options:"<<std::endl;
 	std::cout<<"-h					Print this handy help message"<<std::endl;
     std::cout<<"-o FILE             Output file name, creates a sanitised copy of the input file  [default: sanitise input file inplace]" <<std::endl; 

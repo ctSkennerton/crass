@@ -457,7 +457,7 @@ int drawMain (int argc, char ** argv)
 
 void drawUsage(void)
 {
-    std::cout<<PACKAGE_NAME<<" draw [-ghyoaf] file.crispr"<<std::endl;
+    std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" draw [-ghyoaf] file.crispr"<<std::endl;
 	std::cout<<"Options:"<<std::endl;
 	std::cout<<"-h					print this handy help message"<<std::endl;
     std::cout<<"-o DIR              output file directory  [default: .]" <<std::endl; 

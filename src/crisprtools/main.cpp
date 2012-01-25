@@ -33,11 +33,11 @@
 #include "config.h"
 void usage (void)
 {
-	std::cout<<PACKAGE_NAME<<" ("<<PACKAGE_VERSION<<")"<<std::endl;
-	std::cout<<PACKAGE_NAME<<" is a set of smal utilities for manipulating .crispr files"<<std::endl;
+	std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" ("<<CRISPRTOOLS_PACKAGE_VERSION<<")"<<std::endl;
+	std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" is a set of smal utilities for manipulating .crispr files"<<std::endl;
 	std::cout<<"The .crispr file specification is a standard xml based format for describing CRISPRs"<<std::endl;
-	std::cout<<"Type "<<PACKAGE_NAME<<" <subcommand> -h for help on each utility"<<std::endl;
-	std::cout<<"Usage:\t"<<PACKAGE_NAME<<" <subcommand> [options]"<<std::endl<<std::endl;
+	std::cout<<"Type "<<CRISPRTOOLS_PACKAGE_NAME<<" <subcommand> -h for help on each utility"<<std::endl;
+	std::cout<<"Usage:\t"<<CRISPRTOOLS_PACKAGE_NAME<<" <subcommand> [options]"<<std::endl<<std::endl;
     std::cout<<"subcommand:  merge       combine multiple files"<<std::endl;
 	std::cout<<"             extract     extract sequences in fasta"<<std::endl;
 	std::cout<<"             filter      make new files based on parameters"<<std::endl;

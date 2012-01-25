@@ -4,9 +4,9 @@ INCLUDES = \
 	-I$(top_srcdir)/src/libcrispr
 
 bin_PROGRAMS = crisprtools
-
+crisprtools_CXXFLAGS = @OLD_CXXFLAGS@
 crisprtools_LDADD = $(top_builddir)/src/libcrispr/libcrispr.la
-crisprtools_LDFLAGS = @GRAPHVIZ_LIBRARIES@
+crisprtools_LDFLAGS = @GV_LIBS@
 crisprtools_SOURCES = \
 	main.cpp \
 	StlExt.h \
