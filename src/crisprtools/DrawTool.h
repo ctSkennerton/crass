@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "XML.h"
+#include "Xml.h"
 #include "CrisprGraph.h"
 #include "Rainbow.h"
 #include <graphviz/gvc.h>

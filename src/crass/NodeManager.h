@@ -58,7 +58,7 @@
 #include "ReadHolder.h"
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
-#include "XML.h"
+#include "Xml.h"
 #include "StatsManager.h"
 
 

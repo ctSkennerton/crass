@@ -16,7 +16,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "MergeTool.h"
-#include "XML.h"
 #include "Exception.h"
 #include "config.h"
 #include <getopt.h>

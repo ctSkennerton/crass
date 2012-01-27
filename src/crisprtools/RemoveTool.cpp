@@ -34,7 +34,7 @@
 
 #include <iostream>
 #include "RemoveTool.h"
-#include "XML.h"
+#include "Xml.h"
 #include "Exception.h"
 #include "StlExt.h"
 #include "config.h"

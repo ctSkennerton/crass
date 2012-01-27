@@ -49,7 +49,7 @@
 #include <errno.h>
 
 // local includes
-#include "XML.h"
+#include "Xml.h"
 #include "Exception.h"
 
 using namespace xercesc;

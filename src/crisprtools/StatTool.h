@@ -23,7 +23,7 @@
 #include <vector>
 #include <string>
 #include <set>
-#include "XML.h"
+#include "Xml.h"
 #include "StlExt.h"
 
 

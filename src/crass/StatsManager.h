@@ -40,6 +40,7 @@
  */
 #include <cmath>
 #include <numeric>
+#include <algorithm>
 
 template <class T>
 class StatsManager {

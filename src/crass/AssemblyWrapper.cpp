@@ -51,7 +51,7 @@
 #include "config.h"
 #include "crassDefines.h"
 #include "StlExt.h"
-#include "XML.h"
+#include "Xml.h"
 #include "kseq.h"
 #include "SeqUtils.h"
 

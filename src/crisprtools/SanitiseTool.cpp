@@ -18,7 +18,6 @@
 #include "SanitiseTool.h"
 #include "Exception.h"
 #include "config.h"
-#include "XML.h"
 
 #include <iostream>
 int SanitiseTool::processOptions (int argc, char ** argv)

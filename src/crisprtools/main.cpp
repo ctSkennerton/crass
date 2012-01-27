@@ -21,16 +21,18 @@
 #include <getopt.h>
 #include <cstring>
 
+#include "config.h"
 #include "Utils.h"
 #include "MergeTool.h"
 #include "SplitTool.h"
 #include "ExtractTool.h"
 #include "FilterTool.h"
 #include "SanitiseTool.h"
+#ifdef RENDERING
 #include "DrawTool.h"
+#endif
 #include "StatTool.h"
 #include "RemoveTool.h"
-#include "config.h"
 void usage (void)
 {
 	std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" ("<<CRISPRTOOLS_PACKAGE_VERSION<<")"<<std::endl;

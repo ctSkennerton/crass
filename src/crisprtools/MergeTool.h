@@ -21,7 +21,7 @@
 #define MERGETOOL_H
 #include <set>
 #include <string>
-#include "XML.h"
+#include "Xml.h"
 class MergeTool {
     std::set<std::string> MT_GroupIds;
     bool MT_Sanitise;

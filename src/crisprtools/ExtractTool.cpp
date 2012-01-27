@@ -18,7 +18,6 @@
 #include "Utils.h"
 #include "config.h"
 #include "Exception.h"
-#include "XML.h"
 
 #include "StlExt.h"
 #include <getopt.h>

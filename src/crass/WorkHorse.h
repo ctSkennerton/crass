@@ -50,7 +50,7 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 #include "StringCheck.h"
-#include "XML.h"
+#include "Xml.h"
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
