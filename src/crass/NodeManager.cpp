@@ -878,10 +878,6 @@ EDGE_TYPE NodeManager::getOppositeEdgeType(EDGE_TYPE currentEdgeType)
 int NodeManager::getSpacerCount(bool showDetached)
 {
     int number_of_spacers = 0;
-    if(NM_Spacers.empty())
-    {
-        std::cout<<"Spacer list empty"<<std::endl;
-    }
     SpacerListIterator sp_iter = NM_Spacers.begin();
     while (sp_iter != NM_Spacers.end()) 
     {
