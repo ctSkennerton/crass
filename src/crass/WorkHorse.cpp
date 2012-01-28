@@ -358,7 +358,9 @@ int WorkHorse::buildGraph(void)
 	// Load the spacers into a graph
 	//
     // go through the DR2GID_map and make all reads in each group into nodes
+    
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+    std::cout<<PACKAGE_NAME<<"_graphBuilder: "<<mTrueDRs.size()<<" putative CRISPRs found!"<<std::endl;
     while(drg_iter != mDR2GIDMap.end())
     {
         if(NULL != drg_iter->second)
@@ -466,7 +468,6 @@ int WorkHorse::mungeDRs(void)
     std::map<std::string, int> k2GID_map;
     logInfo("Reducing list of potential DRs (1): Initial clustering", 1);
     logInfo("Reticulating splines...", 1);
-    
     std::map<int, std::map<std::string, int> * > group_kmer_counts_map;
     
     // go through all of the read holder objects
@@ -476,6 +477,7 @@ int WorkHorse::mungeDRs(void)
         clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &group_kmer_counts_map);
         ++read_map_iter;
     }
+    std::cout<<PACKAGE_NAME<<"_cluster_core: "<<mReads.size()<<" variants mapped to "<<mDR2GIDMap.size()<<" clusters"<<std::endl;
 
     if(isLogging(4))
     {
