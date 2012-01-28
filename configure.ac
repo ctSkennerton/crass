@@ -139,8 +139,8 @@ AC_SUBST(GV_LIBS)
 #
 
 # Checks for compilers.
-OLD_CLAGS= CFLAGS
-OLD_CXXFLAGS = CXXFLAGS
+OLD_CLAGS=$CFLAGS
+OLD_CXXFLAGS=$CXXFLAGS
 AC_SUBST(OLD_CLAGS)
 AC_SUBST(OLD_CXXFLAGS)
 CFLAGS=
@@ -194,6 +194,16 @@ AC_TYPE_SIZE_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset pow strchr strspn])
+
+
+# Check for presence of pdfLaTeX
+AC_CHECK_PROG(PDFLATEX, pdflatex, pdflatex)
+if test -z "$PDFLATEX"; then
+AC_MSG_WARN([Unable to create PDF version of the user manual.])
+fi
+
+AM_CONDITIONAL([HAVE_PDFLATEX], test -n "$PDFLATEX")
+
 
 # only perform the check if rendering
 if test x$rendering = xtrue; then
@@ -253,4 +263,4 @@ if test $PERFORM_CRASS_ASSEMBLY = yes; then
     fi 
 fi
 
-AC_OUTPUT(Makefile src/Makefile src/libcrispr/Makefile src/crass/Makefile src/crisprtools/Makefile man/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/libcrispr/Makefile src/crass/Makefile src/crisprtools/Makefile man/Makefile doc/Makefile)
