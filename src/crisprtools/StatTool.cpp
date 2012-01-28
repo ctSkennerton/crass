@@ -20,6 +20,8 @@
 #include "config.h"
 #include "Exception.h"
 #include <iostream>
+#include <getopt.h>
+#include <cstring>
 
 StatTool::~StatTool()
 {
@@ -40,13 +42,13 @@ void StatTool::generateGroupsFromString ( std::string str)
 int StatTool::processOptions (int argc, char ** argv)
 {
 	int c;
-	while((c = getopt(argc, argv, "pahg:o:")) != -1)
+	while((c = getopt(argc, argv, "ahHg:ps:to:")) != -1)
 	{
         switch(c)
 		{
 			case 'a':
             {
-                ST_AssemblyStats = true;
+                ST_AggregateStats = true;
                 break;
             }
             case 'h':
@@ -68,6 +70,21 @@ int StatTool::processOptions (int argc, char ** argv)
             case 'g':
             {
                 generateGroupsFromString(optarg);
+                break;
+            }
+            case 's':
+            {
+                ST_Separator = optarg;
+                break;
+            }
+            case 't':
+            {
+                ST_Tabular = true;
+                break;
+            }
+            case 'H':
+            {
+                ST_WithHeader = true;
                 break;
             }
             default:
@@ -107,18 +124,29 @@ int StatTool::processInputFile(const char * inputFile)
             }
             
         }
-        
+        AStats agregate_stats;
+         agregate_stats.total_groups = 0;
+         agregate_stats.total_spacers = 0;
+         agregate_stats.total_dr = 0;
+         agregate_stats.total_flanker = 0;
+         agregate_stats.total_spacer_length = 0;
+         agregate_stats.total_spacer_cov = 0;
+         agregate_stats.total_dr_length = 0;
+         agregate_stats.total_flanker_length = 0;
         // go through each of the groups and print out a pretty picture
         std::vector<StatManager *>::iterator iter = this->begin();
         while (iter != this->end()) {
             if (ST_Pretty) {
                 prettyPrint(*iter);
-            } else {
+            } else if (ST_Tabular) {
                 printTabular(*iter);
             }
             iter++;
         }
-        
+        if (ST_AggregateStats) {
+            calculateAgregateSTats(&agregate_stats);
+            printAggregate(&agregate_stats);
+        }
         
     } catch (xercesc::DOMException& e ) {
         char * c_msg = tc(e.getMessage());
@@ -353,6 +381,20 @@ void StatTool::parseFlankers(xercesc::DOMElement * parentNode, crispr::XML& xmlP
 //        }
 //    }
 //}
+void StatTool::calculateAgregateSTats(AStats * agregateStats)
+{
+    std::vector<StatManager * >::iterator iter;
+    for(iter = begin(); iter != end(); iter++) {
+        agregateStats->total_groups++;
+        agregateStats->total_dr += (*iter)->getRpeatCount();
+        agregateStats->total_dr_length += (*iter)->meanRepeatL();
+        agregateStats->total_spacers += (*iter)->getSpacerCount();
+        agregateStats->total_spacer_length += ((*iter)->getSpLenVec().empty()) ?  0 : (*iter)->meanSpacerL();
+        agregateStats->total_spacer_cov +=((*iter)->getSpCovVec().empty()) ?  0 : (*iter)->meanSpacerC();
+        agregateStats->total_flanker += (*iter)->getFlankerCount();
+        agregateStats->total_flanker_length += ((*iter)->getFlLenVec().empty()) ? 0 : (*iter)->meanFlankerL();
+    }
+}
 void StatTool::prettyPrint(StatManager * sm)
 {
     std::cout<<sm->getGid()<<" | "<<sm->getConcensus()<<" | ";
@@ -369,33 +411,65 @@ void StatTool::prettyPrint(StatManager * sm)
     std::cout<<"{ "<<sm->getRpeatCount()<< " " <<sm->getSpacerCount()<<" "<<sm->getFlankerCount()<<" } "<<std::endl;
 }
 
+void StatTool::printHeader()
+{
+    std::cout<<"GID"<<ST_Separator;
+    std::cout<<"DR concensus"<<ST_Separator;
+    std::cout<<"# DR Variants"<<ST_Separator;
+    std::cout<<"Ave. DR Length"<<ST_Separator;
+    std::cout<<"# spacers"<<ST_Separator;
+    std::cout<<"Ave. SP Length"<<ST_Separator;
+    std::cout<<"Ave. SP Cov"<<ST_Separator;
+    std::cout<<"# Flankers"<<ST_Separator;
+    std::cout<<"Ave. FL Length"<<std::endl;
+    ST_WithHeader = false;
+}
+
 void StatTool::printTabular(StatManager * sm)
 {
-    std::cout<< sm->getGid()<<'\t';
-    std::cout<< sm->getConcensus()<<'\t';
-    std::cout<< sm->getRpeatCount()<< '\t';
-    std::cout<< sm->meanRepeatL()<<'\t';
-    std::cout<< sm->getSpacerCount()<<'\t';
+    if (ST_WithHeader) {
+        printHeader();
+    }
+    std::cout<< sm->getGid()<<ST_Separator;
+    std::cout<< sm->getConcensus()<<ST_Separator;
+    std::cout<< sm->getRpeatCount()<< ST_Separator;
+    std::cout<< sm->meanRepeatL()<<ST_Separator;
+    std::cout<< sm->getSpacerCount()<<ST_Separator;
     if (!sm->getSpLenVec().empty()) {
-        std::cout<< sm->meanSpacerL()<<'\t';
+        std::cout<< sm->meanSpacerL()<<ST_Separator;
     } else {
-        std::cout<<0<<'\t';
+        std::cout<<0<<ST_Separator;
     }
     if (sm->getSpCovVec().empty()) {
-        std::cout<<0<<'\t';
+        std::cout<<0<<ST_Separator;
     } else {
-        std::cout<< sm->meanSpacerC()<<'\t';
+        std::cout<< sm->meanSpacerC()<<ST_Separator;
     }
-    std::cout<< sm->getFlankerCount()<<'\t';
+    std::cout<< sm->getFlankerCount()<<ST_Separator;
     if (sm->getFlLenVec().empty()) {
         std::cout<<0<<std::endl;
     } else {
         std::cout<< sm->meanFlankerL()<<std::endl;
-
     }
-
 }
-
+void StatTool::printAggregate( AStats * agregate_stats)
+{
+    // if we pass through a NULL pointer then we print
+    if (ST_WithHeader) {
+        // the way this is called we should only print
+        // the header only if tabular isn't set
+        printHeader();
+    }
+    std::cout<<agregate_stats->total_groups<<ST_Separator;
+    std::cout<<"*"<<ST_Separator;
+    std::cout<<agregate_stats->total_dr<<ST_Separator;
+    std::cout<<agregate_stats->total_dr_length/agregate_stats->total_groups<<ST_Separator;
+    std::cout<<agregate_stats->total_spacers<<ST_Separator;
+    std::cout<<agregate_stats->total_spacer_length/agregate_stats->total_groups<<ST_Separator;
+    std::cout<<agregate_stats->total_spacer_cov/agregate_stats->total_groups<<ST_Separator;
+    std::cout<<agregate_stats->total_flanker<<ST_Separator;
+    std::cout<<agregate_stats->total_flanker_length/agregate_stats->total_groups<<std::endl;
+}
 int statMain (int argc, char ** argv)
 {
     try {
@@ -420,8 +494,13 @@ int statMain (int argc, char ** argv)
 }
 void statUsage(void)
 {
-    std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" stat [-gh] file.crispr"<<std::endl;
+    std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" stat [-aghpst] [--header] file.crispr"<<std::endl;
 	std::cout<<"Options:"<<std::endl;
+    std::cout<<"-a                  print out aggregate summary, can be combined with -t -p"<<std::endl;
     std::cout<<"-h					print this handy help message"<<std::endl;
+    std::cout<<"--header            print out column headers in tabular output"<<std::endl;
 	std::cout<<"-g INT[,n]          a comma separated list of group IDs that you would like to see stats for."<<std::endl;
+    std::cout<<"-p                  pretty print"<<std::endl;
+    std::cout<<"-s                  separator string for tabular output [default: '\t']"<<std::endl;
+    std::cout<<"-t                  tabular output"<<std::endl;
 }

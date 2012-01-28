@@ -30,6 +30,17 @@
 #define SPACER_CHAR '+'
 #define FLANKER_CHAR '~'
 #define REPEAT_CHAR '-'
+typedef struct __AStats {
+    
+    int total_groups;
+    int total_spacers;
+    int total_dr;
+    int total_flanker;
+    int total_spacer_length;
+    int total_spacer_cov;
+    int total_dr_length;
+    int total_flanker_length;
+    } AStats;
 
 class StatManager {
     std::vector<int> SM_SpacerLength;
@@ -115,6 +126,10 @@ class StatTool {
     bool ST_AssemblyStats;
     bool ST_Subset;
     std::string ST_OutputFileName;
+    bool ST_WithHeader;
+    bool ST_AggregateStats;
+    bool ST_Tabular;
+    std::string ST_Separator;
     
 public:
     StatTool() {
@@ -122,6 +137,10 @@ public:
         ST_Pretty = false;
         ST_Subset = false;
         ST_AssemblyStats = false;
+        ST_WithHeader = false;
+        ST_AggregateStats = false;
+        ST_Tabular = false;
+        ST_Separator = "\t";
     }
     ~StatTool();
 
@@ -141,8 +160,11 @@ public:
 //    void parseCSpacer(xercesc::DOMElement * parentNode, crispr::XML& xmlParser);
 //    void parseLinkSpacers(xercesc::DOMElement * parentNode, crispr::XML& xmlParser);
 //    void parseLinkFlankers(xercesc::DOMElement * parentNode, crispr::XML& xmlParser);
+    void calculateAgregateSTats(AStats * agregateStats);
     void prettyPrint(StatManager * sm);
+    void printHeader(void);
     void printTabular(StatManager * sm);
+    void printAggregate(AStats * agregateStats);
     std::vector<StatManager *>::iterator begin(){return ST_StatsVec.begin();}
     std::vector<StatManager *>::iterator end(){return ST_StatsVec.end();}
 
