@@ -94,6 +94,18 @@ int StatTool::processOptions (int argc, char ** argv)
                 break;
             }
 		}
+        try {
+            if(!ST_Pretty && !ST_Tabular && !ST_AggregateStats) {
+                throw crispr::input_exception("You must specify one of -t -a -p");
+            }
+            if(ST_Pretty && ST_Tabular) {
+                throw crispr::input_exception("-p and -t cannot both be specified");
+            }
+        } catch (crispr::input_exception& e) {
+            std::cerr<< e.what()<<std::endl;
+            statUsage();
+            exit(1);
+        }
 	}
 	return optind;
 }
@@ -104,10 +116,14 @@ int StatTool::processInputFile(const char * inputFile)
         crispr::XML xml_parser;
         xercesc::DOMDocument * input_doc_obj = xml_parser.setFileParser(inputFile);
         xercesc::DOMElement * root_elem = input_doc_obj->getDocumentElement();
-
+        int num_groups_to_process = static_cast<int>(ST_Groups.size());
+        //std::cout<<num_groups_to_process<<std::endl;
         for (xercesc::DOMElement * currentElement = root_elem->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
 
-                
+            if (ST_Subset && num_groups_to_process == 0) {
+                //std::cout<<"DOG"<<std::endl;
+                break;
+            }
             // is this a group element
             if (xercesc::XMLString::equals(currentElement->getTagName(), xml_parser.getGroup())) {
                 char * c_gid = tc(currentElement->getAttribute(xml_parser.getGid()));
@@ -116,23 +132,26 @@ int StatTool::processInputFile(const char * inputFile)
                     // we only want some of the groups look at DT_Groups
                     if (ST_Groups.find(group_id.substr(1)) != ST_Groups.end() ) {
                         parseGroup(currentElement, xml_parser);
+
+                        // decrease the number of groups left
+                        // if we are only using a subset
+                        if(ST_Subset) num_groups_to_process--;
                     }
                 } else {
                     parseGroup(currentElement, xml_parser);   
                 }
                 xr(&c_gid);
             }
-            
         }
         AStats agregate_stats;
-         agregate_stats.total_groups = 0;
-         agregate_stats.total_spacers = 0;
-         agregate_stats.total_dr = 0;
-         agregate_stats.total_flanker = 0;
-         agregate_stats.total_spacer_length = 0;
-         agregate_stats.total_spacer_cov = 0;
-         agregate_stats.total_dr_length = 0;
-         agregate_stats.total_flanker_length = 0;
+        agregate_stats.total_groups = 0;
+        agregate_stats.total_spacers = 0;
+        agregate_stats.total_dr = 0;
+        agregate_stats.total_flanker = 0;
+        agregate_stats.total_spacer_length = 0;
+        agregate_stats.total_spacer_cov = 0;
+        agregate_stats.total_dr_length = 0;
+        agregate_stats.total_flanker_length = 0;
         // go through each of the groups and print out a pretty picture
         std::vector<StatManager *>::iterator iter = this->begin();
         while (iter != this->end()) {
@@ -147,7 +166,6 @@ int StatTool::processInputFile(const char * inputFile)
             calculateAgregateSTats(&agregate_stats);
             printAggregate(&agregate_stats);
         }
-        
     } catch (xercesc::DOMException& e ) {
         char * c_msg = tc(e.getMessage());
         std::cerr<<c_msg<<std::endl;
@@ -156,7 +174,6 @@ int StatTool::processInputFile(const char * inputFile)
         std::cerr<<e.what()<<std::endl;
         return 1;
     }
-    
     return 0;
 }
 void StatTool::parseGroup(xercesc::DOMElement * parentNode, crispr::XML& xmlParser)
@@ -179,15 +196,11 @@ void StatTool::parseGroup(xercesc::DOMElement * parentNode, crispr::XML& xmlPars
 
         if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getData())) {
             parseData(currentElement, xmlParser, sm);
-            
         } /*else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getAssembly())) {
             if (ST_AssemblyStats) {
                 parseAssembly(currentElement, xmlParser);
             }
         }*/
-            
-            
-        
     }
 }
 
@@ -498,7 +511,7 @@ void statUsage(void)
 	std::cout<<"Options:"<<std::endl;
     std::cout<<"-a                  print out aggregate summary, can be combined with -t -p"<<std::endl;
     std::cout<<"-h					print this handy help message"<<std::endl;
-    std::cout<<"--header            print out column headers in tabular output"<<std::endl;
+    std::cout<<"-H                  print out column headers in tabular output"<<std::endl;
 	std::cout<<"-g INT[,n]          a comma separated list of group IDs that you would like to see stats for."<<std::endl;
     std::cout<<"-p                  pretty print"<<std::endl;
     std::cout<<"-s                  separator string for tabular output [default: '\t']"<<std::endl;
