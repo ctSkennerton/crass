@@ -1,3 +1,51 @@
+Sun Jan 29 23:44:43 2012 +1000    ctSkennerton
+    added an extra check for low complexity when a true DR is found - removes a few DR's where individual variants fall under the threshold but the consensus does not
+
+Sun Jan 29 23:07:41 2012 +1000    ctSkennerton
+    a few misc print statement updates
+
+Sun Jan 29 22:51:34 2012 +1000    ctSkennerton
+    little update to the help msg
+
+Sun Jan 29 22:50:49 2012 +1000    ctSkennerton
+    fixed required_argument to no_arguement problem with processing --help option. added basic progressive parser
+
+Sun Jan 29 22:48:20 2012 +1000    ctSkennerton
+    added in some sanity checks for the options, fixed a help msg and added a basic progressive parser
+
+Sat Jan 28 21:46:52 2012 +1000    ctSkennerton
+    added a couple of print statements to the clustering and graph generation functions
+
+Sat Jan 28 21:45:40 2012 +1000    ctSkennerton
+    removed a rouge print statement from NodeManager#getSpacerCount
+
+Sat Jan 28 21:44:14 2012 +1000    ctSkennerton
+    added in some comands for making the documentation
+
+Sat Jan 28 21:42:40 2012 +1000    ctSkennerton
+    added in some more output options
+
+Fri Jan 27 23:13:28 2012 +1000    ctSkennerton
+    fixed some file names in the git index that was causing some strange differences
+
+Fri Jan 27 23:04:48 2012 +1000    ctSkennerton
+    Modified #include statements to fix some strange bugs... got no idea how it was compiling before
+
+Wed Jan 25 21:45:37 2012 +1000    ctSkennerton
+    Made heaps of changes to the build system to get the CFLAGS and LDFLAGS right... might still be a few bugs but it's better.  Also bumped the versioning up to reflect all these changes to the project
+
+Tue Jan 24 17:46:16 2012 +1000    ctSkennerton
+    updated directory structure to include crisprtools
+
+Sun Jan 22 15:26:13 2012 +1000    ctSkennerton
+    quick change to a logging statement
+
+Sun Jan 22 15:23:32 2012 +1000    ctSkennerton
+    fixed some implicit type conversions
+
+Wed Jan 18 16:35:29 2012 +1000    ctSkennerton
+    update version to 0.1.5 to reflect bug fixes
+
 Wed Jan 18 16:32:31 2012 +1000    ctSkennerton
     resolve issue #29 make sure that the true direct repeat is in its laurenized form
 
