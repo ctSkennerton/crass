@@ -511,6 +511,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         log_counter++;
         read_counter++;
     }
+    std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<std::endl;
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 

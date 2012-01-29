@@ -346,6 +346,7 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     // We needs to do somes clustering! Then trim and concatenate the direct repeats
     if (mungeDRs())
     {
+        return 1;
         logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
     }
     
@@ -360,7 +361,8 @@ int WorkHorse::buildGraph(void)
     // go through the DR2GID_map and make all reads in each group into nodes
     
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
-    std::cout<<PACKAGE_NAME<<"_graphBuilder: "<<mTrueDRs.size()<<" putative CRISPRs found!"<<std::endl;
+    std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<mTrueDRs.size()<<" putative CRISPRs found!"<<std::endl;
+    std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: ";
     while(drg_iter != mDR2GIDMap.end())
     {
         if(NULL != drg_iter->second)
@@ -368,6 +370,7 @@ int WorkHorse::buildGraph(void)
 #ifdef DEBUG
             logInfo("Creating NodeManager "<<drg_iter->first, 6);
 #endif
+            std::cout<<' '<<drg_iter->first<<' ';
             mDRs[mTrueDRs[drg_iter->first]] = new NodeManager(mTrueDRs[drg_iter->first], mOpts);
             DR_ClusterIterator drc_iter = (drg_iter->second)->begin();
             while(drc_iter != (drg_iter->second)->end())
@@ -384,6 +387,7 @@ int WorkHorse::buildGraph(void)
         }
         drg_iter++;
     }
+    std::cout<<std::endl;
     return 0;
 }
 
@@ -477,7 +481,7 @@ int WorkHorse::mungeDRs(void)
         clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &group_kmer_counts_map);
         ++read_map_iter;
     }
-    std::cout<<PACKAGE_NAME<<"_cluster_core: "<<mReads.size()<<" variants mapped to "<<mDR2GIDMap.size()<<" clusters"<<std::endl;
+    std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: "<<mReads.size()<<" variants mapped to "<<mDR2GIDMap.size()<<" clusters"<<std::endl;
 
     if(isLogging(4))
     {
