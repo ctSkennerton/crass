@@ -55,7 +55,7 @@ int ExtractTool::processOptions (int argc, char ** argv)
 	int c;
     int index;
     static struct option long_options [] = {       
-        {"help", required_argument, NULL, 'h'}
+        {"help", no_argument, NULL, 'h'}
     };
 	while((c = getopt_long(argc, argv, "hg:sdfxyo:", long_options, &index)) != -1)
 	{
@@ -192,8 +192,13 @@ void ExtractTool::parseWantedGroups(crispr::XML& xmlObj, xercesc::DOMElement * r
 {
     
     try {
-        
+        int num_groups_to_process = static_cast<int>(ET_Group.size());
         for (xercesc::DOMElement * currentElement = rootElement->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
+            // break if we have processed all of the wanted groups
+            if(ET_Subset && num_groups_to_process == 0) {
+                break;
+            }
+            
             // is this a group element
             if (xercesc::XMLString::equals(currentElement->getTagName(), xmlObj.getGroup())) {
                 // new group
@@ -239,7 +244,6 @@ void ExtractTool::parseWantedGroups(crispr::XML& xmlObj, xercesc::DOMElement * r
                             }
                         }
                     }
-
                     extractDataFromGroup(xmlObj, currentElement);
                     
                     if(ET_SplitGroup) {
@@ -261,16 +265,16 @@ void ExtractTool::parseWantedGroups(crispr::XML& xmlObj, xercesc::DOMElement * r
                     }
                 }
             }
-            
+            // reduse the number of groups to look for 
+            // if the subset option is set
+            if(ET_Subset) num_groups_to_process--;
         }
-        
     } catch( xercesc::XMLException& e ) {
         char* message = xercesc::XMLString::transcode( e.getMessage() );
         std::stringstream errBuf;
         errBuf << "Error parsing file: " << message << std::flush;
         throw (crispr::xml_exception(__FILE__, __LINE__,__PRETTY_FUNCTION__,(errBuf.str()).c_str()));
         xercesc::XMLString::release( &message );
-        
     } catch (crispr::xml_exception& xe) {
         std::cerr<< xe.what()<<std::endl;
         return;
@@ -281,7 +285,10 @@ void ExtractTool::extractDataFromGroup(crispr::XML& xmlDoc, xercesc::DOMElement 
 {
     // get the first child - the data element
     try {
-        for (xercesc::DOMElement * currentElement = currentGroup->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
+        // the data element is the first child of the group
+        xercesc::DOMElement * dataElement = currentGroup->getFirstElementChild();
+        // go through all the children of data
+        for (xercesc::DOMElement * currentElement = dataElement->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
             char * c_gid = tc(currentGroup->getAttribute(xmlDoc.getGid()));
             if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc.getDrs())) {
                 if (ET_DirectRepeat) {
@@ -319,7 +326,6 @@ void ExtractTool::extractDataFromGroup(crispr::XML& xmlDoc, xercesc::DOMElement 
                 }
             }
             xr(&c_gid);
-            
         }
     } catch( xercesc::XMLException& e ) {
         char* message = xercesc::XMLString::transcode( e.getMessage() );
@@ -336,10 +342,8 @@ void ExtractTool::processData(crispr::XML& xmlDoc, xercesc::DOMElement * current
 {
     try {
         for (xercesc::DOMElement * currentElement = currentType->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
-            
             char * c_seq = tc(currentElement->getAttribute(xmlDoc.getSeq()));
             std::string id;
-            
             switch (wantedType) {
                 case REPEAT:
                 {
@@ -378,27 +382,21 @@ void ExtractTool::processData(crispr::XML& xmlDoc, xercesc::DOMElement * current
                     break;
                 }
             }
-            
             outStream<<'>'<<gid<<id<<std::endl<<c_seq<<std::endl;
             xr(&c_seq);
-            
         }
-        
     } catch( xercesc::XMLException& e ) {
         char* message = xercesc::XMLString::transcode( e.getMessage() );
         std::stringstream errBuf;
         errBuf << "Error parsing file: " << message << std::flush;
         throw (crispr::xml_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, (errBuf.str()).c_str()));
         xercesc::XMLString::release( &message );
-        
     } catch (crispr::xml_exception& xe) {
         std::cerr<< xe.what()<<std::endl;
         return;
-        
     } catch (crispr::runtime_exception& re) {
         std::cerr<<re.what()<<std::endl;
         return;
-        
     }
 }
 
