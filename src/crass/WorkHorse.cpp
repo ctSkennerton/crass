@@ -1244,6 +1244,42 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         return false;
     }
     
+    
+    // QC the DR again for low complexity
+    if (isRepeatLowComplexity(true_DR) && collapsed_options.size() == 0) 
+    {
+        // probably a dud. throw it out
+        // free the memory and clean up
+        if(NULL != clustered_DRs)
+        {
+        	delete clustered_DRs;
+        	clustered_DRs = NULL;
+        	mDR2GIDMap[GID] = NULL;
+        }
+        
+        logInfo("Killed: {" << true_DR << "} cause' the consensus was low complexity...", 1);
+        
+        //++++++++++++++++++++++++++++++++++++++++++++++++
+        // clean up the mess we made
+        
+        if(NULL != consensus_array)
+        	delete[] consensus_array;
+        if(NULL != conservation_array)
+        	delete[] conservation_array;
+        if(coverage_array != NULL)
+        {
+    		for(int i = 0; i < 4; i++)
+    		{
+    			if(NULL != coverage_array[i])
+    				delete[] coverage_array[i];
+    		}
+    		delete[] coverage_array;
+    		coverage_array = NULL;
+        }
+        return false;
+    }
+    
+    
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // print out the consensus array 
     
