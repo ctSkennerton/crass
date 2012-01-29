@@ -36,6 +36,7 @@
 #define __SEQ_UTILS_H
 #include <string>
 #include <zlib.h>
+
 std::string reverseComplement(std::string str);
 
 std::string laurenize(std::string seq);

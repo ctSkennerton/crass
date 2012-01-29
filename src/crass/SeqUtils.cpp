@@ -47,84 +47,40 @@
 
 #include "SeqUtils.h"
 
-
+char comp_tab[] = {
+    0,   1,	2,	 3,	  4,   5,	6,	 7,	  8,   9,  10,	11,	 12,  13,  14,	15,
+    16,  17,  18,	19,	 20,  21,  22,	23,	 24,  25,  26,	27,	 28,  29,  30,	31,
+    32,  33,  34,	35,	 36,  37,  38,	39,	 40,  41,  42,	43,	 44,  45,  46,	47,
+    48,  49,  50,	51,	 52,  53,  54,	55,	 56,  57,  58,	59,	 60,  61,  62,	63,
+    64, 'T', 'V', 'G', 'H', 'E', 'F', 'C', 'D', 'I', 'J', 'M', 'L', 'K', 'N', 'O',
+	'P', 'Q', 'Y', 'S', 'A', 'A', 'B', 'W', 'X', 'R', 'Z',	91,	 92,  93,  94,	95,
+    64, 't', 'v', 'g', 'h', 'e', 'f', 'c', 'd', 'i', 'j', 'm', 'l', 'k', 'n', 'o',
+	'p', 'q', 'y', 's', 'a', 'a', 'b', 'w', 'x', 'r', 'z', 123, 124, 125, 126, 127
+};
 
 std::string reverseComplement(std::string str)
 {
-    std::stringstream revcomp_string;
-    std::string::reverse_iterator rit;
-    for ( rit = str.rbegin() ; rit < str.rend(); rit++ )
+    int l = (int)strlen(str.c_str());
+    char * revcomp_str = new char[l];
+    for (int i = 0; i <=l; i++) {
+        revcomp_str[i]=NULL;
+    }
+    int i, c0, c1;
+    for (i = 0; i < l>>1; ++i) 
     {
-		switch ((*rit)) 
-        {
-            case 'A':
-            case 'a':
-                revcomp_string << 'T';
-                break;
-            case 'C':
-            case 'c':
-                revcomp_string << 'G';
-                break;
-            case 'G':
-            case 'g':
-                revcomp_string << 'C';
-                break;
-            case 'T':
-            case 't':
-            case 'U':
-            case 'u':
-                revcomp_string << 'A';
-                break;
-            case 'M':
-            case 'm':
-                revcomp_string <<'K'; 
-                break;
-            case 'R':
-            case 'r':
-                revcomp_string << 'Y';
-                break;
-            case 'W':
-            case 'w':
-                revcomp_string << 'W';
-                break;
-            case 'S':
-            case 's':
-                revcomp_string << 'S';
-                break;
-            case 'Y':
-            case 'y':
-                revcomp_string << 'R';
-                break;
-            case 'K':
-            case 'k':
-                revcomp_string << 'M';
-                break;
-            case 'V':
-            case 'v':
-                revcomp_string << 'B';
-                break;
-            case 'H':
-            case 'h':
-                revcomp_string << 'D';
-                break;
-            case 'D':
-            case 'd':
-                revcomp_string << 'H';
-                break;
-            case 'B':
-            case 'b':
-                revcomp_string << 'V';
-                break;
-            case 'N':
-            case 'n':
-                revcomp_string << 'N';
-                break;
-            default:
-                revcomp_string << 'N';
-                break;
-		}
-	}
-    return revcomp_string.str();
+        c0 = comp_tab[(int)str[i]];
+        c1 = comp_tab[(int)str[l - 1 - i]];
+        revcomp_str[i] = c1;
+        revcomp_str[l - 1 - i] = c0;
+    }
+    if (l&1) 
+    {
+        revcomp_str[l>>1] = comp_tab[(int)str[l>>1]];
+    }
+    
+    std::string ret = revcomp_str;
+    delete [] revcomp_str;
+    return ret;
 }
 
 std::string laurenize (std::string seq1)

@@ -54,7 +54,6 @@
 #include "crass.h"
 #include "crassDefines.h"
 #include "LoggerSimp.h"
-#include "SeqUtils.h"
 #include "WorkHorse.h"
 #include "Rainbow.h"
 #include "StlExt.h"

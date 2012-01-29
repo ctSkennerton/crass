@@ -157,7 +157,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     //-----
     // wrapper for the various processes needed to assemble crisprs
     //
-	
+
 	logInfo("Parsing reads in " << (seqFiles.size()) << " files", 1);
 	if(parseSeqFiles(seqFiles))
 	{
