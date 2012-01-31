@@ -60,8 +60,8 @@ char comp_tab[] = {
 
 std::string reverseComplement(std::string str)
 {
-    int l = (int)strlen(str.c_str());
-    char * revcomp_str = new char[l];
+    int l = (int)str.length();
+    char * revcomp_str = new char[l+1];
     for (int i = 0; i <=l; i++) {
         revcomp_str[i]=NULL;
     }
