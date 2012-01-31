@@ -263,4 +263,4 @@ if test $PERFORM_CRASS_ASSEMBLY = yes; then
     fi 
 fi
 
-AC_OUTPUT(Makefile src/Makefile src/libcrispr/Makefile src/crass/Makefile src/crisprtools/Makefile man/Makefile doc/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/libcrispr/Makefile src/crass/Makefile src/crisprtools/Makefile man/Makefile )
