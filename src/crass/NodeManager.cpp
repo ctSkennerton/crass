@@ -1423,7 +1423,8 @@ void NodeManager::addSpacersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * pa
         {
             std::string spacer = NM_StringCheck.getString(SI->getID());
             std::string spid = "SP" + to_string(SI->getID());
-            xmlDoc->addSpacer(spacer, spid, parentNode);
+            std::string cov = to_string(SI->getCount());
+            xmlDoc->addSpacer(spacer, spid, parentNode, cov);
         }
         spacer_iter++;
     }
