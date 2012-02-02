@@ -299,14 +299,20 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         if(rt == LONG_READ)
         {
             logInfo("Long read algorithm selected", 2);
-            longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found);
+            if (longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found))
+            {
+                return 1;
+            }
             logInfo("Number of reads found: "<<this->numOfReads(), 2);
             
         }
         else
         {
             logInfo("Short read algorithm selected", 2);
-            shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            if (shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck)) 
+            {
+                return 1;
+            }
             logInfo("number of reads found so far: "<<this->numOfReads(), 2);
             
         }

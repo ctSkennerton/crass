@@ -46,6 +46,7 @@
 #include <cmath>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <exception>
 
 // local includes
 #include "libcrispr.h"
@@ -112,7 +113,7 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength, const
 
 // CRT search
 
-void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound)
+int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound)
 {
     //-----
     // Code lifted from CRT, ported by Connor and hacked by Mike.
@@ -196,7 +197,16 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
             std::string pattern = read.substr(j, opts.searchWindowLength);
             
             //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
-            int pattern_in_text_index = PatternMatcher::bmpSearch(text, pattern);
+            int pattern_in_text_index = -1;
+            try {
+                pattern_in_text_index = PatternMatcher::bmpSearch(text, pattern);
+            } catch (std::exception& e) {
+                std::cerr<<e.what()<<std::endl;
+                std::cerr<<"String Length: "<<seq_length<<std::endl;
+                std::cerr<<"Cutting substr:"<<beginSearch<<" : "<<j<<" - "<<j + opts.searchWindowLength<<std::endl;
+                std::cerr<<"When processing Read "<<read_counter<<" in file "<< inputFastq<<std::endl;
+                return 1;
+            }
             if (pattern_in_text_index >= 0)
             {
                 tmp_holder->startStopsAdd(j,  j + opts.searchWindowLength);
@@ -271,10 +281,10 @@ void longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRea
     logInfo("finished processing file:"<<inputFastq, 1);    
     std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<<"Processed "<<read_counter<<std::endl;
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
-
+    return 0;
 }
 
-void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& patternsHash, lookupTable& readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& patternsHash, lookupTable& readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
@@ -326,8 +336,16 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
             if (search_begin >= search_end ) break;
             
             // do the search
-            
-            int second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
+            int second_start = -1;
+            try {
+                second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
+            } catch (std::exception& e) {
+                std::cerr<<e.what()<<std::endl;
+                std::cerr<<"String Length: "<<seq_length<<std::endl;
+                std::cerr<<"Cutting substr:"<<search_begin<<" : "<<first_start<<" - "<<first_start + opts.lowDRsize<<std::endl;
+                std::cerr<<"When processing Read "<<read_counter<<" in file "<< inputFastq<<std::endl;
+                return 1;
+            }
 
             // check to see if we found something
             if (second_start > -1) 
@@ -348,7 +366,7 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
                     while (0)//read.at(first_end + extenstion_length) == read.at(second_end + extenstion_length)) 
                     {
 #ifdef DEBUG
-                        logInfo(read.at(first_end + extenstion_length)<<" == "<<read.at(second_end + extenstion_length),8);
+                        logInfo(read.at(first_end + extenstion_length)<<" == "<<read.at(second_end + extenstion_length),10);
 #endif
                         extenstion_length++;
                         next_index++;
@@ -423,6 +441,7 @@ void shortReadSearch(const char * inputFastq, const options& opts, lookupTable& 
     logInfo("Finished processing file:"<<inputFastq, 1);
     std::cout<<"["<<PACKAGE_NAME<<"_shortReadFinder]: "<<"Processed "<<read_counter<<std::endl;
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found", 2);
+    return 0;
 }
 
 
