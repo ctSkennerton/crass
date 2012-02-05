@@ -42,13 +42,19 @@ void StatTool::generateGroupsFromString ( std::string str)
 int StatTool::processOptions (int argc, char ** argv)
 {
 	int c;
-	while((c = getopt(argc, argv, "ahHg:ps:to:")) != -1)
+	while((c = getopt(argc, argv, "ahHg:ps:o:")) != -1)
 	{
         switch(c)
 		{
 			case 'a':
             {
                 ST_AggregateStats = true;
+                break;
+            }
+            case 'p':
+            {
+                ST_Pretty = true;
+                ST_Tabular = false;
                 break;
             }
             case 'h':
@@ -62,11 +68,7 @@ int StatTool::processOptions (int argc, char ** argv)
                 ST_OutputFileName = optarg;
                 break;
             }
-            case 'p':
-            {
-                ST_Pretty = true;
-                break;
-            }
+
             case 'g':
             {
                 generateGroupsFromString(optarg);
@@ -77,11 +79,7 @@ int StatTool::processOptions (int argc, char ** argv)
                 ST_Separator = optarg;
                 break;
             }
-            case 't':
-            {
-                ST_Tabular = true;
-                break;
-            }
+
             case 'H':
             {
                 ST_WithHeader = true;
