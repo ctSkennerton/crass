@@ -92,29 +92,6 @@ emph={CDATA,PCDATA,REQUIRED, IMPLIED},
 morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 }
 
-%\lstset{ %
-%language=XML,                % the language of the code
-%basicstyle=\footnotesize,       % the size of the fonts that are used for the code
-%%numbers=left,                   % where to put the line-numbers
-%%numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
-%%stepnumber=2,                   % the step between two line-numbers. If it's 1, each line 
-%                                % will be numbered
-%numbersep=5pt,                  % how far the line-numbers are from the code
-%backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
-%keywordstyle=\color{black}\bfseries
-%showspaces=false,               % show spaces adding particular underscores
-%showstringspaces=false,         % underline spaces within strings
-%showtabs=false,                 % show tabs within strings adding particular underscores
-%%frame=single,                   % adds a frame around the code
-%tabsize=2,                      % sets default tabsize to 2 spaces
-%captionpos=b,                   % sets the caption-position to bottom
-%breaklines=true,                % sets automatic line breaking
-%breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
-%title=\lstname,                 % show the filename of files included with \lstinputlisting;
-%                                % also try caption instead of title
-%escapeinside={\%*}{*)},         % if you want to add a comment within your code
-%morekeywords={*,...}            % if you want to add more keywords to the set
-%}
 %%% END Article customizations
 
 %%% The "real" document content comes below...
@@ -131,9 +108,14 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 The CRISPR file (.crispr) is an xml based document designed to describe all properties of the direct repeats and spacer sequences obtained from CRISPR loci from genomic and metagenomic datasets.  It's key function is to enable a standard way of describing the complex arrangements of spacers that are seen in environmental samples.  Each .crispr file can contain multiple  \lstinline[language=XML_new]$<group>$   tags; each one corresponding to a different CRISPR locus.  Each group then has three tags: \lstinline[language=XML_new]$<data>$, \lstinline[language=XML_new]$<metadata>$ and \lstinline[language=XML_new]$<assembly>$ 
 \subsection{Terminologies and Concepts}
+\subsubsection{Clustered Regularly Interspersed Short Palindromic Repeats (CRISPRs)}
+CRISPRs are a class of repeatative elements found in many bacterial and archaeal genomes.  They encode a complex microbial immune system capable of rapidly adapting to, and targeting invading DNA.  CRISPR elements are composed of direct repeats (DRs), spacers and flanking sequences.
 \paragraph{Direct Repeats}
+Although the P in CRISPR is for palindromic, most DRs do not form perfect palindromes.  There are many different types of repeats, some that do contain palindromic regions in them and others that do not.  What is common is that within a CRISPR locus the sequence of the DR will remain identical. This is essential as the DR sequence is used to bound the spacer sequences that are used for the immune response.
 \paragraph{Spacers}
+Spacer sequences are small segments of invading DNA that is added to a CRISPR locus.  These spacers are used as a targeting mechanism of degradative proteins. 
 \paragraph{The Leader Sequence}
+The leader seuqence flanks one side of the the CRISPR locus and is thought to act as a promoter sequence.
 \section{Elements}
 \subsection{Data}
 The data tag is designed list all of the spacers that a CRISPR contains as well as the direct repeats and any flanking sequences such as the leader sequence.  The plural is intended for the direct repeats as a single locus could have multiple variants of the direct repeat.
@@ -141,7 +123,7 @@ The data tag is designed list all of the spacers that a CRISPR contains as well 
 \begin{lstlisting}[language=XML_new]
 <data>
 	<drs>
-		<dr seq="GAGTTCCCCGCGCCA" drid="DR1" confcnt="12" totcnt="20"/>
+		<dr seq="GAGTCCCCGC" drid="DR1" confcnt="12" totcnt="20"/>
 	</drs>
 	<spacers>
 		<spacer seq="TGAGCGGTCGC" spid="SP1"/>

@@ -40,7 +40,9 @@ Levensthein String Comparison Algorithm:
 http://www.merriampark.com/ldcpp.htm
 
 CRISPR Recognition Tool (CRT)
-
+Bland, C., Ramsey, T.L., Sabree, F., Lowe, M., Brown, K., Kyrpides, N.C., and Hugenholtz, P. (2007) 
+CRISPR Recognition Tool (CRT): a tool for automatic detection of clustered regularly interspaced palindromic repeats. 
+BMC Bioinformatics 8: 209.
 
 
 INSTALLATION
@@ -65,12 +67,29 @@ $ ./configure
 $ make
 $ make install
 
+NON-STANDARD INSTALLATIONS
+Crass and Crisprtools can access the graphviz libraies and executables if desired. Use the 
+--enable-rendering during configure to access this feature.
+
+Use the --with-xerces configure option to change the Xerces install prefix. Configure will look for 
+$prefix/lib/ and $prefix/include directories for the library objects and header files.  Note that the 
+below options for changing LDFLAGS and CPPFLAGS will not work for Xerces as it is a C++ library and not a 
+C library and therefore different code is used to check for it.   
+
+LDFLAGS - set this environmental variable during configure to add to the path where library object files can be found. 
+Don't forget to use -L a the begining
+
+CPPFLAGS - set this environmental variable during configure to add to the path where header files are located.
+
+example:
+
+./configure --enable-rendering LDFLAGS="-L/usr/home/user_name/local/lib/" CPPFLAGS="-I/usr/home/user_name/local/include/" 
 
 RUNNING CRASS
 
 crass has two basic commands:
 
-$ crass [-bcdhklnoswxyDSV] [--dumpReads] [--removeHomopolymers] [--logToScreen] <sequence_files>
+$ crass [-bcdhklnoswxyDSV] [--removeHomopolymers] [--logToScreen] <sequence_files>
 
 which finds CRISPR containing reads
 

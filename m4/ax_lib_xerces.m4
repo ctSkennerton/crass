@@ -26,7 +26,7 @@
 #
 #   This macro calls:
 #
-#     AC_SUBST(XERCES_CFLAGS)
+#     AC_SUBST(XERCES_CPPFLAGS)
 #     AC_SUBST(XERCES_LDFLAGS)
 #     AC_SUBST(XERCES_VERSION) - only if version requirement is used
 #
