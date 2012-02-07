@@ -11,13 +11,6 @@ crass_LDADD = $(top_builddir)/src/libcrispr/libcrispr.la
 crass_CXXFLAGS = @XERCES_CPPFLAGS@ -Werror -pedantic -Wall
 crass_LDFLAGS = @zlib_flags@
 
-if DEBUG
-    crass_CXXFLAGS += -ggdb -O2
-endif
-if MEMCHECK
-    crass_CXXFLAGS +=  -g -O0
-endif
-
 
 crass_SOURCES =\
 PatternMatcher.cpp PatternMatcher.h\
