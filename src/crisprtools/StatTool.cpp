@@ -121,7 +121,6 @@ int StatTool::processInputFile(const char * inputFile)
         for (xercesc::DOMElement * currentElement = root_elem->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
 
             if (ST_Subset && num_groups_to_process == 0) {
-                //std::cout<<"DOG"<<std::endl;
                 break;
             }
             // is this a group element
@@ -207,7 +206,6 @@ void StatTool::parseGroup(xercesc::DOMElement * parentNode, crispr::XML& xmlPars
 void StatTool::parseData(xercesc::DOMElement * parentNode, crispr::XML& xmlParser, StatManager * statManager)
 {
     for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
-            
         if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getDrs())) {
             // change the direct repeats
             parseDrs(currentElement, xmlParser, statManager);
