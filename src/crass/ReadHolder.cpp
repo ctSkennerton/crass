@@ -39,7 +39,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-
+#include <stdexcept>
 // local includes
 #include "ReadHolder.h"
 #include "SeqUtils.h"
@@ -648,27 +648,51 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     	{
     		// read starts with a spacer
     		// the next spacer starts after the first DR
+        try {
             *retStr = RH_Seq.substr(0, *ss_iter);
+              } catch (std::out_of_range& e) {
+                  std::cerr<<e.what()<<std::endl;
+                  std::cerr<<"Cutting substr: "<<0<<" : "<<*ss_iter<<std::endl;
+                  std::cerr<<"From Read: "<<RH_Seq<<std::endl;
+                  std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
+                  exit(1);
+              }
     		RH_NextSpacerStart = 1;
             return true;
     	}
     	else
     	{
     		// read starts with a DR
-    		ss_iter++;
-    		int start_cut = (*ss_iter) + 1;
+            ss_iter++;
+            int start_cut = (*ss_iter) + 1;
     		ss_iter++;
     		if(ss_iter < RH_StartStops.end())
     		{
-                *retStr = RH_Seq.substr(start_cut, *ss_iter - start_cut);
-    		}
+                try {
+                    *retStr = RH_Seq.substr(start_cut, *ss_iter - start_cut);
+                } catch (std::out_of_range& e) {
+                    std::cerr<<e.what()<<std::endl;
+                    std::cerr<<"Cutting substr: "<<start_cut<<" : "<<*ss_iter - start_cut<<std::endl;
+                    std::cerr<<"From Read: "<<RH_Seq<<std::endl;
+                    std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
+                    exit(1);
+                }
+            }
     		else
-    		{
-    			// only one DR in thie whole guy!
-    			*retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
+            {
+                // only one DR in thie whole guy!
+                try {
+                    RH_NextSpacerStart = 3;
+                    return true;
+                    *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
+                } catch (std::out_of_range& e) {
+                    std::cerr<<e.what()<<std::endl;
+                    std::cerr<<"Cutting substr: "<<start_cut<<" : "<<RH_Seq.length() - start_cut<<std::endl;
+                    std::cerr<<"From Read: "<<RH_Seq<<std::endl;
+                    std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
+                    exit(1);
+                }
     		}
-    		RH_NextSpacerStart = 3;
-            return true;
     	}
     }
     else
@@ -683,9 +707,17 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
             if(*ss_iter < (RH_Seq.length() - 1))
             {
             	// read ends with a spacer
-                *retStr = RH_Seq.substr(*ss_iter + 1);
-                RH_NextSpacerStart+=2;
-                return true;
+                try {
+                    *retStr = RH_Seq.substr(*ss_iter + 1);
+                    RH_NextSpacerStart+=2;
+                    return true;
+                } catch (std::out_of_range& e) {
+                    std::cerr<<e.what()<<std::endl;
+                    std::cerr<<"Cutting substr: "<<*ss_iter + 1<<std::endl;
+                    std::cerr<<"From Read: "<<RH_Seq<<std::endl;
+                    std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
+                    exit(1);
+                }
             }
             else
             {
@@ -700,13 +732,21 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     	else
     	{
     		// middle one
-    		int start_cut = (*ss_iter) + 1;
-    		ss_iter++;
+            int start_cut = (*ss_iter) + 1;
+            ss_iter++;
     		int length = *ss_iter - start_cut;
-            *retStr = RH_Seq.substr(start_cut, length);
-    		RH_NextSpacerStart += 2;
-            return true;
-    	}
+            try {
+                *retStr = RH_Seq.substr(start_cut, length);
+    		    RH_NextSpacerStart += 2;
+                return true;
+            } catch (std::out_of_range& e) {
+                std::cerr<<e.what()<<std::endl;
+                std::cerr<<"Cutting substr: "<<start_cut<<" : "<<length<<std::endl;
+                std::cerr<<"From Read: "<<RH_Seq<<std::endl;
+                std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
+                exit(1);
+            }
+        }
     }    
     // should we get here?
 	logError("SP WTF");
