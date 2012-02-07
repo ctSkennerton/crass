@@ -69,7 +69,7 @@ namespace crass {
     
     class substring_exception: public exception{
     public:
-        substring_exception(const char * message, const char * base_str, int start_pos, int length, const char * file, int line, const char * function);
+        substring_exception(const char * message, const char * base_str, int start_pos, int length, const char * file, int line, const char * function)
         {
             std::stringstream ss;
             ss<<"[ERROR]: ";

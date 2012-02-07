@@ -38,6 +38,7 @@ kseq.h\
 GraphDrawingDefines.h\
 crassDefines.h\
 StlExt.h\
+CrassException.h\
 StatsManager.h
 
 if ASSEMBLY_WRAPPER
