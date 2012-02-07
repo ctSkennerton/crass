@@ -139,7 +139,7 @@ public:
         ST_AssemblyStats = false;
         ST_WithHeader = false;
         ST_AggregateStats = false;
-        ST_Tabular = false;
+        ST_Tabular = true;
         ST_Separator = "\t";
     }
     ~StatTool();

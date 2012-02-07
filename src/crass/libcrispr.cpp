@@ -47,7 +47,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <exception>
-
+#include <stdexcept>
 // local includes
 #include "libcrispr.h"
 #include "LoggerSimp.h"
@@ -58,6 +58,7 @@
 #include "kseq.h"
 #include "StlExt.h"
 #include "config.h"
+#include "CrassException.h"
 
 /* 
 declare the type of file handler and the read() function
@@ -192,21 +193,22 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
             {
                 endSearch = beginSearch;
             }
-            
-            std::string text = read.substr(beginSearch, (endSearch - beginSearch));
-            std::string pattern = read.substr(j, opts.searchWindowLength);
-            
+            std::string text;
+            std::string pattern;
+            try {
+                 text = read.substr(beginSearch, (endSearch - beginSearch));
+            } catch (std::out_of_range& e) {
+                throw crass::substring_exception(e.what(), read.c_str(), beginSearch, (endSearch - beginSearch),__FILE__, __LINE__, __PRETTY_FUNCTION__);
+            }
+            try {
+                pattern = read.substr(j, opts.searchWindowLength);
+            } catch (std::out_of_range& e) {
+                throw crass::substring_exception(e.what(), read.c_str(),j,opts.searchWindowLength, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+            }
             //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
             int pattern_in_text_index = -1;
-            try {
                 pattern_in_text_index = PatternMatcher::bmpSearch(text, pattern);
-            } catch (std::exception& e) {
-                std::cerr<<e.what()<<std::endl;
-                std::cerr<<"String Length: "<<seq_length<<std::endl;
-                std::cerr<<"Cutting substr:"<<beginSearch<<" : "<<j<<" - "<<j + opts.searchWindowLength<<std::endl;
-                std::cerr<<"When processing Read "<<read_counter<<" in file "<< inputFastq<<std::endl;
-                return 1;
-            }
+
             if (pattern_in_text_index >= 0)
             {
                 tmp_holder->startStopsAdd(j,  j + opts.searchWindowLength);
@@ -339,12 +341,9 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
             int second_start = -1;
             try {
                 second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
-            } catch (std::exception& e) {
-                std::cerr<<e.what()<<std::endl;
-                std::cerr<<"String Length: "<<seq_length<<std::endl;
-                std::cerr<<"Cutting substr:"<<search_begin<<" : "<<first_start<<" - "<<first_start + opts.lowDRsize<<std::endl;
-                std::cerr<<"When processing Read "<<read_counter<<" in file "<< inputFastq<<std::endl;
-                return 1;
+            } catch (std::out_of_range& e) {
+                throw crass::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__,e.what());
+
             }
 
             // check to see if we found something

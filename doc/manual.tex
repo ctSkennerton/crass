@@ -73,6 +73,47 @@
 \renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
 \renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
 
+%%% Source Code Appearance
+\usepackage{listings}
+\usepackage[usenames,dvipsnames]{color}
+
+\definecolor{gray}{rgb}{0.4,0.4,0.4}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
+\definecolor{cyan}{rgb}{0.0,0.6,0.6}
+
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible,
+  showstringspaces=false,
+  commentstyle=\color{gray}\upshape
+  breaklines=true
+}
+
+\lstdefinelanguage{XML_new}
+{
+  morestring=[b]",
+  morestring=[s]{>}{<},
+  morecomment=[s]{<?}{?>},
+  stringstyle=\color{black},
+  identifierstyle=\color{darkblue},
+  keywordstyle=\color{cyan},
+  morekeywords={seq,drid,confcnt, totcnt, spid, flid,cov, type,url, cid, drconf}% list your attributes here
+}
+
+\lstdefinelanguage{DTD}
+{
+morestring=[b]",
+  morecomment=[s]{<?}{?>},
+%morecomment=[s]{\#}{\>},
+%moredirectives={\#REQUIRED},
+  stringstyle=\color{darkblue},
+  identifierstyle=\color{gray},
+  keywordstyle=\color{cyan},
+  emphstyle=\color{RoyalPurple},
+emph={CDATA,PCDATA,REQUIRED, IMPLIED},
+ moredelim=*[s][\color{Black}]{(}{)},
+morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
+}
 %%% END Article customizations
 
 %%% The "real" document content comes below...
@@ -87,13 +128,13 @@
 
 \tableofcontents
 \section{Quick Start}
-\begin{lstlisting}[basicstyle=\footnotesize]
-$ ./configure
-$ make
-$ make install
-
-$ ./crass [options] input_file{1, n}
-$ ./crass assemble [velvet|cap3] -i PATH -g INT -x xx.crispr -s INT[,INT] [options]
+\begin{lstlisting}
+	$ ./configure
+	$ make
+	$ make install
+	
+	$ ./crass [options] input_file{1, n}
+	$ ./crass assemble [velvet|cap3]  [options]
 \end{lstlisting}
 \section{Installation}
 Crass has been developed with the GNU build system for maximum compatibility across platforms.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
@@ -108,10 +149,10 @@ There are a number of optional features of Crass that require additional softwar
 
 \subsection{Compiling}
 On a GNU system simply:
-\begin{lstlisting}[basicstyle=\footnotesize]
-$  ./configure
-$  make
-$  [sudo] make install
+\begin{lstlisting}
+	$  ./configure
+	$  make
+	$  [sudo] make install
 \end{lstlisting}
 
 \subsubsection{Configure/Compiling Options}
@@ -121,24 +162,25 @@ Crass supports a number of compile-time options as well as the common options:
     \begin{longtable}{  l    p{10cm} }
     \hline
     Option & Definition \\  \hline\hline
-    enable-debug &   Setting this option will define the HAVE\_DEBUG preprocessor symbol.  When set it will change the scale of the log level from 1 - 4 to 1 - 10.  Note that when setting the log level above 4, Crass will print alot of information to the log file that is only nessessary when debugging the program.  Extra stages of Crass will also be performed such as printing debug graphs and the -ggdb CPPFLAG will be set.  Crass will probably run slower with enable-debug even if the log level is set low due to the extra operations that Crass performs.\\ \\
-   enable-verbose\_logging & This option is different from enable-debug as it changes what information is printed in the log statments.  enabling verbose logging will add the source file name, the function name and the line number for every log statement. \\ \\    
-enable-rendering &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\  \\
-   disable-assembly & Disables the assembly wrapper even if the Xerces library and suitable genome assemblers can be found.  Disabling the assembly wrapper willl change which souce files are compiled and as a result reduce the size of the executable. \\ 
+    -{}-enable-debug &   Setting this option will define the HAVE\_DEBUG preprocessor symbol.  When set it will change the scale of the log level from 1 - 4 to 1 - 10.  Note that when setting the log level above 4, Crass will print alot of information to the log file that is only nessessary when debugging the program.  Extra stages of Crass will also be performed such as printing debug graphs and the -ggdb CPPFLAG will be set.  Crass will probably run slower with enable-debug even if the log level is set low due to the extra operations that Crass performs.\\ \\
+   -{}-enable-verbose\_logging & This option is different from enable-debug as it changes what information is printed in the log statments.  enabling verbose logging will add the source file name, the function name and the line number for every log statement. \\ \\    
+-{}-enable-rendering &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\  \\
+   -{}-disable-assembly & Disables the assembly wrapper even if the Xerces library and suitable genome assemblers can be found.  Disabling the assembly wrapper willl change which souce files are compiled and as a result reduce the size of the executable. \\ \\
+-{}-with-xerces & Set the path where the Xerces header and library objcets can be found\\
 
     \hline
     \end{longtable}
 
 \section{Running Instructions}
 Crass has two separate commands for finding and for assembling CRISPRs:
- \begin{lstlisting}[basicstyle=\footnotesize]
-$ ./crass [options] input_file
-$ ./crass assemble ASSEMBLER -i PATH -g INT -x xx.crispr -s INT[,INT] [options]
+ \begin{lstlisting}
+	$ ./crass [options] input_file
+	$ ./crass assemble ASSEMBLER [options]
 \end{lstlisting}
 \subsection{Finding CRISPRs}
 Once installed the most minimal comand is 
-\begin{lstlisting}[basicstyle=\footnotesize]
-$  ./crass input_file
+\begin{lstlisting}
+	$  ./crass input_file
 \end{lstlisting}
 which leaves all of the user options at their default values.
 
@@ -191,24 +233,28 @@ Once the CRISPR finder is done there will be a number of output output files.  F
 The graph file is important for you to visualise all of the spacer arrangments in your CRISPRs.  If your input was a metagenomic sample then it is likely that there will be multiple arrangments of spacers.  Each individual section will be numbered and this numbering is important to the Crass assembler.   
 \subsection{Assembling CRISPRs}
 CRISPRs from metagenomic data can/will have many spacer arrangements.  This makes them difficult for a regular genome assembler to resolve as they look for a single route through the graph.   The Crass assembler is a wrapper for other popular genome assemblers; currently there are wrappers for Velvet and Cap3.  I premise is that you, the user will look at the output from Crass to determine which of the paths to take through the spacer graph, which are listed as different 'contigs'. To perform the assembly you need to tell Crass the group number of the CRISPR from the finder stage (this will be in the file name), the .crispr file from Crass and the a comma separated list of the segments/contigs IDs for your group of interest.  The most minimal command is shown below: 
- \begin{lstlisting}[basicstyle=\footnotesize]
-$ ./crass assemble ASSEMBLER -i PATH -g INT -x xx.crispr -s INT[,INT] [options]
+ \begin{lstlisting}
+	$ ./crass assemble ASSEMBLER [options]
 \end{lstlisting}
  If for example you run Crass of a metagenome and get 5 groups and you want to assemble contigs 1, 2, 5, 6, 10 from group 3 using velvet
- \begin{lstlisting}[basicstyle=\footnotesize]
-$ ./crass assemble velvet -g 3 -x crass.crispr -s 1,2,5,6,10
+ \begin{lstlisting}
+	$ ./crass assemble velvet -g 3 -x crass.crispr -s 1,2,5,6,10
 \end{lstlisting}
 
 This will extract all of the reads that contain spacers from those contigs and use them as input to velvet which will do the assembly in the backgroud.  This is a 'dumb' process in the sense that if you provide contig IDs for multiple pathways the assembler will still try and succeed but this will undoubtibly cause breaks. 
 
-\section{File Formats}
+\section{The CRISPR File (.crispr)}
 \label{sec:Fileformats}
-\subsection{The CRISPR File (.crispr)}
 The .crispr file is an XML format to describe all aspects of a CRISPR loci.  The bulk of the file specification will not be discussed in this manual, however the basics will be talked about to give you some idea of what it is and how Crass uses it.
-\subsubsection{The Crass Assembler}
-\subsubsection{Specification Overview}
+\subsection{Specification Overview}
+Each .crispr file contains a number of \lstinline[language=XML_new]$<group>$ tags, each one containing data about an individual CRISPR locus.  There are three sections for each group:
+\paragraph{The Data Section}
+This section gives you a list of all of the direct repeats (\lstinline[language=XML_new]$<drs>$), spacers (\lstinline[language=XML_new]$<spacers>$) and flanking (\lstinline[language=XML_new]$<flankers>$) that crass found.  Spacers will also have a coverage associated with them.
 \paragraph{The Metadata Section}
+This section lists all the other files that are associated with the CRISPR locus described in the group.  These include links to image files, and files containing raw sequence data.
 \paragraph{The Assembly Section}
+This represents all of the links between each spacer to all others.  Reading this section essentially equates to reading a graph of the spacer arrangement of the CRISPR locus
+
 
 \section{Practical Considerations}
 Crass has been designed primarily with use of Illumina data, however there is nothing stopping you from using it of data produced by other sequencing technologies such as 454, Sanger or Ion Torrent.  There are a few practical considerations when dealing with other data types.

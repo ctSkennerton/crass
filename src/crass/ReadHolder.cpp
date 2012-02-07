@@ -45,6 +45,8 @@
 #include "SeqUtils.h"
 #include "SmithWaterman.h"
 #include "LoggerSimp.h"
+#include "CrassException.h"
+
 
 
 // the input must be an even number which will be the start of the repeat
@@ -100,40 +102,47 @@ unsigned int ReadHolder::getAverageSpacerLength()
 
     // get the first spacer, but only include it if a DR lies before it
     std::string tmp_string;
-    if(getFirstSpacer(&tmp_string))
-    {		
-    	// check to make sure that the read doesn't start on a spacer
-		if(*(RH_StartStops.begin()) == 0)
-		{
-			// starts on a DR
-			stored_len = (int)tmp_string.length();
-		}
-		// else stored_len == 0
-		
-		// get all the middle spacers
-		while(getNextSpacer(&tmp_string))
-		{
-			num_spacers++;
-			sum += stored_len;
-			stored_len = (int)tmp_string.length();
-		}
-		
-		// check to make sure that the read doesn't end on a spacer
-		if(RH_StartStops.back() == (RH_Seq.length() - 1))
-		{
-			// ends on a DR
-			num_spacers++;
-			sum += stored_len;
-		}
-		
-		if(0 != num_spacers)
-			return sum/numSpacers();
+    try {
+        if(getFirstSpacer(&tmp_string))
+        {		
+            // check to make sure that the read doesn't start on a spacer
+            if(*(RH_StartStops.begin()) == 0)
+            {
+                // starts on a DR
+                stored_len = (int)tmp_string.length();
+            }
+            // else stored_len == 0
+            
+            // get all the middle spacers
+            while(getNextSpacer(&tmp_string))
+            {
+                num_spacers++;
+                sum += stored_len;
+                stored_len = (int)tmp_string.length();
+            }
+            // check to make sure that the read doesn't end on a spacer
+            if(RH_StartStops.back() == (RH_Seq.length() - 1))
+            {
+                // ends on a DR
+                num_spacers++;
+                sum += stored_len;
+            }
+            
+            if(0 != num_spacers)
+                return sum/numSpacers();
+        }
+        else
+        {
+            logError("No Spacers!");
+        }
+        return 0;
+
+    } catch (crass::substring_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        exit(99);
     }
-    else
-    {
-    	logError("No Spacers!");
-    }
-    return 0;
+    		
+
 }
 
 std::vector<std::string> ReadHolder::getAllSpacerStrings(void)
@@ -623,7 +632,12 @@ bool ReadHolder::getFirstSpacer(std::string * retStr)
     // cut the first Spacer or return false if it all stuffs up
     //
     RH_NextSpacerStart = 0;
-    return getNextSpacer(retStr);
+    try {
+        return getNextSpacer(retStr);
+    } catch (crass::substring_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        exit(99);
+    }
 }
 
 bool ReadHolder::getNextSpacer(std::string * retStr)
@@ -648,15 +662,11 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     	{
     		// read starts with a spacer
     		// the next spacer starts after the first DR
-        try {
-            *retStr = RH_Seq.substr(0, *ss_iter);
-              } catch (std::out_of_range& e) {
-                  std::cerr<<e.what()<<std::endl;
-                  std::cerr<<"Cutting substr: "<<0<<" : "<<*ss_iter<<std::endl;
-                  std::cerr<<"From Read: "<<RH_Seq<<std::endl;
-                  std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
-                  exit(1);
-              }
+            try {
+                *retStr = RH_Seq.substr(0, *ss_iter);
+            } catch (std::out_of_range& e) {
+                throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+            }
     		RH_NextSpacerStart = 1;
             return true;
     	}
@@ -671,11 +681,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                 try {
                     *retStr = RH_Seq.substr(start_cut, *ss_iter - start_cut);
                 } catch (std::out_of_range& e) {
-                    std::cerr<<e.what()<<std::endl;
-                    std::cerr<<"Cutting substr: "<<start_cut<<" : "<<*ss_iter - start_cut<<std::endl;
-                    std::cerr<<"From Read: "<<RH_Seq<<std::endl;
-                    std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
-                    exit(1);
+                    throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
                 }
             }
     		else
@@ -686,11 +692,8 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                     return true;
                     *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
                 } catch (std::out_of_range& e) {
-                    std::cerr<<e.what()<<std::endl;
-                    std::cerr<<"Cutting substr: "<<start_cut<<" : "<<RH_Seq.length() - start_cut<<std::endl;
-                    std::cerr<<"From Read: "<<RH_Seq<<std::endl;
-                    std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
-                    exit(1);
+                    throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+
                 }
     		}
     	}
@@ -712,11 +715,8 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                     RH_NextSpacerStart+=2;
                     return true;
                 } catch (std::out_of_range& e) {
-                    std::cerr<<e.what()<<std::endl;
-                    std::cerr<<"Cutting substr: "<<*ss_iter + 1<<std::endl;
-                    std::cerr<<"From Read: "<<RH_Seq<<std::endl;
-                    std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
-                    exit(1);
+                    throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+
                 }
             }
             else
@@ -740,11 +740,8 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     		    RH_NextSpacerStart += 2;
                 return true;
             } catch (std::out_of_range& e) {
-                std::cerr<<e.what()<<std::endl;
-                std::cerr<<"Cutting substr: "<<start_cut<<" : "<<length<<std::endl;
-                std::cerr<<"From Read: "<<RH_Seq<<std::endl;
-                std::cerr<<"Length: "<<RH_Seq.length()<<std::endl;
-                exit(1);
+                throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+
             }
         }
     }    
@@ -826,97 +823,103 @@ std::string ReadHolder::splitApart(void)
     std::string working_str;
     std::string sep_str = " ";
     StartStopListIterator ss_iter = RH_StartStops.begin();
-    if(0 == *ss_iter)
-    {
-        // start with a DR
-        if(getFirstDR(&working_str))
+    try {
+        if(0 == *ss_iter)
         {
-            ss << "DR: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-        
-        if(getFirstSpacer(&working_str))
-        {
-            ss << "SP: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-        
-        while(1)
-        {
-            if(getNextDR(&working_str))
+            // start with a DR
+            if(getFirstDR(&working_str))
             {
-                ss << "DR: " << working_str;  
+                ss << "DR: " << working_str;
             }
             else
             {
-                break;
+                return "---";
             }
             ss << sep_str;
-            if(getNextSpacer(&working_str))
+            
+            if(getFirstSpacer(&working_str))
             {
-                ss  << "SP: "<< working_str;  
+                ss << "SP: " << working_str;
             }
             else
             {
-                break;
+                return "---";
             }
             ss << sep_str;
+            
+            while(1)
+            {
+                if(getNextDR(&working_str))
+                {
+                    ss << "DR: " << working_str;  
+                }
+                else
+                {
+                    break;
+                }
+                ss << sep_str;
+                if(getNextSpacer(&working_str))
+                {
+                    ss  << "SP: "<< working_str;  
+                }
+                else
+                {
+                    break;
+                }
+                ss << sep_str;
+            }
         }
+        else
+        {
+            // start with a spacer
+            if(getFirstSpacer(&working_str))
+            {
+                ss << "SP: " << working_str;
+            }
+            else
+            {
+                return "---";
+            }
+            ss << sep_str;
+            
+            if(getFirstDR(&working_str))
+            {
+                ss << "DR: " << working_str;
+            }
+            else
+            {
+                return "---";
+            }
+            ss << sep_str;
+            
+            // oooohh naughty
+            while(1)
+            {
+                if(getNextSpacer(&working_str))
+                {
+                    ss << "SP: " << working_str;  
+                }
+                else
+                {
+                    break;
+                }
+                ss << sep_str;
+                if(getNextDR(&working_str))
+                {
+                    ss << "DR: " << working_str; 
+                }
+                else
+                {
+                    break;
+                }
+                ss << sep_str;
+            }
+        }
+    } catch (crass::substring_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        exit(99);
     }
-    else
-    {
-        // start with a spacer
-        if(getFirstSpacer(&working_str))
-        {
-            ss << "SP: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-        
-        if(getFirstDR(&working_str))
-        {
-            ss << "DR: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-        
-        // oooohh naughty
-        while(1)
-        {
-            if(getNextSpacer(&working_str))
-            {
-                ss << "SP: " << working_str;  
-            }
-            else
-            {
-                break;
-            }
-            ss << sep_str;
-            if(getNextDR(&working_str))
-            {
-                ss << "DR: " << working_str; 
-            }
-            else
-            {
-                break;
-            }
-            ss << sep_str;
-        }
-    }
+
     
     return ss.str();
 }
