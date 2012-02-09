@@ -668,7 +668,6 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                 throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
             }
     		RH_NextSpacerStart = 1;
-            return true;
     	}
     	else
     	{
@@ -689,7 +688,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                 // only one DR in thie whole guy!
                 try {
                     RH_NextSpacerStart = 3;
-                    return true;
+                    
                     *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
                 } catch (std::out_of_range& e) {
                     throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
@@ -697,6 +696,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                 }
     		}
     	}
+        return true;
     }
     else
     {
