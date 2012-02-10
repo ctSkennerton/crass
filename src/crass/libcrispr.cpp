@@ -58,6 +58,7 @@
 #include "kseq.h"
 #include "StlExt.h"
 #include "config.h"
+#include "CrassException.h"
 
 /* 
 declare the type of file handler and the read() function
@@ -329,8 +330,12 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
             
             // do the search
             int second_start = -1;
-            second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
 
+            try {
+                second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
+            } catch (std::exception& e) {
+                throw crass::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__,e.what());
+            }
 
             // check to see if we found something
             if (second_start > -1) 
