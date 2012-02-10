@@ -20,6 +20,7 @@
 #include "config.h"
 #include "Exception.h"
 #include <iostream>
+#include <fstream>
 #include <getopt.h>
 #include <cstring>
 
@@ -42,7 +43,7 @@ void StatTool::generateGroupsFromString ( std::string str)
 int StatTool::processOptions (int argc, char ** argv)
 {
 	int c;
-	while((c = getopt(argc, argv, "ahHg:ps:o:")) != -1)
+	while((c = getopt(argc, argv, "ahHg:pPs:o:")) != -1)
 	{
         switch(c)
 		{
@@ -53,8 +54,12 @@ int StatTool::processOptions (int argc, char ** argv)
             }
             case 'p':
             {
-                ST_Pretty = true;
-                ST_Tabular = false;
+                ST_OutputStyle = pretty;
+                break;
+            }
+            case 'P':
+            {
+                ST_OutputStyle = veryPretty;
                 break;
             }
             case 'h':
@@ -92,18 +97,6 @@ int StatTool::processOptions (int argc, char ** argv)
                 break;
             }
 		}
-        try {
-            if(!ST_Pretty && !ST_Tabular && !ST_AggregateStats) {
-                throw crispr::input_exception("You must specify one of -t -a -p");
-            }
-            if(ST_Pretty && ST_Tabular) {
-                throw crispr::input_exception("-p and -t cannot both be specified");
-            }
-        } catch (crispr::input_exception& e) {
-            std::cerr<< e.what()<<std::endl;
-            statUsage();
-            exit(1);
-        }
 	}
 	return optind;
 }
@@ -112,6 +105,12 @@ int StatTool::processInputFile(const char * inputFile)
 {
     try {
         crispr::XML xml_parser;
+        std::ifstream in_file_stream(inputFile);
+        if (in_file_stream.good()) {
+            in_file_stream.close();
+        } else {
+            throw crispr::input_exception("cannot open input file");
+        }
         xercesc::DOMDocument * input_doc_obj = xml_parser.setFileParser(inputFile);
         xercesc::DOMElement * root_elem = input_doc_obj->getDocumentElement();
         int num_groups_to_process = static_cast<int>(ST_Groups.size());
@@ -152,11 +151,33 @@ int StatTool::processInputFile(const char * inputFile)
         agregate_stats.total_flanker_length = 0;
         // go through each of the groups and print out a pretty picture
         std::vector<StatManager *>::iterator iter = this->begin();
+        int longest_consensus = 0;
+        int longest_gid = 0;
+        if (ST_OutputStyle == veryPretty) {
+            while (iter != this->end()) {
+                if(static_cast<int>((*iter)->getConcensus().length()) > longest_consensus) {
+                    longest_consensus = static_cast<int>((*iter)->getConcensus().length());
+                }
+                if (static_cast<int>((*iter)->getGid().length()) > longest_gid) {
+                    longest_gid = static_cast<int>((*iter)->getGid().length());
+                }
+            }
+            iter = this->begin();
+        }
+        
         while (iter != this->end()) {
-            if (ST_Pretty) {
-                prettyPrint(*iter);
-            } else if (ST_Tabular) {
-                printTabular(*iter);
+            switch (ST_OutputStyle) {
+                case tabular:
+                    printTabular(*iter);
+                    break;
+                case pretty:
+                    prettyPrint(*iter);
+                    break;
+                case veryPretty:
+                    veryPrettyPrint(*iter, longest_consensus, longest_gid);
+                    break;
+                default:
+                    break;
             }
             iter++;
         }
@@ -168,7 +189,11 @@ int StatTool::processInputFile(const char * inputFile)
         char * c_msg = tc(e.getMessage());
         std::cerr<<c_msg<<std::endl;
         xr(&c_msg);
+        return 1;
     } catch (crispr::xml_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    } catch (crispr::input_exception& e) {
         std::cerr<<e.what()<<std::endl;
         return 1;
     }
@@ -410,6 +435,42 @@ void StatTool::prettyPrint(StatManager * sm)
 {
     std::cout<<sm->getGid()<<" | "<<sm->getConcensus()<<" | ";
     int i = 0;
+    for ( i = 0; i < sm->getRpeatCount(); ++i) {
+        std::cout<<REPEAT_CHAR;
+    }
+    for ( i = 0; i < sm->getSpacerCount() ; ++i) {
+        std::cout<<SPACER_CHAR;
+    }
+    for ( i = 0; i < sm->getFlankerCount(); ++i) {
+        std::cout<<FLANKER_CHAR;
+    }
+    std::cout<<"{ "<<sm->getRpeatCount()<< " " <<sm->getSpacerCount()<<" "<<sm->getFlankerCount()<<" } "<<std::endl;
+}
+
+void StatTool::veryPrettyPrint(StatManager * sm, int longestConsensus, int longestGID )
+{
+    //const int num_columns = 120;
+    
+    //int num_lines = sm->getSpacerCount() / num_columns;
+    int current_gid_length = static_cast<int>(sm->getGid().length());
+    int current_consensus_length = static_cast<int>(sm->getConcensus().length());
+    int consensus_padding = longestConsensus - current_consensus_length;
+    int gid_padding = longestGID - current_gid_length;
+    
+    //int total_length_before_spacers = current_gid_length + current_consensus_length + gid_padding + consensus_padding;
+    
+    std::cout<<sm->getGid();
+    int i = 0;
+    for ( i = 0; i < gid_padding; i++) {
+        std::cout<<' ';
+    }
+    
+    std::cout<<" | "<<sm->getConcensus();
+    for ( i = 0; i < consensus_padding; i++) {
+        std::cout<<' ';
+    }
+    std::cout<<" | ";
+    
     for ( i = 0; i < sm->getRpeatCount(); ++i) {
         std::cout<<REPEAT_CHAR;
     }

@@ -643,11 +643,6 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         	clustered_DRs = NULL;
             mDR2GIDMap.erase(GID);
         }
-//        if(NULL != mDR2GIDMap[GID])
-//        {
-//        	//delete mDR2GIDMap[GID];
-//        	//mDR2GIDMap[GID] = NULL;
-//        }
         return false;
     }
     
@@ -1640,6 +1635,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     }
     return true;
 }
+
 int WorkHorse::numberOfReadsInGroup(DR_Cluster * currentGroup)
 {
     DR_ClusterIterator grouped_drs_iter = currentGroup->begin();
@@ -2203,30 +2199,31 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
                 
                 std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
                 std::string graph_file_name = graph_file_prefix + "_spacers.gv";
-                graph_file.open(graph_file_name.c_str());
-                if (graph_file.good()) 
+                
+                // check to see if there is anything to print - if so then make the key
+                if ( mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file_name, mTrueDRs[drg_iter->first], mOpts->longDescription, mOpts->showSingles))
                 {
-                    mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file, mTrueDRs[drg_iter->first], mOpts->longDescription, mOpts->showSingles);
                     mDRs[mTrueDRs[drg_iter->first]]->printSpacerKey(key_file, 10, namePrefix + to_string(drg_iter->first));
-#if RENDERING
-                    if (!mOpts->noRendering) 
-                    {
-                        // create a command string and call graphviz to make the image file
-                        std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
-                        if(system(cmd.c_str()))
-                        {
-                            logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
-                            return 1;
-                        }
-                    }
-#endif
-                } 
+                }
                 else 
                 {
-                    logError("Unable to create graph output file "<<graph_file_name);
-                    return 1;
+                    // should delete this guy since there are no spacers
+                    // this way the group will not be in the xml either
+                    delete mDRs[mTrueDRs[drg_iter->first]];
+                    mDRs[mTrueDRs[drg_iter->first]] = NULL;
                 }
-                graph_file.close();
+#if RENDERING
+                if (!mOpts->noRendering) 
+                {
+                    // create a command string and call graphviz to make the image file
+                    std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                    if(system(cmd.c_str()))
+                    {
+                        logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
+                        return 1;
+                    }
+                }
+#endif
             }
         }
         drg_iter++;

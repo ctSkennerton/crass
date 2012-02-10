@@ -664,7 +664,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     		// the next spacer starts after the first DR
             try {
                 *retStr = RH_Seq.substr(0, *ss_iter);
-            } catch (std::out_of_range& e) {
+            } catch (std::exception& e) {
                 throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
             }
     		RH_NextSpacerStart = 1;
@@ -679,7 +679,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     		{
                 try {
                     *retStr = RH_Seq.substr(start_cut, *ss_iter - start_cut);
-                } catch (std::out_of_range& e) {
+                } catch (std::exception& e) {
                     throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
                 }
             }
@@ -690,7 +690,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                     RH_NextSpacerStart = 3;
                     
                     *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
-                } catch (std::out_of_range& e) {
+                } catch (std::exception& e) {
                     throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
                 }
@@ -714,7 +714,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                     *retStr = RH_Seq.substr(*ss_iter + 1);
                     RH_NextSpacerStart+=2;
                     return true;
-                } catch (std::out_of_range& e) {
+                } catch (std::exception& e) {
                     throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
                 }
@@ -739,7 +739,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                 *retStr = RH_Seq.substr(start_cut, length);
     		    RH_NextSpacerStart += 2;
                 return true;
-            } catch (std::out_of_range& e) {
+            } catch (std::exception& e) {
                 throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
             }

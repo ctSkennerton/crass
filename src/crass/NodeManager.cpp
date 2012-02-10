@@ -1758,58 +1758,74 @@ void NodeManager::printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * c
     }
 }
 
-void NodeManager::printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc, bool showSingles)
+bool NodeManager::printSpacerGraph(std::string& outFileName, std::string title, bool longDesc, bool showSingles)
 {
     //-----
     // Print a graphviz style graph of the DRs and spacers
     //
-    setSpacerColourLimits();
-    gvGraphHeader(dataOut, title);
-            
-    SpacerListIterator spi_iter = NM_Spacers.begin();
-    while (spi_iter != NM_Spacers.end()) 
+    std::ofstream data_out;
+    data_out.open(outFileName.c_str());
+    if (data_out.good()) 
     {
-        if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
+        setSpacerColourLimits();
+        gvGraphHeader(data_out, title);
+        bool at_least_one_spacer=false;        
+        SpacerListIterator spi_iter = NM_Spacers.begin();
+        while (spi_iter != NM_Spacers.end()) 
         {
-            // print the graphviz nodes
-            std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
-
-            // print the node attribute
-            if ((spi_iter->second)->isFlanker()) {
-                gvFlanker(dataOut, label, NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
-            } else {
-                gvSpacer(dataOut,label,NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
-
-            }
-        }
-        spi_iter++;
-    }
-    
-    spi_iter = NM_Spacers.begin();
-    while (spi_iter != NM_Spacers.end()) 
-    {
-        if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
-        {
-            // print the graphviz nodes
-            std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
-            // print the node attribute
-            // now print the edges
-            SpacerEdgeVector_Iterator edge_iter = (spi_iter->second)->begin();
-            while (edge_iter != (spi_iter->second)->end()) 
+            if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
             {
-                if (((*edge_iter)->edge)->isAttached() && (*edge_iter)->d == FORWARD && (showSingles || (0 != ((*edge_iter)->edge)->getSpacerRank()))) 
-                {
+                at_least_one_spacer = true;
+                // print the graphviz nodes
+                std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
+                
+                // print the node attribute
+                if ((spi_iter->second)->isFlanker()) {
+                    gvFlanker(data_out, label, NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
+                } else {
+                    gvSpacer(data_out,label,NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
                     
-                    // get the label for our edge
-                    // print the graphviz nodes
-                    gvSpEdge(dataOut, label, getSpacerGraphLabel((*edge_iter)->edge, longDesc));
                 }
-                edge_iter++;
             }
-        }   
-        spi_iter++;
-    }        
-    gvGraphFooter(dataOut);
+            spi_iter++;
+        }
+        if (!at_least_one_spacer) 
+        {
+            return false;
+        }
+        spi_iter = NM_Spacers.begin();
+        while (spi_iter != NM_Spacers.end()) 
+        {
+            if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
+            {
+                // print the graphviz nodes
+                std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
+                // print the node attribute
+                // now print the edges
+                SpacerEdgeVector_Iterator edge_iter = (spi_iter->second)->begin();
+                while (edge_iter != (spi_iter->second)->end()) 
+                {
+                    if (((*edge_iter)->edge)->isAttached() && (*edge_iter)->d == FORWARD && (showSingles || (0 != ((*edge_iter)->edge)->getSpacerRank()))) 
+                    {
+                        
+                        // get the label for our edge
+                        // print the graphviz nodes
+                        gvSpEdge(data_out, label, getSpacerGraphLabel((*edge_iter)->edge, longDesc));
+                    }
+                    edge_iter++;
+                }
+            }   
+            spi_iter++;
+        }        
+        gvGraphFooter(data_out);
+        data_out.close();
+        return true;
+    } 
+    else 
+    {
+        logError("Cannot open output file "<<outFileName);
+        return false;
+    }
 }
     
 std::string NodeManager::getSpacerGraphLabel(SpacerInstance * spacer, bool longDesc)

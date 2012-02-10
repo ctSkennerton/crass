@@ -28,7 +28,7 @@
 #include "ExtractTool.h"
 #include "FilterTool.h"
 #include "SanitiseTool.h"
-#ifdef RENDERING
+#if RENDERING && HAVE_LIBCDT && HAVE_LIBGRAPH && HAVE_LIBGVC
 #include "DrawTool.h"
 #endif
 #include "StatTool.h"
@@ -42,9 +42,9 @@ void usage (void)
 	std::cout<<"Usage:\t"<<CRISPRTOOLS_PACKAGE_NAME<<" <subcommand> [options]"<<std::endl<<std::endl;
     std::cout<<"subcommand:  merge       combine multiple files"<<std::endl;
 	std::cout<<"             extract     extract sequences in fasta"<<std::endl;
-	std::cout<<"             filter      make new files based on parameters"<<std::endl;
+	//std::cout<<"             filter      make new files based on parameters"<<std::endl;
 	std::cout<<"             sanitise    change the IDs of elements"<<std::endl;
-#ifdef RENDERING
+#if RENDERING && HAVE_LIBCDT && HAVE_LIBGRAPH && HAVE_LIBGVC
     std::cout<<"             draw        create a rendered image of the CRISPR with Graphviz"<<std::endl;
 #endif
 	std::cout<<"             stat        show statistics on some or all CRISPRs"<<std::endl;
@@ -61,9 +61,9 @@ int main(int argc, char ** argv)
 	else if(!strcmp(argv[1], "merge")) return mergeMain(argc -1 , argv + 1);
     else if(!strcmp(argv[1], "split")) return splitMain(argc - 1, argv + 1);
 	else if(!strcmp(argv[1], "extract")) return extractMain(argc - 1 , argv + 1);
-	else if(!strcmp(argv[1],"filter")) return filterMain(argc - 1, argv + 1);
+	//else if(!strcmp(argv[1],"filter")) return filterMain(argc - 1, argv + 1);
 	else if(!strcmp(argv[1], "sanitise")) return sanitiseMain(argc - 1 , argv + 1);
-#ifdef RENDERING
+#if RENDERING && HAVE_LIBCDT && HAVE_LIBGRAPH && HAVE_LIBGVC
 	else if(!strcmp(argv[1], "draw")) return drawMain(argc - 1, argv + 1);
 #endif
 	else if(!strcmp(argv[1], "stat")) return statMain(argc - 1, argv + 1);

@@ -167,8 +167,8 @@ class NodeManager {
     // Printing / IO
         void printDebugGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc);         // Print a graphviz style graph of the DRs and spacers
 		void printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc); 
-        void printSpacerGraph(std::ostream &dataOut, std::string title, bool longDesc, bool showSingles);         // Print a graphviz style graph of the FULL spacers
-        void printSpacerGraph(void);         // Print a graphviz style graph of the FULL spacers
+        bool printSpacerGraph(std::string& outFileName, std::string title, bool longDesc, bool showSingles);         // Print a graphviz style graph of the FULL spacers
+        bool printSpacerGraph(void);         // Print a graphviz style graph of the FULL spacers
         std::string getSpacerGraphLabel(SpacerInstance * spacer, bool longDesc);
 
     

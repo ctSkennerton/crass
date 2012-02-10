@@ -31,38 +31,6 @@ AC_DEFINE([CRISPRTOOLS_PACKAGE_REVISION],[1],[Define the revision of the package
 #
 #
 
-#DEBUG
-#AC_ARG_ENABLE([debug],
-#    [AS_HELP_STRING([--enable-debug],
-#    [Turn on debugging preprocessor flags])],
-#    [case "${enableval}" in
-#        yes) debug=true ;;
-#        no)  debug=false ;;
-#        *) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
-#    esac],[debug=false])
-#
-#AM_CONDITIONAL([DEBUG],[test x$debug = xtrue])
-#
-#if test x$debug = xtrue; then
-#    AC_DEFINE([DEBUG],[1],[define to 1 for debug statments])
-#fi
-#
-##VALGRIND FLAGS
-#AC_ARG_ENABLE([memcheck],
-#[AS_HELP_STRING([--enable-memcheck],
-#[Set CFLAGS for valgrind])],
-#[case "${enableval}" in
-#yes) memcheck=true ;;
-#no)  memcheck=false ;;
-#*) AC_MSG_ERROR([bad value ${enableval} for --enable-memcheck]) ;;
-#esac],[memcheck=false])
-#
-#AM_CONDITIONAL([MEMCHECK],[test x$memcheck = xtrue])
-#
-#if test x$memcheck = xtrue; then
-#AC_DEFINE([MEMCHECK],[1],[define to 1 for valgrind statments])
-#fi
-#
 #SUPER_LOGGING
 AC_ARG_ENABLE([verbose_logging],
     [AS_HELP_STRING([--enable-verbose_logging],
@@ -86,6 +54,7 @@ AC_ARG_ENABLE([rendering],
         no)  rendering=false ;;
         *) AC_MSG_ERROR([bad value ${enableval} for --enable-rendering]) ;;
     esac],[rendering=false])
+
 # check for assembly
 AC_ARG_ENABLE([assembly],
     [AS_HELP_STRING([--disable-assembly],
@@ -95,7 +64,7 @@ AC_ARG_ENABLE([assembly],
             no)  assembly=false ;;
             *) AC_MSG_ERROR([bad value ${enableval} for --disable-assembly]) ;;
         esac],[assembly=true])
-    
+
 #check that graphviz is installed before defining RENDERING
 GV_LIBS=
 GV_BOOL=false
@@ -139,12 +108,7 @@ AC_SUBST(GV_LIBS)
 #
 
 # Checks for compilers.
-#OLD_CLAGS=$CFLAGS
-#OLD_CXXFLAGS=$CXXFLAGS
-#AC_SUBST(OLD_CLAGS)
-#AC_SUBST(OLD_CXXFLAGS)
-#CFLAGS=
-#CXXFLAGS=
+
 
 AC_PROG_CXX
 AC_PROG_CC

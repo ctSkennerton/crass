@@ -118,29 +118,33 @@ public:
 
 class StatTool {
 
+    enum OUTPUT_STYLE {tabular, pretty, veryPretty};
+    
     std::set<std::string> ST_Groups;
     
     std::vector<StatManager *> ST_StatsVec;
     
-    bool ST_Pretty;
+    //bool ST_Pretty;
     bool ST_AssemblyStats;
     bool ST_Subset;
     std::string ST_OutputFileName;
     bool ST_WithHeader;
     bool ST_AggregateStats;
-    bool ST_Tabular;
+    //bool ST_Tabular;
     std::string ST_Separator;
+    OUTPUT_STYLE ST_OutputStyle;
     
 public:
     StatTool() {
 
-        ST_Pretty = false;
+        //ST_Pretty = false;
         ST_Subset = false;
         ST_AssemblyStats = false;
         ST_WithHeader = false;
         ST_AggregateStats = false;
-        ST_Tabular = true;
+        //ST_Tabular = true;
         ST_Separator = "\t";
+        ST_OutputStyle = tabular;
     }
     ~StatTool();
 
@@ -162,6 +166,7 @@ public:
 //    void parseLinkFlankers(xercesc::DOMElement * parentNode, crispr::XML& xmlParser);
     void calculateAgregateSTats(AStats * agregateStats);
     void prettyPrint(StatManager * sm);
+    void veryPrettyPrint(StatManager * sm, int longestConsensus, int longestGID);
     void printHeader(void);
     void printTabular(StatManager * sm);
     void printAggregate(AStats * agregateStats);
