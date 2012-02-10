@@ -300,25 +300,28 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         // we should look for a DR here
         int part_s, part_e;
         part_s = part_e = 0;
-        //        std::cout << "Check start: " << *ss_iter << " : " << opts->lowSpacerSize << std::endl;
-        stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, 0, ((int)(*ss_iter) - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
-        if(0 != part_e)
-        {
-            if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
+        try {
+            stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, 0, ((int)(*ss_iter) - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
+            if(0 != part_e)
             {
-                if(((DR->rfind(sp.second) + (sp.second).length()) == DR->length()) && (0 == part_s))
+                if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
                 {
+                    if(((DR->rfind(sp.second) + (sp.second).length()) == DR->length()) && (0 == part_s))
+                    {
 #ifdef DEBUG
-                    logInfo("adding direct repeat to start",10);
-                    logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
+                        logInfo("adding direct repeat to start",10);
+                        logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
 #endif
-                    std::reverse(RH_StartStops.begin(), RH_StartStops.end());
-                    RH_StartStops.push_back(part_e);
-                    RH_StartStops.push_back(0);
-                    std::reverse(RH_StartStops.begin(), RH_StartStops.end());
+                        std::reverse(RH_StartStops.begin(), RH_StartStops.end());
+                        RH_StartStops.push_back(part_e);
+                        RH_StartStops.push_back(0);
+                        std::reverse(RH_StartStops.begin(), RH_StartStops.end());
+                    }
                 }
             }
-
+        } catch (crass::exception& e) {
+            std::cerr<<e.what()<<std::endl;
+            exit(148);
         }
     }
     // then the back
@@ -328,24 +331,29 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         // we should look for a DR here
         int part_s, part_e;
         part_s = part_e = 0;
-        stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, (RH_StartStops.back() + opts->lowSpacerSize), (end_dist - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
-        if(0 != part_e)
-        {
-            if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
+        try {
+            stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, (RH_StartStops.back() + opts->lowSpacerSize), (end_dist - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
+            if(0 != part_e)
             {
-                if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
+                if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
                 {
+                    if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
+                    {
 #ifdef DEBUG
-                    logInfo("adding partial direct repeat to end",10);
-                    logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
-                    logInfo((int)sp.first.length() - (int)sp.second.length(),10);
+                        logInfo("adding partial direct repeat to end",10);
+                        logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
+                        logInfo((int)sp.first.length() - (int)sp.second.length(),10);
 #endif
-                    // in most cases the right index is returned however 
-                    // if the length of the smith waterman alignment differ the indix needs to be corrected 
-                    RH_StartStops.push_back(part_s + abs((int)sp.first.length() - (int)sp.second.length()));
-                    RH_StartStops.push_back(part_e);
+                        // in most cases the right index is returned however 
+                        // if the length of the smith waterman alignment differ the indix needs to be corrected 
+                        RH_StartStops.push_back(part_s + abs((int)sp.first.length() - (int)sp.second.length()));
+                        RH_StartStops.push_back(part_e);
+                    }
                 }
             }
+        } catch (crass::exception& e) {
+            std::cerr<<e.what()<<std::endl;
+            exit(148);
         }
     }
 }

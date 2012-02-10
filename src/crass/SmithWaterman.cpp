@@ -57,13 +57,14 @@
 #include <cmath>
 #include <sys/time.h>
 #include <map>
+#include <exception>
 
 // local includes
 #include "SmithWaterman.h"
 #include "SeqUtils.h"
 #include "LoggerSimp.h"
 #include "PatternMatcher.h"
-
+#include "CrassException.h"
 double findMax(double a, double b, double c, double d, int * index)
 {
     //-----
@@ -262,8 +263,20 @@ stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign
     delete [] I_j;
     
     // calculate similarity and return substrings is need be
-    std::string a_ret = seqA.substr(current_i+ aStartSearch, i_max - current_i + aStartSearch);
-    std::string b_ret = seqB.substr(current_j, j_max - current_j);
+    std::string a_ret;
+    std::string b_ret;
+    try {
+        a_ret = seqA.substr(current_i+ aStartSearch, i_max - current_i + aStartSearch);
+    } catch (std::exception& e) {
+        std::cerr<<"thrown --> "<<e.what()<< " ->  "<<seqA.length()<< " : "<<current_i+ aStartSearch<< " : "<< i_max - current_i + aStartSearch<<std::endl;
+        throw (crass::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__, e.what()));
+    }
+    try {
+        b_ret = seqB.substr(current_j, j_max - current_j);
+    } catch (std::exception& e) {
+        std::cerr<<"thrown --> "<<e.what()<< " ->  "<<seqB.length()<< " : "<<current_j<<" : "<< j_max - current_j<<std::endl;
+        throw (crass::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__, e.what()));
+    }
     if(0 != similarity)
     {
         
