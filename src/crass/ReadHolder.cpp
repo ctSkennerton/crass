@@ -687,14 +687,13 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
             {
                 // only one DR in thie whole guy!
                 try {
-                    RH_NextSpacerStart = 3;
                     
                     *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
                 } catch (std::exception& e) {
                     throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
-
                 }
     		}
+            RH_NextSpacerStart = 3;
     	}
         return true;
     }
@@ -716,7 +715,6 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                     return true;
                 } catch (std::exception& e) {
                     throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
-
                 }
             }
             else
@@ -741,7 +739,6 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                 return true;
             } catch (std::exception& e) {
                 throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
-
             }
         }
     }    
@@ -823,7 +820,7 @@ std::string ReadHolder::splitApart(void)
     std::string working_str;
     std::string sep_str = " ";
     StartStopListIterator ss_iter = RH_StartStops.begin();
-    try {
+    //try {
         if(0 == *ss_iter)
         {
             // start with a DR
@@ -915,10 +912,10 @@ std::string ReadHolder::splitApart(void)
                 ss << sep_str;
             }
         }
-    } catch (crass::substring_exception& e) {
-        std::cerr<<e.what()<<std::endl;
-        exit(99);
-    }
+    //} catch (crass::substring_exception& e) {
+    //    std::cerr<<e.what()<<std::endl;
+    //    exit(99);
+    //}
 
     
     return ss.str();
