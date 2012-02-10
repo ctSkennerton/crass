@@ -57,7 +57,6 @@
 #include "StlExt.h"
 #include "StringCheck.h"
 #include "config.h"
-#include "CrassException.h"
 
 
 
@@ -167,22 +166,12 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	}
 	
     // build the spacer end graph
-	try {
-        if(buildGraph())
-        {
-            logError("FATAL ERROR: buildGraph failed");
-            return 3;
-        }
-    } catch (crass::exception& e) {
-        std::cerr<<e.what()<<std::endl;
-        return 30;
-    } catch (std::exception& e) {
-        std::cerr<<e.what()<<std::endl;
-        return 31;
-    } catch(...) {
-        std::cerr<<"An unknown exception occurred"<<std::endl;
-        return 32;
+    if(buildGraph())
+    {
+        logError("FATAL ERROR: buildGraph failed");
+        return 3;
     }
+
 	
 #if DEBUG
 	if (!mOpts->noDebugGraph) // this option will only exist if DEBUG is set anyway
@@ -307,38 +296,27 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
             logInfo("The average read length "<<mAveReadLength<<" is below the minimum threshold of "<<(2*mOpts->lowDRsize) + mOpts->lowSpacerSize, 1);
             return 1;
         }
-        try {
-            if(rt == LONG_READ)
+        if(rt == LONG_READ)
+        {
+            logInfo("Long read algorithm selected", 2);
+            if (longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found))
             {
-                logInfo("Long read algorithm selected", 2);
-                if (longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found))
-                {
-                    return 1;
-                }
-                logInfo("Number of reads found: "<<this->numOfReads(), 2);
-                
+                return 1;
             }
-            else
-            {
-                logInfo("Short read algorithm selected", 2);
-                if (shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck)) 
-                {
-                    return 1;
-                }
-                logInfo("number of reads found so far: "<<this->numOfReads(), 2);
-                
-            }
-
-        } catch (crass::exception& e) {
-            std::cerr<<e.what()<<std::endl;
-            return 1;
-        } catch (std::exception& e) {
-            std::cerr<<e.what()<<std::endl;
-            return 2;
-        } catch (...) {
-            std::cerr<<"An unknown exception occurred"<<std::endl;
-            return 3;
+            logInfo("Number of reads found: "<<this->numOfReads(), 2);
+            
         }
+        else
+        {
+            logInfo("Short read algorithm selected", 2);
+            if (shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck)) 
+            {
+                return 1;
+            }
+            logInfo("number of reads found so far: "<<this->numOfReads(), 2);
+            
+        }
+
         // Check to see if we found anything, should return if we haven't
         if (patterns_lookup.empty()) 
         {
