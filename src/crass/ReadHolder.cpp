@@ -987,6 +987,9 @@ void ReadHolder::printContents(void)
     }
     std::cout << std::endl;
     std::cout << RH_Seq << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+    
 }
 
 void ReadHolder::logContents(int logLevel)
