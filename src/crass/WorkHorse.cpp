@@ -999,7 +999,7 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 	{
 #ifdef DEBUG
 		logInfo("Pos: " << i << " conserved(%): " << conservation_array[i] << " consensus: " << consensus_array[i], 1);
-#endif
+#endif		
 		*collapsed_pos++;
 		if(conservation_array[i] >= CRASS_DEF_COLLAPSED_CONS_CUT_OFF)
 		{
@@ -1045,6 +1045,7 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 			else
 			{
 				// is this seen at the DR level?
+				(*refined_DR_ends)[i] = false;
 				std::map<char, int> collapsed_options2;
 				DR_ClusterIterator dr_iter2 = clustered_DRs->begin();
 				while (dr_iter2 != clustered_DRs->end()) 
@@ -1063,8 +1064,6 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 							// this is easy, we can compare based on this char only
 							char decision_char = tmp_DR[*dr_zone_start - (*DR_offset_map)[*dr_iter2] + *collapsed_pos];
 							collapsed_options2[decision_char] = (*collapsed_options)[decision_char];
-							//logInfo("Index: " << (dr_zone_start - DR_offset_map[*dr_iter2] + collapsed_pos) << " dzs: " << dr_zone_start << " do: " << DR_offset_map[*dr_iter2] << " cp: " << collapsed_pos << " dl: " << ((int)tmp_DR.length()), 1);
-							//logInfo("Adding : " << decision_char << " to CO2", 1);
 						}
 					}
 					else
@@ -1079,26 +1078,22 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 					// in the case that the DR is collapsing at the very end of the zone,
 					// it may be because the spacers ahve a weird distribution of starting
 					// bases. We need to check this out here...
+#ifdef DEBUG
 					if(*collapsed_pos == 0)
 					{
-	#ifdef DEBUG
 						logInfo("   ...ignoring (RLO SS)", 5);
-	#endif
 					}
 					else if(*collapsed_pos + *dr_zone_start == *dr_zone_end)
 					{
-	#ifdef DEBUG
 						logInfo("   ...ignoring (RLO EE)", 5);
-	#endif
 					}
 					else
 					{
-	#ifdef DEBUG
 						logInfo("   ...ignoring (RLO KK)", 5);
-	#endif
-						true_DR += consensus_array[i];
-						(*refined_DR_ends)[i] = true;
 					}
+#endif
+					true_DR += consensus_array[i];
+					(*refined_DR_ends)[i] = true;
 					collapsed_options->clear();
 				}
 				else
@@ -1114,6 +1109,7 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 			}
 		}
 	}
+	logInfo("Consensus DR: " << true_DR, 1);
 	return true_DR;
 }
 
@@ -1334,11 +1330,11 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Update the refined starts and ends of the DR 
-    
     if(0 == collapsed_options.size())
     {
         // update the DR start and ends
         int diffs = dr_zone_end - dr_zone_start + 1 - (int)true_DR.length();
+        logInfo(diffs << " = " << dr_zone_end << " - " << (dr_zone_start + 1) << " - " << (int)true_DR.length(), 1);
         while(0 < diffs)
         {
             // we need to update the start or end
