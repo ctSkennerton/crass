@@ -626,7 +626,7 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, DR_C
     return false;
 }
 
-bool WorkHorse::populateConsensusArray(std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int ** coverage_array, char * consensus_array, float * conservation_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
+bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
 {
 	//-----
 	// Use the data structures initialised in parseGroupedDRs
@@ -1214,7 +1214,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Set up the master DR's array and insert this guy into the main array
-    populateConsensusArray(master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, clustered_DRs, coverage_array, consensus_array, conservation_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
+    populateCoverageArray(master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, clustered_DRs, coverage_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
     
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // calculate consensus and diversity
