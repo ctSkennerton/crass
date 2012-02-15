@@ -62,6 +62,7 @@
 // --------------------------------------------------------------------
 // HARD CODED PARAMS FOR FINDING TRUE DRs
 // --------------------------------------------------------------------
+#define CRASS_DEF_MIN_CONS_ARRAY_LEN			1200				// minimum size of the consensus array
 #define CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF       (0.85)              // amount that a DR must agrre with the existsing DR within a zone to be added
 #define CRASS_DEF_NUM_KMERS_4_MODE              (5)                 // find the top XX occuring in the DR
 #define CRASS_DEF_NUM_KMERS_4_MODE_HALF         (CRASS_DEF_NUM_KMERS_4_MODE - (CRASS_DEF_NUM_KMERS_4_MODE/2)) // Ceil of 50% of CRASS_DEF_NUM_KMERS_4_MODE
