@@ -268,13 +268,11 @@ stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign
     try {
         a_ret = seqA.substr(current_i+ aStartSearch, i_max - current_i + aStartSearch);
     } catch (std::exception& e) {
-        std::cerr<< throwSuffix(e.what())<<seqA.length()<< " : "<<current_i+ aStartSearch<< " : "<< i_max - current_i + aStartSearch<<std::endl;
         throw (crispr::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__, e.what()));
     }
     try {
         b_ret = seqB.substr(current_j, j_max - current_j);
     } catch (std::exception& e) {
-        std::cerr<<throwSuffix(e.what())<<seqB.length()<< " : "<<current_j<<" : "<< j_max - current_j<<std::endl;
         throw (crispr::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__, e.what()));
     }
     if(0 != similarity)
