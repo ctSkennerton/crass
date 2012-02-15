@@ -58,6 +58,7 @@
 #include "StlExt.h"
 #include "StringCheck.h"
 #include "config.h"
+#include "Exception.h"
 
 
 
@@ -297,26 +298,32 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
             logInfo("The average read length "<<mAveReadLength<<" is below the minimum threshold of "<<(2*mOpts->lowDRsize) + mOpts->lowSpacerSize, 1);
             return 1;
         }
-        if(rt == LONG_READ)
-        {
-            logInfo("Long read algorithm selected", 2);
-            if (longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found))
+        try {
+            if(rt == LONG_READ)
             {
-                return 1;
+                logInfo("Long read algorithm selected", 2);
+                if (longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found))
+                {
+                    return 1;
+                }
+                logInfo("Number of reads found: "<<this->numOfReads(), 2);
+                
             }
-            logInfo("Number of reads found: "<<this->numOfReads(), 2);
-            
-        }
-        else
-        {
-            logInfo("Short read algorithm selected", 2);
-            if (shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck)) 
+            else
             {
-                return 1;
+                logInfo("Short read algorithm selected", 2);
+                if (shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck)) 
+                {
+                    return 1;
+                }
+                logInfo("number of reads found so far: "<<this->numOfReads(), 2);
+                
             }
-            logInfo("number of reads found so far: "<<this->numOfReads(), 2);
-            
+        } catch (crispr::exception& e) {
+            std::cerr<<e.what()<<std::endl;
+            return 1;
         }
+
 
         // Check to see if we found anything, should return if we haven't
         if (patterns_lookup.empty()) 

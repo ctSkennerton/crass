@@ -64,7 +64,7 @@
 #include "SeqUtils.h"
 #include "LoggerSimp.h"
 #include "PatternMatcher.h"
-#include "CrassException.h"
+#include "Exception.h"
 double findMax(double a, double b, double c, double d, int * index)
 {
     //-----
@@ -268,20 +268,17 @@ stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign
     try {
         a_ret = seqA.substr(current_i+ aStartSearch, i_max - current_i + aStartSearch);
     } catch (std::exception& e) {
-        std::cerr<<"thrown --> "<<e.what()<< " ->  "<<seqA.length()<< " : "<<current_i+ aStartSearch<< " : "<< i_max - current_i + aStartSearch<<std::endl;
-        throw (crass::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__, e.what()));
+        std::cerr<< throwSuffix(e.what())<<seqA.length()<< " : "<<current_i+ aStartSearch<< " : "<< i_max - current_i + aStartSearch<<std::endl;
+        throw (crispr::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__, e.what()));
     }
     try {
         b_ret = seqB.substr(current_j, j_max - current_j);
     } catch (std::exception& e) {
-        std::cerr<<"thrown --> "<<e.what()<< " ->  "<<seqB.length()<< " : "<<current_j<<" : "<< j_max - current_j<<std::endl;
-        throw (crass::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__, e.what()));
+        std::cerr<<throwSuffix(e.what())<<seqB.length()<< " : "<<current_j<<" : "<< j_max - current_j<<std::endl;
+        throw (crispr::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__, e.what()));
     }
     if(0 != similarity)
     {
-        
-        // the line below seems wrong replaced with simpler comparison that appears to have fixed a bug
-        //double similarity_ld = 1 - ((double)(PatternMatcher::levenstheinDistance(a_ret, seqB) - (seqB.length() - a_ret.length()))/(double)a_ret.length());
         
         double similarity_ld = 1.0 - (PatternMatcher::levenstheinDistance(a_ret, b_ret) /(double)a_ret.length()); 
         if(similarity_ld >= similarity)

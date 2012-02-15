@@ -57,7 +57,7 @@
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
 #include "StlExt.h"
-#include "CrassException.h"
+#include "Exception.h"
 
 
 SpacerInstance * WalkingManager::shift(SpacerInstance * newNode)
@@ -191,7 +191,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
                         addFirstCrisprNode(&prev_node, working_str, header_st);
                     } 
                 }
-            } catch (crass::substring_exception& e) {
+            } catch (crispr::substring_exception& e) {
                 std::cerr<<e.what()<<std::endl;
                 exit(99);
             } catch (...) {

@@ -45,7 +45,7 @@
 #include "SeqUtils.h"
 #include "SmithWaterman.h"
 #include "LoggerSimp.h"
-#include "CrassException.h"
+#include "Exception.h"
 
 
 
@@ -319,7 +319,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
                     }
                 }
             }
-        } catch (crass::exception& e) {
+        } catch (crispr::exception& e) {
             std::cerr<<e.what()<<std::endl;
             exit(148);
         }
@@ -351,7 +351,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
                     }
                 }
             }
-        } catch (crass::exception& e) {
+        } catch (crispr::exception& e) {
             std::cerr<<e.what()<<std::endl;
             exit(148);
         }
@@ -638,7 +638,7 @@ bool ReadHolder::getFirstSpacer(std::string * retStr)
     RH_NextSpacerStart = 0;
     try {
         return getNextSpacer(retStr);
-    } catch (crass::substring_exception& e) {
+    } catch (crispr::substring_exception& e) {
         std::cerr<<e.what()<<std::endl;
         exit(99);
     }
@@ -669,7 +669,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
             try {
                 *retStr = RH_Seq.substr(0, *ss_iter);
             } catch (std::out_of_range& e) {
-                throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
             }
     		RH_NextSpacerStart = 1;
     	}
@@ -684,7 +684,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                 try {
                     *retStr = RH_Seq.substr(start_cut, *ss_iter - start_cut);
                 } catch (std::out_of_range& e) {
-                    throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
                 }
             }
     		else
@@ -694,7 +694,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                     
                     *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
                 } catch (std::exception& e) {
-                    throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
                 }
     		}
             RH_NextSpacerStart = 3;
@@ -718,7 +718,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                     RH_NextSpacerStart+=2;
                     return true;
                 } catch (std::exception& e) {
-                    throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
                 }
             }
             else
@@ -742,7 +742,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     		    RH_NextSpacerStart += 2;
                 return true;
             } catch (std::exception& e) {
-                throw crass::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
             }
         }
     }    
@@ -916,7 +916,7 @@ std::string ReadHolder::splitApart(void)
                 ss << sep_str;
             }
         }
-    } catch (crass::substring_exception& e) {
+    } catch (crispr::substring_exception& e) {
         std::cerr<<e.what()<<std::endl;
         exit(99);
     }
