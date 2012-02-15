@@ -749,8 +749,8 @@ int NodeManager::cleanGraph(void)
                 break;
             }
             case 1:
+                logError("Cap node slipped through the cracks!");
             case 0:
-                logError("Nodes in bubble removal have less than two edges!");
                 break;
             default:
             {
