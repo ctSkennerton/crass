@@ -58,6 +58,7 @@
 #include "StlExt.h"
 #include "StringCheck.h"
 #include "config.h"
+#include "Exception.h"
 
 
 
@@ -297,26 +298,32 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
             logInfo("The average read length "<<mAveReadLength<<" is below the minimum threshold of "<<(2*mOpts->lowDRsize) + mOpts->lowSpacerSize, 1);
             return 1;
         }
-        if(rt == LONG_READ)
-        {
-            logInfo("Long read algorithm selected", 2);
-            if (longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found))
+        try {
+            if(rt == LONG_READ)
             {
-                return 1;
+                logInfo("Long read algorithm selected", 2);
+                if (longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found))
+                {
+                    return 1;
+                }
+                logInfo("Number of reads found: "<<this->numOfReads(), 2);
+                
             }
-            logInfo("Number of reads found: "<<this->numOfReads(), 2);
-            
-        }
-        else
-        {
-            logInfo("Short read algorithm selected", 2);
-            if (shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck)) 
+            else
             {
-                return 1;
+                logInfo("Short read algorithm selected", 2);
+                if (shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck)) 
+                {
+                    return 1;
+                }
+                logInfo("number of reads found so far: "<<this->numOfReads(), 2);
+                
             }
-            logInfo("number of reads found so far: "<<this->numOfReads(), 2);
-            
+        } catch (crispr::exception& e) {
+            std::cerr<<e.what()<<std::endl;
+            return 1;
         }
+
 
         // Check to see if we found anything, should return if we haven't
         if (patterns_lookup.empty()) 
@@ -626,7 +633,7 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, DR_C
     return false;
 }
 
-bool WorkHorse::populateConsensusArray(std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int ** coverage_array, char * consensus_array, float * conservation_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
+bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
 {
 	//-----
 	// Use the data structures initialised in parseGroupedDRs
@@ -1214,7 +1221,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Set up the master DR's array and insert this guy into the main array
-    populateConsensusArray(master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, clustered_DRs, coverage_array, consensus_array, conservation_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
+    populateCoverageArray(master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, clustered_DRs, coverage_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
     
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // calculate consensus and diversity

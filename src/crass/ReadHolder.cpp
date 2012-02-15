@@ -45,7 +45,7 @@
 #include "SeqUtils.h"
 #include "SmithWaterman.h"
 #include "LoggerSimp.h"
-#include "CrassException.h"
+#include "Exception.h"
 
 
 
@@ -300,25 +300,28 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         // we should look for a DR here
         int part_s, part_e;
         part_s = part_e = 0;
-        //        std::cout << "Check start: " << *ss_iter << " : " << opts->lowSpacerSize << std::endl;
-        stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, 0, ((int)(*ss_iter) - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
-        if(0 != part_e)
-        {
-            if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
+        try {
+            stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, 0, ((int)(*ss_iter) - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
+            if(0 != part_e)
             {
-                if(((DR->rfind(sp.second) + (sp.second).length()) == DR->length()) && (0 == part_s))
+                if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
                 {
+                    if(((DR->rfind(sp.second) + (sp.second).length()) == DR->length()) && (0 == part_s))
+                    {
 #ifdef DEBUG
-                    logInfo("adding direct repeat to start",10);
-                    logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
+                        logInfo("adding direct repeat to start",10);
+                        logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
 #endif
-                    std::reverse(RH_StartStops.begin(), RH_StartStops.end());
-                    RH_StartStops.push_back(part_e);
-                    RH_StartStops.push_back(0);
-                    std::reverse(RH_StartStops.begin(), RH_StartStops.end());
+                        std::reverse(RH_StartStops.begin(), RH_StartStops.end());
+                        RH_StartStops.push_back(part_e);
+                        RH_StartStops.push_back(0);
+                        std::reverse(RH_StartStops.begin(), RH_StartStops.end());
+                    }
                 }
             }
-
+        } catch (crispr::exception& e) {
+            std::cerr<<e.what()<<std::endl;
+            exit(148);
         }
     }
     // then the back
@@ -328,24 +331,29 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         // we should look for a DR here
         int part_s, part_e;
         part_s = part_e = 0;
-        stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, (RH_StartStops.back() + opts->lowSpacerSize), (end_dist - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
-        if(0 != part_e)
-        {
-            if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
+        try {
+            stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, (RH_StartStops.back() + opts->lowSpacerSize), (end_dist - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
+            if(0 != part_e)
             {
-                if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
+                if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
                 {
+                    if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
+                    {
 #ifdef DEBUG
-                    logInfo("adding partial direct repeat to end",10);
-                    logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
-                    logInfo((int)sp.first.length() - (int)sp.second.length(),10);
+                        logInfo("adding partial direct repeat to end",10);
+                        logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
+                        logInfo((int)sp.first.length() - (int)sp.second.length(),10);
 #endif
-                    // in most cases the right index is returned however 
-                    // if the length of the smith waterman alignment differ the indix needs to be corrected 
-                    RH_StartStops.push_back(part_s + abs((int)sp.first.length() - (int)sp.second.length()));
-                    RH_StartStops.push_back(part_e);
+                        // in most cases the right index is returned however 
+                        // if the length of the smith waterman alignment differ the indix needs to be corrected 
+                        RH_StartStops.push_back(part_s + abs((int)sp.first.length() - (int)sp.second.length()));
+                        RH_StartStops.push_back(part_e);
+                    }
                 }
             }
+        } catch (crispr::exception& e) {
+            std::cerr<<e.what()<<std::endl;
+            exit(148);
         }
     }
 }
@@ -628,7 +636,12 @@ bool ReadHolder::getFirstSpacer(std::string * retStr)
     // cut the first Spacer or return false if it all stuffs up
     //
     RH_NextSpacerStart = 0;
-    return getNextSpacer(retStr);
+    try {
+        return getNextSpacer(retStr);
+    } catch (crispr::substring_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        exit(99);
+    }
 }
 
 bool ReadHolder::getNextSpacer(std::string * retStr)
@@ -653,9 +666,12 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     	{
     		// read starts with a spacer
     		// the next spacer starts after the first DR
-            *retStr = RH_Seq.substr(0, *ss_iter);
+            try {
+                *retStr = RH_Seq.substr(0, *ss_iter);
+            } catch (std::out_of_range& e) {
+                throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+            }
     		RH_NextSpacerStart = 1;
-            return true;
     	}
     	else
     	{
@@ -665,16 +681,25 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
     		ss_iter++;
     		if(ss_iter < RH_StartStops.end())
     		{
+                try {
                     *retStr = RH_Seq.substr(start_cut, *ss_iter - start_cut);
+                } catch (std::out_of_range& e) {
+                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                }
             }
     		else
             {
                 // only one DR in thie whole guy!
-                *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
+                try {
+                    
+                    *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
+                } catch (std::exception& e) {
+                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                }
     		}
             RH_NextSpacerStart = 3;
-            return true;
     	}
+        return true;
     }
     else
     {
@@ -688,9 +713,13 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
             if(*ss_iter < (RH_Seq.length() - 1))
             {
             	// read ends with a spacer
-                *retStr = RH_Seq.substr(*ss_iter + 1);
-                RH_NextSpacerStart+=2;
-                return true;
+                try {
+                    *retStr = RH_Seq.substr(*ss_iter + 1);
+                    RH_NextSpacerStart+=2;
+                    return true;
+                } catch (std::exception& e) {
+                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                }
             }
             else
             {
@@ -708,9 +737,13 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
             int start_cut = (*ss_iter) + 1;
             ss_iter++;
     		int length = *ss_iter - start_cut;
-            *retStr = RH_Seq.substr(start_cut, length);
-            RH_NextSpacerStart += 2;
-            return true;
+            try {
+                *retStr = RH_Seq.substr(start_cut, length);
+    		    RH_NextSpacerStart += 2;
+                return true;
+            } catch (std::exception& e) {
+                throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+            }
         }
     }    
     // should we get here?
@@ -791,97 +824,103 @@ std::string ReadHolder::splitApart(void)
     std::string working_str;
     std::string sep_str = " ";
     StartStopListIterator ss_iter = RH_StartStops.begin();
-    if(0 == *ss_iter)
-    {
-        // start with a DR
-        if(getFirstDR(&working_str))
+    try {
+        if(0 == *ss_iter)
         {
-            ss << "DR: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-        
-        if(getFirstSpacer(&working_str))
-        {
-            ss << "SP: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-        
-        while(1)
-        {
-            if(getNextDR(&working_str))
+            // start with a DR
+            if(getFirstDR(&working_str))
             {
-                ss << "DR: " << working_str;  
+                ss << "DR: " << working_str;
             }
             else
             {
-                break;
+                return "---";
             }
             ss << sep_str;
-            if(getNextSpacer(&working_str))
+            
+            if(getFirstSpacer(&working_str))
             {
-                ss  << "SP: "<< working_str;  
+                ss << "SP: " << working_str;
             }
             else
             {
-                break;
+                return "---";
             }
             ss << sep_str;
+            
+            while(1)
+            {
+                if(getNextDR(&working_str))
+                {
+                    ss << "DR: " << working_str;  
+                }
+                else
+                {
+                    break;
+                }
+                ss << sep_str;
+                if(getNextSpacer(&working_str))
+                {
+                    ss  << "SP: "<< working_str;  
+                }
+                else
+                {
+                    break;
+                }
+                ss << sep_str;
+            }
         }
+        else
+        {
+            // start with a spacer
+            if(getFirstSpacer(&working_str))
+            {
+                ss << "SP: " << working_str;
+            }
+            else
+            {
+                return "---";
+            }
+            ss << sep_str;
+            
+            if(getFirstDR(&working_str))
+            {
+                ss << "DR: " << working_str;
+            }
+            else
+            {
+                return "---";
+            }
+            ss << sep_str;
+            
+            // oooohh naughty
+            while(1)
+            {
+                if(getNextSpacer(&working_str))
+                {
+                    ss << "SP: " << working_str;  
+                }
+                else
+                {
+                    break;
+                }
+                ss << sep_str;
+                if(getNextDR(&working_str))
+                {
+                    ss << "DR: " << working_str; 
+                }
+                else
+                {
+                    break;
+                }
+                ss << sep_str;
+            }
+        }
+    } catch (crispr::substring_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        exit(99);
     }
-    else
-    {
-        // start with a spacer
-        if(getFirstSpacer(&working_str))
-        {
-            ss << "SP: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-        
-        if(getFirstDR(&working_str))
-        {
-            ss << "DR: " << working_str;
-        }
-        else
-        {
-            return "---";
-        }
-        ss << sep_str;
-        
-        // oooohh naughty
-        while(1)
-        {
-            if(getNextSpacer(&working_str))
-            {
-                ss << "SP: " << working_str;  
-            }
-            else
-            {
-                break;
-            }
-            ss << sep_str;
-            if(getNextDR(&working_str))
-            {
-                ss << "DR: " << working_str; 
-            }
-            else
-            {
-                break;
-            }
-            ss << sep_str;
-        }
-    }
+
     
     return ss.str();
 }

@@ -58,6 +58,7 @@
 #include "kseq.h"
 #include "StlExt.h"
 #include "config.h"
+#include "Exception.h"
 
 /* 
 declare the type of file handler and the read() function
@@ -192,8 +193,20 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
             {
                 endSearch = beginSearch;
             }
-            std::string text = read.substr(beginSearch, (endSearch - beginSearch));
-            std::string pattern = read.substr(j, opts.searchWindowLength);
+            
+            std::string text;
+            std::string pattern;
+            try {
+                text = read.substr(beginSearch, (endSearch - beginSearch));
+
+            } catch (std::exception& e) {
+                throw crispr::substring_exception(e.what(), text.c_str(), beginSearch, (endSearch - beginSearch), __FILE__, __LINE__, __PRETTY_FUNCTION__);
+            }
+            try {
+                pattern = read.substr(j, opts.searchWindowLength);
+            } catch (std::exception& e) {
+                throw crispr::substring_exception(e.what(), read.c_str(), j, opts.searchWindowLength, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+            }
 
             //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
             int pattern_in_text_index = -1;
@@ -205,7 +218,6 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
                 unsigned int found_pattern_start_index = beginSearch + (unsigned int)pattern_in_text_index;
                 
                 tmp_holder->startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength);
-                //std::cout<<pattern<<std::endl;
                 scanRight(tmp_holder, pattern, opts.lowSpacerSize, 24);
             }
 
@@ -329,8 +341,12 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
             
             // do the search
             int second_start = -1;
-            second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
 
+            try {
+                second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
+            } catch (std::exception& e) {
+                throw crispr::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__,e.what());
+            }
 
             // check to see if we found something
             if (second_start > -1) 
