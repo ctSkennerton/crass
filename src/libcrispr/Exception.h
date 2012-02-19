@@ -23,6 +23,8 @@ crisprtools is free software: you can redistribute it and/or modify it
 #include <exception>
 #include <string>
 #include <sstream>
+#include <cstring>
+
 namespace crispr {
     
     class exception 
