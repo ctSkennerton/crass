@@ -1007,7 +1007,7 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 #ifdef DEBUG
 		logInfo("Pos: " << i << " conserved(%): " << conservation_array[i] << " consensus: " << consensus_array[i], 1);
 #endif		
-		*collapsed_pos++;
+		(*collapsed_pos)++;
 		if(conservation_array[i] >= CRASS_DEF_COLLAPSED_CONS_CUT_OFF)
 		{
 			(*refined_DR_ends)[i] = true;
