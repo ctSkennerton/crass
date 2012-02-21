@@ -24,7 +24,7 @@ crisprtools is free software: you can redistribute it and/or modify it
 #include <string>
 #include <sstream>
 #include <cstring>
-#define throwSuffix(eRROR) "throw --> "<<eRROR.what()<<" ->  "
+
 namespace crispr {
     
     class exception 
