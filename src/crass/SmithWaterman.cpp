@@ -192,7 +192,7 @@ stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign
     {
         for(int j=1;j<=length_seq_B;j++)
         {
-            int index;
+            int index = -1;
             matrix[i][j] = findMax(   matrix[i-1][j-1] + SW_SIM_SCORE(seqA[i-1 + aStartSearch],seqB[j-1]), \
                                       matrix[i-1][j] + SW_GAP, \
                                       matrix[i][j-1] + SW_GAP, \
