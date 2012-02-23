@@ -105,10 +105,10 @@ class WorkHorse {
         int removeLowSpacerNodeManagers(void);
         int mungeDRs(void);                         			// cluster potential DRs and make node managers
         bool clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
-        bool findMasterDR(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, StringToken * masterDRToken, std::string * masterDRSequence);
-        bool populateCoverageArray(std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY);
-        std::string calculateDRConsensus(std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, DR_Cluster * clustered_DRs, int * nextFreeGID);
-        bool parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int * nextFreeGID);
+        bool findMasterDR(int GID, std::vector<std::string> * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence);
+        bool populateCoverageArray(int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY);
+        std::string calculateDRConsensus(int GID, std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, int * nextFreeGID);
+        bool parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID);
         int numberOfReadsInGroup(DR_Cluster * currentGroup);
         bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string kmer, const std::string * DR);
         bool getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);

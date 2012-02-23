@@ -113,10 +113,12 @@ class ReadHolder
             RH_IsFasta = false;
 
         }
+        
         ~ReadHolder(void)
         {
             clear();
         }
+        
         void clear(void)
         {
             RH_Seq.clear();
@@ -275,12 +277,6 @@ class ReadHolder
             RH_Seq = _sequence;
         }
 
-        inline void setStartStopList(StartStopList _repeats)
-        {
-            RH_StartStops.clear();
-            RH_StartStops = _repeats;
-        }
-        
         inline void setRepeatLength(int length)
         {
             RH_RepeatLength = length;
@@ -296,11 +292,6 @@ class ReadHolder
             RH_RepeatLength--;
         }
     
-        inline void setRepeatAt(unsigned int val, int pos)
-        {
-            RH_StartStops[pos] = val;
-        }
-
         inline void setHeader(std::string h)
         {
             this->RH_Header = h;
@@ -358,17 +349,6 @@ class ReadHolder
 		inline int repeatSpacing(unsigned int pos1, unsigned int pos2)
 		{
 			return (getRepeatAt(pos2) - getRepeatAt(pos1));
-		}
-		
-		inline void addRepeat(unsigned int val)
-		{
-			RH_StartStops.push_back(val);
-		}
-		
-		inline void insertRepeatAt(unsigned int val, int pos)
-		{
-			StartStopListIterator iter = RH_StartStops.begin() + pos;
-			RH_StartStops.insert(iter, val);
 		}
 
         StartStopListIterator begin(void)
