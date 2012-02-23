@@ -122,6 +122,9 @@ int ExtractTool::processOptions (int argc, char ** argv)
             }
 		}
 	}
+    if (!(ET_Flanker | ET_Spacer | ET_DirectRepeat)) {
+        throw crispr::input_exception("Please specify at least one of -s -d -f");
+    }
 	return optind;
 }
 
@@ -226,6 +229,7 @@ void ExtractTool::parseWantedGroups(crispr::XML& xmlObj, xercesc::DOMElement * r
                         
                         // matches to one of our wanted groups
                         extractDataFromGroup(xmlObj, currentElement);
+                        if(ET_Subset) num_groups_to_process--;
                     } 
                     xr(&c_group_id);
                 } else {
@@ -245,6 +249,7 @@ void ExtractTool::parseWantedGroups(crispr::XML& xmlObj, xercesc::DOMElement * r
                         }
                     }
                     extractDataFromGroup(xmlObj, currentElement);
+                    if(ET_Subset) num_groups_to_process--;
                     
                     if(ET_SplitGroup) {
                         // we are only spliting on type make three generic files
@@ -267,7 +272,6 @@ void ExtractTool::parseWantedGroups(crispr::XML& xmlObj, xercesc::DOMElement * r
             }
             // reduse the number of groups to look for 
             // if the subset option is set
-            if(ET_Subset) num_groups_to_process--;
         }
     } catch( xercesc::XMLException& e ) {
         char* message = xercesc::XMLString::transcode( e.getMessage() );
@@ -433,7 +437,7 @@ void extractUsage (void)
 	std::cout<<"-g INT[,n]          a comma separated list of group IDs that you would like to extract data from."<<std::endl;
 	std::cout<<"					Note that only the group number is needed, do not use prefixes like 'Group' or 'G', which"<<std::endl;
 	std::cout<<"					are sometimes used in file names or in a .crispr file"<<std::endl;
-	std::cout<<"-s					Extract the spacers of the listed group"<<std::endl;
+	std::cout<<"-s                  Extract the spacers of the listed group"<<std::endl;
 	std::cout<<"-d					Extract the direct repeats of the listed group"<<std::endl;
 	std::cout<<"-f					Extract the flanking sequences of the listed group"<<std::endl;
 	std::cout<<"-x					Split the results into different files for each group.  If multiple types are set i.e. -sd"<<std::endl;
