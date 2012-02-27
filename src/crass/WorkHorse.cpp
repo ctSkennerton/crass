@@ -45,6 +45,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <unistd.h>
 
 // local includes
 #include "WorkHorse.h"
@@ -2457,6 +2458,10 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
     xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
     
     std::string file_name;
+    char * buf;
+    std::string absolute_dir = getcwd(buf, 4096);
+    absolute_dir += "/";
+    delete buf;
     // add in files if they exist
     if (!mOpts->logToScreen) 
     {
@@ -2464,11 +2469,11 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         file_name = mOpts->output_fastq + PACKAGE_NAME + "." + mTimeStamp + ".log";
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("log", file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("log", absolute_dir + file_name, metadata_elem);
         }
         else
         {
-            logError("Could not find the log file at "<<file_name<<" but I think it should be there... wierd");
+            logError("Could not find the log file at "<<absolute_dir + file_name<<" but I think it should be there... wierd");
         }
     }
     
@@ -2481,22 +2486,22 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_debug.gv";
         if (checkFileOrError((file_name + file_sufix).c_str())) 
         {
-            xmlDoc->addFileToMetadata("data", (file_name + file_sufix), metadata_elem);
+            xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the Debug .gv file at "<< file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the Debug .gv file at "<< absolute_dir << file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
         }
         
         // and now for the cleaned .gv
         file_name = mOpts->output_fastq + "Clean_";
         if (checkFileOrError((file_name + file_sufix).c_str())) 
         {
-            xmlDoc->addFileToMetadata("data", (file_name + file_sufix), metadata_elem);
+            xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the Debug .gv file at "<<file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the Debug .gv file at "<<absolute_dir <<file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
             
         }
     }
@@ -2512,22 +2517,22 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         file_name = mOpts->output_fastq + "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the Debug .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the Debug .eps file at "<<absolute_dir <<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
         }
         
         file_name = mOpts->output_fastq + "Clean_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
         
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the cleaned debug .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the cleaned debug .eps file at "<<absolute_dir +file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
         }
     }
 
@@ -2537,11 +2542,11 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         file_name = mOpts->output_fastq + "Spacers_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the Spacer .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the Spacer .eps file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
         }
     } 
 
@@ -2552,11 +2557,11 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
     file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".fa";
     if (checkFileOrError(file_name.c_str())) 
     {
-        xmlDoc->addFileToMetadata("sequence", file_name, metadata_elem);
+        xmlDoc->addFileToMetadata("sequence", absolute_dir + file_name, metadata_elem);
     } 
     else 
     {
-        logError("Could not find the fasta file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+        logError("Could not find the fasta file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
     }
     
     
@@ -2564,11 +2569,11 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
     file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".spacers";
     if (checkFileOrError(file_name.c_str())) 
     {
-        xmlDoc->addFileToMetadata("data", file_name, metadata_elem);
+        xmlDoc->addFileToMetadata("data", absolute_dir + file_name, metadata_elem);
     } 
     else 
     {
-        logError("Could not find the spacer dictionary file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+        logError("Could not find the spacer dictionary file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
     }
     return 0;
     
