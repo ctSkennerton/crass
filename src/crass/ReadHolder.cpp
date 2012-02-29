@@ -708,6 +708,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                     *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
                 } catch (std::exception& e) {
                     throw crispr::substring_exception(e.what(), RH_Seq.c_str(), start_cut, (int)(RH_Seq.length() - start_cut), __FILE__, __LINE__, __PRETTY_FUNCTION__);
+
                 }
     		}
             RH_NextSpacerStart = 3;

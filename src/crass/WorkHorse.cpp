@@ -638,8 +638,9 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
 	// Load all the reads into the consensus array
 	//
 	logInfo("Populating consensus array", 1);
+
 	bool first_run = true;          // we only need to do this once
-	int array_len = ((int)3*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)3*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
+	int array_len = ((int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 
 	// chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
@@ -687,19 +688,21 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                     case 'G':
                         index = 2;
                         break;
-                    case 'T':
+                    default:
                         index = 3;
                         break;
                 }
-                if(index >= 0 && index < 4)
-                {
-                	int index_b = i+this_read_start_pos; 
-                	if((index_b) >= array_len)
-                	{
-                		logError("The consensus/coverage arrays are too short. Consider changing CRASS_DEF_MIN_CONS_ARRAY_LEN to something larger and re-compiling");
-                	}
-                    coverage_array[index][index_b]++;
-                }
+				int index_b = i+this_read_start_pos; 
+				if((index_b) >= array_len)
+				{
+					logError("The consensus/coverage arrays are too short. Consider changing CRASS_DEF_MIN_CONS_ARRAY_LEN to something larger and re-compiling");
+				}
+				if((index_b) < 0)
+				{
+					logError("AARRGGHH!!! " << i << " : " << this_read_start_pos << " : " << index_b << " : " << kmer_positions_ARRAY[0]  << " - " << (*read_iter)->startStopsAt(dr_start_index) << " - " << kmer_positions_DR[0]);
+				}
+
+				coverage_array[index][index_b]++;
             }
         }
         else
@@ -961,7 +964,7 @@ std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> 
 		logInfo("DR zone: " << *dr_zone_start << " -> " << *dr_zone_end, 1);
 #endif
 	
-	int array_len = ((int)3*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)3*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
+	int array_len = ((int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 	// chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
     std::map<char, int> reverse_alphabet;
@@ -1172,7 +1175,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
     // Initialise variables we'll need
     // chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
-    int array_len = ((int)3*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)3*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
+    int array_len = ((int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 
     // first we need a 4 * array_len
     int ** coverage_array = new int*[4];
@@ -1231,7 +1234,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
     int dr_zone_end = -1;
 
     // just the positions in the DR fangs...
-    kmer_positions_ARRAY[0] = (int)(array_len/3);
+    kmer_positions_ARRAY[0] = (int)(array_len*CRASS_DEF_CONS_ARRAY_START);
     isKmerPresent(kmer_rcs_DR, kmer_positions_DR, (*nTopKmers)[0], &master_DR_sequence);
     
     for(int i = 1; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
