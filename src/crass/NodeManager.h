@@ -145,7 +145,7 @@ class NodeManager {
 
     // Cleaning
         int cleanGraph(void);
-        void clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType);
+        bool clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType);
     
     // Contigs
         void getAllSpacerCaps(SpacerInstanceVector * sv);
