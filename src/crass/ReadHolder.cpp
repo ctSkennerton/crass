@@ -188,7 +188,6 @@ void ReadHolder::startStopsAdd(unsigned int i, unsigned int j)
 	if(i > j) { logError("SS list corrupted! " << i << " : " << j);	}
 	if((i > RH_Seq.length()) || (j > RH_Seq.length())) { logError("Too long! " << i << " : " << j);	}
 #endif
-	
     this->RH_StartStops.push_back(i);
     if(j >= (unsigned int)getSeqLength())
     {
