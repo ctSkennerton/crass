@@ -1,3 +1,165 @@
+Fri Mar 2 00:43:50 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Fri Mar 2 00:43:34 2012 +1000    ctSkennerton
+    removed an unused function
+
+Thu Mar 1 16:04:41 2012 +1000    minillinim
+    The bug fixing marches onwards!
+
+Wed Feb 29 12:36:27 2012 +1000    ctSkennerton
+    merge origin:master
+
+Wed Feb 29 12:34:26 2012 +1000    ctSkennerton
+    Extract tool now uses a bit set rather than individual bool members
+
+Wed Feb 29 12:31:43 2012 +1000    ctSkennerton
+    changed over an exception type
+
+Wed Feb 29 11:11:38 2012 +1000    minillinim
+    Fixed two bugs.
+
+Wed Feb 29 11:10:40 2012 +1000    minillinim
+    Made the graph cleaning code slighly less dumb. Add iteration between bubble removal and DEP removal
+
+Mon Feb 27 16:53:18 2012 +1000    ctSkennerton
+    resolve issue #28 - xml now prints full path names
+
+Thu Feb 23 16:21:22 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Thu Feb 23 16:21:11 2012 +1000    ctSkennerton
+    added in some option sanity checks
+
+Thu Feb 23 15:54:46 2012 +1000    minillinim
+    removed dud exception
+
+Thu Feb 23 15:53:23 2012 +1000    minillinim
+    Neated the code very very slightly
+
+Thu Feb 23 15:41:03 2012 +1000    minillinim
+    Fixed a bug which caused a number of weird-ass errors. Neatened some stuff up while I was at it
+
+Tue Feb 21 10:37:22 2012 +1000    minillinim
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Sun Feb 19 21:50:53 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Sun Feb 19 21:49:24 2012 +1000    ctSkennerton
+    removed a macro that wasn't getting used anyway
+
+Sun Feb 19 21:47:24 2012 +1000    ctSkennerton
+    The collapsed_pos pointer was getting modified not the value.  Was causing some of the memory corruption in issue #35.  Still seg faulting on JCVI_SMPL_1103283000005.fa
+
+Wed Feb 15 15:54:24 2012 +1000    minillinim
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Wed Feb 15 15:54:04 2012 +1000    minillinim
+    Removed stupid error message
+
+Wed Feb 15 15:50:45 2012 +1000    ctSkennerton
+    fixed a few include statements
+
+Wed Feb 15 14:02:36 2012 +1000    ctSkennerton
+    merged crass::exception into crispr::exception
+
+Wed Feb 15 13:38:00 2012 +1000    ctSkennerton
+    removed a couple of unused parameters and chaged a function name accordingly
+
+Wed Feb 15 13:25:36 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Wed Feb 15 13:24:59 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Wed Feb 15 13:24:53 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Wed Feb 15 12:54:02 2012 +1000    minillinim
+    Fixed an infinite loop bug with regards to refined ends...
+
+Wed Feb 15 10:44:39 2012 +1000    minillinim
+    Added the variable: CRASS_DEF_MIN_CONS_ARRAY_LEN
+
+Wed Feb 15 10:40:57 2012 +1000    minillinim
+    Made print contents a little bit purdier
+
+Wed Feb 15 10:40:14 2012 +1000    minillinim
+    Reafctored some of the stupidly large function which does most of the work of refining DRs
+
+Fri Feb 10 22:40:35 2012 +1000    ctSkennerton
+    added some exception handling to smith-waterman
+
+Fri Feb 10 13:09:01 2012 +1000    ctSkennerton
+    Merge branch 'exception'
+
+Fri Feb 10 12:52:46 2012 +1000    ctSkennerton
+    solved the endless loop problem. A counter wasn't getting updated cause it was in the wrong scope after a try ... catch block was put in
+
+Fri Feb 10 11:33:41 2012 +1000    ctSkennerton
+    now seems to work on crazy
+
+Fri Feb 10 10:09:18 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Fri Feb 10 10:08:23 2012 +1000    ctSkennerton
+    fixed a bug where a graphviz file would be produced but without any spacers
+
+Thu Feb 9 12:39:43 2012 +1000    ctSkennerton
+    fixed a bug in ReadHolder#getNextSpacer
+
+Tue Feb 7 23:29:27 2012 +1000    ctSkennerton
+    removed internal changes to cflags.  Now can only be set on the command line - which is GNU coding standards
+
+Tue Feb 7 23:14:18 2012 +1000    ctSkennerton
+    added in makefile for documentation
+
+Tue Feb 7 16:27:12 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Tue Feb 7 16:27:05 2012 +1000    ctSkennerton
+    bleg
+
+Tue Feb 7 15:50:39 2012 +1000    ctSkennerton
+    added in some exception handling to catch substring errors
+
+Tue Feb 7 15:25:37 2012 +1000    ctSkennerton
+    added in an exception handling class
+
+Tue Feb 7 14:36:47 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Tue Feb 7 14:36:31 2012 +1000    ctSkennerton
+    Documentation updates
+
+Tue Feb 7 14:29:43 2012 +1000    ctSkennerton
+    Added some exception handling to some functions
+
+Sun Feb 5 22:17:28 2012 +1000    ctSkennerton
+    made tabular output implicit, no longer have need for the -t option
+
+Thu Feb 2 22:53:22 2012 +1000    ctSkennerton
+    add in some documentation for crisprtools
+
+Thu Feb 2 15:06:52 2012 +1000    ctSkennerton
+    added some exception handling to libcrispr to catch errors more cleanly
+
+Tue Jan 31 22:20:42 2012 +1000    ctSkennerton
+    spacer coverage now back in the xml - didn't realise it had gone AWOL
+
+Tue Jan 31 16:41:34 2012 +1000    ctSkennerton
+    fixed a memory leak
+
+Tue Jan 31 15:39:23 2012 +1000    ctSkennerton
+    Updated the build settings to allow for non-standard install locations of Xerces
+
+Mon Jan 30 02:46:17 2012 +1000    ctSkennerton
+    changed the reverse complement code to a faster algorithm
+
+Sun Jan 29 23:51:42 2012 +1000    ctSkennerton
+    update version to crass0.2.1 crisprtools0.1.1
+
 Sun Jan 29 23:44:43 2012 +1000    ctSkennerton
     added an extra check for low complexity when a true DR is found - removes a few DR's where individual variants fall under the threshold but the consensus does not
 
