@@ -2093,24 +2093,6 @@ int WorkHorse::splitIntoContigs(void)
 // file IO
 //**************************************
 
-void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup)
-{
-    //-----
-    // Print all the information from a single round
-    //
-    logInfo("Printing lookup tables from file: " << fileName << "to " << mOutFileDir, 1);
-    
-    // Make file names
-    std::string kmer_lookup_name = mOutFileDir + CRASS_DEF_DEF_KMER_LOOKUP_EXT;
-    std::string patterns_lookup_name = mOutFileDir + CRASS_DEF_DEF_PATTERN_LOOKUP_EXT;
-    std::string spacer_lookup_name = mOutFileDir + CRASS_DEF_DEF_SPACER_LOOKUP_EXT;
-    
-    // Write!
-    writeLookupToFile(kmer_lookup_name, kmerLookup);  
-    writeLookupToFile(patterns_lookup_name, patternsLookup);
-    writeLookupToFile(spacer_lookup_name, spacerLookup);
-}
-
 
 int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
 {

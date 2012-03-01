@@ -127,7 +127,6 @@ class WorkHorse {
         //**************************************
         // file IO
         //**************************************
-        void printFileLookups(std::string fileName, lookupTable &kmerLookup, lookupTable &patternsLookup, lookupTable &spacerLookup);
         int dumpReads(DR_Cluster_Map * DR2GID_map, bool split);		// dump the reads for this group to file
         int dumpSpacers(void);										// Dump the spacers for this group to file
         int renderDebugGraphs(void);							// render debug graphs
