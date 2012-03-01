@@ -353,13 +353,13 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         }
     }
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
-    logInfo("number of reads found so far: "<<this->numOfReads(), 2);
+    logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
     
     // There will be an abundance of forms for each direct repeat.
     // We needs to do somes clustering! Then trim and concatenate the direct repeats
     if (mungeDRs())
     {
-        logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
+        logError("Weird stuff happend when trying to get the 'true' direct repeat");            
         return 1;
     }
     
@@ -375,7 +375,7 @@ int WorkHorse::buildGraph(void)
     
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
     std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<mTrueDRs.size()<<" putative CRISPRs found!"<<std::endl;
-    std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: ";
+    //MI std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<std::flush;
     while(drg_iter != mDR2GIDMap.end())
     {
         if(NULL != drg_iter->second)
@@ -383,24 +383,28 @@ int WorkHorse::buildGraph(void)
 #ifdef DEBUG
             logInfo("Creating NodeManager "<<drg_iter->first, 6);
 #endif
-            std::cout<<' '<<drg_iter->first<<' ';
+            //MI std::cout<<'['<<drg_iter->first<<','<<mTrueDRs[drg_iter->first]<<std::flush;
             mDRs[mTrueDRs[drg_iter->first]] = new NodeManager(mTrueDRs[drg_iter->first], mOpts);
+            //MI std::cout<<'.'<<std::flush;
             DR_ClusterIterator drc_iter = (drg_iter->second)->begin();
             while(drc_iter != (drg_iter->second)->end())
             {
                 // go through each read
+            	//MI std::cout<<'|'<<std::flush;
                 ReadListIterator read_iter = mReads[*drc_iter]->begin();
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
+                	//MI std::cout<<'.'<<std::flush;
                     mDRs[mTrueDRs[drg_iter->first]]->addReadHolder(*read_iter);
                     read_iter++;
                 }
                 drc_iter++;
             }
+            //MI std::cout<<"],"<<std::flush;
         }
         drg_iter++;
     }
-    std::cout<<std::endl;
+    //MI std::cout<<std::endl;
     return 0;
 }
 

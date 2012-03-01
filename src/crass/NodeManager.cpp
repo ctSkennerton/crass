@@ -140,70 +140,78 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
     //-----
     // Split down a read holder and make some nodes
     //
-        std::string working_str;
-        CrisprNode * prev_node = NULL;
-        
-        //    logInfo("Adding: " << RH->getHeader(),1);
-        
-        // add the header of this read to our stringcheck
-        StringToken header_st = NM_StringCheck.addString(RH->getHeader());
-        
-        if(RH->getFirstSpacer(&working_str))
-        {
-            
-            try {
-                // do we have a direct repeat from the very beginning
-                if (RH->startStopsAt(0) == 0) 
-                {
-                    addCrisprNodes(&prev_node, working_str, header_st);
-                } 
-                else 
-                {
-                    // we only want to add the second kmer, since it is anchored by the direct repeat
-                    addSecondCrisprNode(&prev_node, working_str, header_st);
-                }
-                
-                // get all the spacers in the middle
-                //check to see if we end with a direct repeat or a spacer
-                if (RH->getSeqLength() == (int)RH->back() + 1) 
-                {
-                    // direct repeat goes right to the end of the read take both
-                    while (RH->getNextSpacer(&working_str)) 
-                    {
-                        addCrisprNodes(&prev_node, working_str, header_st);
-                    }
-                } 
-                else 
-                {
-                    // we end with an overhanging spacer so we want to break from the loop early
-                    // so that on the final time we only cut the first kmer            
-                    while (RH->getLastSpacerPos() < (int)RH->getStartStopListSize() - 1) 
-                    {
-                        //std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
-                        RH->getNextSpacer(&working_str);
-                        addCrisprNodes(&prev_node, working_str, header_st);
-                    } 
-                    
-                    // get our last spacer
-                    if (RH->getNextSpacer(&working_str)) 
-                    {
-                        //std::cout<<working_str<<std::endl;
-                        addFirstCrisprNode(&prev_node, working_str, header_st);
-                    } 
-                }
-            } catch (crispr::substring_exception& e) {
-                std::cerr<<e.what()<<std::endl;
-                exit(99);
-            } catch (...) {
-                std::cerr<<"an unknown exception has occurred "<<__FILE__<<" : "<<__LINE__<<" : "<<__PRETTY_FUNCTION__<<std::endl; 
-            }
-        }
-        else
-        {
-            logError("Could not get a spacer for the read");
-            return false;
-        }
-        return true;
+	std::string working_str;
+	CrisprNode * prev_node = NULL;
+	
+	// add the header of this read to our stringcheck
+	StringToken header_st = NM_StringCheck.addString(RH->getHeader());
+	
+	//MI std::cout << std::endl << "----------------------------------\n" << RH->getHeader() << std::endl; 
+	//MI std::cout << RH->splitApartSimple() << std::endl;
+	
+	if(RH->getFirstSpacer(&working_str))
+	{
+		//MI std::cout << "first SP: " << working_str << std::endl;
+		try {
+			// do we have a direct repeat from the very beginning
+			if (RH->startStopsAt(0) == 0) 
+			{
+				//MI std::cout << "both" << std::endl;
+				addCrisprNodes(&prev_node, working_str, header_st);
+			} 
+			else 
+			{
+				//MI std::cout << "sec" << std::endl;
+				// we only want to add the second kmer, since it is anchored by the direct repeat
+				addSecondCrisprNode(&prev_node, working_str, header_st);
+			}
+			
+			// get all the spacers in the middle
+			//check to see if we end with a direct repeat or a spacer
+			if (RH->getSeqLength() == (int)RH->back() + 1) 
+			{
+				// direct repeat goes right to the end of the read take both
+				//MI std::cout << "DR until end" << std::endl;
+				while (RH->getNextSpacer(&working_str)) 
+				{		
+					//MI std::cout << "SP: " << working_str << std::endl;
+					addCrisprNodes(&prev_node, working_str, header_st);
+				}
+			} 
+			else 
+			{
+				//MI std::cout << "SP at end" << std::endl;
+				// we end with an overhanging spacer so we want to break from the loop early
+				// so that on the final time we only cut the first kmer            
+				while (RH->getLastSpacerPos() < (int)RH->getStartStopListSize() - 1) 
+				{
+					//std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
+					RH->getNextSpacer(&working_str);
+					//MI std::cout << "SP: " << working_str << std::endl;
+					addCrisprNodes(&prev_node, working_str, header_st);
+				} 
+				
+				// get our last spacer
+				if (RH->getNextSpacer(&working_str)) 
+				{
+					//std::cout<<working_str<<std::endl;
+					//MI std::cout << "last SP: " << working_str << std::endl;
+					addFirstCrisprNode(&prev_node, working_str, header_st);
+				} 
+			}
+		} catch (crispr::substring_exception& e) {
+			std::cerr<<e.what()<<std::endl;
+			exit(99);
+		} catch (...) {
+			std::cerr<<"an unknown exception has occurred "<<__FILE__<<" : "<<__LINE__<<" : "<<__PRETTY_FUNCTION__<<std::endl; 
+		}
+	}
+	else
+	{
+		logError("Could not get a spacer for the read");
+		return false;
+	}
+	return true;
 }
 
 //----
