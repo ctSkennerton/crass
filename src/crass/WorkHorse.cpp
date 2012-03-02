@@ -359,10 +359,15 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     
     // There will be an abundance of forms for each direct repeat.
     // We needs to do somes clustering! Then trim and concatenate the direct repeats
-    if (mungeDRs())
-    {
+    try {
+        if (mungeDRs())
+        {
+            return 1;
+            logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
+        }
+    } catch(crispr::exception& e) {
+        std::cerr<<e.what()<<std::endl;
         return 1;
-        logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
     }
     
     return 0;
@@ -698,6 +703,8 @@ bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToke
                 	if((i+this_read_start_pos) >= array_len)
                 	{
                 		logError("The consensus/coverage arrays are too short. Consider changing CRASS_DEF_MIN_CONS_ARRAY_LEN to something larger and re-compiling");
+                        throw crispr::exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,"The consensus/coverage arrays are too short. \
+                                                Consider changing CRASS_DEF_MIN_CONS_ARRAY_LEN to something larger and re-compiling");
                 	}
                     coverage_array[index][i+this_read_start_pos]++;
                 }
@@ -709,7 +716,6 @@ bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToke
         }
         read_iter++;
     }
-
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // now go thru all the other DRs in this group and add them into
     // the consensus array
