@@ -2451,7 +2451,7 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
     xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
     
     std::string file_name;
-    char * buf;
+    char * buf = NULL;
     std::string absolute_dir = getcwd(buf, 4096);
     absolute_dir += "/";
     delete buf;
