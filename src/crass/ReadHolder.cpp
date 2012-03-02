@@ -52,6 +52,7 @@
 // the input must be an even number which will be the start of the repeat
 unsigned int ReadHolder::getRepeatAt(unsigned int i)
 {
+#ifdef DEBUG
     if (i % 2 != 0) 
     {
         logError("Attempting to get a repeat start index from a odd numbered index in RH_StartStops: "<<i);
@@ -60,11 +61,13 @@ unsigned int ReadHolder::getRepeatAt(unsigned int i)
     {
         logError("Index is greater than the length of the Vector: "<<i);
     }
+#endif
     return RH_StartStops[i];
 }
 std::string ReadHolder::repeatStringAt(unsigned int i)
 {
-    if (i % 2 != 0) 
+#ifdef DEBUG
+	if (i % 2 != 0) 
     {
         logError("Attempting to cut a repeat sequence from a odd numbered index in RH_StartStops: "<<i)
     }
@@ -72,11 +75,13 @@ std::string ReadHolder::repeatStringAt(unsigned int i)
     {
         logError("Index is greater than the length of the Vector: "<<i);
     }
+#endif
     return RH_Seq.substr(RH_StartStops[i], RH_StartStops[i + 1] - RH_StartStops[i] + 1);
 }
 
 std::string ReadHolder::spacerStringAt(unsigned int i)
 {
+#ifdef DEBUG
     if (i % 2 != 0) 
     {
         logError("Attempting to cut a spacer sequence from a odd numbered index in RH_StartStops: "<<i)
@@ -85,6 +90,7 @@ std::string ReadHolder::spacerStringAt(unsigned int i)
     {
         logError("Index is greater than the length of the Vector: "<<i);
     }
+#endif
     unsigned int curr_spacer_start_index = RH_StartStops[i + 1] + 1;
     unsigned int curr_spacer_end_index = RH_StartStops[i + 2] - 1;
     return RH_Seq.substr(curr_spacer_start_index, (curr_spacer_end_index - curr_spacer_start_index));
@@ -177,19 +183,17 @@ int ReadHolder::averageRepeatLength()
 
 void ReadHolder::startStopsAdd(unsigned int i, unsigned int j)
 {
+#ifdef DEBUG	
+	if(((int)i < 0) || ((int)j < 0)) { logError("Adding negative to SS list! " << i << " : " << j);	}
+	if(i > j) { logError("SS list corrupted! " << i << " : " << j);	}
+	if((i > RH_Seq.length()) || (j > RH_Seq.length())) { logError("Too long! " << i << " : " << j);	}
+#endif
     this->RH_StartStops.push_back(i);
     if(j >= (unsigned int)getSeqLength())
     {
-        //logError("Adding DR end index greater than "<<(getSeqLength())<<" ("<<j<<")");
     	j = (unsigned int)getSeqLength() - 1;
     }
     this->RH_StartStops.push_back(j);
-}
-
-// TODO +1?
-void ReadHolder::removeRepeat(unsigned int val)
-{
-    RH_StartStops.erase(RH_StartStops.begin()+val, RH_StartStops.begin() +val + 2);
 }
 
 void ReadHolder::dropPartials(void)
@@ -228,19 +232,24 @@ void ReadHolder::reverseStartStops(void)
     
     int seq_len = (int)RH_Seq.length();
     int true_start_offset = seq_len - RH_StartStops.back() - 1;
+#ifdef DEBUG
     if (true_start_offset < 0) 
     {
         logError("The first direct repeat position is a negative number");
     }
+#endif
     StartStopListRIterator ss_iter = RH_StartStops.rbegin();
     
     unsigned int prev_pos_fixed = true_start_offset;
     unsigned int prev_pos_orig = *ss_iter;
-    
+   
     while(ss_iter != RH_StartStops.rend())
     {
         unsigned int gap = prev_pos_orig - *ss_iter;
         prev_pos_fixed += gap;
+#ifdef DEBUG
+        if((int)prev_pos_fixed < 0) { logError("About to add negative value! " << true_start_offset << " : " << prev_pos_orig << " : " << *ss_iter << " : " << gap << " : " << prev_pos_fixed); printContents(); }
+#endif
         tmp_ss.push_back(prev_pos_fixed);
         prev_pos_orig = *ss_iter;
         ss_iter++;
@@ -278,7 +287,9 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         {
             *ss_iter -= frontOffset;
         }
-        
+#ifdef DEBUG
+        if(*ss_iter > (unsigned int)RH_Seq.length()) { logError("Something wrong with front offset! " << *ss_iter << " : " << frontOffset); }
+#endif
         // the second guy is the end of the DR
         ss_iter++;
         *ss_iter = *(ss_iter - 1) + usable_length;
@@ -311,6 +322,8 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
 #ifdef DEBUG
                         logInfo("adding direct repeat to start",10);
                         logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
+                    	if(part_e < 0) { logError("Adding negative to SS list! " << part_e); }
+                    	if(part_e > (int)RH_Seq.length()) { logError("SS longer than read: " << part_e); }
 #endif
                         std::reverse(RH_StartStops.begin(), RH_StartStops.end());
                         RH_StartStops.push_back(part_e);
@@ -345,9 +358,8 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
                         logInfo((int)sp.first.length() - (int)sp.second.length(),10);
 #endif
                         // in most cases the right index is returned however 
-                        // if the length of the smith waterman alignment differ the indix needs to be corrected 
-                        RH_StartStops.push_back(part_s + abs((int)sp.first.length() - (int)sp.second.length()));
-                        RH_StartStops.push_back(part_e);
+                        // if the length of the smith waterman alignment differ the index needs to be corrected 
+                    	startStopsAdd(part_s + abs((int)sp.first.length() - (int)sp.second.length()), part_e);
                     }
                 }
             }
@@ -684,7 +696,7 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                 try {
                     *retStr = RH_Seq.substr(start_cut, *ss_iter - start_cut);
                 } catch (std::out_of_range& e) {
-                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), start_cut, (*ss_iter - start_cut), __FILE__, __LINE__, __PRETTY_FUNCTION__);
                 }
             }
     		else
@@ -694,7 +706,8 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
                     
                     *retStr = RH_Seq.substr(start_cut, RH_Seq.length() - start_cut);
                 } catch (std::exception& e) {
-                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), 0, *ss_iter, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+                    throw crispr::substring_exception(e.what(), RH_Seq.c_str(), start_cut, (int)(RH_Seq.length() - start_cut), __FILE__, __LINE__, __PRETTY_FUNCTION__);
+
                 }
     		}
             RH_NextSpacerStart = 3;
@@ -724,10 +737,12 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
             else
             {
             	// read ends with a DR. No more spacers to get
+#ifdef DEBUG
             	if(*ss_iter > (RH_Seq.length() - 1))
             	{
             		logError("ss list out of range");
             	}
+#endif
                 return false;    		
             }
     	}
@@ -747,7 +762,6 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
         }
     }    
     // should we get here?
-	logError("SP WTF");
     return false;
 }
 
@@ -995,6 +1009,7 @@ void ReadHolder::printContents(void)
     }
     std::cout << std::endl;
     std::cout << RH_Seq << std::endl;
+    std::cout << "Len: " << RH_Seq.length() << std::endl;
     std::cout << "---------------------------------------------" << std::endl;
     std::cout << "---------------------------------------------" << std::endl;
     

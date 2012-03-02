@@ -113,6 +113,97 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength, const
 
 
 // CRT search
+int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange)
+{
+	#ifdef DEBUG
+	logInfo("Scanning Right for more repeats:", 9);
+	#endif
+	unsigned int start_stops_size = tmp_holder->getStartStopListSize();
+	
+	unsigned int pattern_length = (unsigned int)pattern.length();
+	
+	// final start index
+	unsigned int last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 2);
+	
+	//second to final start index
+	unsigned int second_last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 4);
+	
+	unsigned int repeat_spacing = last_repeat_index - second_last_repeat_index;
+	
+	#ifdef DEBUG
+	logInfo(start_stops_size<<" : "<<pattern_length<<" : "<<last_repeat_index<<" : "<<second_last_repeat_index<<" : "<<repeat_spacing, 9);
+	#endif
+	
+	int candidate_repeat_index, position;
+	
+	unsigned int begin_search, end_search;
+	
+	unsigned int read_length = (unsigned int)tmp_holder->getSeqLength();
+	bool more_to_search = true;
+	while (more_to_search)
+	{
+		candidate_repeat_index = last_repeat_index + repeat_spacing;
+		begin_search = candidate_repeat_index - scanRange;
+		end_search = candidate_repeat_index + pattern_length + scanRange;
+		#ifdef DEBUG
+		logInfo(candidate_repeat_index<<" : "<<begin_search<<" : "<<end_search, 9);
+		#endif
+		/******************** range checks ********************/
+		//check that we do not search too far within an existing repeat when scanning right
+		unsigned int scanRightMinBegin = last_repeat_index + pattern_length + minSpacerLength;
+		
+		if (begin_search < scanRightMinBegin)
+		{
+			begin_search = scanRightMinBegin;
+		}
+		if (begin_search > read_length - 1)
+		{
+			#ifdef DEBUG
+			logInfo("returning... "<<begin_search<<" > "<<read_length - 1, 9);
+			#endif
+			return read_length - 1;
+		}
+		if (end_search > read_length)
+		{
+			end_search = read_length;
+		}
+		
+		if ( begin_search >= end_search)
+		{
+			#ifdef DEBUG
+			logInfo("Returning... "<<begin_search<<" >= "<<end_search, 9);
+			#endif
+			return end_search;
+		}
+		/******************** end range checks ********************/
+		
+		std::string text = tmp_holder->substr(begin_search, (end_search - begin_search));
+		
+		#ifdef DEBUG
+		logInfo(pattern<<" : "<<text, 9);
+		#endif
+		position = PatternMatcher::bmpSearch(text, pattern);
+		
+		
+		if (position >= 0)
+		{
+			tmp_holder->startStopsAdd(begin_search + position, begin_search + position + pattern_length);
+			second_last_repeat_index = last_repeat_index;
+			last_repeat_index = begin_search + position;
+			repeat_spacing = last_repeat_index - second_last_repeat_index;
+			if (repeat_spacing < (minSpacerLength + pattern_length))
+			{
+				more_to_search = false;
+			}
+		}
+		else
+		{
+			more_to_search = false;
+		}
+	}
+	
+	return begin_search + position;
+}
 
 int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound)
 {
@@ -243,7 +334,7 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
                     
                     // drop partials
                     tmp_holder->dropPartials();
-                    if (qcFoundRepeats(tmp_holder))
+                    if (qcFoundRepeats(tmp_holder, opts.lowSpacerSize, opts.highSpacerSize))
                     {
 #ifdef DEBUG
                         logInfo("Passed all tests!", 8);
@@ -397,7 +488,7 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
 
                     if ((tmp_holder->getAverageSpacerLength() >= opts.lowSpacerSize) && (tmp_holder->getAverageSpacerLength() <= opts.highSpacerSize))
                     {
-                        if (qcFoundRepeats(tmp_holder)) 
+                        if (qcFoundRepeats(tmp_holder, opts.lowSpacerSize, opts.highSpacerSize)) 
                         {
 
                             match_found = true;
@@ -535,100 +626,6 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 
-
-int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange)
-{
-    #ifdef DEBUG
-    logInfo("Scanning Right for more repeats:", 9);
-    #endif
-    unsigned int start_stops_size = tmp_holder->getStartStopListSize();
-    
-    unsigned int pattern_length = (unsigned int)pattern.length();
-    
-    // final start index
-    unsigned int last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 2);
-    
-    //second to final start index
-    unsigned int second_last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 4);
-    
-    unsigned int repeat_spacing = last_repeat_index - second_last_repeat_index;
-    
-    #ifdef DEBUG
-    logInfo(start_stops_size<<" : "<<pattern_length<<" : "<<last_repeat_index<<" : "<<second_last_repeat_index<<" : "<<repeat_spacing, 9);
-    #endif
-    
-    int candidate_repeat_index, position;
-    
-    unsigned int begin_search, end_search;
-    
-    unsigned int read_length = (unsigned int)tmp_holder->getSeqLength();
-    bool more_to_search = true;
-    while (more_to_search)
-    {
-        candidate_repeat_index = last_repeat_index + repeat_spacing;
-        begin_search = candidate_repeat_index - scanRange;
-        end_search = candidate_repeat_index + pattern_length + scanRange;
-        #ifdef DEBUG
-        logInfo(candidate_repeat_index<<" : "<<begin_search<<" : "<<end_search, 9);
-        #endif
-        /******************** range checks ********************/
-        //check that we do not search too far within an existing repeat when scanning right
-        unsigned int scanRightMinBegin = last_repeat_index + pattern_length + minSpacerLength;
-        
-        if (begin_search < scanRightMinBegin)
-        {
-            begin_search = scanRightMinBegin;
-        }
-        if (begin_search > read_length - 1)
-        {
-            #ifdef DEBUG
-            logInfo("returning... "<<begin_search<<" > "<<read_length - 1, 9);
-            #endif
-            return read_length - 1;
-        }
-        if (end_search > read_length)
-        {
-            end_search = read_length;
-        }
-        
-        if ( begin_search >= end_search)
-        {
-            #ifdef DEBUG
-            logInfo("Returning... "<<begin_search<<" >= "<<end_search, 9);
-            #endif
-            return end_search;
-        }
-        /******************** end range checks ********************/
-        
-        std::string text = tmp_holder->substr(begin_search, (end_search - begin_search));
-        
-        #ifdef DEBUG
-        logInfo(pattern<<" : "<<text, 9);
-        #endif
-        position = PatternMatcher::bmpSearch(text, pattern);
-        
-        
-        if (position >= 0)
-        {
-            tmp_holder->startStopsAdd(begin_search + position, begin_search + position + pattern_length);
-            second_last_repeat_index = last_repeat_index;
-            last_repeat_index = begin_search + position;
-            repeat_spacing = last_repeat_index - second_last_repeat_index;
-            if (repeat_spacing < (minSpacerLength + pattern_length))
-            {
-                more_to_search = false;
-            }
-        }
-        else
-        {
-            more_to_search = false;
-        }
-    }
-    
-    return begin_search + position;
-}
-
-
 unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, int minSpacerLength)
 {
 #ifdef DEBUG
@@ -687,7 +684,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
 #endif
     unsigned int right_extension_length = 0;
     // don't search too far  
-    unsigned int max_right_extension_length = shortest_repeat_spacing - minSpacerLength;
+    unsigned int max_right_extension_length = shortest_repeat_spacing;// - minSpacerLength;
 #ifdef DEBUG
     logInfo("max right extension length: "<<max_right_extension_length, 9);
 #endif
@@ -766,7 +763,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
     
     // again, not too far
     unsigned int left_extension_length = 0;
-    int test_for_negative = shortest_repeat_spacing - minSpacerLength - tmp_holder->getRepeatLength();
+    int test_for_negative = shortest_repeat_spacing - tmp_holder->getRepeatLength();// - minSpacerLength;
     unsigned int max_left_extension_length = (test_for_negative >= 0)? (unsigned int) test_for_negative : 0;
 
 #ifdef DEBUG
@@ -856,7 +853,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, in
 
 
 //need at least two elements
-bool qcFoundRepeats(ReadHolder * tmp_holder)
+bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerLength)
 {
     try {
         if (tmp_holder->numRepeats() < 2) 
@@ -882,106 +879,216 @@ bool qcFoundRepeats(ReadHolder * tmp_holder)
     logInfo("\tPassed test 3. The repeat is not low complexity", 8);
 #endif
     // test for a long or short read
-    if (2 <= tmp_holder->numSpacers()) 
+    int single_compare_index = 0;
+    bool is_short = (2 > tmp_holder->numSpacers()); 
+    if(!is_short) 
     {
-        std::vector<std::string> spacer_vec = tmp_holder->getAllSpacerStrings();
+    	// for holding stats
+        float ave_spacer_to_spacer_len_difference = 0.0;
+        float ave_repeat_to_spacer_len_difference = 0.0;
+        float ave_spacer_to_spacer_difference = 0.0;
+        float ave_repeat_to_spacer_difference = 0.0;
+        int min_spacer_length = 10000000;
+        int max_spacer_length = 0;
+        int num_compared = 0;
         
-        int spacer_vec_size = (int)spacer_vec.size();
-        int sum_spacer_to_spacer_len_diff = 0;
-        int sum_repeat_to_spacer_len_diff = 0;
-        
-        float sum_spacer_to_spacer_difference = 0.0;
-        float sum_repeat_to_spacer_difference = 0.0;
-        
-        std::vector<std::string>::iterator spacer_iter = spacer_vec.begin();
-        while (spacer_iter != spacer_vec.end() - 1) 
+        // we need to do things a little differently depending on whether of not this guy starts 
+        // or ends on a spacer...
+        int sp_start_offset = 0;
+        int sp_end_offset = 0;
+        if (tmp_holder->startStopsAt(0) != 0)
         {
+        	// starts with a spacer
+        	//MI std::cout << "sp_start" << std::endl;
+        	sp_start_offset++;
+        }
+		if (tmp_holder->getSeqLength() != (int)tmp_holder->back() + 1) 
+		{
+			// ends with a spacer
+			//MI std::cout << "sp_end" << std::endl;
+			sp_end_offset++;
+		}
+
+		// now go through the spacers
+		std::vector<std::string> spacer_vec = tmp_holder->getAllSpacerStrings();
+        std::vector<std::string>::iterator spacer_iter = spacer_vec.begin();
+        std::vector<std::string>::iterator spacer_last = spacer_vec.end();
+        spacer_iter += sp_start_offset;
+        spacer_last -= sp_end_offset;
+        
+        while (spacer_iter != spacer_last) 
+        {
+        	num_compared++;
+            ave_repeat_to_spacer_difference += PatternMatcher::getStringSimilarity(repeat, *spacer_iter);
+            float ss_diff = PatternMatcher::getStringSimilarity(*spacer_iter, *(spacer_iter + 1));
+            ave_spacer_to_spacer_difference += ss_diff;
+            //MI std::cout << ss_diff << " : " << *spacer_iter << " : " << *(spacer_iter + 1) << std::endl;
             
-            sum_repeat_to_spacer_difference += PatternMatcher::getStringSimilarity(repeat, *spacer_iter);
-            sum_spacer_to_spacer_difference += PatternMatcher::getStringSimilarity(*spacer_iter, *(spacer_iter + 1));
+            ave_spacer_to_spacer_len_difference += spacer_iter->size() - (spacer_iter + 1)->size();
+            ave_repeat_to_spacer_len_difference += repeat.size() - spacer_iter->size();
             
-            sum_spacer_to_spacer_len_diff += spacer_iter->size() - (spacer_iter + 1)->size();
-            sum_repeat_to_spacer_len_diff += repeat.size() - spacer_iter->size();
+            if((int)(spacer_iter->length()) < min_spacer_length)
+            {
+            	min_spacer_length = (int)(spacer_iter->length()); 
+            }
+
+            if((int)(spacer_iter->length()) > max_spacer_length)
+            {
+            	max_spacer_length = (int)(spacer_iter->length()); 
+            }
             
             spacer_iter++;
         }
-        float diff_cutoff = (spacer_vec_size * CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY);
         
-        //float spacer_vec_size_as_float = (float)spacer_vec.size();
-        if (sum_spacer_to_spacer_difference > diff_cutoff) 
+        // we may not have compared anything...
+        if(num_compared == 0)
         {
-#ifdef DEBUG
-            logInfo("\tFailed test 4a. Spacers are too similar: "<<sum_spacer_to_spacer_difference/spacer_vec_size<<" > "<<diff_cutoff/spacer_vec_size, 8);
-#endif
-            return false;
+        	// there are only three spacers in this read and the read begins and ends on a spacer
+        	// we will still need to do some comparisons
+        	is_short = true;
+        	single_compare_index = 1;
         }
-#ifdef DEBUG
-        logInfo("\tPassed test 4a. Spacers are not too similar: "<<sum_spacer_to_spacer_difference/spacer_vec_size<<" < "<<diff_cutoff/spacer_vec_size, 8);
-#endif    
-        if (sum_repeat_to_spacer_difference > diff_cutoff)
+        else
         {
+        	// we can keep going!
+            ave_spacer_to_spacer_difference /= num_compared;
+            ave_repeat_to_spacer_difference /= num_compared;
+            ave_spacer_to_spacer_len_difference = abs(ave_spacer_to_spacer_len_difference /= num_compared);
+            ave_repeat_to_spacer_len_difference = abs(ave_repeat_to_spacer_len_difference /= num_compared);
+            
+            /*
+             * MAX AND MIN SPACER LENGTHS
+             */
+            if (min_spacer_length < minSpacerLength) 
+            {
 #ifdef DEBUG
-            logInfo("\tFailed test 4b. Spacers are too similar to the repeat: "<<sum_repeat_to_spacer_difference/spacer_vec_size<<" > "<<diff_cutoff/spacer_vec_size, 8);
+                logInfo("\tFailed test 4a. Min spacer length out of range: "<<min_spacer_length<<" < "<<minSpacerLength, 8);
 #endif
-            return false;
-        }
+                return false;
+            }
 #ifdef DEBUG
-        logInfo("\tPassed test 4b. Spacers are not too similar to the repeat: "<<sum_repeat_to_spacer_difference/spacer_vec_size<<" < "<<diff_cutoff/spacer_vec_size, 8);
+            logInfo("\tPassed test 4a. Min spacer length within range: "<<min_spacer_length<<" > "<<minSpacerLength, 8);
+#endif
+            if (min_spacer_length > maxSpacerLength) 
+            {
+#ifdef DEBUG
+                logInfo("\tFailed test 4b. Max spacer length out of range: "<<max_spacer_length<<" > "<<maxSpacerLength, 8);
+#endif
+                return false;
+            }
+#ifdef DEBUG
+            logInfo("\tPassed test 4b. Max spacer length within range: "<<max_spacer_length<<" < "<<maxSpacerLength, 8);
+#endif
+            
+            /*
+             * REPEAT AND SPACER CONTENT SIMILARITIES
+             */
+            if (ave_spacer_to_spacer_difference > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY) 
+            {
+#ifdef DEBUG
+                logInfo("\tFailed test 5a. Spacers are too similar: "<<ave_spacer_to_spacer_difference<<" > "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
+#endif
+                return false;
+            }
+#ifdef DEBUG
+            logInfo("\tPassed test 5a. Spacers are not too similar: "<<ave_spacer_to_spacer_difference<<" < "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
 #endif    
-        
-        int spacer_len_cutoff = spacer_vec_size * CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF;
-        if (abs((int)sum_spacer_to_spacer_len_diff) > spacer_len_cutoff) 
-        {
+            if (ave_repeat_to_spacer_difference > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY)
+            {
+#ifdef DEBUG
+                logInfo("\tFailed test 5b. Spacers are too similar to the repeat: "<<ave_repeat_to_spacer_difference<<" > "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
+#endif
+                return false;
+            }
+#ifdef DEBUG
+            logInfo("\tPassed test 5b. Spacers are not too similar to the repeat: "<<ave_repeat_to_spacer_difference<<" < "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
+#endif    
+            
+            /*
+             * REPEAT AND SPACER LENGTH SIMILARITIES
+             */
+            if (ave_spacer_to_spacer_len_difference > CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF) 
+            {
 #ifdef DEBUG 
-            logInfo("\tFailed test 5a. Spacer lengths differ too much: "<<abs(sum_spacer_to_spacer_len_diff)/spacer_vec_size<<" > "<<spacer_len_cutoff/spacer_vec_size, 8);
+                logInfo("\tFailed test 6a. Spacer lengths differ too much: "<<ave_spacer_to_spacer_len_difference<<" > "<<CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF, 8);
 #endif
-            return false;
-        }
+                return false;
+            }
 #ifdef DEBUG 
-        logInfo("\tPassed test 5a. Spacer lengths do not differ too much: "<<abs(sum_spacer_to_spacer_len_diff)/spacer_vec_size<<" < "<<spacer_len_cutoff/spacer_vec_size, 8);
+            logInfo("\tPassed test 6a. Spacer lengths do not differ too much: "<<ave_spacer_to_spacer_len_difference<<" < "<<CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF, 8);
 #endif    
-        int repeat_to_spacer_len_cutoff = spacer_vec_size * CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF;
-        
-        if (abs(sum_repeat_to_spacer_len_diff) > repeat_to_spacer_len_cutoff) 
-        {
+            if (ave_repeat_to_spacer_len_difference > CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF) 
+            {
 #ifdef DEBUG
-            logInfo("\tFailed test 5b. Repeat to spacer lengths differ too much: "<<abs(sum_repeat_to_spacer_len_diff)/spacer_vec_size<<" > "<<repeat_to_spacer_len_cutoff/spacer_vec_size, 8);
+                logInfo("\tFailed test 6b. Repeat to spacer lengths differ too much: "<<ave_repeat_to_spacer_len_difference<<" > "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
 #endif
-            return false;
+                return false;
+            }
+#ifdef DEBUG
+            logInfo("\tPassed test 6b. Repeat to spacer lengths do not differ too much: "<<ave_repeat_to_spacer_len_difference<<" < "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
+#endif
+            
         }
-#ifdef DEBUG
-        logInfo("\tPassed test 5b. Repeat to spacer lengths do not differ too much: "<<abs(sum_repeat_to_spacer_len_diff)/spacer_vec_size<<" < "<<repeat_to_spacer_len_cutoff/spacer_vec_size, 8);
-#endif
-        
     }
-    // short read only one spacer
-    else
+    
+    // Are we testing a short read or only one spacer?
+    if(is_short)
     {
-        std::string spacer = tmp_holder->spacerStringAt(0);
+        std::string spacer = tmp_holder->spacerStringAt(single_compare_index);
         float similarity = PatternMatcher::getStringSimilarity(repeat, spacer);
         if (similarity > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY) 
         {
+            /*
+             * MAX AND MIN SPACER LENGTHS
+             */
+        	if ((int)spacer.length() < minSpacerLength) 
+            {
 #ifdef DEBUG
-            logInfo("\tFailed test 4. Spacer is too similar to the repeat: "<<similarity<<" > "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
+                logInfo("\tFailed test 4a. Min spacer length out of range: "<<spacer.length()<<" < "<<minSpacerLength, 8);
+#endif
+                return false;
+            }
+#ifdef DEBUG
+            logInfo("\tPassed test 4a. Min spacer length within range: "<<spacer.length()<<" > "<<minSpacerLength, 8);
+#endif
+            if ((int)spacer.length() > maxSpacerLength) 
+            {
+#ifdef DEBUG
+                logInfo("\tFailed test 4b. Max spacer length out of range: "<<spacer.length()<<" > "<<maxSpacerLength, 8);
+#endif
+                return false;
+            }
+#ifdef DEBUG
+         	logInfo("\tPassed test 4b. Max spacer length within range: "<<spacer.length()<<" < "<<maxSpacerLength, 8);
+#endif
+            /*
+             * REPEAT AND SPACER CONTENT SIMILARITIES
+             */ 
+#ifdef DEBUG
+            logInfo("\tFailed test 5. Spacer is too similar to the repeat: "<<similarity<<" > "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
 #endif
             return false;
         }
 #ifdef DEBUG
-        logInfo("\tPassed test 4. Spacer is not too similar to the repeat: "<<similarity<<" < "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
+        logInfo("\tPassed test 5. Spacer is not too similar to the repeat: "<<similarity<<" < "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
 #endif        
+        
+        /*
+         * REPEAT AND SPACER LENGTH SIMILARITIES
+         */
         if (abs((int)spacer.length() - (int)repeat.length()) > CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF) 
         {
 #ifdef DEBUG
-            logInfo("\tFailed test 5. Repeat to spacer length differ too much: "<<abs((int)spacer.length() - (int)repeat.length())<<" > "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
+            logInfo("\tFailed test 6. Repeat to spacer length differ too much: "<<abs((int)spacer.length() - (int)repeat.length())<<" > "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
 #endif
             return false;
         }
 #ifdef DEBUG
-        logInfo("\tPassed test 5. Repeat to spacer length do not differ too much: "<<abs((int)spacer.length() - (int)repeat.length())<<" < "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
+        logInfo("\tPassed test 6. Repeat to spacer length do not differ too much: "<<abs((int)spacer.length() - (int)repeat.length())<<" < "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
 #endif
     }
-    return true;
     
+    return true;
 }
 
 bool isRepeatLowComplexity(std::string& repeat)

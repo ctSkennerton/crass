@@ -92,7 +92,7 @@ int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpa
 
 unsigned int extendPreRepeat(ReadHolder* tmp_holder, int searchWindowLength, int minSpacerLength);
 
-bool qcFoundRepeats(ReadHolder * tmp_holder);
+bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerLength);
 
 bool isRepeatLowComplexity(std::string& repeat);
 

@@ -62,7 +62,9 @@
 // --------------------------------------------------------------------
 // HARD CODED PARAMS FOR FINDING TRUE DRs
 // --------------------------------------------------------------------
-#define CRASS_DEF_MIN_CONS_ARRAY_LEN			1200				// minimum size of the consensus array
+#define CRASS_DEF_MIN_CONS_ARRAY_LEN            1200                // minimum size of the consensus array
+#define CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER      4                   // find the cons array length by multiplying read length by this guy
+#define CRASS_DEF_CONS_ARRAY_START              (0.5)               // how far into the cons array to start placing reads 
 #define CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF       (0.85)              // amount that a DR must agrre with the existsing DR within a zone to be added
 #define CRASS_DEF_NUM_KMERS_4_MODE              (5)                 // find the top XX occuring in the DR
 #define CRASS_DEF_NUM_KMERS_4_MODE_HALF         (CRASS_DEF_NUM_KMERS_4_MODE - (CRASS_DEF_NUM_KMERS_4_MODE/2)) // Ceil of 50% of CRASS_DEF_NUM_KMERS_4_MODE
@@ -93,14 +95,14 @@
 #define CRASS_DEF_DEF_KMER_LOOKUP_EXT           "crass_kmers.txt"
 #define CRASS_DEF_DEF_PATTERN_LOOKUP_EXT        "crass_direct_repeats.txt"
 #define CRASS_DEF_DEF_SPACER_LOOKUP_EXT         "crass_spacers.txt"
-#define CRASS_DEF_CRISPR_EXT					".crispr"
+#define CRASS_DEF_CRISPR_EXT                    ".crispr"
 // --------------------------------------------------------------------
 // XML
 // --------------------------------------------------------------------
-#define CRASS_DEF_CRISPR_HEADER					"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<crass_assem version=\"1.0\">\n"
+#define CRASS_DEF_CRISPR_HEADER                 "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<crass_assem version=\"1.0\">\n"
 #define CRASS_DEF_ROOT_ELEMENT                  "crispr"
 #define CRASS_DEF_XML_VERSION                   "1.0"
-#define CRASS_DEF_CRISPR_FOOTER					"</crass_assem>\n"
+#define CRASS_DEF_CRISPR_FOOTER                 "</crass_assem>\n"
 // --------------------------------------------------------------------
 // GRAPH BUILDING
 // --------------------------------------------------------------------
@@ -132,7 +134,7 @@
 #define CRASS_DEF_NUM_OF_BINS                   -1                  // the number of bins to create
 #define CRASS_DEF_GRAPH_COLOUR                  RED_BLUE            // default colour scale for the graphs
 #define CRASS_DEF_SPACER_LONG_DESC              false               // use a long desc of the spacer in the output graph
-#define CRASS_DEF_SPACER_SHOW_SINGLES			false				// do not show singles by default
+#define CRASS_DEF_SPACER_SHOW_SINGLES           false                // do not show singles by default
 
 typedef struct {
     int                 logLevel;                                           // level of verbosity allowed in the log file
@@ -155,8 +157,8 @@ typedef struct {
     bool                dontPerformScalling;                                // turn all scalling off for the user to define variables
     std::string         layoutAlgorithm;                                    // the graphviz layout algorithm to use 
     bool                longDescription;                                    // print a long description for the final spacer graph
-    bool 				showSingles;										// print singletons when making the spacer graph
-    int 				cNodeKmerLength;									// length of the kmers making up a crisprnode
+    bool                 showSingles;                                        // print singletons when making the spacer graph
+    int                 cNodeKmerLength;                                    // length of the kmers making up a crisprnode
 #ifdef DEBUG
     bool                noDebugGraph;                                       // Even if DEBUG preprocessor macro is set do not produce debug graph files
 #endif

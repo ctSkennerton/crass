@@ -140,70 +140,78 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
     //-----
     // Split down a read holder and make some nodes
     //
-        std::string working_str;
-        CrisprNode * prev_node = NULL;
-        
-        //    logInfo("Adding: " << RH->getHeader(),1);
-        
-        // add the header of this read to our stringcheck
-        StringToken header_st = NM_StringCheck.addString(RH->getHeader());
-        
-        if(RH->getFirstSpacer(&working_str))
-        {
-            
-            try {
-                // do we have a direct repeat from the very beginning
-                if (RH->startStopsAt(0) == 0) 
-                {
-                    addCrisprNodes(&prev_node, working_str, header_st);
-                } 
-                else 
-                {
-                    // we only want to add the second kmer, since it is anchored by the direct repeat
-                    addSecondCrisprNode(&prev_node, working_str, header_st);
-                }
-                
-                // get all the spacers in the middle
-                //check to see if we end with a direct repeat or a spacer
-                if (RH->getSeqLength() == (int)RH->back() + 1) 
-                {
-                    // direct repeat goes right to the end of the read take both
-                    while (RH->getNextSpacer(&working_str)) 
-                    {
-                        addCrisprNodes(&prev_node, working_str, header_st);
-                    }
-                } 
-                else 
-                {
-                    // we end with an overhanging spacer so we want to break from the loop early
-                    // so that on the final time we only cut the first kmer            
-                    while (RH->getLastSpacerPos() < (int)RH->getStartStopListSize() - 1) 
-                    {
-                        //std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
-                        RH->getNextSpacer(&working_str);
-                        addCrisprNodes(&prev_node, working_str, header_st);
-                    } 
-                    
-                    // get our last spacer
-                    if (RH->getNextSpacer(&working_str)) 
-                    {
-                        //std::cout<<working_str<<std::endl;
-                        addFirstCrisprNode(&prev_node, working_str, header_st);
-                    } 
-                }
-            } catch (crispr::substring_exception& e) {
-                std::cerr<<e.what()<<std::endl;
-                exit(99);
-            } catch (...) {
-                std::cerr<<"an unknown exception has occurred "<<__FILE__<<" : "<<__LINE__<<" : "<<__PRETTY_FUNCTION__<<std::endl; 
-            }
-        }
-        else
-        {
-            logError("Could not get a spacer for the read");
-            return false;
-        }
-        return true;
+	std::string working_str;
+	CrisprNode * prev_node = NULL;
+	
+	// add the header of this read to our stringcheck
+	StringToken header_st = NM_StringCheck.addString(RH->getHeader());
+	
+	//MI std::cout << std::endl << "----------------------------------\n" << RH->getHeader() << std::endl; 
+	//MI std::cout << RH->splitApartSimple() << std::endl;
+	
+	if(RH->getFirstSpacer(&working_str))
+	{
+		//MI std::cout << "first SP: " << working_str << std::endl;
+		try {
+			// do we have a direct repeat from the very beginning
+			if (RH->startStopsAt(0) == 0) 
+			{
+				//MI std::cout << "both" << std::endl;
+				addCrisprNodes(&prev_node, working_str, header_st);
+			} 
+			else 
+			{
+				//MI std::cout << "sec" << std::endl;
+				// we only want to add the second kmer, since it is anchored by the direct repeat
+				addSecondCrisprNode(&prev_node, working_str, header_st);
+			}
+			
+			// get all the spacers in the middle
+			//check to see if we end with a direct repeat or a spacer
+			if (RH->getSeqLength() == (int)RH->back() + 1) 
+			{
+				// direct repeat goes right to the end of the read take both
+				//MI std::cout << "DR until end" << std::endl;
+				while (RH->getNextSpacer(&working_str)) 
+				{		
+					//MI std::cout << "SP: " << working_str << std::endl;
+					addCrisprNodes(&prev_node, working_str, header_st);
+				}
+			} 
+			else 
+			{
+				//MI std::cout << "SP at end" << std::endl;
+				// we end with an overhanging spacer so we want to break from the loop early
+				// so that on the final time we only cut the first kmer            
+				while (RH->getLastSpacerPos() < (int)RH->getStartStopListSize() - 1) 
+				{
+					//std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
+					RH->getNextSpacer(&working_str);
+					//MI std::cout << "SP: " << working_str << std::endl;
+					addCrisprNodes(&prev_node, working_str, header_st);
+				} 
+				
+				// get our last spacer
+				if (RH->getNextSpacer(&working_str)) 
+				{
+					//std::cout<<working_str<<std::endl;
+					//MI std::cout << "last SP: " << working_str << std::endl;
+					addFirstCrisprNode(&prev_node, working_str, header_st);
+				} 
+			}
+		} catch (crispr::substring_exception& e) {
+			std::cerr<<e.what()<<std::endl;
+			exit(99);
+		} catch (...) {
+			std::cerr<<"an unknown exception has occurred "<<__FILE__<<" : "<<__LINE__<<" : "<<__PRETTY_FUNCTION__<<std::endl; 
+		}
+	}
+	else
+	{
+		logError("Could not get a spacer for the read");
+		return false;
+	}
+	return true;
 }
 
 //----
@@ -629,163 +637,182 @@ int NodeManager::cleanGraph(void)
     //-----
     // Clean all the bits off the graph mofo!
     //
-    std::multimap<CrisprNode *, CrisprNode *> fork_choice_map;
-    NodeVector nv_cap, nv_other, detach_list;
-    NodeVectorIterator nv_iter;
+    // keep going while we're detaching stuff
+    bool some_detached = true;
     
-    // get all the nodes
-    findAllNodes(&nv_cap, &nv_other);
-    
-    // First do caps
-    nv_iter = nv_cap.begin();
-    while(nv_iter != nv_cap.end())
+    while(some_detached)
     {
-        // we can just lop off caps joined by jumpers (perhaps)
-        if ((*nv_iter)->getInnerRank() == 0)
+        std::multimap<CrisprNode *, CrisprNode *> fork_choice_map;
+        NodeVector nv_cap, nv_other, detach_list;
+        NodeVectorIterator nv_iter;
+        some_detached = false;
+        
+        // get all the nodes
+        findAllNodes(&nv_cap, &nv_other);
+    
+        // First do caps
+        nv_iter = nv_cap.begin();
+        while(nv_iter != nv_cap.end())
         {
-            // make sure that this guy is linked to a cross node
-            edgeList * el;
-            if(0 != (*nv_iter)->getRank(CN_EDGE_JUMPING_F))
-                el = (*nv_iter)->getEdges(CN_EDGE_JUMPING_F);
-            else
-                el = (*nv_iter)->getEdges(CN_EDGE_JUMPING_B);
-            
-            // there is only one guy in this list!
-            int other_rank = ((el->begin())->first)->getTotalRank();
-            if(other_rank != 2)
-                detach_list.push_back(*nv_iter);
-        }
-        else
-        {
-            // make sure that this guy is linked to a cross node
-            edgeList * el;
-            bool is_forward;
-            if(0 != (*nv_iter)->getRank(CN_EDGE_FORWARD))
+            // we can just lop off caps joined by jumpers (perhaps)
+            if ((*nv_iter)->getInnerRank() == 0)
             {
-                el = (*nv_iter)->getEdges(CN_EDGE_FORWARD);
-                is_forward = false;
+                // make sure that this guy is linked to a cross node
+                edgeList * el;
+                if(0 != (*nv_iter)->getRank(CN_EDGE_JUMPING_F))
+                    el = (*nv_iter)->getEdges(CN_EDGE_JUMPING_F);
+                else
+                    el = (*nv_iter)->getEdges(CN_EDGE_JUMPING_B);
+                
+                // there is only one guy in this list!
+                int other_rank = ((el->begin())->first)->getTotalRank();
+                if(other_rank != 2)
+                    detach_list.push_back(*nv_iter);
             }
             else
             {
-                el = (*nv_iter)->getEdges(CN_EDGE_BACKWARD);
-                is_forward = true;
-            }
-            
-            // there is only one guy in this list!
-            CrisprNode * joining_node = ((el->begin())->first); 
-            int other_rank = joining_node->getTotalRank();
-            if(other_rank != 2)
-            {
-                // this guy joins onto a crossnode
-                // check to see if he is the only cap here!
-                NodeVector caps_at_join;
-                if(findCapsAt(&caps_at_join, is_forward, true, true, joining_node) > 1)
+                // make sure that this guy is linked to a cross node
+                edgeList * el;
+                bool is_forward;
+                if(0 != (*nv_iter)->getRank(CN_EDGE_FORWARD))
                 {
-                    // this is a fork at the end of an arm
-                    fork_choice_map.insert(std::pair<CrisprNode *, CrisprNode *>(joining_node, *nv_iter)) ;
+                    el = (*nv_iter)->getEdges(CN_EDGE_FORWARD);
+                    is_forward = false;
                 }
                 else
                 {
-                    // the only cap at a cross. NUKE!
-                    detach_list.push_back(*nv_iter);
-                }
-            }
-        }
-        nv_iter++;
-    }
-    
-    // make coverage decisions for end forks
-    std::map<CrisprNode *, int> best_coverage_map_cov;
-    std::map<CrisprNode *, CrisprNode *> best_coverage_map_node;
-    std::multimap<CrisprNode *, CrisprNode *>::iterator fcm_iter = fork_choice_map.begin();
-    while(fcm_iter != fork_choice_map.end())
-    {
-        if(best_coverage_map_cov.find(fcm_iter->first) == best_coverage_map_cov.end())
-        {
-            // first one!
-            best_coverage_map_cov.insert(std::pair<CrisprNode *, int>(fcm_iter->first, ((*fcm_iter).second)->getCoverage()));
-            best_coverage_map_node.insert(std::pair<CrisprNode *, CrisprNode *>(fcm_iter->first, (*fcm_iter).second));
-        }
-        else
-        {
-            // one is already here!
-            int new_cov = ((*fcm_iter).second)->getCoverage();
-            if(best_coverage_map_cov[fcm_iter->first] < new_cov)
-            {
-                // the new one is better!
-                best_coverage_map_cov[fcm_iter->first] = ((*fcm_iter).second)->getCoverage();
-                best_coverage_map_node[fcm_iter->first] = (*fcm_iter).second;
-            }
-        }
-        fcm_iter++;
-    }
-    fcm_iter = fork_choice_map.begin();
-    while(fcm_iter != fork_choice_map.end())
-    {
-        if(best_coverage_map_node[fcm_iter->first] != (*fcm_iter).second)
-        {
-            // not the best one!
-            detach_list.push_back((*fcm_iter).second);
-        }
-        fcm_iter++;
-    }
-    
-    // then do bubbles
-    nv_iter = nv_other.begin();
-    while(nv_iter != nv_other.end())
-    {
-        switch ((*nv_iter)->getTotalRank()) 
-        {
-            case 2:
-            {
-                // check that there is one inner and one jumping edge
-                if (!((*nv_iter)->getInnerRank() && (*nv_iter)->getJumpingRank())) 
-                {
-#ifdef DEBUG
-                    logInfo("node "<<(*nv_iter)->getID()<<" has only two edges of the same type -- cannot be linear -- detaching", 8);
-#endif
-                    (*nv_iter)->detachNode();
-                }
-                break;
-            }
-            case 1:
-            case 0:
-                logError("Nodes in bubble removal have less than two edges!");
-                break;
-            default:
-            {
-                // get the rank for the the inner and jumping edges.
-                if((*nv_iter)->getInnerRank() != 1)
-                {
-                    // there are multiple inner edges for this guy
-                    clearBubbles(*nv_iter, CN_EDGE_FORWARD);
-                    
+                    el = (*nv_iter)->getEdges(CN_EDGE_BACKWARD);
+                    is_forward = true;
                 }
                 
-                if((*nv_iter)->getJumpingRank() != 1)
+                // there is only one guy in this list!
+                CrisprNode * joining_node = ((el->begin())->first); 
+                int other_rank = joining_node->getTotalRank();
+                if(other_rank != 2)
                 {
-                    // there are multiple jumping edges for this guy
-                    clearBubbles(*nv_iter, CN_EDGE_JUMPING_F);
+                    // this guy joins onto a crossnode
+                    // check to see if he is the only cap here!
+                    NodeVector caps_at_join;
+                    if(findCapsAt(&caps_at_join, is_forward, true, true, joining_node) > 1)
+                    {
+                        // this is a fork at the end of an arm
+                        fork_choice_map.insert(std::pair<CrisprNode *, CrisprNode *>(joining_node, *nv_iter)) ;
+                    }
+                    else
+                    {
+                        // the only cap at a cross. NUKE!
+                        detach_list.push_back(*nv_iter);
+                    }
                 }
-                break;
             }
-        }        
-        nv_iter++;
-    }
+            nv_iter++;
+        }
+        
+        // make coverage decisions for end forks
+        std::map<CrisprNode *, int> best_coverage_map_cov;
+        std::map<CrisprNode *, CrisprNode *> best_coverage_map_node;
+        std::multimap<CrisprNode *, CrisprNode *>::iterator fcm_iter = fork_choice_map.begin();
+        while(fcm_iter != fork_choice_map.end())
+        {
+            if(best_coverage_map_cov.find(fcm_iter->first) == best_coverage_map_cov.end())
+            {
+                // first one!
+                best_coverage_map_cov.insert(std::pair<CrisprNode *, int>(fcm_iter->first, ((*fcm_iter).second)->getCoverage()));
+                best_coverage_map_node.insert(std::pair<CrisprNode *, CrisprNode *>(fcm_iter->first, (*fcm_iter).second));
+            }
+            else
+            {
+                // one is already here!
+                int new_cov = ((*fcm_iter).second)->getCoverage();
+                if(best_coverage_map_cov[fcm_iter->first] < new_cov)
+                {
+                    // the new one is better!
+                    best_coverage_map_cov[fcm_iter->first] = ((*fcm_iter).second)->getCoverage();
+                    best_coverage_map_node[fcm_iter->first] = (*fcm_iter).second;
+                }
+            }
+            fcm_iter++;
+        }
+        fcm_iter = fork_choice_map.begin();
+        while(fcm_iter != fork_choice_map.end())
+        {
+            if(best_coverage_map_node[fcm_iter->first] != (*fcm_iter).second)
+            {
+                // not the best one!
+                detach_list.push_back((*fcm_iter).second);
+            }
+            fcm_iter++;
+        }
+
+        // check to see if we'll need to do this again
+        if(detach_list.size() > 0)
+            some_detached = true;
+        
+        // finally, detach!
+        nv_iter = detach_list.begin();
+        while(nv_iter != detach_list.end())
+        {
+            (*nv_iter)->detachNode();
+            nv_iter++;
+        }
     
-    // finally, detach!
-    nv_iter = detach_list.begin();
-    while(nv_iter != detach_list.end())
-    {
-        (*nv_iter)->detachNode();
-        nv_iter++;
-    }
+        // refresh the node lists
+        findAllNodes(&nv_cap, &nv_other);
     
+        // then do bubbles
+        nv_iter = nv_other.begin();
+        while(nv_iter != nv_other.end())
+        {
+            switch ((*nv_iter)->getTotalRank()) 
+            {
+                case 2:
+                {
+                    // check that there is one inner and one jumping edge
+                    if (!((*nv_iter)->getInnerRank() && (*nv_iter)->getJumpingRank())) 
+                    {
+    #ifdef DEBUG
+                        logInfo("node "<<(*nv_iter)->getID()<<" has only two edges of the same type -- cannot be linear -- detaching", 8);
+    #endif
+                        (*nv_iter)->detachNode();
+                        some_detached = true;
+                    }
+                    break;
+                }
+                case 1:
+                case 0:
+                    break;
+                default:
+                {
+                    // get the rank for the the inner and jumping edges.
+                    if((*nv_iter)->getInnerRank() != 1)
+                    {
+                        // there are multiple inner edges for this guy
+                        if(clearBubbles(*nv_iter, CN_EDGE_FORWARD))
+                        	some_detached = true;
+                    }
+                    
+                    if((*nv_iter)->getJumpingRank() != 1)
+                    {
+                        // there are multiple jumping edges for this guy
+                        if(clearBubbles(*nv_iter, CN_EDGE_JUMPING_F))
+                        	some_detached = true;
+                    }
+                    break;
+                }
+            }        
+            nv_iter++;
+        }
+    }
     return 0;
 }
 
-void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
+bool NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
 {
+	//-----
+	// Return true if something got detached
+	//
+	bool some_detached = false;
+	
     // get a list of edges
     edgeList * curr_edges = rootNode->getEdges(currentEdgeType);
     
@@ -839,6 +866,7 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                         {
                             // the first guy has greater coverage so detach our current node
                             (curr_edges_iter->first)->detachNode();
+                            some_detached = true;
 #ifdef DEBUG
                             logInfo("Detaching "<<(curr_edges_iter->first)->getID()<<" as it has lower coverage", 8);
 #endif
@@ -847,6 +875,7 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                         {
                             // the first guy was lower so kill him
                             first_node->detachNode();
+                            some_detached = true;
 #ifdef DEBUG
                             logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 8);
 #endif
@@ -860,6 +889,7 @@ void NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
         }
         curr_edges_iter++;
     }
+    return some_detached;
 }
 
 EDGE_TYPE NodeManager::getOppositeEdgeType(EDGE_TYPE currentEdgeType)
@@ -945,7 +975,7 @@ int NodeManager::buildSpacerGraph(void)
 {
     //-----
     // For all forward nodes, count the number of ongoing spacers
-	// make spacer edges if told to do so
+    // make spacer edges if told to do so
     //
     SpacerListIterator spacers_iter = NM_Spacers.begin();
     while(spacers_iter != NM_Spacers.end()) 
@@ -956,28 +986,28 @@ int NodeManager::buildSpacerGraph(void)
         
         if(rq_last_node->isAttached() && rq_leader_node->isAttached())
         {
-        	// mark this guy as attached
-        	(spacers_iter->second)->setAttached(true);
-        	
-			// now get all the jumping forward edges from this node
-			edgeList * qel = rq_last_node->getEdges(CN_EDGE_JUMPING_F);
-			edgeListIterator qel_iter = qel->begin();
-			while(qel_iter != qel->end())
-			{
-				if((qel_iter->first)->isAttached() && (qel_iter->first)->isForward())
-				{
-					// a forward attached node. Now check for inner edges.
-					edgeList * el = (qel_iter->first)->getEdges(CN_EDGE_FORWARD);
-					edgeListIterator el_iter = el->begin();
-					while(el_iter != el->end())
-					{
-						if((el_iter->first)->isAttached())
-						{
-							// bingo!
-							SpacerInstance * next_spacer = NM_Spacers[makeSpacerKey((el_iter->first)->getID(), (qel_iter->first)->getID())];
-							
+            // mark this guy as attached
+            (spacers_iter->second)->setAttached(true);
+            
+            // now get all the jumping forward edges from this node
+            edgeList * qel = rq_last_node->getEdges(CN_EDGE_JUMPING_F);
+            edgeListIterator qel_iter = qel->begin();
+            while(qel_iter != qel->end())
+            {
+                if((qel_iter->first)->isAttached() && (qel_iter->first)->isForward())
+                {
+                    // a forward attached node. Now check for inner edges.
+                    edgeList * el = (qel_iter->first)->getEdges(CN_EDGE_FORWARD);
+                    edgeListIterator el_iter = el->begin();
+                    while(el_iter != el->end())
+                    {
+                        if((el_iter->first)->isAttached())
+                        {
+                            // bingo!
+                            SpacerInstance * next_spacer = NM_Spacers[makeSpacerKey((el_iter->first)->getID(), (qel_iter->first)->getID())];
+                            
                             if (next_spacer == spacers_iter->second) {
-                                logError("Spacer "<<spacers_iter->second << " with id "<< (spacers_iter->second)->getID()<< " has an edge to itself... aborting edge "<<next_spacer <<" : "<< spacers_iter->second);
+                                //logError("Spacer "<<spacers_iter->second << " with id "<< (spacers_iter->second)->getID()<< " has an edge to itself... aborting edge "<<next_spacer <<" : "<< spacers_iter->second);
                             } 
                             else 
                             {
@@ -995,16 +1025,16 @@ int NodeManager::buildSpacerGraph(void)
                                 next_spacer->addEdge(new_edge2);
                             }
 
-						}
-						el_iter++;
-					}
-				}
-				qel_iter++;
-			}
+                        }
+                        el_iter++;
+                    }
+                }
+                qel_iter++;
+            }
         }
         else
         {
-        	(spacers_iter->second)->setAttached(false);	
+            (spacers_iter->second)->setAttached(false);    
         }
         spacers_iter++;
     }
@@ -1048,31 +1078,31 @@ void NodeManager::findSpacerForContig(SpacerInstanceVector * sv, int contigID)
 
 int NodeManager::cleanSpacerGraph(void)
 {
-	//-----
-	// Clean up the spacer graph
-	//
-	int round  = 0;
+    //-----
+    // Clean up the spacer graph
+    //
+    int round  = 0;
     bool cleaned_some = true;
     while(cleaned_some)
     {
-    	round++;
-    	logInfo("Cleaning round: " << round, 2);
-    	cleaned_some = false;
-    	
-    	// remove fur
+        round++;
+        logInfo("Cleaning round: " << round, 2);
+        cleaned_some = false;
+        
+        // remove fur
         SpacerListIterator sp_iter = NM_Spacers.begin();
         while(sp_iter != NM_Spacers.end())
         {
             if((sp_iter->second)->isAttached())
             {
-				if(sp_iter->second->isFur())
-				{
-					//std::cout << "a: " << sp_iter->second << std::endl;
-					sp_iter->second->detachFromSpacerGraph();
-					cleaned_some = true;
-				}
+                if(sp_iter->second->isFur())
+                {
+                    //std::cout << "a: " << sp_iter->second << std::endl;
+                    sp_iter->second->detachFromSpacerGraph();
+                    cleaned_some = true;
+                }
             }
-        	sp_iter++;
+            sp_iter++;
         }
         
         // remove non-viable nodes
@@ -1081,12 +1111,12 @@ int NodeManager::cleanSpacerGraph(void)
         {
             if((sp_iter->second)->isAttached())
             {
-				if(!sp_iter->second->isViable())
-				{
-					//std::cout << "b: " << sp_iter->second << std::endl;
-					sp_iter->second->detachFromSpacerGraph();
-					cleaned_some = true;
-				}
+                if(!sp_iter->second->isViable())
+                {
+                    //std::cout << "b: " << sp_iter->second << std::endl;
+                    sp_iter->second->detachFromSpacerGraph();
+                    cleaned_some = true;
+                }
             }
             sp_iter++;
         }
@@ -1094,99 +1124,99 @@ int NodeManager::cleanSpacerGraph(void)
         // remove bubbles
         removeSpacerBubbles();
     }
-	return 0;
+    return 0;
 }
 
 void NodeManager::removeSpacerBubbles(void)
 {
-	//-----
-	// remove bubbles from the spacer graph
-	//
-	std::map<SpacerKey, SpacerInstance *> bubble_map;
-	SpacerInstanceVector detach_list;
-	SpacerListIterator sp_iter = NM_Spacers.begin();
-	while(sp_iter != NM_Spacers.end())
-	{
-		if((sp_iter->second)->isAttached())
-		{
-			// we only car about rank 2 or over nodes
-			if(2 <= (sp_iter->second)->getSpacerRank())
-			{
-				// first make a list of the forward and backward spacers
-				SpacerEdgeVector_Iterator edge_iter = (sp_iter->second)->begin();
-				SpacerInstanceVector f_spacers, r_spacers;
-				while(edge_iter != (sp_iter->second)->end())
-				{
-					if((*edge_iter)->d == REVERSE)
-						r_spacers.push_back((*edge_iter)->edge);
-					else
-						f_spacers.push_back((*edge_iter)->edge);
-					edge_iter++;
-				}
-				
-				// now make a list of spacer keys 
-				SpacerInstanceVector_Iterator r_edge_iter = r_spacers.begin();
-				while(r_edge_iter != r_spacers.end())
-				{
-					SpacerInstanceVector_Iterator f_edge_iter =  f_spacers.begin();
-					while(f_edge_iter != f_spacers.end())
-					{
-						// make a key
-						SpacerKey tmp_key = makeSpacerKey((*r_edge_iter)->getID(), (*f_edge_iter)->getID());
-						// check if we've seen this key before
-						std::map<SpacerKey, SpacerInstance *>::iterator bm_iter = bubble_map.find(tmp_key);
-						if(bm_iter == bubble_map.end())
-						{
-							// first time
-							bubble_map[tmp_key] = sp_iter->second;
-						}
-						else
-						{
-							// bubble! -- check the coverages!
-							if(bubble_map[tmp_key]->getCount() < (sp_iter->second)->getCount())
-							{
-								// stored guy has lower coverage!
-								detach_list.push_back(bubble_map[tmp_key]);
-								bubble_map[tmp_key] = sp_iter->second;
-							}
-							else if((sp_iter->second)->getCount() < bubble_map[tmp_key]->getCount())
-							{
-								// new guy has lower coverage!
-								detach_list.push_back(sp_iter->second);
-							}
-							else
-							{
-								// coverages are equal, kill the one with the lower rank
-								if(bubble_map[tmp_key]->getSpacerRank() < (sp_iter->second)->getSpacerRank())
-								{
-									// stored guy has lower coverage!
-									detach_list.push_back(bubble_map[tmp_key]);
-									bubble_map[tmp_key] = sp_iter->second;
-								}
-								else
-								{
-									// new guy has lower or equal coverage!
-									detach_list.push_back(sp_iter->second);
-								}
-							}
-						}
-						f_edge_iter++;
-					}
-					r_edge_iter++;
-				}
-			}
-		}
-		sp_iter++;
-	}
-	        
-	// detach all on the detach list!
-	SpacerInstanceVector_Iterator dl_iter = detach_list.begin();
-	while(dl_iter != detach_list.end())
-	{
-		(*dl_iter)->detachFromSpacerGraph();
-		dl_iter++;
-	}
-	
+    //-----
+    // remove bubbles from the spacer graph
+    //
+    std::map<SpacerKey, SpacerInstance *> bubble_map;
+    SpacerInstanceVector detach_list;
+    SpacerListIterator sp_iter = NM_Spacers.begin();
+    while(sp_iter != NM_Spacers.end())
+    {
+        if((sp_iter->second)->isAttached())
+        {
+            // we only car about rank 2 or over nodes
+            if(2 <= (sp_iter->second)->getSpacerRank())
+            {
+                // first make a list of the forward and backward spacers
+                SpacerEdgeVector_Iterator edge_iter = (sp_iter->second)->begin();
+                SpacerInstanceVector f_spacers, r_spacers;
+                while(edge_iter != (sp_iter->second)->end())
+                {
+                    if((*edge_iter)->d == REVERSE)
+                        r_spacers.push_back((*edge_iter)->edge);
+                    else
+                        f_spacers.push_back((*edge_iter)->edge);
+                    edge_iter++;
+                }
+                
+                // now make a list of spacer keys 
+                SpacerInstanceVector_Iterator r_edge_iter = r_spacers.begin();
+                while(r_edge_iter != r_spacers.end())
+                {
+                    SpacerInstanceVector_Iterator f_edge_iter =  f_spacers.begin();
+                    while(f_edge_iter != f_spacers.end())
+                    {
+                        // make a key
+                        SpacerKey tmp_key = makeSpacerKey((*r_edge_iter)->getID(), (*f_edge_iter)->getID());
+                        // check if we've seen this key before
+                        std::map<SpacerKey, SpacerInstance *>::iterator bm_iter = bubble_map.find(tmp_key);
+                        if(bm_iter == bubble_map.end())
+                        {
+                            // first time
+                            bubble_map[tmp_key] = sp_iter->second;
+                        }
+                        else
+                        {
+                            // bubble! -- check the coverages!
+                            if(bubble_map[tmp_key]->getCount() < (sp_iter->second)->getCount())
+                            {
+                                // stored guy has lower coverage!
+                                detach_list.push_back(bubble_map[tmp_key]);
+                                bubble_map[tmp_key] = sp_iter->second;
+                            }
+                            else if((sp_iter->second)->getCount() < bubble_map[tmp_key]->getCount())
+                            {
+                                // new guy has lower coverage!
+                                detach_list.push_back(sp_iter->second);
+                            }
+                            else
+                            {
+                                // coverages are equal, kill the one with the lower rank
+                                if(bubble_map[tmp_key]->getSpacerRank() < (sp_iter->second)->getSpacerRank())
+                                {
+                                    // stored guy has lower coverage!
+                                    detach_list.push_back(bubble_map[tmp_key]);
+                                    bubble_map[tmp_key] = sp_iter->second;
+                                }
+                                else
+                                {
+                                    // new guy has lower or equal coverage!
+                                    detach_list.push_back(sp_iter->second);
+                                }
+                            }
+                        }
+                        f_edge_iter++;
+                    }
+                    r_edge_iter++;
+                }
+            }
+        }
+        sp_iter++;
+    }
+            
+    // detach all on the detach list!
+    SpacerInstanceVector_Iterator dl_iter = detach_list.begin();
+    while(dl_iter != detach_list.end())
+    {
+        (*dl_iter)->detachFromSpacerGraph();
+        dl_iter++;
+    }
+    
 }
 
 int NodeManager::splitIntoContigs(void)
@@ -1247,7 +1277,7 @@ int NodeManager::splitIntoContigs(void)
 
     delete walk_elem;
     
-	logInfo("Made: " << NM_NextContigID << " spacer contig(s)", 1);
+    logInfo("Made: " << NM_NextContigID << " spacer contig(s)", 1);
     return 0;
 }
 
@@ -1326,10 +1356,10 @@ void NodeManager::setContigIDForSpacers(SpacerInstanceVector * currentContigNode
 
 void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool split)
 {
-	//-----
-	// dump reads to this file
-	//
-	std::map<std::string, int> read_2_contig_map; 
+    //-----
+    // dump reads to this file
+    //
+    std::map<std::string, int> read_2_contig_map; 
     std::ofstream reads_file;
     reads_file.open(readsFileName.c_str());
     if (reads_file.good()) 
@@ -1346,33 +1376,33 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
             
             if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
             {
-            	std::vector<std::string> headers = Cleader->getReadHeaders(&NM_StringCheck);
-            	std::vector<std::string>::iterator h_iter = headers.begin();
-            	while(h_iter != headers.end())
-            	{
-            		read_2_contig_map[*h_iter] = CID;
-            		h_iter++;
-            	}
-            	
-            	headers = Clast->getReadHeaders(&NM_StringCheck);
-            	h_iter = headers.begin();
-				while(h_iter != headers.end())
-				{
-					read_2_contig_map[*h_iter] = CID;
-					h_iter++;
-				}
+                std::vector<std::string> headers = Cleader->getReadHeaders(&NM_StringCheck);
+                std::vector<std::string>::iterator h_iter = headers.begin();
+                while(h_iter != headers.end())
+                {
+                    read_2_contig_map[*h_iter] = CID;
+                    h_iter++;
+                }
+                
+                headers = Clast->getReadHeaders(&NM_StringCheck);
+                h_iter = headers.begin();
+                while(h_iter != headers.end())
+                {
+                    read_2_contig_map[*h_iter] = CID;
+                    h_iter++;
+                }
             }
             spacer_iter++;
         }
         
-		// now we can print all the reads to file
-		ReadListIterator read_iter = NM_ReadList.begin();
-		while (read_iter != NM_ReadList.end()) 
-		{
-			std::string header = (*read_iter)->getHeader();
-			if(read_2_contig_map.find(header) != read_2_contig_map.end())
-			{
-				if ((*read_iter)->getIsFasta()) 
+        // now we can print all the reads to file
+        ReadListIterator read_iter = NM_ReadList.begin();
+        while (read_iter != NM_ReadList.end()) 
+        {
+            std::string header = (*read_iter)->getHeader();
+            if(read_2_contig_map.find(header) != read_2_contig_map.end())
+            {
+                if ((*read_iter)->getIsFasta()) 
                 {
                     reads_file<<">"<<header<<"_C"<<read_2_contig_map[header];
                     if (((*read_iter)->getComment()).length() > 0) 
@@ -1414,11 +1444,11 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
                 }
                 
                 
-			}
-			read_iter++;
-		}
-		reads_file.close();
-	}
+            }
+            read_iter++;
+        }
+        reads_file.close();
+    }
 }
 
 // Spacer dictionaries
@@ -1830,30 +1860,30 @@ bool NodeManager::printSpacerGraph(std::string& outFileName, std::string title, 
     
 std::string NodeManager::getSpacerGraphLabel(SpacerInstance * spacer, bool longDesc)
 {
-	//-----
-	// Get the label for a spacer when printing the spacer graph
-	//
-	std::stringstream se;
-	if(longDesc)
-	{
-		if (spacer->isFlanker()) {
+    //-----
+    // Get the label for a spacer when printing the spacer graph
+    //
+    std::stringstream se;
+    if(longDesc)
+    {
+        if (spacer->isFlanker()) {
             se<< CRASS_DEF_GV_FL_PREFIX;
         } else {
             se << CRASS_DEF_GV_SPA_PREFIX;
         }
         se << spacer->getID() << "_" << NM_StringCheck.getString(spacer->getID()) << "_" << spacer->getCount();
-	}
-	else
-	{
+    }
+    else
+    {
         if (spacer->isFlanker()) {
             se<< CRASS_DEF_GV_FL_PREFIX;
         } else {
             se << CRASS_DEF_GV_SPA_PREFIX;
         }
         se << spacer->getID() << "_" << spacer->getCount();
-	}
-	se << "_C" << spacer->getContigID();
-	return se.str();
+    }
+    se << "_C" << spacer->getContigID();
+    return se.str();
 }
 
 void NodeManager::printAllSpacers(void)
@@ -1873,20 +1903,20 @@ void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, std::strin
     //-----
     // Print a graphviz style graph of the DRs and spacers
     //
-	static int cluster_number = 0;
-	gvKeyGroupHeader(dataOut, cluster_number, groupNumber);
-	double ul = NM_SpacerRainbow.getUpperLimit();
-	double ll = NM_SpacerRainbow.getLowerLimit();
-	double step_size = (ul - ll) / (numSteps - 1);
-	if(step_size < 1) { step_size = 1; }
-	for(double i = ll; i <= ul; i+= step_size)
-	{
-		int this_step = int(i); 
-		std::stringstream ss;
-		ss << this_step;
-		gvKeyEntry(dataOut, ss.str(), NM_SpacerRainbow.getColour(this_step));
-	}
-	gvKeyFooter(dataOut);
+    static int cluster_number = 0;
+    gvKeyGroupHeader(dataOut, cluster_number, groupNumber);
+    double ul = NM_SpacerRainbow.getUpperLimit();
+    double ll = NM_SpacerRainbow.getLowerLimit();
+    double step_size = (ul - ll) / (numSteps - 1);
+    if(step_size < 1) { step_size = 1; }
+    for(double i = ll; i <= ul; i+= step_size)
+    {
+        int this_step = int(i); 
+        std::stringstream ss;
+        ss << this_step;
+        gvKeyEntry(dataOut, ss.str(), NM_SpacerRainbow.getColour(this_step));
+    }
+    gvKeyFooter(dataOut);
     cluster_number++;
 }
 

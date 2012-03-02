@@ -45,6 +45,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <unistd.h>
 
 // local includes
 #include "WorkHorse.h"
@@ -59,8 +60,6 @@
 #include "StringCheck.h"
 #include "config.h"
 #include "Exception.h"
-
-
 
 bool sortDirectRepeatByLength( const std::string &a, const std::string &b)
 {
@@ -355,7 +354,7 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         }
     }
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
-    logInfo("number of reads found so far: "<<this->numOfReads(), 2);
+    logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
     
     // There will be an abundance of forms for each direct repeat.
     // We needs to do somes clustering! Then trim and concatenate the direct repeats
@@ -382,7 +381,7 @@ int WorkHorse::buildGraph(void)
     
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
     std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<mTrueDRs.size()<<" putative CRISPRs found!"<<std::endl;
-    std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: ";
+    //MI std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<std::flush;
     while(drg_iter != mDR2GIDMap.end())
     {
         if(NULL != drg_iter->second)
@@ -390,24 +389,28 @@ int WorkHorse::buildGraph(void)
 #ifdef DEBUG
             logInfo("Creating NodeManager "<<drg_iter->first, 6);
 #endif
-            std::cout<<' '<<drg_iter->first<<' ';
+            //MI std::cout<<'['<<drg_iter->first<<','<<mTrueDRs[drg_iter->first]<<std::flush;
             mDRs[mTrueDRs[drg_iter->first]] = new NodeManager(mTrueDRs[drg_iter->first], mOpts);
+            //MI std::cout<<'.'<<std::flush;
             DR_ClusterIterator drc_iter = (drg_iter->second)->begin();
             while(drc_iter != (drg_iter->second)->end())
             {
                 // go through each read
+            	//MI std::cout<<'|'<<std::flush;
                 ReadListIterator read_iter = mReads[*drc_iter]->begin();
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
+                	//MI std::cout<<'.'<<std::flush;
                     mDRs[mTrueDRs[drg_iter->first]]->addReadHolder(*read_iter);
                     read_iter++;
                 }
                 drc_iter++;
             }
+            //MI std::cout<<"],"<<std::flush;
         }
         drg_iter++;
     }
-    std::cout<<std::endl;
+    //MI std::cout<<std::endl;
     return 0;
 }
 
@@ -530,8 +533,7 @@ int WorkHorse::mungeDRs(void)
     std::map<int, std::map<std::string, int> * >::iterator group_count_iter = group_kmer_counts_map.begin();
     while(group_count_iter != group_kmer_counts_map.end())
     {
-        DR_Cluster * clustered_DRs = mDR2GIDMap[group_count_iter->first];
-        if(clustered_DRs != NULL)
+        if(NULL != mDR2GIDMap[group_count_iter->first])
         {
             // it's real, so parse this group
             // get the five top kmers
@@ -539,7 +541,7 @@ int WorkHorse::mungeDRs(void)
             if (getNMostAbundantKmers(n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second)) 
             {
                 // a return value of false indicates that this function has deleted clustered_DRs
-                parseGroupedDRs(group_count_iter->first, &n_top_kmers, clustered_DRs, &next_free_GID);
+                parseGroupedDRs(group_count_iter->first, &n_top_kmers, &next_free_GID);
             }
             else
             {
@@ -569,7 +571,7 @@ int WorkHorse::mungeDRs(void)
     return 0;
 }
 
-bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, StringToken * masterDRToken, std::string * masterDRSequence)
+bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence)
 {
 	//-----
 	// Identify a master DR
@@ -588,8 +590,8 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, DR_C
     
     // go through the DRs in this cluster, we'd like to find one which has all kmers in it...
     // moreover, we need to get the one with all 5 and the most reads
-    DR_ClusterIterator dr_iter = clustered_DRs->begin();
-    while (dr_iter != clustered_DRs->end()) 
+    DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
+    while (dr_iter != (mDR2GIDMap[GID])->end()) 
     {
         std::string tmp_DR = mStringCheck.getString(*dr_iter);
         bool got_all_mode_mers = true;
@@ -627,10 +629,10 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, DR_C
         // probably a dud. throw it out
         // free the memory and clean up
         logInfo("Could not identify a master DR", 4);
-        if(NULL != clustered_DRs)
+        if(NULL != mDR2GIDMap[GID])
         {
-        	delete clustered_DRs;
-        	clustered_DRs = NULL;
+        	delete mDR2GIDMap[GID];
+        	mDR2GIDMap[GID] = NULL;
             mDR2GIDMap.erase(GID);
         }
     }
@@ -638,15 +640,16 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, DR_C
     return false;
 }
 
-bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
+bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
 {
 	//-----
 	// Use the data structures initialised in parseGroupedDRs
 	// Load all the reads into the consensus array
 	//
 	logInfo("Populating consensus array", 1);
+
 	bool first_run = true;          // we only need to do this once
-	int array_len = ((int)3*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)3*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
+	int array_len = ((int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 
 	// chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
@@ -694,20 +697,21 @@ bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToke
                     case 'G':
                         index = 2;
                         break;
-                    case 'T':
+                    default:
                         index = 3;
                         break;
                 }
-                if(index >= 0 && index < 4)
-                {
-                	if((i+this_read_start_pos) >= array_len)
-                	{
-                		logError("The consensus/coverage arrays are too short. Consider changing CRASS_DEF_MIN_CONS_ARRAY_LEN to something larger and re-compiling");
-                        throw crispr::exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,"The consensus/coverage arrays are too short. \
-                                                Consider changing CRASS_DEF_MIN_CONS_ARRAY_LEN to something larger and re-compiling");
-                	}
-                    coverage_array[index][i+this_read_start_pos]++;
-                }
+				int index_b = i+this_read_start_pos; 
+				if((index_b) >= array_len)
+				{
+					logError("The consensus/coverage arrays are too short. Consider changing CRASS_DEF_MIN_CONS_ARRAY_LEN to something larger and re-compiling");
+				}
+				if((index_b) < 0)
+				{
+					logError("AARRGGHH!!! " << i << " : " << this_read_start_pos << " : " << index_b << " : " << kmer_positions_ARRAY[0]  << " - " << (*read_iter)->startStopsAt(dr_start_index) << " - " << kmer_positions_DR[0]);
+				}
+
+				coverage_array[index][index_b]++;
             }
         }
         else
@@ -719,8 +723,8 @@ bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToke
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // now go thru all the other DRs in this group and add them into
     // the consensus array
-    DR_ClusterIterator dr_iter = clustered_DRs->begin();
-    while (dr_iter != clustered_DRs->end()) 
+    DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
+    while (dr_iter != (mDR2GIDMap[GID])->end()) 
     {
         // get the string for this mofo
         std::string tmp_DR = mStringCheck.getString(*dr_iter);
@@ -781,6 +785,7 @@ bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToke
                         mReads[st] = mReads[*dr_iter];
                         mReads[*dr_iter] = NULL;
                         *dr_iter = st;
+                        (*DR_offset_map)[*dr_iter] = -1;
                     }
                     
                     for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
@@ -815,7 +820,7 @@ bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToke
                     {
                         // note the position of this DR in the array
                         (*DR_offset_map)[*dr_iter] = ((kmer_positions_ARRAY)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index]);
-                        
+
                         // We need to check that at least CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF percent of bases agree within the "Zone"
                         int this_DR_start_index = 0;
                         int zone_start_index = *dr_zone_start;
@@ -925,22 +930,38 @@ bool WorkHorse::populateCoverageArray(std::string master_DR_sequence, StringToke
                             }
                         }
                     }
-                    else
-                    {
-                        // std::cout<<"TODO: kill this guy here"<<std::endl;
-                        // TODO
-                        // should probably kill this guy here. He couldn't be added to the array
-                        // pretty sure that we want to kill dr_iter
-                    }
                 }
             }
         }
         dr_iter++;
     }	
+
+    // kill the unfounded ones
+    dr_iter = (mDR2GIDMap[GID])->begin();
+    while (dr_iter != (mDR2GIDMap[GID])->end()) 
+    {
+    	if(DR_offset_map->find(*dr_iter) != DR_offset_map->end())
+    	{
+			if((*DR_offset_map)[*dr_iter] == -1)
+			{
+				clearReadList(mReads[*dr_iter]);
+				mReads[*dr_iter] = NULL;
+				dr_iter = (mDR2GIDMap[GID])->erase(dr_iter); 
+			}
+	    	else
+	    	{
+	    		dr_iter++;
+	    	}
+    	}
+    	else
+    	{
+    		dr_iter++;
+    	}
+    }
     return true;
 } 
 
-std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, DR_Cluster * clustered_DRs, int * nextFreeGID)
+std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, int * nextFreeGID)
 {
 	//-----
 	// calculate the consensus sequence in the consensus array and the  
@@ -951,11 +972,17 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 		logInfo("DR zone: " << *dr_zone_start << " -> " << *dr_zone_end, 1);
 #endif
 	
-	int array_len = ((int)3*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)3*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
+	int array_len = ((int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 	// chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
-
+    std::map<char, int> reverse_alphabet;
+	for(int i = 0; i < 4; i++)
+	{
+		reverse_alphabet[alphabet[i]] = i;
+	}
+	
 	// populate the conservation array
+    int num_GT_zero = 0;
     for(int j = 0; j < array_len; j++)
 	{
 		int max_count = 0;
@@ -973,10 +1000,19 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 
 		// we need at least CRASS_DEF_MIN_READ_DEPTH reads to call a DR
 		if(total_count > CRASS_DEF_MIN_READ_DEPTH)
+		{
 			conservation_array[j] = (float)(max_count)/total_count;
+			num_GT_zero++;
+		}
 		else
+		{
 			conservation_array[j] = 0;
+		}
 	}
+    
+    // check to see that this DR is supported by a bare minimum of reads
+    if(num_GT_zero < CRASS_DEF_MIN_READ_DEPTH)
+    	logWarn("**WARNING: low confidence DR", 1);
 	
 	// trim these back a bit (if we trim too much we'll get it back right now anywho)
 	*dr_zone_start += CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
@@ -1011,7 +1047,7 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 	for(int i = *dr_zone_start; i <= *dr_zone_end; i++)
 	{
 #ifdef DEBUG
-		logInfo("Pos: " << i << " conserved(%): " << conservation_array[i] << " consensus: " << consensus_array[i], 1);
+		logInfo("Pos: " << i << " coverage: " << coverage_array[reverse_alphabet[consensus_array[i]]][i] << " conserved(%): " << conservation_array[i] << " consensus: " << consensus_array[i], 1);
 #endif		
 		(*collapsed_pos)++;
 		if(conservation_array[i] >= CRASS_DEF_COLLAPSED_CONS_CUT_OFF)
@@ -1060,22 +1096,22 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 				// is this seen at the DR level?
 				(*refined_DR_ends)[i] = false;
 				std::map<char, int> collapsed_options2;
-				DR_ClusterIterator dr_iter2 = clustered_DRs->begin();
-				while (dr_iter2 != clustered_DRs->end()) 
+				DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
+				while (dr_iter != (mDR2GIDMap[GID])->end()) 
 				{
-					std::string tmp_DR = mStringCheck.getString(*dr_iter2);
-					if(-1 != (*DR_offset_map)[*dr_iter2])
+					std::string tmp_DR = mStringCheck.getString(*dr_iter);
+					if(-1 != (*DR_offset_map)[*dr_iter])
 					{
 						// check if the deciding character is within range of this DR
 						// collapsed_pos + dr_zone_start gives the index in the ARRAY of the collapsed char
-						// DR_offset_map[*dr_iter2] gives the start of the DR in the array
-						// We need to check that collapsed_pos + dr_zone_start >= DR_offset_map[*dr_iter2] AND
-						// that collapsed_pos < dr_zone_start - DR_offset_map[*dr_iter2] + tmp_DR.length()
-						//if(DR_offset_map[*dr_iter2] <= dr_zone_start && dr_zone_start < (DR_offset_map[*dr_iter2] + (int)(tmp_DR.length())) && collapsed_pos < (int)(tmp_DR.length()))
-						if((*collapsed_pos + *dr_zone_start >= (*DR_offset_map)[*dr_iter2]) && (*collapsed_pos + *dr_zone_start - (*DR_offset_map)[*dr_iter2] < ((int)tmp_DR.length())))
+						// DR_offset_map[*dr_iter] gives the start of the DR in the array
+						// We need to check that collapsed_pos + dr_zone_start >= DR_offset_map[*dr_iter] AND
+						// that collapsed_pos < dr_zone_start - DR_offset_map[*dr_iter] + tmp_DR.length()
+						//if(DR_offset_map[*dr_iter] <= dr_zone_start && dr_zone_start < (DR_offset_map[*dr_iter] + (int)(tmp_DR.length())) && collapsed_pos < (int)(tmp_DR.length()))
+						if((*collapsed_pos + *dr_zone_start >= (*DR_offset_map)[*dr_iter]) && (*collapsed_pos + *dr_zone_start - (*DR_offset_map)[*dr_iter] < ((int)tmp_DR.length())))
 						{
 							// this is easy, we can compare based on this char only
-							char decision_char = tmp_DR[*dr_zone_start - (*DR_offset_map)[*dr_iter2] + *collapsed_pos];
+							char decision_char = tmp_DR[*dr_zone_start - (*DR_offset_map)[*dr_iter] + *collapsed_pos];
 							collapsed_options2[decision_char] = (*collapsed_options)[decision_char];
 						}
 					}
@@ -1083,7 +1119,7 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 					{
 						logWarn("No offset for DR: " << tmp_DR, 1);
 					}
-					dr_iter2++;
+					dr_iter++;
 				}
 				
 				if(2 > collapsed_options2.size())
@@ -1126,19 +1162,19 @@ std::string WorkHorse::calculateDRConsensus(std::map<StringToken, int> * DR_offs
 	return true_DR;
 }
 
-bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, DR_Cluster * clustered_DRs, int * nextFreeGID) 
+bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID) 
 {
 	
     //-----
     // Cluster refinement and possible splitting for a Group ID
     //
     logInfo("Parsing group: " << GID, 4);
-    
+    		
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Find a Master DR for this group of DRs
     StringToken master_DR_token = -1;
     std::string master_DR_sequence = "**unset**";
-    if(!findMasterDR(GID, nTopKmers, clustered_DRs, &master_DR_token, &master_DR_sequence)) { return false; }
+    if(!findMasterDR(GID, nTopKmers, &master_DR_token, &master_DR_sequence)) { return false; }
     
     // now we have the n most abundant kmers and one DR which contains them all
     // time to rock and rrrroll!
@@ -1147,7 +1183,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     // Initialise variables we'll need
     // chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
-    int array_len = ((int)3*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)3*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
+    int array_len = ((int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 
     // first we need a 4 * array_len
     int ** coverage_array = new int*[4];
@@ -1194,7 +1230,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     
     // The offset of the start position of each potential DR 
     // when compared to the "true DR"
-    // we use this structure when we detect overcollaping
+    // we use this structure when we detect overcollapsing
     std::map<StringToken, int> DR_offset_map;
     
     // we will compare the orientations and positions of all other guys to the master so we need a permanent store
@@ -1206,7 +1242,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     int dr_zone_end = -1;
 
     // just the positions in the DR fangs...
-    kmer_positions_ARRAY[0] = (int)(array_len/3);
+    kmer_positions_ARRAY[0] = (int)(array_len*CRASS_DEF_CONS_ARRAY_START);
     isKmerPresent(kmer_rcs_DR, kmer_positions_DR, (*nTopKmers)[0], &master_DR_sequence);
     
     for(int i = 1; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
@@ -1227,7 +1263,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Set up the master DR's array and insert this guy into the main array
-    populateCoverageArray(master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, clustered_DRs, coverage_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
+    populateCoverageArray(GID, master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, coverage_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
     
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // calculate consensus and diversity
@@ -1236,17 +1272,16 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
 	int collapsed_pos = -1;
 	std::map<char, int> collapsed_options;            // holds the chars we need to split on
 	std::map<int, bool> refined_DR_ends;              // so we can update DR ends based on consensus 
-    std::string true_DR = calculateDRConsensus(&DR_offset_map, &collapsed_pos, &collapsed_options, &refined_DR_ends, &dr_zone_start, &dr_zone_end, coverage_array, consensus_array, conservation_array, clustered_DRs, nextFreeGID);
-    
+    std::string true_DR = calculateDRConsensus(GID, &DR_offset_map, &collapsed_pos, &collapsed_options, &refined_DR_ends, &dr_zone_start, &dr_zone_end, coverage_array, consensus_array, conservation_array, nextFreeGID);
+
     // check to make sure that the DR is not just some random long RE
     if((unsigned int)(true_DR.length()) > mOpts->highDRsize)
     {
         // probably a dud. throw it out
         // free the memory and clean up
-        if(NULL != clustered_DRs)
+        if(NULL != mDR2GIDMap[GID])
         {
-        	delete clustered_DRs;
-        	clustered_DRs = NULL;
+        	delete mDR2GIDMap[GID];
         	mDR2GIDMap[GID] = NULL;
         }
 
@@ -1276,10 +1311,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     {
         // probably a dud. throw it out
         // free the memory and clean up
-        if(NULL != clustered_DRs)
+        if(NULL != mDR2GIDMap[GID])
         {
-        	delete clustered_DRs;
-        	clustered_DRs = NULL;
+        	delete mDR2GIDMap[GID];
         	mDR2GIDMap[GID] = NULL;
         }
         
@@ -1311,10 +1345,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
     {
         // probably a dud. throw it out
         // free the memory and clean up
-        if(NULL != clustered_DRs)
+        if(NULL != mDR2GIDMap[GID])
         {
-        	delete clustered_DRs;
-        	clustered_DRs = NULL;
+        	delete mDR2GIDMap[GID];
         	mDR2GIDMap[GID] = NULL;
         }
         
@@ -1339,8 +1372,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         }
         return false;
     }
-    
-    
+
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Update the refined starts and ends of the DR 
     if(0 == collapsed_options.size())
@@ -1432,7 +1464,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
 		delete[] coverage_array;
 		coverage_array = NULL;
     }
-    
+
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // possibly split the DR group
     
@@ -1454,8 +1486,8 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
             co_iter++;
         }
         
-        DR_ClusterIterator dr_iter = clustered_DRs->begin();
-        while (dr_iter != clustered_DRs->end()) 
+        DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
+        while (dr_iter != (mDR2GIDMap[GID])->end()) 
         {
             std::string tmp_DR = mStringCheck.getString(*dr_iter);
             if(-1 != DR_offset_map[*dr_iter])
@@ -1616,10 +1648,9 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         }
         
         // time to delete the old clustered DRs and the group from the DR2GID_map
-        if(NULL != clustered_DRs)
+        if(NULL != mDR2GIDMap[GID])
         {
-        	delete clustered_DRs;
-        	clustered_DRs = NULL;
+        	delete mDR2GIDMap[GID];
         	mDR2GIDMap[GID] = NULL;
         }
         
@@ -1629,7 +1660,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         std::map<char, int>::iterator cc_iter = coll_char_to_GID_map.begin();
         while(cc_iter != coll_char_to_GID_map.end())
         {
-            parseGroupedDRs(cc_iter->second, nTopKmers, mDR2GIDMap[cc_iter->second], nextFreeGID);
+            parseGroupedDRs(cc_iter->second, nTopKmers, nextFreeGID);
             cc_iter++;
         }
     }
@@ -1650,25 +1681,34 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, D
         DR_ClusterIterator drc_iter = (mDR2GIDMap[GID])->begin();
         while(drc_iter != (mDR2GIDMap[GID])->end())
         {
-            if (DR_offset_map[*drc_iter] == -1 ) 
-            {
-                logError("Repeat "<< *drc_iter<<" in Group "<<GID <<" has no offset in DR_offset_map");
-            } 
-            else 
-            {
-                // go through each read
-                ReadListIterator read_iter = mReads[*drc_iter]->begin();
-                while (read_iter != mReads[*drc_iter]->end()) 
-                {
-                    (*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
-                    // reverse complement sequence if the true DR is not in its laurenized form
-                    if (rev_comp) 
-                    {
-                        (*read_iter)->reverseComplementSeq();
-                    }
-                    read_iter++;
-                }
-            }
+        	if(DR_offset_map.find(*drc_iter) == DR_offset_map.end())
+        	{
+        		logError("1: Repeat "<< *drc_iter<<" in Group "<<GID <<" has no offset in DR_offset_map");
+        	}
+        	else
+        	{
+				if (DR_offset_map[*drc_iter] == -1 ) 
+				{
+					// This means that we couldn't add this DR or any of it's reads into the consensus array
+					logError("2: Repeat "<< *drc_iter<<" in Group "<<GID <<" has no offset in DR_offset_map");
+				} 
+				else 
+				{
+					// go through each read
+					ReadListIterator read_iter = mReads[*drc_iter]->begin();
+					while (read_iter != mReads[*drc_iter]->end()) 
+					{
+						(*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
+	
+						// reverse complement sequence if the true DR is not in its laurenized form
+						if (rev_comp) 
+						{
+							(*read_iter)->reverseComplementSeq();
+						}
+						read_iter++;
+					}
+				}
+        	}
             drc_iter++;
         }
     }
@@ -1938,7 +1978,6 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     }
     
     // we need to record the group for this mofo!
-
     mDR2GIDMap[group]->push_back(DRToken);
     
     // we need to assign all homeless kmers to the group!
@@ -2061,24 +2100,6 @@ int WorkHorse::splitIntoContigs(void)
 //**************************************
 // file IO
 //**************************************
-
-void WorkHorse::printFileLookups(std::string fileName, lookupTable &kmerLookup , lookupTable &patternsLookup, lookupTable &spacerLookup)
-{
-    //-----
-    // Print all the information from a single round
-    //
-    logInfo("Printing lookup tables from file: " << fileName << "to " << mOutFileDir, 1);
-    
-    // Make file names
-    std::string kmer_lookup_name = mOutFileDir + CRASS_DEF_DEF_KMER_LOOKUP_EXT;
-    std::string patterns_lookup_name = mOutFileDir + CRASS_DEF_DEF_PATTERN_LOOKUP_EXT;
-    std::string spacer_lookup_name = mOutFileDir + CRASS_DEF_DEF_SPACER_LOOKUP_EXT;
-    
-    // Write!
-    writeLookupToFile(kmer_lookup_name, kmerLookup);  
-    writeLookupToFile(patterns_lookup_name, patternsLookup);
-    writeLookupToFile(spacer_lookup_name, spacerLookup);
-}
 
 
 int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
@@ -2318,10 +2339,8 @@ bool WorkHorse::checkFileOrError(const char * fileName)
         std::cerr << e.what()<<std::endl;
         logError(e.what());
         return false;
-
     }
 }
-
 
 bool WorkHorse::printXML(std::string namePrefix)
 {
@@ -2432,6 +2451,10 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
     xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
     
     std::string file_name;
+    char * buf;
+    std::string absolute_dir = getcwd(buf, 4096);
+    absolute_dir += "/";
+    delete buf;
     // add in files if they exist
     if (!mOpts->logToScreen) 
     {
@@ -2439,11 +2462,11 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         file_name = mOpts->output_fastq + PACKAGE_NAME + "." + mTimeStamp + ".log";
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("log", file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("log", absolute_dir + file_name, metadata_elem);
         }
         else
         {
-            logError("Could not find the log file at "<<file_name<<" but I think it should be there... wierd");
+            logError("Could not find the log file at "<<absolute_dir + file_name<<" but I think it should be there... wierd");
         }
     }
     
@@ -2456,22 +2479,22 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_debug.gv";
         if (checkFileOrError((file_name + file_sufix).c_str())) 
         {
-            xmlDoc->addFileToMetadata("data", (file_name + file_sufix), metadata_elem);
+            xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the Debug .gv file at "<< file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the Debug .gv file at "<< absolute_dir << file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
         }
         
         // and now for the cleaned .gv
         file_name = mOpts->output_fastq + "Clean_";
         if (checkFileOrError((file_name + file_sufix).c_str())) 
         {
-            xmlDoc->addFileToMetadata("data", (file_name + file_sufix), metadata_elem);
+            xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the Debug .gv file at "<<file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the Debug .gv file at "<<absolute_dir <<file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
             
         }
     }
@@ -2487,22 +2510,22 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         file_name = mOpts->output_fastq + "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the Debug .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the Debug .eps file at "<<absolute_dir <<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
         }
         
         file_name = mOpts->output_fastq + "Clean_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
         
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the cleaned debug .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the cleaned debug .eps file at "<<absolute_dir +file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
         }
     }
 
@@ -2512,11 +2535,11 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         file_name = mOpts->output_fastq + "Spacers_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("image", file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the Spacer .eps file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            logError("Could not find the Spacer .eps file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
         }
     } 
 
@@ -2527,11 +2550,11 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
     file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".fa";
     if (checkFileOrError(file_name.c_str())) 
     {
-        xmlDoc->addFileToMetadata("sequence", file_name, metadata_elem);
+        xmlDoc->addFileToMetadata("sequence", absolute_dir + file_name, metadata_elem);
     } 
     else 
     {
-        logError("Could not find the fasta file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+        logError("Could not find the fasta file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
     }
     
     
@@ -2539,11 +2562,11 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
     file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".spacers";
     if (checkFileOrError(file_name.c_str())) 
     {
-        xmlDoc->addFileToMetadata("data", file_name, metadata_elem);
+        xmlDoc->addFileToMetadata("data", absolute_dir + file_name, metadata_elem);
     } 
     else 
     {
-        logError("Could not find the spacer dictionary file at "<<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+        logError("Could not find the spacer dictionary file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
     }
     return 0;
     

@@ -17,7 +17,7 @@ LT_LANG([C++])
 AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
 AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
 AC_DEFINE([PACKAGE_MINOR_VERSION],[2],[Define the minor version of the package])
-AC_DEFINE([PACKAGE_REVISION],[1],[Define the revision of the package])
+AC_DEFINE([PACKAGE_REVISION],[2],[Define the revision of the package])
 
 
 AC_DEFINE([CRISPRTOOLS_PACKAGE_FULL_NAME],["Crisprtools"],[Define the full name of the package])
