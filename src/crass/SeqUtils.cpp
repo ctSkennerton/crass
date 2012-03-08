@@ -126,9 +126,9 @@ void RecursiveMkdir(std::string dir)
     size_t pos = 0;
     while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
         tmp = dir.substr(0,pos);
-        mkdir(tmp.c_str(), S_IRWXU);
+        mkdir(tmp.c_str(), S_IRWXU | S_IRWXG);
     }
-    mkdir(dir.c_str(), S_IRWXU);
+    mkdir(dir.c_str(), S_IRWXU | S_IRWXG);
 }
 
 
