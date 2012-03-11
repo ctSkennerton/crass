@@ -235,7 +235,6 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     
     // check to see if these kmers are already stored
     StringToken st1 = NM_StringCheck.getToken(first_kmer);
-    StringToken st2 = NM_StringCheck.getToken(second_kmer);
     
     // if they have been added previously then token != 0
     if(0 == st1)
@@ -251,13 +250,13 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     {
         // we already have a node for this guy
         first_kmer_node = NM_Nodes[st1];
-        (NM_Nodes[st1])->incrementCount();
+        first_kmer_node->incrementCount();
     }
     
+    StringToken st2 = NM_StringCheck.getToken(second_kmer);
     if(0 == st2)
     {
         st2 = NM_StringCheck.addString(second_kmer);
-        
         second_kmer_node = new CrisprNode(st2);
         second_kmer_node->setForward(false);
         NM_Nodes[st2] = second_kmer_node;
@@ -265,7 +264,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     else
     {
         second_kmer_node = NM_Nodes[st2];
-        (NM_Nodes[st2])->incrementCount();
+        second_kmer_node->incrementCount();
     }
     
     // add in the read headers for the two CrisprNodes
@@ -293,7 +292,11 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     if(NM_Spacers.find(this_sp_key) == NM_Spacers.end())
     {
         // new instance
-        StringToken sp_str_token = NM_StringCheck.addString(workingString);
+        StringToken sp_str_token = NM_StringCheck.getToken(workingString);
+    	if(0 == sp_str_token)
+    	{
+            sp_str_token = NM_StringCheck.addString(workingString);
+    	}
         curr_spacer = new SpacerInstance(sp_str_token, first_kmer_node, second_kmer_node);
         NM_Spacers[this_sp_key] = curr_spacer;
         

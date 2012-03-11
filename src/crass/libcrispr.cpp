@@ -895,7 +895,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         // we need to do things a little differently depending on whether of not this guy starts 
         // or ends on a spacer...
         int sp_start_offset = 0;
-        int sp_end_offset = 0;
+        int sp_end_offset = 1;
         if (tmp_holder->startStopsAt(0) != 0)
         {
         	// starts with a spacer
@@ -909,7 +909,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
 			sp_end_offset++;
 		}
 
-		// now go through the spacers
+		// now go through the spacers and check for similarities
 		std::vector<std::string> spacer_vec = tmp_holder->getAllSpacerStrings();
         std::vector<std::string>::iterator spacer_iter = spacer_vec.begin();
         std::vector<std::string>::iterator spacer_last = spacer_vec.end();
@@ -922,22 +922,28 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
             float ss_diff = PatternMatcher::getStringSimilarity(*spacer_iter, *(spacer_iter + 1));
             ave_spacer_to_spacer_difference += ss_diff;
             //MI std::cout << ss_diff << " : " << *spacer_iter << " : " << *(spacer_iter + 1) << std::endl;
-            ave_spacer_to_spacer_len_difference += ((float)spacer_iter->size() - (float)(spacer_iter + 1)->size());
-            ave_repeat_to_spacer_len_difference +=  ((float)repeat.size() - (float)spacer_iter->size());
-            
+            ave_spacer_to_spacer_len_difference += ((float)(spacer_iter->size()) - (float)((spacer_iter + 1)->size()));
+            ave_repeat_to_spacer_len_difference +=  ((float)(repeat.size()) - (float)(spacer_iter->size()));
+            spacer_iter++;
+        }
+
+        // now look for max and min lengths!
+        spacer_iter = spacer_vec.begin() + sp_start_offset;
+        spacer_last++;
+        while (spacer_iter != spacer_last) 
+        {
+        	num_compared++;
             if((int)(spacer_iter->length()) < min_spacer_length)
             {
             	min_spacer_length = (int)(spacer_iter->length()); 
             }
-
             if((int)(spacer_iter->length()) > max_spacer_length)
             {
             	max_spacer_length = (int)(spacer_iter->length()); 
             }
-            
             spacer_iter++;
         }
-        
+
         // we may not have compared anything...
         if(num_compared == 0)
         {
@@ -1103,7 +1109,6 @@ bool isRepeatLowComplexity(std::string& repeat)
     
     std::string::iterator dr_iter = repeat.begin();
     //int i = dr_match.DR_StartPos;
-    while (dr_iter != repeat.end()) 
     {
         switch (*dr_iter) 
         {

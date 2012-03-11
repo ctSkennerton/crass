@@ -63,7 +63,6 @@ std::string StringCheck::getString(StringToken token)
     {
         return mT2S_map[token];
     }
-    std::cout << token << std::endl;
     logError("Token: " << token << " not stored");
     stringstream ss;
     ss << "ERROR_" << token;
