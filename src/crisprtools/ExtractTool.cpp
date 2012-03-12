@@ -1,10 +1,10 @@
 // ExtractTool.cpp
 //
-// Copyright (C) 2011 2012 - Connor Skennerton
+// Copyright (C) 2011, 2012 - Connor Skennerton
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation; either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -35,6 +35,7 @@ ExtractTool::ExtractTool (void)
     
     ET_OutputPrefix = "./";
     ET_OutputNamePrefix = "";
+    ET_OutputHeaderPrefix = "";
 }
 
 ExtractTool::~ExtractTool (void)
@@ -56,7 +57,7 @@ int ExtractTool::processOptions (int argc, char ** argv)
     static struct option long_options [] = {       
         {"help", no_argument, NULL, 'h'}
     };
-	while((c = getopt_long(argc, argv, "hg:Csdfxyo:O:", long_options, &index)) != -1)
+	while((c = getopt_long(argc, argv, "hH:g:Csdfxyo:O:", long_options, &index)) != -1)
 	{
         switch(c)
 		{
@@ -71,6 +72,11 @@ int ExtractTool::processOptions (int argc, char ** argv)
 				exit(1);
 				break;
 			}
+            case 'H':
+            {
+                ET_OutputHeaderPrefix = optarg;
+                break;
+            }
 			case 'g':
 			{
 				generateGroupsFromString (optarg);
@@ -400,7 +406,7 @@ void ExtractTool::processData(crispr::XML& xmlDoc, xercesc::DOMElement * current
                     break;
                 }
             }
-            outStream<<'>'<<gid<<id<<std::endl<<c_seq<<std::endl;
+            outStream<<'>'<<ET_OutputHeaderPrefix<<gid<<id<<std::endl<<c_seq<<std::endl;
             xr(&c_seq);
         }
     } catch( xercesc::XMLException& e ) {
