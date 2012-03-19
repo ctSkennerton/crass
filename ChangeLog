@@ -1,3 +1,66 @@
+Mon Mar 19 19:53:04 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Mon Mar 19 19:52:41 2012 +1000    ctSkennerton
+    XML file no longer prints the time stamp
+
+Mon Mar 19 13:15:36 2012 +1000    minillinim
+    Merge remote branch 'origin/master'
+
+Mon Mar 19 13:09:23 2012 +1000    minillinim
+    Fixed two bugs in the clustering code which made identical DRs be in different groups, Also changed the NmostAbundant code to include only UNIQUE kmers.
+
+Mon Mar 19 13:08:16 2012 +1000    minillinim
+    Changed the term kmer_size to kmer_clust_size to better reflect it's usage in the code
+
+Mon Mar 19 13:07:18 2012 +1000    minillinim
+    Changed the cluster size and kmer lengths for DR variant clustering Changed the name kmer_size to kmer_clustsize to reflect better its useage in the code
+
+Mon Mar 12 13:01:18 2012 +1000    ctSkennerton
+    added in a new option to allow a custom prefix to the fasta header
+
+Mon Mar 12 12:59:43 2012 +1000    ctSkennerton
+    added in a simple batch script
+
+Sun Mar 11 23:02:26 2012 +1000    ctSkennerton
+    solved issue #36.  Added in a test during option processing to check if the output directory is writable
+
+Sun Mar 11 22:26:27 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Sun Mar 11 22:26:08 2012 +1000    ctSkennerton
+    upped the version number of crisprtools
+
+Sun Mar 11 22:25:24 2012 +1000    ctSkennerton
+    added in a tool so that crisper files can be filtered based on the number of spacers repeats and flankers
+
+Sun Mar 11 22:22:42 2012 +1000    ctSkennerton
+    fixed a bug where the spacer count wasn't being incremented if there was not coverage
+
+Thu Mar 8 20:56:10 2012 +1000    ctSkennerton
+    make files with group read and write
+
+Tue Mar 6 16:53:16 2012 +1000    minillinim
+    yay for no more bugs!
+
+Fri Mar 2 15:34:18 2012 +1000    ctSkennerton
+    properly initalised a variable now
+
+Fri Mar 2 14:12:53 2012 +1000    ctSkennerton
+    fixed a bug in libcrispr.cpp caused by bad casting
+
+Fri Mar 2 12:00:26 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+Fri Mar 2 11:57:36 2012 +1000    ctSkennerton
+    added in some exception handling to Workhorse
+
+Fri Mar 2 11:55:59 2012 +1000    ctSkennerton
+    added a defult case to smith waterman case statement
+
+Fri Mar 2 00:46:34 2012 +1000    ctSkennerton
+    update the version number to 0.2.2
+
 Fri Mar 2 00:43:50 2012 +1000    ctSkennerton
     Merge branch 'master' of github.com:ctSkennerton/crass
 
