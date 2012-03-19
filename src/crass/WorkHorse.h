@@ -135,7 +135,7 @@ class WorkHorse {
         int renderSpacerGraphs(std::string namePrefix);
         bool checkFileOrError(const char * fileName);
     
-        bool printXML(void) { return printXML(mOpts->output_fastq + "crass_" + mTimeStamp); } // print all the assembly gossip to XML
+        bool printXML(void) { return printXML(mOpts->output_fastq + "crass"); } // print all the assembly gossip to XML
         bool printXML(std::string namePrefix);
         bool addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
         bool addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
