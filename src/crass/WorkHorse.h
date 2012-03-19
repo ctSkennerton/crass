@@ -112,6 +112,7 @@ class WorkHorse {
         int numberOfReadsInGroup(DR_Cluster * currentGroup);
         bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string kmer, const std::string * DR);
         bool getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
+        bool getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
         
         //**************************************
         // spacer graphs
