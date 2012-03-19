@@ -55,8 +55,8 @@
 #define CRASS_DEF_MIN_SW_ALIGNMENT_RATIO        (0.85)              // SW alignments need to be this percentage of the original query to be considered real
 #define CRASS_DEF_SW_SEARCH_EXT                 8
 #define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD     (0.75)
-#define CRASS_DEF_KMER_SIZE                     7
-#define CRASS_DEF_K_CLUST_MIN                   12
+#define CRASS_DEF_KMER_SIZE                     11					// length of the kmers used when clustering DR groups
+#define CRASS_DEF_K_CLUST_MIN                   6					// number of shared kmers needed to group DR variants together
 #define CRASS_DEF_READ_COUNTER_LOGGER           100000
 #define CRASS_DEF_MAX_READS_FOR_DECISION        1000
 // --------------------------------------------------------------------
@@ -145,7 +145,7 @@ typedef struct {
     unsigned int        highSpacerSize;                                     // the upper size limit for a spacer
     std::string         output_fastq;                                       // the output directory for the output files
     std::string         delim;                                              // delimiter used in stats report currently not used
-    int                 kmer_size;                                          // number of kmers needed to be shared to add to a cluser
+    int                 kmer_clust_size;                                    // number of kmers needed to be shared to add to a cluser
     unsigned int        searchWindowLength;                                 // option 'w'used in long read search only
     unsigned int        minNumRepeats;                                      // option 'n'used in long read search only
     bool                logToScreen;                                        // log to std::cout rather than to the log file
