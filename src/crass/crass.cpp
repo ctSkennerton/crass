@@ -333,6 +333,12 @@ int processOptions(int argc, char *argv[], options *opts)
                 {
                     recursiveMkdir(opts->output_fastq);
                 }
+                // check that the directory is writable
+                else if(access(optarg, W_OK))
+                {
+                    std::cerr<<PACKAGE_NAME<<" [ERROR]: You do not have permission to write to "<<optarg<<std::endl;
+                    exit(1);
+                }
                 break;
             case 'r': 
                 opts->reportStats = true; 

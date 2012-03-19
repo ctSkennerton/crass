@@ -262,7 +262,6 @@ void StatTool::parseSpacers(xercesc::DOMElement * parentNode, crispr::XML& xmlPa
 
         char * c_spacer = tc(currentElement->getAttribute(xmlParser.getSeq()));
         std::string spacer = c_spacer;
-
         xr(&c_spacer);
         statManager->addSpLenVec(static_cast<int>(spacer.length()));
         char * c_cov = tc(currentElement->getAttribute(xmlParser.getCov()));
@@ -272,8 +271,8 @@ void StatTool::parseSpacers(xercesc::DOMElement * parentNode, crispr::XML& xmlPa
             int cov_int;
             from_string(cov_int, cov, std::dec);
             statManager->addSpCovVec(cov_int);
-            statManager->incrementSpacerCount();
         }
+        statManager->incrementSpacerCount();
     }
 }
 

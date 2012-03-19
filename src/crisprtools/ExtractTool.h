@@ -53,6 +53,7 @@ class ExtractTool
         std::ofstream ET_OneStream;
         std::ofstream ET_GroupStream;
         std::string ET_OutputPrefix;
+        std::string ET_OutputHeaderPrefix;
         std::string ET_OutputNamePrefix;
         std::bitset<7> ET_BitMask;
 /*
