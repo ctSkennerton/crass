@@ -455,10 +455,10 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
                 {
                     // read through the subsuquent bases untill they don't match
                     unsigned int extenstion_length = 0;
-                    while (0)//read.at(first_end + extenstion_length) == read.at(second_end + extenstion_length)) 
+                    while (read.at(first_end + extenstion_length) == read.at(second_end + extenstion_length)) 
                     {
 #ifdef DEBUG
-                        logInfo(read.at(first_end + extenstion_length)<<" == "<<read.at(second_end + extenstion_length),10);
+                        logInfo(read.at(first_end + extenstion_length)<<" == "<<read.at(second_end + extenstion_length),20);
 #endif
                         extenstion_length++;
                         next_index++;

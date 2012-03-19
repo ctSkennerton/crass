@@ -536,9 +536,9 @@ int WorkHorse::mungeDRs(void)
         if(NULL != mDR2GIDMap[group_count_iter->first])
         {
             // it's real, so parse this group
-            // get the five top kmers
+            // get the N top kmers
             std::vector<std::string> n_top_kmers;
-            if (getNMostAbundantKmers(n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second)) 
+            if (getNMostAbundantKmers((mDR2GIDMap[group_count_iter->first])->size(), n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second)) 
             {
                 // a return value of false indicates that this function has deleted clustered_DRs
                 parseGroupedDRs(group_count_iter->first, &n_top_kmers, &next_free_GID);
@@ -580,16 +580,16 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, Stri
 	// otherwise deletes the memory pointed at by clustered_DRs and returns false
 	//
 	//
-    // to store our DR which has all 5 kmers
+    // to store our DR which has all XX kmers
 	logInfo("Identifying a master DR", 1);
     int master_read_count = 0;
     
-    // these are needed fo rthe call to is kmer present but we don't actually need to values!
+    // these are needed for the call to is kmer present but we don't actually need to values!
     bool disp_rc;
     int disp_pos;
     
     // go through the DRs in this cluster, we'd like to find one which has all kmers in it...
-    // moreover, we need to get the one with all 5 and the most reads
+    // moreover, we need to get the one with all XX and the most reads
     DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
     while (dr_iter != (mDR2GIDMap[GID])->end()) 
     {
@@ -750,7 +750,6 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                 if(-1 == (kmer_positions_DR)[i])
                     num_neg1++; 
             }
-            
             if(num_neg1 < CRASS_DEF_NUM_KMERS_4_MODE_HALF)
             {
                 // all is good! ...so far
@@ -818,6 +817,7 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                     
                     if(found_kmer)
                     {
+
                         // note the position of this DR in the array
                         (*DR_offset_map)[*dr_iter] = ((kmer_positions_ARRAY)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index]);
 
@@ -835,6 +835,7 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                         {
                             zone_start_index = (*DR_offset_map)[*dr_iter];
                         }
+                        
                         // work out the comparison length
                         int eff_zone_length = *dr_zone_end - zone_start_index;
                         int eff_DR_length = (int)tmp_DR.length() - this_DR_start_index;
@@ -867,7 +868,7 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                             zone_start_index++;
                             this_DR_start_index++;
                         }
-                        
+
                         agress_with_zone /= comp_len;
                         if(agress_with_zone >= CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF)
                         {
@@ -1379,7 +1380,6 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
     {
         // update the DR start and ends
         int diffs = dr_zone_end - dr_zone_start + 1 - (int)true_DR.length();
-        logInfo(diffs << " = " << dr_zone_end << " - " << (dr_zone_start + 1) << " - " << (int)true_DR.length(), 1);
         while(0 < diffs)
         {
             // we need to update the start or end
@@ -1473,7 +1473,6 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
         // We need to build a bit of new infrastructure.
         // assume we have K different DR alleles and N putative DRs
         // we need to build K new DR clusters
-        logInfo("", 5);
         logInfo("Attempting to split the collapsed DR", 5);
         std::map<char, int> coll_char_to_GID_map;
         std::map<char, int>::iterator co_iter = collapsed_options.begin();
@@ -1482,7 +1481,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
             int group = (*nextFreeGID)++;
             mDR2GIDMap[group] = new DR_Cluster;
             coll_char_to_GID_map[co_iter->first] = group;
-            logInfo("Mapping \""<< co_iter->first <<"\" to group: " << group, 1);
+            logInfo("Mapping \""<< co_iter->first << " : "  << co_iter->second << "\" to group: " << group, 1);
             co_iter++;
         }
         
@@ -1732,16 +1731,25 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
     //-----
     // Work out if a Kmer is present in a string and store positions etc...
     //
+    std::string tmp_kmer = reverseComplement(kmer);
     size_t pos = DR->find(kmer);
     if(pos == string::npos)
     {
         // try the reverse complement
         // rev compt the kmer, it's shorter!
-        std::string tmp_kmer = reverseComplement(kmer);
         pos = DR->find(tmp_kmer);
         if(pos != string::npos)
         {
-            // found the kmer!
+            // found the kmer in the reverse direction!
+        	// make sure I found it once only
+            pos = DR->find(tmp_kmer, pos+1);
+            if(pos != string::npos)
+            {
+            	// found it twice
+                *startPosition = -1;
+                return false;
+            } // else OK
+            
             *didRevComp = true;
             *startPosition = (int)pos;           
             return true;
@@ -1749,7 +1757,27 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
     }
     else
     {
-        // found the kmer!
+        // found the kmer in the forward direction!
+    	// search for more in the forward direction
+    	pos = DR->find(kmer, pos+1);
+        if(pos != string::npos)
+        {
+        	// found it twice    	
+            *startPosition = -1;
+            return false;
+        }
+        else
+        {
+            // none? -> search in the reverse direction from start
+            pos = DR->find(tmp_kmer);
+            if(pos != string::npos)
+            {
+            	// found in both dirs!
+                *startPosition = -1;
+                return false;
+            } // else OK
+        }
+        
         *didRevComp = false;
         *startPosition = (int)pos;
         return true;
@@ -1760,6 +1788,17 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
 
 bool WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
 {
+	//-----
+	// True to it's name get MOST abundant kmers.
+	// 
+	return getNMostAbundantKmers(1000000, mostAbundantKmers, num2Get, kmer_CountMap);
+}
+
+bool WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
+{
+	//-----
+	// gte the most abundant kmers under a certain amount.
+	//
     std::string top_kmer;    
     std::map<std::string, bool> top_kmer_map;
     
@@ -1776,7 +1815,7 @@ bool WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmer
             
             while (map_iter != kmer_CountMap->end()) 
             {
-                if((map_iter->second > max_count) && (top_kmer_map.find(map_iter->first) == top_kmer_map.end()))
+                if((map_iter->second > max_count) && (map_iter->second <= maxAmount) && (top_kmer_map.find(map_iter->first) == top_kmer_map.end()))
                 {
                     max_count = map_iter->second;
                     top_kmer = map_iter->first;
@@ -1816,7 +1855,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     // 
     // Here we declare the minimum criteria for membership when clustering
     // this is not cool!
-    int min_clust_membership_count = mOpts->kmer_size;
+    int min_clust_membership_count = mOpts->kmer_clust_size;
     // 
     //***************************************
     //***************************************
@@ -1923,9 +1962,11 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
         std::string tmp_str(kmers[i]);
         tmp_str = laurenize(tmp_str);
         
-        // see if this guy has been counted!
+        // see if this guy has been counted LOCALLY
+        // use this list when we go to select N most abundant kmers
         if(local_kmer_CountMap.find(tmp_str) == local_kmer_CountMap.end())
         {
+        	// first time this kmer has been seen in this read
             local_kmer_CountMap[tmp_str] = 1;
         }
         else
@@ -1933,19 +1974,20 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
             local_kmer_CountMap[tmp_str]++;
         }
         
-        // see if we've seen this kmer before
+        // see if we've seen this kmer before GLOBALLY
         std::map<std::string, int>::iterator k2g_iter = k2GIDMap->find(tmp_str);
         if(k2g_iter == k2GIDMap->end())
         {
-            // first time we seen this one
+            // first time we seen this one GLOBALLY
             homeless_kmers.push_back(tmp_str);
         }
         else
         {
+        	// we've seen this guy before.
             // only do this if our guy doesn't belong to a group yet
             if(0 == group)
             {
-                // this kmer belongs to a group!
+                // this kmer belongs to a group -> increment the local group count
                 std::map<int, int>::iterator this_group_iter = group_count.find(k2g_iter->second);
                 if(this_group_iter == group_count.end())
                 {
@@ -1954,6 +1996,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
                 else
                 {
                     group_count[k2g_iter->second]++;
+                    // have we seen this guy enought times?
                     if(min_clust_membership_count <= group_count[k2g_iter->second])
                     {
                         // we have found a group for this mofo!
@@ -1966,7 +2009,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     
     if(0 == group)
     {
-        // we need to make a new group for all the homeless kmers
+    	// we couldn't put our guy into a group
         group = (*nextFreeGID)++;
         
         // we need to make a new entry in the group map
