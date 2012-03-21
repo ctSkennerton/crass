@@ -115,7 +115,7 @@ void removeUsage(void)
     std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" rm [-ho] -g <groups> file.crispr"<<std::endl;
 	std::cout<<"Options:"<<std::endl;
     std::cout<<"-h					print this handy help message"<<std::endl;
-	std::cout<<"-g INT[,n]          a comma separated list of group IDs that you would like to see stats for."<<std::endl;
+	std::cout<<"-g INT[,n]          a comma separated list of group IDs that you would like to remove"<<std::endl;
     std::cout<<"-o FILE             output file name. Default behaviour changes file inplace"<<std::endl;
 }
 int processRemoveOptions(int argc, char ** argv, std::set<std::string>& groups, std::string& outputFile )

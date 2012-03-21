@@ -25,21 +25,128 @@ is a tool for displaying, extracting and manipulating .crispr files. These files
 (CRISPR) loci from genomic and metagenomic datasets.
 
 .Pp
-.Sh COMMANDS
+.Sh COMMANDS AND OPTIONS
 
 .Bl -tag -width -indent
-.It merge 
-take two .crispr files and merge them together
-.It sanitise 
-change names and accession numbers of groups
-.It extract 
+.It merge [-hso OUTFILE] file1.crispr file2.crispr [1,n]
+take two or more .crispr files and merge them together
+.Bl -tag -width -indent
+.It Fl h
+Output help message
+.It Fl s
+Sanitise the group names in the resulting output file so that all groups have consecutive identifiers, and that there are no clashes between group numbers
+.It Fl o Ar OUTFILE
+Specify an output file for the merged .crispr file [default: crisprtools_merged.crispr ]
+.El
+.It sanitise [-ohcsdf] file.crispr
+change names and accession numbers of groups, spacers and flankers
+.Bl -tag -width -indent
+.It Fl h
+Output help message
+.It Fl o Ar OUTFILE
+Output file name, creates a sanitised copy of the input file  [default: sanitise input file inplace]
+.It Fl s
+Sanitise the spacers
+.It Fl c
+Sanitise the contigs
+.It Fl d
+Sanitise the direct repeats
+.It Fl f
+Sanitise the flanking sequences
+.El
+.It extract [-ghyxsdfCoO] file.crispr
 get data out of a .crispr file
-.It stat 
+.Bl -tag -width -indent
+.It 
+.It Fl h
+print this handy help message
+.It Fl o Ar DIR
+Output file directory  [default: .]  
+.It Fl O Ar STRING
+Give a custom prefix to each of the outputed files [default: ]
+.It Fl g Ar INT[,n]
+A comma separated list of group IDs that you would like to extract data from.
+Note that only the group number is needed, do not use prefixes like 'Group' or 'G', which
+are sometimes used in file names or in a .crispr file
+.It Fl s
+Extract the spacers of the listed group
+.It Fl d
+Extract the direct repeats of the listed group
+.It Fl f
+Extract the flanking sequences of the listed group
+.It Fl C
+Supress coverage information when printing spacers
+.It Fl x
+Split the results into different files for each group.  If multiple types are set i.e. -sd
+then both the spacers and direct repeats from each group will be in the one file
+.It Fl y
+Split the results into different files for each type of sequence from all selected groups.
+Only has an effect if multiple types are set.
+.El
+.It stat [-aghpst] [--header] file.crispr
 get some statistics of the CRISPRs described 
-.It rm 
+.Bl -tag -width -indent
+.It Fl a 
+print out aggregate summary, can be combined with -t -p
+.It Fl h
+print this handy help message
+.It Fl H
+print out column headers in tabular output
+.It Fl g Ar INT[,n]
+a comma separated list of group IDs that you would like to see stats for.
+.It Fl p
+pretty print
+.It Fl s
+separator string for tabular output [default: '\t']
+.It Fl t
+tabular output
+.El
+.It rm [-ho] -g <groups> file.crispr
 remove a group
-.It draw 
+.Bl -tag -width -indent
+.It Fl h
+Output help message
+.It fl g Ar INT[,n]
+A comma separated list of group IDs that you would like to remove
+.It fl o Ar OUTFILE 
+Output file name. Default behaviour changes file inplace
+.El
+.It draw [-ghyoaf] file.crispr
 render a graphviz image of some or all of the CRISPRs described in the file
+.Bl -tag -width -indent
+.It Fl h
+print this handy help message
+.It Fl o Ar DIR
+output file directory  [default: .]
+.It Fl g Ar INT[,n]
+A comma separated list of group IDs that you would like to extract data from.
+Note that only the group number is needed, do not use prefixes like 'Group' or 'G', which
+are sometimes used in file names or in a .crispr file
+.It Fl a Ar STRING
+The Graphviz layout algorithm to use [default: dot ]
+.It Fl f Ar STRING           
+The output format for the image, equivelent to the -T parameter of Graphviz executables [default: eps]
+.It Fl c Ar COLOUR           
+The colour scale to use for coverage information.  The available choices are:
+        red-blue
+        blue-red
+        red-blue-green
+        green-blue-red
+.El
+.It filter [-ohsdf] file.crisprr
+remove groups based on criteria
+.Bl -tag -width -indent
+.It Fl h    
+Print this handy help message
+.It Fl o Ar FILE            
+Output file name, creates a filtered copy of the input file  [default: modify input file inplace]
+.It Fl s Ar INT             
+Filter based on the number of spacers the spacers 
+.It Fl d Ar INT             
+Filter based on the direct repeats 
+.It Fl f Ar INT              
+Filter based on the flanking sequences 
+.El
 .El
 
 

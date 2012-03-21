@@ -75,7 +75,7 @@ int mergeMain (int argc, char ** argv)
             // create a DOM document
             crispr::XML master_DOM;
             int master_DOM_error;
-            xercesc::DOMElement * master_root_elem = master_DOM.createDOMDocument("crass_assem", "1.0", master_DOM_error);
+            xercesc::DOMElement * master_root_elem = master_DOM.createDOMDocument("crispr", "1.0", master_DOM_error);
             if (master_root_elem != NULL && master_DOM_error == 0) {
                 
                 xercesc::DOMDocument * master_doc = master_DOM.getDocumentObj();
