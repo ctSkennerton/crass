@@ -218,11 +218,9 @@ void StatTool::parseGroup(xercesc::DOMElement * parentNode, crispr::XML& xmlPars
 
         if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getData())) {
             parseData(currentElement, xmlParser, sm);
-        } /*else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getAssembly())) {
-            if (ST_AssemblyStats) {
-                parseAssembly(currentElement, xmlParser);
-            }
-        }*/
+        } else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getMetadata())) {
+            parseMetadata(currentElement, xmlParser, sm);
+        }
     }
 }
 
@@ -289,131 +287,35 @@ void StatTool::parseFlankers(xercesc::DOMElement * parentNode, crispr::XML& xmlP
     }
 }
 
-//void StatTool::parseAssembly(xercesc::DOMElement * parentNode, crispr::XML& xmlParser)
-//{
-//    xercesc::DOMNodeList * children = parentNode->getChildNodes();
-//    const  XMLSize_t nodeCount = children->getLength();
-//    
-//    // For all nodes, children of "root" in the XML tree.
-//    for( XMLSize_t xx = 0; xx < nodeCount; ++xx ) {
-//        xercesc::DOMNode * currentNode = children->item(xx);
-//        if( currentNode->getNodeType() &&  currentNode->getNodeType() == xercesc::DOMNode::ELEMENT_NODE ) {
-//            // Found node which is an Element. Re-cast node as element
-//            xercesc::DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-//            if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getContig())) {
-//                currentElement->setAttribute(xmlParser.getCid(), xmlParser.STR_2_XMLCH(getNextContigS()));
-//                incrementContig();
-//                parseContig(currentElement, xmlParser);
-//            }
-//            
-//        }
-//    }
-//    
-//}
-//
-//void StatTool::parseContig(xercesc::DOMElement * parentNode, crispr::XML& xmlParser)
-//{
-//    xercesc::DOMNodeList * children = parentNode->getChildNodes();
-//    const  XMLSize_t nodeCount = children->getLength();
-//    
-//    // For all nodes, children of "root" in the XML tree.
-//    for( XMLSize_t xx = 0; xx < nodeCount; ++xx ) {
-//        xercesc::DOMNode * currentNode = children->item(xx);
-//        if( currentNode->getNodeType() &&  currentNode->getNodeType() == xercesc::DOMNode::ELEMENT_NODE ) {
-//            // Found node which is an Element. Re-cast node as element
-//            xercesc::DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-//            if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getCspacer())) {
-//                if (ST_Spacers) {
-//                    std::string spid = xmlParser.XMLCH_2_STR( currentElement->getAttribute(xmlParser.getSpid()));
-//                    currentElement->setAttribute(xmlParser.getSpid(), xmlParser.STR_2_XMLCH(ST_SpacerMap[spid]));
-//                }
-//                if (ST_Spacers || ST_Repeats || ST_Flank) {
-//                    parseCSpacer(currentElement, xmlParser);
-//                }
-//            }
-//        }
-//    }
-//    
-//}
-//
-//void StatTool::parseCSpacer(xercesc::DOMElement * parentNode, crispr::XML& xmlParser)
-//{
-//    xercesc::DOMNodeList * children = parentNode->getChildNodes();
-//    const  XMLSize_t nodeCount = children->getLength();
-//    
-//    // For all nodes, children of "root" in the XML tree.
-//    for( XMLSize_t xx = 0; xx < nodeCount; ++xx ) {
-//        xercesc::DOMNode * currentNode = children->item(xx);
-//        if( currentNode->getNodeType() &&  currentNode->getNodeType() == xercesc::DOMNode::ELEMENT_NODE ) {
-//            // Found node which is an Element. Re-cast node as element
-//            xercesc::DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-//            if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getBspacers())) {
-//                if (ST_Spacers || ST_Repeats) {
-//                    parseLinkSpacers(currentElement, xmlParser);
-//                }
-//            } else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getFspacers())) {
-//                if (ST_Spacers || ST_Repeats) {
-//                    parseLinkSpacers(currentElement, xmlParser);
-//                }
-//            } else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getBflankers())) {
-//                if (ST_Flank || ST_Repeats) {
-//                    parseLinkFlankers(currentElement, xmlParser);
-//                }
-//            } else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getFflankers())) {
-//                if (ST_Flank || ST_Repeats) {
-//                    parseLinkFlankers(currentElement, xmlParser);
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//void StatTool::parseLinkSpacers(xercesc::DOMElement * parentNode, crispr::XML& xmlParser)
-//{
-//    xercesc::DOMNodeList * children = parentNode->getChildNodes();
-//    const  XMLSize_t nodeCount = children->getLength();
-//    
-//    // For all nodes, children of "root" in the XML tree.
-//    for( XMLSize_t xx = 0; xx < nodeCount; ++xx ) {
-//        xercesc::DOMNode * currentNode = children->item(xx);
-//        if( currentNode->getNodeType() &&  currentNode->getNodeType() == xercesc::DOMNode::ELEMENT_NODE ) {
-//            // Found node which is an Element. Re-cast node as element
-//            xercesc::DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-//            if (ST_Spacers) {
-//                std::string spid = xmlParser.XMLCH_2_STR( currentElement->getAttribute(xmlParser.getSpid()));
-//                currentElement->setAttribute(xmlParser.getSpid(), xmlParser.STR_2_XMLCH( ST_SpacerMap[spid]));
-//            }
-//            if (ST_Repeats) {
-//                std::string drid = xmlParser.XMLCH_2_STR( currentElement->getAttribute(xmlParser.getDrid()));
-//                currentElement->setAttribute(xmlParser.getDrid(), xmlParser.STR_2_XMLCH( ST_RepeatMap[drid]));
-//            }
-//        }
-//    }
-//}
-//
-//void StatTool::parseLinkFlankers(xercesc::DOMElement * parentNode, crispr::XML& xmlParser)
-//{
-//    xercesc::DOMNodeList * children = parentNode->getChildNodes();
-//    const  XMLSize_t nodeCount = children->getLength();
-//    
-//    // For all nodes, children of "root" in the XML tree.
-//    for( XMLSize_t xx = 0; xx < nodeCount; ++xx ) {
-//        xercesc::DOMNode * currentNode = children->item(xx);
-//        if( currentNode->getNodeType() &&  currentNode->getNodeType() == xercesc::DOMNode::ELEMENT_NODE ) {
-//            // Found node which is an Element. Re-cast node as element
-//            xercesc::DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-//            if (ST_Flank) {
-//                std::string flid = xmlParser.XMLCH_2_STR( currentElement->getAttribute(xmlParser.getFlid()));
-//                currentElement->setAttribute(xmlParser.getFlid(), xmlParser.STR_2_XMLCH( ST_FlankMap[flid]));
-//            }
-//            
-//            if (ST_Repeats) {
-//                std::string drid = xmlParser.XMLCH_2_STR( currentElement->getAttribute(xmlParser.getDrid()));
-//                currentElement->setAttribute(xmlParser.getDrid(), xmlParser.STR_2_XMLCH( ST_RepeatMap[drid]));
-//            }
-//        }
-//    }
-//}
+void StatTool::parseMetadata(xercesc::DOMElement * parentNode, crispr::XML& xmlParser, StatManager * statManager) {
+    for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
+        if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getFile())) {
+            char * c_type_attr = tc(currentElement->getAttribute(xmlParser.getType()));
+            if (! strcmp(c_type_attr, "sequence")) {
+                char * c_url = tc(currentElement->getAttribute(xmlParser.getUrl()));
+                statManager->setReadCount(calculateReads(c_url));
+                xr(&c_url);
+            }
+            xr(&c_type_attr);
+        }
+    }
+}
+int StatTool::calculateReads(const char * fileName) {
+    std::fstream sequence_file;
+    sequence_file.open(fileName);
+    int sequence_counter = 0;
+    if (! sequence_file.good()) {
+        
+    }
+    std::string line;
+    while (sequence_file >> line) {
+        if (line.substr(0,1) == ">") {
+            sequence_counter++;
+        }
+    }
+    return sequence_counter;
+}
+
 void StatTool::calculateAgregateSTats(AStats * agregateStats)
 {
     std::vector<StatManager * >::iterator iter;
@@ -426,6 +328,7 @@ void StatTool::calculateAgregateSTats(AStats * agregateStats)
         agregateStats->total_spacer_cov +=((*iter)->getSpCovVec().empty()) ?  0 : (*iter)->meanSpacerC();
         agregateStats->total_flanker += (*iter)->getFlankerCount();
         agregateStats->total_flanker_length += ((*iter)->getFlLenVec().empty()) ? 0 : (*iter)->meanFlankerL();
+        agregateStats->total_reads += (*iter)->getReadCount();
     }
 }
 void StatTool::prettyPrint(StatManager * sm)
@@ -490,7 +393,8 @@ void StatTool::printHeader()
     std::cout<<"Ave. SP Length"<<ST_Separator;
     std::cout<<"Ave. SP Cov"<<ST_Separator;
     std::cout<<"# Flankers"<<ST_Separator;
-    std::cout<<"Ave. FL Length"<<std::endl;
+    std::cout<<"Ave. FL Length"<<ST_Separator;
+    std::cout<<"# Reads"<<std::endl;
     ST_WithHeader = false;
 }
 
@@ -516,10 +420,11 @@ void StatTool::printTabular(StatManager * sm)
     }
     std::cout<< sm->getFlankerCount()<<ST_Separator;
     if (sm->getFlLenVec().empty()) {
-        std::cout<<0<<std::endl;
+        std::cout<<0<<ST_Separator;
     } else {
-        std::cout<< sm->meanFlankerL()<<std::endl;
+        std::cout<< sm->meanFlankerL()<<ST_Separator;
     }
+    std::cout<<sm->getReadCount()<<std::endl;
 }
 void StatTool::printAggregate( AStats * agregate_stats)
 {
@@ -537,7 +442,8 @@ void StatTool::printAggregate( AStats * agregate_stats)
     std::cout<<agregate_stats->total_spacer_length/agregate_stats->total_groups<<ST_Separator;
     std::cout<<agregate_stats->total_spacer_cov/agregate_stats->total_groups<<ST_Separator;
     std::cout<<agregate_stats->total_flanker<<ST_Separator;
-    std::cout<<agregate_stats->total_flanker_length/agregate_stats->total_groups<<std::endl;
+    std::cout<<agregate_stats->total_flanker_length/agregate_stats->total_groups<<ST_Separator;
+    std::cout<<agregate_stats->total_reads/agregate_stats->total_groups<<std::endl;
 }
 int statMain (int argc, char ** argv)
 {

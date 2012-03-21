@@ -40,6 +40,7 @@ typedef struct __AStats {
     int total_spacer_cov;
     int total_dr_length;
     int total_flanker_length;
+    int total_reads;
     } AStats;
 
 class StatManager {
@@ -50,6 +51,7 @@ class StatManager {
     int SM_SpacerCount;
     int SM_RepeatCount;
     int SM_FlankerCount;
+    int SM_ReadCount;
     std::string SM_ConsensusRepeat;
     std::string SM_Gid;
     
@@ -67,7 +69,7 @@ public:
     inline int getSpacerCount(void) {return SM_SpacerCount;}
     inline int getRpeatCount(void) {return SM_RepeatCount;}
     inline int getFlankerCount(void) {return SM_FlankerCount;}
-    
+    inline int getReadCount(void) {return SM_ReadCount;}
 
     
     inline void incrementSpacerCount(void) {++SM_SpacerCount;}
@@ -87,7 +89,7 @@ public:
     inline void setSpacerCount(int i) { SM_SpacerCount = i;}
     inline void setRepeatCount(int i) { SM_RepeatCount = i;}
     inline void setFlankerCount(int i) { SM_FlankerCount = i;}
-    
+    inline void setReadCount(int i) {SM_ReadCount = i;}
     // mode
     
     inline int modeSpacerL(void){return mode(SM_SpacerLength);}
@@ -158,7 +160,8 @@ public:
     void parseDrs(xercesc::DOMElement * parentNode, crispr::XML& xmlParser, StatManager * statManager);
     void parseSpacers(xercesc::DOMElement * parentNode, crispr::XML& xmlParser, StatManager * statManager);
     void parseFlankers(xercesc::DOMElement * parentNode, crispr::XML& xmlParser, StatManager * statManager);
-    
+    void parseMetadata(xercesc::DOMElement * parentNode, crispr::XML& xmlParser, StatManager * statManager);
+    int calculateReads(const char * fileName);
 //    void parseAssembly(xercesc::DOMElement * parentNode, crispr::XML& xmlParser);
 //    void parseContig(xercesc::DOMElement * parentNode, crispr::XML& xmlParser);
 //    void parseCSpacer(xercesc::DOMElement * parentNode, crispr::XML& xmlParser);
