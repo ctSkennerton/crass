@@ -319,7 +319,7 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
                 logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " ("<<tmp_holder->numRepeats()<<") repeated kmers found", 8);
 #endif
 
-                unsigned int actual_repeat_length = extendPreRepeat(tmp_holder, opts.searchWindowLength, opts.lowSpacerSize);
+                unsigned int actual_repeat_length = extendPreRepeat(tmp_holder, opts.searchWindowLength);
 
                 if ( (actual_repeat_length >= opts.lowDRsize) && (actual_repeat_length <= opts.highDRsize) )
                 {
@@ -565,7 +565,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     int cut_start = 0;
     int cut_length = CRASS_DEF_MAX_SING_PATTERNS;
     int total_pattern_size = (int)patterns.size();
-    logInfo("["<<PACKAGE_NAME<<"_singletonFinder]: There are a total of: " << total_pattern_size << " patterns.", 5);
+    std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: " << total_pattern_size << " patterns."<<std::endl;
     std::vector<std::string>::iterator start_iter, end_iter;
     while(total_pattern_size > 0)
     {
@@ -592,7 +592,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         // intialised with the subset of the patterns
         std::vector<std::string> tmp_vec;
         tmp_vec.insert(tmp_vec.begin(), start_iter, end_iter);
-        logInfo(tmp_vec.size(), 1);
+
         vec_vec_patterns.push_back(tmp_vec);
         
         // update our counters
@@ -614,14 +614,16 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
 	std::vector<WuManber> wu_mans;
 	std::vector<std::vector<std::string> >::iterator pats_iter = patterns.begin();
 	std::vector<std::vector<std::string> >::iterator pats_last = patterns.end();
+    
+    
 	while(pats_iter != pats_last)
-	{
-	    WuManber search;
+	{        
+        WuManber search;
 	    search.Initialize(*pats_iter);
 	    wu_mans.push_back(search);
+        
 		pats_iter++;
 	}
-    
 	
 	// now we got lots of wumanbers, search each string
     gzFile fp = getFileHandle(inputFastq);
@@ -636,36 +638,42 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
 
 	std::vector<WuManber>::iterator wm_iter =  wu_mans.begin();
 	std::vector<WuManber>::iterator wm_last =  wu_mans.end();
-	pats_iter = patterns.begin();
+    
+    pats_iter = patterns.begin();
+
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         // seq is a read what we love
     	// search it for the patterns until found
     	bool found = false;
     	
+        
+        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+        if (seq->comment.s) 
+        {
+            tmp_holder->setComment(seq->comment.s);
+        }
+        if (seq->qual.s) 
+        {
+            tmp_holder->setQual(seq->qual.s);
+        }
+        
+        if (opts.removeHomopolymers) 
+        {
+            tmp_holder->encode();
+        }
+        std::string read = tmp_holder->getSeq();
     	// reset these mofos
     	wm_iter =  wu_mans.begin();
     	wm_last =  wu_mans.end();
+        pats_iter = patterns.begin();
+
     	while(wm_iter != wm_last)
-    	{
-            ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
-            if (seq->comment.s) 
-            {
-                tmp_holder->setComment(seq->comment.s);
-            }
-            if (seq->qual.s) 
-            {
-                tmp_holder->setQual(seq->qual.s);
-            }
-            
-            if (opts.removeHomopolymers) 
-            {
-                tmp_holder->encode();
-            }
-            std::string read = tmp_holder->getSeq();
-            
+    	{            
             //initialize with an impossible number
             int start_pos = -1;
+            
+            
             std::string found_repeat = wm_iter->Search(read.length(), read.c_str(), *pats_iter, start_pos);
             
             
@@ -693,8 +701,11 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
             {
                 delete tmp_holder;
             }
+            
             if(found)
+            {
             	break;
+            }
             
             pats_iter++;
     		wm_iter++;
@@ -713,7 +724,7 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 
-unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, int minSpacerLength)
+unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
 {
 #ifdef DEBUG
     logInfo("Extending Prerepeat...", 9);

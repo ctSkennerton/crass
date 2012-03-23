@@ -35,8 +35,8 @@ k( 0 ), m( 0 ), B(3), m_bInitialized( false ) {
 }
 
 WuManber::~WuManber( void ) {
-    delete [] m_ShiftTable;
-    delete [] m_vPatternMap;
+    //delete []  m_ShiftTable;
+    //delete [] m_vPatternMap;
 }
 
 void WuManber::Initialize( const WuVector &patterns, 
@@ -144,9 +144,9 @@ void WuManber::Initialize( const WuVector &patterns,
     m_bInitialized = true;
 }
 
-string WuManber::Search( size_t TextLength, const char *Text, WuVector &patterns, int &start_pos ) 
+string WuManber::Search( size_t TextLength, const char *Text, std::vector<std::string> &patterns, int &start_pos ) 
 {
-    
+
     //assert( k == patterns.size() );
     //assert( m < TextLength );
     //assert( m_bInitialized );
