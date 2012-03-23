@@ -47,7 +47,6 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <exception>
-#include <ctime>
 
 // local includes
 #include "libcrispr.h"
@@ -220,19 +219,11 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
     seq = kseq_init(fp);
     //ReadHolder * tmp_holder = new ReadHolder();
     // read sequence 
-    time_t time_start, time_current;
-    time(&time_start);
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
-            time(&time_current);
-            double diff = difftime(time_start, time_current);
-            time_start = time_current;
-            std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<" ...";
-            //std::cout.setf(std::ios::fixed);
-            //std::cout.precision(2);
-            std::cout<<diff<<std::endl;
+            std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<std::endl;
             log_counter = 0;
         }
         
@@ -396,20 +387,13 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
     static int read_counter = 0;
     // initialize seq
     seq = kseq_init(fp);
-    time_t time_start, time_current;
-    time(&time_start);
+        
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
-            time(&time_current);
-            double diff = difftime(time_start, time_current);
-            time_start = time_current;
-            std::cout<<"["<<PACKAGE_NAME<<"_shortReadFinder]: "<<"Processed "<<read_counter<<" ...";
-            //std::cout.setf(std::ios::fixed);
-            //std::cout.precision(2);
-            std::cout<<diff<<std::endl;
+            std::cout<<"["<<PACKAGE_NAME<<"_shortReadFinder]: "<<"Processed "<<read_counter<<std::endl;
             log_counter = 0;
         }
         
@@ -656,25 +640,13 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
 	std::vector<WuManber>::iterator wm_last =  wu_mans.end();
     
     pats_iter = patterns.begin();
-    time_t time_start, time_current;
-    time(&time_start);
+
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         // seq is a read what we love
     	// search it for the patterns until found
     	bool found = false;
-        
-        if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
-        {
-            time(&time_current);
-            double diff = difftime(time_start, time_current);
-            time_start = time_current;
-            std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
-            //std::cout.setf(std::ios::fixed);
-            //std::cout.precision(2);
-            std::cout<<diff<<std::endl;
-            log_counter = 0;
-        }
+    	
         
         ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
         if (seq->comment.s) 
@@ -738,6 +710,12 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
             pats_iter++;
     		wm_iter++;
     	}
+    	
+    	if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
+        {
+            std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<std::endl;
+            log_counter = 0;
+        }
         
         log_counter++;
         read_counter++;
