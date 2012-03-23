@@ -539,8 +539,11 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
 
 void findSingletons(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
+	//-----
+	// given a potentially large set of patterns, call an innefficent function
+	// on a possible broken down subset
+	//
     std::vector<std::string> patterns;
-    int old_number = (int)mReads->size();
     mapToVector(patternsHash, patterns);
     try
     {
@@ -555,70 +558,154 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         std::cerr << c << std::endl;
         return;
     }   
+
+    // If the patterns vector is too long, we'll need to break it up!
+    // in any case, we need to pass through a vector of vectors
+    std::vector<std::vector<std::string> > vec_vec_patterns;
+    int cut_start = 0;
+    int cut_length = CRASS_DEF_MAX_SING_PATTERNS;
+    int total_pattern_size = (int)patterns.size();
+    logInfo("["<<PACKAGE_NAME<<"_singletonFinder]: There are a total of: " << total_pattern_size << " patterns.", 5);
+    std::vector<std::string>::iterator start_iter, end_iter;
+    while(total_pattern_size > 0)
+    {
+        if(total_pattern_size <  cut_length)
+        {
+        	cut_length = total_pattern_size;
+        }
+        
+        // in the second last iteration, we should check to
+        // see if halving is a better option
+        if((total_pattern_size < 2 * CRASS_DEF_MAX_SING_PATTERNS) && (total_pattern_size > CRASS_DEF_MAX_SING_PATTERNS))
+        {
+        	// in most cases, halving is a better option
+        	cut_length = (int)(total_pattern_size/2);
+        }
+        
+        logInfo(cut_start << " : " << cut_length << " : " << total_pattern_size << " : " << CRASS_DEF_MAX_SING_PATTERNS, 1);
+        
+        // make out iterators
+        start_iter = patterns.begin() + cut_start;
+        end_iter = start_iter + cut_length;
+        
+        // get a new vector to work with
+        // intialised with the subset of the patterns
+        std::vector<std::string> tmp_vec;
+        tmp_vec.insert(tmp_vec.begin(), start_iter, end_iter);
+        logInfo(tmp_vec.size(), 1);
+        vec_vec_patterns.push_back(tmp_vec);
+        
+        // update our counters
+        cut_start += cut_length;
+        total_pattern_size -= cut_length;
+        cut_length = CRASS_DEF_MAX_SING_PATTERNS;
+    }
+
+	findSingletonsMultiVector(inputFastq, opts, vec_vec_patterns, readsFound, mReads, mStringCheck);
+}
+
+void findSingletonsMultiVector(const char *inputFastq, const options &opts, std::vector<std::vector<std::string> > &patterns, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+{
+	//-----
+	// Find sings given a vector of vectors of patterns
+	//
+
+	// make a wumanber for each set of patterns
+	std::vector<WuManber> wu_mans;
+	std::vector<std::vector<std::string> >::iterator pats_iter = patterns.begin();
+	std::vector<std::vector<std::string> >::iterator pats_last = patterns.end();
+	while(pats_iter != pats_last)
+	{
+	    WuManber search;
+	    search.Initialize(*pats_iter);
+	    wu_mans.push_back(search);
+		pats_iter++;
+	}
     
+	
+	// now we got lots of wumanbers, search each string
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
     
     seq = kseq_init(fp);
 
-    WuManber search;
-    search.Initialize(patterns);
-    
     int l;
     int log_counter = 0;
     static int read_counter = 0;
+    int old_number = (int)mReads->size();
+
+	std::vector<WuManber>::iterator wm_iter =  wu_mans.begin();
+	std::vector<WuManber>::iterator wm_last =  wu_mans.end();
+	pats_iter = patterns.begin();
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
-        if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
+        // seq is a read what we love
+    	// search it for the patterns until found
+    	bool found = false;
+    	
+    	// reset these mofos
+    	wm_iter =  wu_mans.begin();
+    	wm_last =  wu_mans.end();
+    	while(wm_iter != wm_last)
+    	{
+            ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+            if (seq->comment.s) 
+            {
+                tmp_holder->setComment(seq->comment.s);
+            }
+            if (seq->qual.s) 
+            {
+                tmp_holder->setQual(seq->qual.s);
+            }
+            
+            if (opts.removeHomopolymers) 
+            {
+                tmp_holder->encode();
+            }
+            std::string read = tmp_holder->getSeq();
+            
+            //initialize with an impossible number
+            int start_pos = -1;
+            std::string found_repeat = wm_iter->Search(read.length(), read.c_str(), *pats_iter, start_pos);
+            
+            
+            if (start_pos != -1)
+            {
+                if (readsFound.find(tmp_holder->getHeader()) == readsFound.end())
+                {
+    #ifdef DEBUG
+                    logInfo("new read recruited: "<<tmp_holder->getHeader(), 9);
+                    logInfo(tmp_holder->getSeq(), 10);
+    #endif
+                    unsigned int DR_end = (unsigned int)start_pos + (unsigned int)found_repeat.length();
+                    if(DR_end >= (unsigned int)read.length())
+                    {
+                        DR_end = (unsigned int)read.length() - 1;
+                    }
+                    tmp_holder->startStopsAdd(start_pos, DR_end);
+                    addReadHolder(mReads, mStringCheck, tmp_holder);
+                    found = true;
+                }
+                else
+                    delete tmp_holder;
+            }
+            else
+            {
+                delete tmp_holder;
+            }
+            if(found)
+            	break;
+            
+            pats_iter++;
+    		wm_iter++;
+    	}
+    	
+    	if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<std::endl;
             log_counter = 0;
         }
         
-        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
-        if (seq->comment.s) 
-        {
-            tmp_holder->setComment(seq->comment.s);
-        }
-        if (seq->qual.s) 
-        {
-            tmp_holder->setQual(seq->qual.s);
-        }
-        
-        if (opts.removeHomopolymers) 
-        {
-            tmp_holder->encode();
-        }
-        std::string read = tmp_holder->getSeq();
-        
-        //initialize with an impossible number
-        int start_pos = -1;
-        std::string found_repeat = search.Search(read.length(), read.c_str(), patterns, start_pos);
-        
-        
-        if (start_pos != -1)
-        {
-            if (readsFound.find(tmp_holder->getHeader()) == readsFound.end())
-            {
-#ifdef DEBUG
-                logInfo("new read recruited: "<<tmp_holder->getHeader(), 9);
-                logInfo(tmp_holder->getSeq(), 10);
-#endif
-                unsigned int DR_end = (unsigned int)start_pos + (unsigned int)found_repeat.length();
-                if(DR_end >= (unsigned int)read.length())
-                {
-                    DR_end = (unsigned int)read.length() - 1;
-                }
-                tmp_holder->startStopsAdd(start_pos, DR_end);
-                addReadHolder(mReads, mStringCheck, tmp_holder);
-            }
-            else
-                delete tmp_holder;
-        }
-        else
-        {
-            delete tmp_holder;
-        }
         log_counter++;
         read_counter++;
     }
