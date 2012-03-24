@@ -227,12 +227,12 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             time(&time_current);
-            double diff = difftime(time_start, time_current);
+            double diff = difftime(time_current,time_start );
             time_start = time_current;
             std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<" ...";
             //std::cout.setf(std::ios::fixed);
             //std::cout.precision(2);
-            std::cout<<diff<<std::endl;
+            std::cout<<diff<<"sec"<<std::endl;
             log_counter = 0;
         }
         
@@ -404,12 +404,12 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             time(&time_current);
-            double diff = difftime(time_start, time_current);
+            double diff = difftime(time_current,time_start );
             time_start = time_current;
             std::cout<<"["<<PACKAGE_NAME<<"_shortReadFinder]: "<<"Processed "<<read_counter<<" ...";
             //std::cout.setf(std::ios::fixed);
             //std::cout.precision(2);
-            std::cout<<diff<<std::endl;
+            std::cout<<diff<<"sec"<<std::endl;
             log_counter = 0;
         }
         
@@ -667,12 +667,12 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             time(&time_current);
-            double diff = difftime(time_start, time_current);
+            double diff = difftime(time_current, time_start);
             time_start = time_current;
             std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
             //std::cout.setf(std::ios::fixed);
             //std::cout.precision(2);
-            std::cout<<diff<<std::endl;
+            std::cout<<diff<<"sec"<<std::endl;
             log_counter = 0;
         }
         
