@@ -1635,33 +1635,6 @@ void NodeManager::printAssemblyToDOM(crispr::XML * xmlDoc, xercesc::DOMElement *
 
 }
 
-
-// Spacer dictionaries
-void NodeManager::dumpSpacerDict(std::string spacerFileName, bool showDetached)
-{
-    //-----
-    // Dump a spacer dictionary to file
-    //
-    std::ofstream spacer_file;
-    spacer_file.open(spacerFileName.c_str());
-    if (spacer_file.good()) 
-    {
-        spacer_file <<"SEQ,ID,COUNT" << std::endl;
-        SpacerListIterator spacer_iter = NM_Spacers.begin();
-        while(spacer_iter != NM_Spacers.end())
-        {
-            SpacerInstance * SI = spacer_iter->second;
-            if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
-            {
-                std::string spacer = NM_StringCheck.getString(SI->getID());
-                spacer_file << spacer << "," << SI->getID() << "," << SI->getCount() << std::endl;
-            }
-            spacer_iter++;
-        }
-        spacer_file.close();
-    }
-}
-
 // Making purdy colours
 void NodeManager::setDebugColourLimits(void)
 {

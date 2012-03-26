@@ -228,11 +228,12 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     }
     
     // dump the spacers to file
-	if(dumpSpacers())
-	{
-        logError("FATAL ERROR: dumpSpacers failed");
-        return 8;
-	}
+    // Not needed any more since we have the crispr file
+//	if(dumpSpacers())
+//	{
+//        logError("FATAL ERROR: dumpSpacers failed");
+//        return 8;
+//	}
     
     // print the reads to a file if requested
 	if(dumpReads(&mDR2GIDMap, false))
@@ -2167,42 +2168,42 @@ int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
 	return 0;
 }
 
-int WorkHorse::dumpSpacers(void)
-{
-	//-----
-	// Wrapper for graph cleaning
-	//
-	// create a spacer dictionary
-	logInfo("Dumping spacers", 1);
-	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
-	while(drg_iter != mDR2GIDMap.end())
-	{
-		if(NULL != drg_iter->second)
-		{            
-			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
-            {
-                (mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers", false);
-		    }
-        }
-		drg_iter++;
-	}
-	return 0;
-}
+//int WorkHorse::dumpSpacers(void)
+//{
+//	//-----
+//	// Wrapper for graph cleaning
+//	//
+//	// create a spacer dictionary
+//	logInfo("Dumping spacers", 1);
+//	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+//	while(drg_iter != mDR2GIDMap.end())
+//	{
+//		if(NULL != drg_iter->second)
+//		{            
+//			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
+//            {
+//                (mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers", false);
+//		    }
+//        }
+//		drg_iter++;
+//	}
+//	return 0;
+//}
 
-void WorkHorse::writeLookupToFile(string &outFileName, lookupTable &outLookup)
-{
-    std::ofstream outLookupFile;
-    outLookupFile.open(outFileName.c_str());
-    
-    lookupTable::iterator ter = outLookup.begin();
-    while (ter != outLookup.end()) 
-    {
-        outLookupFile<<ter->first<<"\t"<<ter->second<<endl;
-        
-        ter++;
-    }
-    outLookupFile.close();
-}
+//void WorkHorse::writeLookupToFile(string &outFileName, lookupTable &outLookup)
+//{
+//    std::ofstream outLookupFile;
+//    outLookupFile.open(outFileName.c_str());
+//    
+//    lookupTable::iterator ter = outLookup.begin();
+//    while (ter != outLookup.end()) 
+//    {
+//        outLookupFile<<ter->first<<"\t"<<ter->second<<endl;
+//        
+//        ter++;
+//    }
+//    outLookupFile.close();
+//}
 
 int WorkHorse::renderDebugGraphs(void)
 {
