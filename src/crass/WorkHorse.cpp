@@ -538,10 +538,12 @@ int WorkHorse::mungeDRs(void)
             // it's real, so parse this group
             // get the N top kmers
             std::vector<std::string> n_top_kmers;
-            if (getNMostAbundantKmers((mDR2GIDMap[group_count_iter->first])->size(), n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second)) 
+            int num_mers_found = getNMostAbundantKmers((mDR2GIDMap[group_count_iter->first])->size(), n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second);
+            if (0 != num_mers_found) 
             {
                 // a return value of false indicates that this function has deleted clustered_DRs
-                parseGroupedDRs(group_count_iter->first, &n_top_kmers, &next_free_GID);
+            	//std::cout << "found " << num_mers_found << " : " << CRASS_DEF_NUM_KMERS_4_MODE << std::endl; 
+                parseGroupedDRs(num_mers_found, group_count_iter->first, &n_top_kmers, &next_free_GID);
             }
             else
             {
@@ -640,7 +642,7 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, Stri
     return false;
 }
 
-bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
+bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
 {
 	//-----
 	// Use the data structures initialised in parseGroupedDRs
@@ -737,7 +739,7 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
             
             // this is a DR we have yet to add to the coverage array
             // First we need to find the positions of the kmers in this DR
-            for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+            for(int i = 0; i < numMers4Mode; i++)
             {
                 isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), (*nTopKmers)[i], &tmp_DR);
             }
@@ -745,18 +747,19 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
             // we need to have at least half of the mode k-mers present to continue
             // Where they are not found, the position gets set to -1
             int num_neg1 = 0;
-            for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+            for(int i = 0; i < numMers4Mode; i++)
             {
                 if(-1 == (kmer_positions_DR)[i])
                     num_neg1++; 
             }
-            if(num_neg1 < CRASS_DEF_NUM_KMERS_4_MODE_HALF)
+            int numMers4Mode_half = numMers4Mode / 2;
+            if(num_neg1 < numMers4Mode_half)
             {
                 // all is good! ...so far
                 // now we can determine if the DR is the reverse complement...
                 int num_agree = 0;
                 int num_disagree = 0;
-                for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+                for(int i = 0; i < numMers4Mode; i++)
                 {
                     if((kmer_rcs_DR_master)[i] == (kmer_rcs_DR)[i])
                         num_agree++;
@@ -787,7 +790,7 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                         (*DR_offset_map)[*dr_iter] = -1;
                     }
                     
-                    for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+                    for(int i = 0; i < numMers4Mode; i++)
                     {
                         isKmerPresent(((kmer_rcs_DR) + i), ((kmer_positions_DR) + i), (*nTopKmers)[i], &tmp_DR);
                     }
@@ -797,7 +800,7 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                     int positioning_kmer_index = 0;
                     bool found_kmer = false;
                     // first find the first non -1 entry, there must be at least CRASS_DEF_NUM_KMERS_4_MODE_HALF
-                    while(positioning_kmer_index < CRASS_DEF_NUM_KMERS_4_MODE)
+                    while(positioning_kmer_index < numMers4Mode)
                     {
                         if(-1 != (kmer_positions_DR)[positioning_kmer_index])
                             break;
@@ -805,7 +808,7 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                     }
                     // start here, now we look to the differences between this kmer and the next kmer
                     // and make sure that that difference is upheld in the master
-                    while(positioning_kmer_index < (CRASS_DEF_NUM_KMERS_4_MODE - 1))
+                    while(positioning_kmer_index < (numMers4Mode - 1))
                     {
                         if(((kmer_positions_DR)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index+1]) == ((kmer_positions_DR_master)[positioning_kmer_index] - (kmer_positions_DR_master)[positioning_kmer_index+1]))
                         {
@@ -1163,7 +1166,7 @@ std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> 
 	return true_DR;
 }
 
-bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID) 
+bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID) 
 {
 	
     //-----
@@ -1246,14 +1249,18 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
     kmer_positions_ARRAY[0] = (int)(array_len*CRASS_DEF_CONS_ARRAY_START);
     isKmerPresent(kmer_rcs_DR, kmer_positions_DR, (*nTopKmers)[0], &master_DR_sequence);
     
-    for(int i = 1; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+    for(int i = 1; i < numMers4Mode; i++)
     {
+    	//std::cout << "1" << (kmer_rcs_DR + i) << std::endl;
+    	//std::cout << "2" << (kmer_positions_DR + i) << std::endl;
+    	//std::cout << "3" << (*nTopKmers)[i] << std::endl;
+    	//std::cout << "4" << &master_DR_sequence << std::endl;
         isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), (*nTopKmers)[i], &master_DR_sequence);
         kmer_positions_ARRAY[i] = kmer_positions_DR[i] - kmer_positions_DR[0] + kmer_positions_ARRAY[0];
     }
     
     // store the first results away as the master results
-    for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+    for(int i = 0; i < numMers4Mode; i++)
     {
         kmer_rcs_DR_master[i] = kmer_rcs_DR[i];
         kmer_positions_DR_master[i] = kmer_positions_DR[i];
@@ -1264,7 +1271,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Set up the master DR's array and insert this guy into the main array
-    populateCoverageArray(GID, master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, coverage_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
+    populateCoverageArray(numMers4Mode, GID, master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, coverage_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
     
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // calculate consensus and diversity
@@ -1659,7 +1666,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
         std::map<char, int>::iterator cc_iter = coll_char_to_GID_map.begin();
         while(cc_iter != coll_char_to_GID_map.end())
         {
-            parseGroupedDRs(cc_iter->second, nTopKmers, nextFreeGID);
+            parseGroupedDRs(numMers4Mode, cc_iter->second, nTopKmers, nextFreeGID);
             cc_iter++;
         }
     }
@@ -1786,7 +1793,7 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
     return false;
 }
 
-bool WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
+int WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
 {
 	//-----
 	// True to it's name get MOST abundant kmers.
@@ -1794,17 +1801,17 @@ bool WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmer
 	return getNMostAbundantKmers(1000000, mostAbundantKmers, num2Get, kmer_CountMap);
 }
 
-bool WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
+int WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
 {
 	//-----
-	// gte the most abundant kmers under a certain amount.
+	// get the most abundant kmers under a certain amount.
 	//
     std::string top_kmer;    
     std::map<std::string, bool> top_kmer_map;
     
     if ((int)(kmer_CountMap->size()) < num2Get) 
     {
-        return false;
+        return 0;
     } 
     else 
     {
@@ -1815,23 +1822,28 @@ bool WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& m
             
             while (map_iter != kmer_CountMap->end()) 
             {
+            	//std::cout << map_iter->first << " : " << map_iter->second << " : " << max_count << " : " << maxAmount << std::endl;
                 if((map_iter->second > max_count) && (map_iter->second <= maxAmount) && (top_kmer_map.find(map_iter->first) == top_kmer_map.end()))
                 {
                     max_count = map_iter->second;
                     top_kmer = map_iter->first;
+                    //std::cout << "NT: " << top_kmer << std::endl;
                 }
                 map_iter++;
             }
+            //std::cout << "ADDING: " << top_kmer << std::endl;            
             top_kmer_map[top_kmer] = true;
         }
+        int num_mers_found = 0;
         std::map<std::string, bool>::iterator tkm_iter = top_kmer_map.begin();
         while(tkm_iter != top_kmer_map.end())
         {
             //std::cout<<tkm_iter->first<<std::endl;
+        	num_mers_found++;
             mostAbundantKmers.push_back(tkm_iter->first);
             tkm_iter++;
         }
-        return true;
+        return num_mers_found;
     }
 }
 
