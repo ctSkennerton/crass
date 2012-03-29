@@ -91,7 +91,7 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
 
 int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange);
 
-unsigned int extendPreRepeat(ReadHolder* tmp_holder, int searchWindowLength, int minSpacerLength);
+unsigned int extendPreRepeat(ReadHolder* tmp_holder, int searchWindowLength);
 
 bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerLength);
 

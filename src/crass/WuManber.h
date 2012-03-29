@@ -22,7 +22,7 @@ public:
     virtual ~WuManber( void );
     void Initialize( WuVector &patterns, 
                     bool bCaseSensitive = false, bool bIncludeSpecialCharacters = false, bool bIncludeExtendedAscii = false );
-    string Search( size_t TextLength, const char *Text, WuVector &patterns, int &start_pos );
+    string Search( size_t TextLength, const char *Text, std::vector<std::string> &patterns, int &start_pos );
     
 protected:
     size_t k;  // number of patterns;
@@ -47,7 +47,7 @@ protected:
     unsigned char m_nSizeOfAlphabet;
     unsigned short m_nBitsInShift; // used for hashing blocks of B characters
     size_t m_nTableSize;  // size for SHIFT and HASH tables
-    size_t *m_ShiftTable;  // SHIFT table
+    size_t * m_ShiftTable;  // SHIFT table
     
     struct structPatternMap { // one struct per pattern for this hash
         size_t PrefixHash;  // hash of first two characters of the pattern

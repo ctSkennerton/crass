@@ -47,6 +47,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <exception>
+#include <ctime>
 
 // local includes
 #include "libcrispr.h"
@@ -219,11 +220,19 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
     seq = kseq_init(fp);
     //ReadHolder * tmp_holder = new ReadHolder();
     // read sequence 
+    time_t time_start, time_current;
+    time(&time_start);
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
-            std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<std::endl;
+            time(&time_current);
+            double diff = difftime(time_start, time_current);
+            time_start = time_current;
+            std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<" ...";
+            //std::cout.setf(std::ios::fixed);
+            //std::cout.precision(2);
+            std::cout<<diff<<std::endl;
             log_counter = 0;
         }
         
@@ -319,7 +328,7 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
                 logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " ("<<tmp_holder->numRepeats()<<") repeated kmers found", 8);
 #endif
 
-                unsigned int actual_repeat_length = extendPreRepeat(tmp_holder, opts.searchWindowLength, opts.lowSpacerSize);
+                unsigned int actual_repeat_length = extendPreRepeat(tmp_holder, opts.searchWindowLength);
 
                 if ( (actual_repeat_length >= opts.lowDRsize) && (actual_repeat_length <= opts.highDRsize) )
                 {
@@ -387,13 +396,20 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
     static int read_counter = 0;
     // initialize seq
     seq = kseq_init(fp);
-        
+    time_t time_start, time_current;
+    time(&time_start);
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
-            std::cout<<"["<<PACKAGE_NAME<<"_shortReadFinder]: "<<"Processed "<<read_counter<<std::endl;
+            time(&time_current);
+            double diff = difftime(time_start, time_current);
+            time_start = time_current;
+            std::cout<<"["<<PACKAGE_NAME<<"_shortReadFinder]: "<<"Processed "<<read_counter<<" ...";
+            //std::cout.setf(std::ios::fixed);
+            //std::cout.precision(2);
+            std::cout<<diff<<std::endl;
             log_counter = 0;
         }
         
@@ -565,7 +581,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     int cut_start = 0;
     int cut_length = CRASS_DEF_MAX_SING_PATTERNS;
     int total_pattern_size = (int)patterns.size();
-    logInfo("["<<PACKAGE_NAME<<"_singletonFinder]: There are a total of: " << total_pattern_size << " patterns.", 5);
+    std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: " << total_pattern_size << " patterns."<<std::endl;
     std::vector<std::string>::iterator start_iter, end_iter;
     while(total_pattern_size > 0)
     {
@@ -621,6 +637,7 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
     // Find sings given a vector of vectors of patterns
     //
 
+
     // make a wumanber for each set of patterns
     std::vector<WuManber*> wu_mans;
     std::vector<std::vector<std::string> *>::iterator pats_iter = patterns.begin();
@@ -635,6 +652,7 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
     
     
     // now we got lots of wumanbers, search each string
+
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
     
@@ -647,16 +665,29 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
 
     std::vector<WuManber*>::iterator wm_iter =  wu_mans.begin();
     std::vector<WuManber*>::iterator wm_last =  wu_mans.end();
+    time_t time_start, time_current;
+    time(&time_start);
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         // seq is a read what we love
         // search it for the patterns until found
         bool found = false;
-        
+        if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
+        {
+            time(&time_current);
+            double diff = difftime(time_start, time_current);
+            time_start = time_current;
+            std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
+            //std::cout.setf(std::ios::fixed);
+            //std::cout.precision(2);
+            std::cout<<diff<<std::endl;
+            log_counter = 0;
+        }
         // reset these mofos
         wm_iter =  wu_mans.begin();
         wm_last =  wu_mans.end();
         pats_iter = patterns.begin();
+
         while(wm_iter != wm_last)
         {
             ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
@@ -703,19 +734,13 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
             {
                 delete tmp_holder;
             }
+            
             if(found)
                 break;
             
             pats_iter++;
             wm_iter++;
         }
-        
-        if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
-        {
-            std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<std::endl;
-            log_counter = 0;
-        }
-        
         log_counter++;
         read_counter++;
     }
@@ -736,7 +761,7 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 
-unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength, int minSpacerLength)
+unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
 {
 #ifdef DEBUG
     logInfo("Extending Prerepeat...", 9);
