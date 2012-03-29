@@ -116,94 +116,94 @@ READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength, const
 // CRT search
 int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange)
 {
-	#ifdef DEBUG
-	logInfo("Scanning Right for more repeats:", 9);
-	#endif
-	unsigned int start_stops_size = tmp_holder->getStartStopListSize();
-	
-	unsigned int pattern_length = (unsigned int)pattern.length();
-	
-	// final start index
-	unsigned int last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 2);
-	
-	//second to final start index
-	unsigned int second_last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 4);
-	
-	unsigned int repeat_spacing = last_repeat_index - second_last_repeat_index;
-	
-	#ifdef DEBUG
-	logInfo(start_stops_size<<" : "<<pattern_length<<" : "<<last_repeat_index<<" : "<<second_last_repeat_index<<" : "<<repeat_spacing, 9);
-	#endif
-	
-	int candidate_repeat_index, position;
-	
-	unsigned int begin_search, end_search;
-	
-	unsigned int read_length = (unsigned int)tmp_holder->getSeqLength();
-	bool more_to_search = true;
-	while (more_to_search)
-	{
-		candidate_repeat_index = last_repeat_index + repeat_spacing;
-		begin_search = candidate_repeat_index - scanRange;
-		end_search = candidate_repeat_index + pattern_length + scanRange;
-		#ifdef DEBUG
-		logInfo(candidate_repeat_index<<" : "<<begin_search<<" : "<<end_search, 9);
-		#endif
-		/******************** range checks ********************/
-		//check that we do not search too far within an existing repeat when scanning right
-		unsigned int scanRightMinBegin = last_repeat_index + pattern_length + minSpacerLength;
-		
-		if (begin_search < scanRightMinBegin)
-		{
-			begin_search = scanRightMinBegin;
-		}
-		if (begin_search > read_length - 1)
-		{
-			#ifdef DEBUG
-			logInfo("returning... "<<begin_search<<" > "<<read_length - 1, 9);
-			#endif
-			return read_length - 1;
-		}
-		if (end_search > read_length)
-		{
-			end_search = read_length;
-		}
-		
-		if ( begin_search >= end_search)
-		{
-			#ifdef DEBUG
-			logInfo("Returning... "<<begin_search<<" >= "<<end_search, 9);
-			#endif
-			return end_search;
-		}
-		/******************** end range checks ********************/
-		
-		std::string text = tmp_holder->substr(begin_search, (end_search - begin_search));
-		
-		#ifdef DEBUG
-		logInfo(pattern<<" : "<<text, 9);
-		#endif
-		position = PatternMatcher::bmpSearch(text, pattern);
-		
-		
-		if (position >= 0)
-		{
-			tmp_holder->startStopsAdd(begin_search + position, begin_search + position + pattern_length);
-			second_last_repeat_index = last_repeat_index;
-			last_repeat_index = begin_search + position;
-			repeat_spacing = last_repeat_index - second_last_repeat_index;
-			if (repeat_spacing < (minSpacerLength + pattern_length))
-			{
-				more_to_search = false;
-			}
-		}
-		else
-		{
-			more_to_search = false;
-		}
-	}
-	
-	return begin_search + position;
+    #ifdef DEBUG
+    logInfo("Scanning Right for more repeats:", 9);
+    #endif
+    unsigned int start_stops_size = tmp_holder->getStartStopListSize();
+    
+    unsigned int pattern_length = (unsigned int)pattern.length();
+    
+    // final start index
+    unsigned int last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 2);
+    
+    //second to final start index
+    unsigned int second_last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 4);
+    
+    unsigned int repeat_spacing = last_repeat_index - second_last_repeat_index;
+    
+    #ifdef DEBUG
+    logInfo(start_stops_size<<" : "<<pattern_length<<" : "<<last_repeat_index<<" : "<<second_last_repeat_index<<" : "<<repeat_spacing, 9);
+    #endif
+    
+    int candidate_repeat_index, position;
+    
+    unsigned int begin_search, end_search;
+    
+    unsigned int read_length = (unsigned int)tmp_holder->getSeqLength();
+    bool more_to_search = true;
+    while (more_to_search)
+    {
+        candidate_repeat_index = last_repeat_index + repeat_spacing;
+        begin_search = candidate_repeat_index - scanRange;
+        end_search = candidate_repeat_index + pattern_length + scanRange;
+        #ifdef DEBUG
+        logInfo(candidate_repeat_index<<" : "<<begin_search<<" : "<<end_search, 9);
+        #endif
+        /******************** range checks ********************/
+        //check that we do not search too far within an existing repeat when scanning right
+        unsigned int scanRightMinBegin = last_repeat_index + pattern_length + minSpacerLength;
+        
+        if (begin_search < scanRightMinBegin)
+        {
+            begin_search = scanRightMinBegin;
+        }
+        if (begin_search > read_length - 1)
+        {
+            #ifdef DEBUG
+            logInfo("returning... "<<begin_search<<" > "<<read_length - 1, 9);
+            #endif
+            return read_length - 1;
+        }
+        if (end_search > read_length)
+        {
+            end_search = read_length;
+        }
+        
+        if ( begin_search >= end_search)
+        {
+            #ifdef DEBUG
+            logInfo("Returning... "<<begin_search<<" >= "<<end_search, 9);
+            #endif
+            return end_search;
+        }
+        /******************** end range checks ********************/
+        
+        std::string text = tmp_holder->substr(begin_search, (end_search - begin_search));
+        
+        #ifdef DEBUG
+        logInfo(pattern<<" : "<<text, 9);
+        #endif
+        position = PatternMatcher::bmpSearch(text, pattern);
+        
+        
+        if (position >= 0)
+        {
+            tmp_holder->startStopsAdd(begin_search + position, begin_search + position + pattern_length);
+            second_last_repeat_index = last_repeat_index;
+            last_repeat_index = begin_search + position;
+            repeat_spacing = last_repeat_index - second_last_repeat_index;
+            if (repeat_spacing < (minSpacerLength + pattern_length))
+            {
+                more_to_search = false;
+            }
+        }
+        else
+        {
+            more_to_search = false;
+        }
+    }
+    
+    return begin_search + position;
 }
 
 int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound)
@@ -252,8 +252,8 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
 
         if (opts.removeHomopolymers)
         {
-			// RLE is necessary...
-			tmp_holder->encode();
+            // RLE is necessary...
+            tmp_holder->encode();
         }
         std::string read = tmp_holder->getSeq();
         
@@ -458,7 +458,7 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
             // check to see if we found something
             if (second_start > -1) 
             {
-            	// bingo!
+                // bingo!
                 second_start += search_begin;
                 unsigned int second_end = (unsigned int)second_start + opts.lowDRsize;
                 unsigned int first_end = first_start + opts.lowDRsize;
@@ -539,7 +539,7 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
         {
             delete tmp_holder;
         }
-    	log_counter++;
+        log_counter++;
         read_counter++;
     }
 
@@ -555,10 +555,10 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
 
 void findSingletons(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
-	//-----
-	// given a potentially large set of patterns, call an innefficent function
-	// on a possible broken down subset
-	//
+    //-----
+    // given a potentially large set of patterns, call an innefficent function
+    // on a possible broken down subset
+    //
     std::vector<std::string> patterns;
     mapToVector(patternsHash, patterns);
     try
@@ -577,7 +577,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
 
     // If the patterns vector is too long, we'll need to break it up!
     // in any case, we need to pass through a vector of vectors
-    std::vector<std::vector<std::string> > vec_vec_patterns;
+    std::vector<std::vector<std::string> * > vec_vec_patterns;
     int cut_start = 0;
     int cut_length = CRASS_DEF_MAX_SING_PATTERNS;
     int total_pattern_size = (int)patterns.size();
@@ -587,18 +587,16 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     {
         if(total_pattern_size <  cut_length)
         {
-        	cut_length = total_pattern_size;
+            cut_length = total_pattern_size;
         }
         
         // in the second last iteration, we should check to
         // see if halving is a better option
         if((total_pattern_size < 2 * CRASS_DEF_MAX_SING_PATTERNS) && (total_pattern_size > CRASS_DEF_MAX_SING_PATTERNS))
         {
-        	// in most cases, halving is a better option
-        	cut_length = (int)(total_pattern_size/2);
+            // in most cases, halving is a better option
+            cut_length = (int)(total_pattern_size/2);
         }
-        
-        logInfo(cut_start << " : " << cut_length << " : " << total_pattern_size << " : " << CRASS_DEF_MAX_SING_PATTERNS, 1);
         
         // make out iterators
         start_iter = patterns.begin() + cut_start;
@@ -606,9 +604,8 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         
         // get a new vector to work with
         // intialised with the subset of the patterns
-        std::vector<std::string> tmp_vec;
-        tmp_vec.insert(tmp_vec.begin(), start_iter, end_iter);
-
+        std::vector<std::string> * tmp_vec = new std::vector<std::string>();
+        tmp_vec->insert(tmp_vec->begin(), start_iter, end_iter);
         vec_vec_patterns.push_back(tmp_vec);
         
         // update our counters
@@ -617,31 +614,45 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         cut_length = CRASS_DEF_MAX_SING_PATTERNS;
     }
 
-	findSingletonsMultiVector(inputFastq, opts, vec_vec_patterns, readsFound, mReads, mStringCheck);
+    findSingletonsMultiVector(inputFastq, opts, vec_vec_patterns, readsFound, mReads, mStringCheck);
+    
+    // clean up
+    std::vector<std::vector<std::string> * >::iterator vv_iter = vec_vec_patterns.begin();
+    std::vector<std::vector<std::string> * >::iterator vv_last = vec_vec_patterns.end();
+    while(vv_iter != vv_last)
+    {
+        if(*vv_iter != NULL)
+        {
+            delete *vv_iter;
+            *vv_iter = NULL;
+        }
+        vv_iter++;
+    }
+    
 }
 
-void findSingletonsMultiVector(const char *inputFastq, const options &opts, std::vector<std::vector<std::string> > &patterns, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+void findSingletonsMultiVector(const char *inputFastq, const options &opts, std::vector<std::vector<std::string> *> &patterns, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
-	//-----
-	// Find sings given a vector of vectors of patterns
-	//
+    //-----
+    // Find sings given a vector of vectors of patterns
+    //
 
-	// make a wumanber for each set of patterns
-	std::vector<WuManber> wu_mans;
-	std::vector<std::vector<std::string> >::iterator pats_iter = patterns.begin();
-	std::vector<std::vector<std::string> >::iterator pats_last = patterns.end();
+
+    // make a wumanber for each set of patterns
+    std::vector<WuManber*> wu_mans;
+    std::vector<std::vector<std::string> *>::iterator pats_iter = patterns.begin();
+    std::vector<std::vector<std::string> *>::iterator pats_last = patterns.end();
+    while(pats_iter != pats_last)
+    {
+        WuManber * search = new WuManber();
+        search->Initialize(*(*pats_iter));
+        wu_mans.push_back(search);
+        pats_iter++;
+    }
     
     
-	while(pats_iter != pats_last)
-	{        
-        WuManber search;
-	    search.Initialize(*pats_iter);
-	    wu_mans.push_back(search);
-        
-		pats_iter++;
-	}
-	
-	// now we got lots of wumanbers, search each string
+    // now we got lots of wumanbers, search each string
+
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
     
@@ -652,18 +663,15 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
     static int read_counter = 0;
     int old_number = (int)mReads->size();
 
-	std::vector<WuManber>::iterator wm_iter =  wu_mans.begin();
-	std::vector<WuManber>::iterator wm_last =  wu_mans.end();
-    
-    pats_iter = patterns.begin();
+    std::vector<WuManber*>::iterator wm_iter =  wu_mans.begin();
+    std::vector<WuManber*>::iterator wm_last =  wu_mans.end();
     time_t time_start, time_current;
     time(&time_start);
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         // seq is a read what we love
-    	// search it for the patterns until found
-    	bool found = false;
-        
+        // search it for the patterns until found
+        bool found = false;
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             time(&time_current);
@@ -675,35 +683,32 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
             std::cout<<diff<<"sec"<<std::endl;
             log_counter = 0;
         }
-        
-        ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
-        if (seq->comment.s) 
-        {
-            tmp_holder->setComment(seq->comment.s);
-        }
-        if (seq->qual.s) 
-        {
-            tmp_holder->setQual(seq->qual.s);
-        }
-        
-        if (opts.removeHomopolymers) 
-        {
-            tmp_holder->encode();
-        }
-        std::string read = tmp_holder->getSeq();
-    	// reset these mofos
-    	wm_iter =  wu_mans.begin();
-    	wm_last =  wu_mans.end();
+        // reset these mofos
+        wm_iter =  wu_mans.begin();
+        wm_last =  wu_mans.end();
         pats_iter = patterns.begin();
 
-    	while(wm_iter != wm_last)
-    	{            
+        while(wm_iter != wm_last)
+        {
+            ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+            if (seq->comment.s) 
+            {
+                tmp_holder->setComment(seq->comment.s);
+            }
+            if (seq->qual.s) 
+            {
+                tmp_holder->setQual(seq->qual.s);
+            }
+            
+            if (opts.removeHomopolymers) 
+            {
+                tmp_holder->encode();
+            }
+            std::string read = tmp_holder->getSeq();
+            
             //initialize with an impossible number
             int start_pos = -1;
-            
-            
-            std::string found_repeat = wm_iter->Search(read.length(), read.c_str(), *pats_iter, start_pos);
-            
+            std::string found_repeat = (*wm_iter)->Search(read.length(), read.c_str(), *(*pats_iter), start_pos);
             
             if (start_pos != -1)
             {
@@ -731,16 +736,26 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
             }
             
             if(found)
-            {
-            	break;
-            }
+                break;
             
             pats_iter++;
-    		wm_iter++;
-    	}
-        
+            wm_iter++;
+        }
         log_counter++;
         read_counter++;
+    }
+    
+    // clean up
+    wm_iter =  wu_mans.begin();
+    wm_last =  wu_mans.end();
+    while(wm_iter != wm_last)
+    {
+        if(*wm_iter != NULL)
+        {
+            delete *wm_iter;
+            *wm_iter = NULL;
+        }
+        wm_iter++;
     }
     std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<std::endl;
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
@@ -838,28 +853,28 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
             logInfo(k<<" : "<<tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength(), 10);
 #endif
             // look at the character just past the end of the last repeat
-			// make sure our indicies make some sense!
+            // make sure our indicies make some sense!
             if((tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength()) >= (unsigned int)tmp_holder->getSeqLength())
-            {	
-            	k = DR_index_end;
+            {    
+                k = DR_index_end;
             }
             else
             {
                 switch( tmp_holder->getSeqCharAt(tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength()))
-				{
-					case 'A':
-						char_count_A++;
-						break;
-					case 'C':
-						char_count_C++;
-						break;
-					case 'G':
-						char_count_G++;
-						break;
-					case 'T':
-						char_count_T++;
-						break;
-				}
+                {
+                    case 'A':
+                        char_count_A++;
+                        break;
+                    case 'C':
+                        char_count_C++;
+                        break;
+                    case 'G':
+                        char_count_G++;
+                        break;
+                    case 'T':
+                        char_count_T++;
+                        break;
+                }
             }
         }
         
@@ -1003,7 +1018,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
     bool is_short = (2 > tmp_holder->numSpacers()); 
     if(!is_short) 
     {
-    	// for holding stats
+        // for holding stats
         float ave_spacer_to_spacer_len_difference = 0.0;
         float ave_repeat_to_spacer_len_difference = 0.0;
         float ave_spacer_to_spacer_difference = 0.0;
@@ -1018,26 +1033,26 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         int sp_end_offset = 1;
         if (tmp_holder->startStopsAt(0) != 0)
         {
-        	// starts with a spacer
-        	//MI std::cout << "sp_start" << std::endl;
-        	sp_start_offset++;
+            // starts with a spacer
+            //MI std::cout << "sp_start" << std::endl;
+            sp_start_offset++;
         }
-		if (tmp_holder->getSeqLength() != (int)tmp_holder->back() + 1) 
-		{
-			// ends with a spacer
-			//MI std::cout << "sp_end" << std::endl;
-			sp_end_offset++;
-		}
+        if (tmp_holder->getSeqLength() != (int)tmp_holder->back() + 1) 
+        {
+            // ends with a spacer
+            //MI std::cout << "sp_end" << std::endl;
+            sp_end_offset++;
+        }
 
-		// now go through the spacers and check for similarities
-		std::vector<std::string> spacer_vec = tmp_holder->getAllSpacerStrings();
+        // now go through the spacers and check for similarities
+        std::vector<std::string> spacer_vec = tmp_holder->getAllSpacerStrings();
         std::vector<std::string>::iterator spacer_iter = spacer_vec.begin();
         std::vector<std::string>::iterator spacer_last = spacer_vec.end();
         spacer_iter += sp_start_offset;
         spacer_last -= sp_end_offset;
         while (spacer_iter != spacer_last) 
         {
-        	num_compared++;
+            num_compared++;
             ave_repeat_to_spacer_difference += PatternMatcher::getStringSimilarity(repeat, *spacer_iter);
             float ss_diff = PatternMatcher::getStringSimilarity(*spacer_iter, *(spacer_iter + 1));
             ave_spacer_to_spacer_difference += ss_diff;
@@ -1052,14 +1067,14 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         spacer_last++;
         while (spacer_iter != spacer_last) 
         {
-        	num_compared++;
+            num_compared++;
             if((int)(spacer_iter->length()) < min_spacer_length)
             {
-            	min_spacer_length = (int)(spacer_iter->length()); 
+                min_spacer_length = (int)(spacer_iter->length()); 
             }
             if((int)(spacer_iter->length()) > max_spacer_length)
             {
-            	max_spacer_length = (int)(spacer_iter->length()); 
+                max_spacer_length = (int)(spacer_iter->length()); 
             }
             spacer_iter++;
         }
@@ -1067,14 +1082,14 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         // we may not have compared anything...
         if(num_compared == 0)
         {
-        	// there are only three spacers in this read and the read begins and ends on a spacer
-        	// we will still need to do some comparisons
-        	is_short = true;
-        	single_compare_index = 1;
+            // there are only three spacers in this read and the read begins and ends on a spacer
+            // we will still need to do some comparisons
+            is_short = true;
+            single_compare_index = 1;
         }
         else
         {
-        	// we can keep going!
+            // we can keep going!
             ave_spacer_to_spacer_difference /= num_compared;
             ave_repeat_to_spacer_difference /= num_compared;
             ave_spacer_to_spacer_len_difference = abs(ave_spacer_to_spacer_len_difference /= num_compared);
@@ -1165,7 +1180,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
             /*
              * MAX AND MIN SPACER LENGTHS
              */
-        	if ((int)spacer.length() < minSpacerLength) 
+            if ((int)spacer.length() < minSpacerLength) 
             {
 #ifdef DEBUG
                 logInfo("\tFailed test 4a. Min spacer length out of range: "<<spacer.length()<<" < "<<minSpacerLength, 8);
@@ -1183,7 +1198,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
                 return false;
             }
 #ifdef DEBUG
-         	logInfo("\tPassed test 4b. Max spacer length within range: "<<spacer.length()<<" < "<<maxSpacerLength, 8);
+             logInfo("\tPassed test 4b. Max spacer length within range: "<<spacer.length()<<" < "<<maxSpacerLength, 8);
 #endif
             /*
              * REPEAT AND SPACER CONTENT SIMILARITIES
