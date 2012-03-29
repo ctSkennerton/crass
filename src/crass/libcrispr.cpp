@@ -227,7 +227,7 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             time(&time_current);
-            double diff = difftime(time_current,time_start );
+            double diff = difftime(time_current, time_start);
             time_start = time_current;
             std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<" ...";
             //std::cout.setf(std::ios::fixed);
