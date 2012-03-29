@@ -84,7 +84,7 @@ int longReadSearch(const char *input_fastq, const options &opts, ReadMap * mRead
 int shortReadSearch(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
 void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
-void findSingletonsMultiVector(const char *inputFastq, const options &opts, std::vector<std::vector<std::string> > &patterns, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
+void findSingletonsMultiVector(const char *inputFastq, const options &opts, std::vector<std::vector<std::string> *> &patterns, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
 
 
 
