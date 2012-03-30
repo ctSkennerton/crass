@@ -113,7 +113,7 @@ class WorkHorse {
         bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string kmer, const std::string * DR);
         int getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
         int getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
-        
+        int getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR);
         //**************************************
         // spacer graphs
         //**************************************

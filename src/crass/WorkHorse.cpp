@@ -539,7 +539,7 @@ int WorkHorse::mungeDRs(void)
             // it's real, so parse this group
             // get the N top kmers
             std::vector<std::string> n_top_kmers;
-            int num_mers_found = getNMostAbundantKmers((mDR2GIDMap[group_count_iter->first])->size(), n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second);
+            int num_mers_found = getNMostAbundantKmers((int)(mDR2GIDMap[group_count_iter->first])->size(), n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second);
             if (0 != num_mers_found) 
             {
                 // a return value of false indicates that this function has deleted clustered_DRs
@@ -735,16 +735,18 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
         // we've already done the master DR
         if(master_DR_token != *dr_iter)
         {
+
             // set this guy to -1 for now
             (*DR_offset_map)[*dr_iter] = -1;
             
             // this is a DR we have yet to add to the coverage array
             // First we need to find the positions of the kmers in this DR
+
             for(int i = 0; i < numMers4Mode; i++)
             {
                 isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), (*nTopKmers)[i], &tmp_DR);
-            }
-            
+                
+            }            
             // we need to have at least half of the mode k-mers present to continue
             // Where they are not found, the position gets set to -1
             int num_neg1 = 0;
@@ -754,6 +756,7 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
                     num_neg1++; 
             }
             int numMers4Mode_half = numMers4Mode / 2;
+            //std::cout<<numMers4Mode_half<<" : " <<numMers4Mode<< " : "<<num_neg1<<std::endl;
             if(num_neg1 < numMers4Mode_half)
             {
                 // all is good! ...so far
@@ -791,6 +794,16 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
                         (*DR_offset_map)[*dr_iter] = -1;
                     }
                     
+                    // TODO: Maybe we should use the smith-waterman here
+                    // So now that all of the variants are in the same 
+                    // orientation, perform a pair-wise alignment against the 
+                    // master to get the offset in the array
+                    //std::string master_dr_seq = mStringCheck.getString(master_DR_token);
+                    //getOffsetAgainstMaster(master_dr_seq, tmp_DR);
+                    
+                    
+                    // find the position of the kmers in the direct repeat
+                    // store whether it was revcomp'd or not
                     for(int i = 0; i < numMers4Mode; i++)
                     {
                         isKmerPresent(((kmer_rcs_DR) + i), ((kmer_positions_DR) + i), (*nTopKmers)[i], &tmp_DR);
@@ -965,6 +978,15 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
     }
     return true;
 } 
+int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR)
+{
+    // call smith-waterman
+    int a_start_align, a_end_align;
+    stringPair pair = smithWaterman(masterDR, slaveDR, &a_start_align, &a_end_align, 0, (int)masterDR.size());
+    std::cout<<"a_start_align: "<<a_start_align<< " a_end_align: "<<a_end_align<<std::endl;
+    std::cout<<pair.first<<std::endl<<pair.second<<std::endl;
+    return a_start_align;
+}
 
 std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, int * nextFreeGID)
 {
@@ -1750,8 +1772,8 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
         {
             // found the kmer in the reverse direction!
         	// make sure I found it once only
-            pos = DR->find(tmp_kmer, pos+1);
-            if(pos != string::npos)
+            size_t pos2 = DR->find(tmp_kmer, pos+1);
+            if(pos2 != string::npos)
             {
             	// found it twice
                 *startPosition = -1;
@@ -1759,16 +1781,16 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
             } // else OK
             
             *didRevComp = true;
-            *startPosition = (int)pos;           
+            *startPosition = (int)pos;    
             return true;
         }
     }
     else
     {
         // found the kmer in the forward direction!
-    	// search for more in the forward direction
-    	pos = DR->find(kmer, pos+1);
-        if(pos != string::npos)
+        // search for more in the forward direction
+        size_t pos2 = DR->find(kmer, pos+1);
+        if(pos2 != string::npos)
         {
         	// found it twice    	
             *startPosition = -1;
@@ -1777,8 +1799,8 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
         else
         {
             // none? -> search in the reverse direction from start
-            pos = DR->find(tmp_kmer);
-            if(pos != string::npos)
+            pos2 = DR->find(tmp_kmer);
+            if(pos2 != string::npos)
             {
             	// found in both dirs!
                 *startPosition = -1;
@@ -2501,128 +2523,126 @@ bool WorkHorse::addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupEl
 
 bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
 {
-    std::stringstream notes;
-    notes << PACKAGE_NAME <<" ("<<PACKAGE_VERSION<<") run on "<<mTimeStamp<<" with command: ";
-    notes <<mCommandLine;
-    xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
-    
-    std::string file_name;
-    char * buf = NULL;
-    std::string absolute_dir = getcwd(buf, 4096);
-    absolute_dir += "/";
-    delete buf;
-    // add in files if they exist
-    if (!mOpts->logToScreen) 
-    {
-        // we whould have a log file
-        file_name = mOpts->output_fastq + PACKAGE_NAME + "." + mTimeStamp + ".log";
-        if (checkFileOrError(file_name.c_str())) 
+    try{
+        
+        std::stringstream notes;
+        notes << PACKAGE_NAME <<" ("<<PACKAGE_VERSION<<") run on "<<mTimeStamp<<" with command: ";
+        notes <<mCommandLine;
+        xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
+        
+        std::string file_name;
+        char * buf = NULL;
+        std::string absolute_dir = getcwd(buf, 4096);
+        absolute_dir += "/";
+        delete buf;
+        // add in files if they exist
+        if (!mOpts->logToScreen) 
         {
-            xmlDoc->addFileToMetadata("log", absolute_dir + file_name, metadata_elem);
-        }
-        else
-        {
-            logError("Could not find the log file at "<<absolute_dir + file_name<<" but I think it should be there... wierd");
-        }
-    }
-    
-    
-#ifdef DEBUG
-    // check for debuging .gv files
-    if (!mOpts->noDebugGraph) 
-    {
-        file_name = mOpts->output_fastq + "Group_"; 
-        std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_debug.gv";
-        if (checkFileOrError((file_name + file_sufix).c_str())) 
-        {
-            xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
-        } 
-        else 
-        {
-            logError("Could not find the Debug .gv file at "<< absolute_dir << file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            // we whould have a log file
+            file_name = mOpts->output_fastq + PACKAGE_NAME + "." + mTimeStamp + ".log";
+            if (checkFileOrError(file_name.c_str())) 
+            {
+                xmlDoc->addFileToMetadata("log", absolute_dir + file_name, metadata_elem);
+            }
+            else
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+            }
         }
         
-        // and now for the cleaned .gv
-        file_name = mOpts->output_fastq + "Clean_";
-        if (checkFileOrError((file_name + file_sufix).c_str())) 
+        
+    #ifdef DEBUG
+        // check for debuging .gv files
+        if (!mOpts->noDebugGraph) 
         {
-            xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
-        } 
-        else 
-        {
-            logError("Could not find the Debug .gv file at "<<absolute_dir <<file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            file_name = mOpts->output_fastq + "Group_"; 
+            std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_debug.gv";
+            if (checkFileOrError((file_name + file_sufix).c_str())) 
+            {
+                xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, (absolute_dir + file_name + file_sufix).c_str() );
+            }
             
+            // and now for the cleaned .gv
+            file_name = mOpts->output_fastq + "Clean_";
+            if (checkFileOrError((file_name + file_sufix).c_str())) 
+            {
+                xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, (absolute_dir + file_name + file_sufix).c_str() );                
+            }
         }
-    }
 
-    
-#endif // DEBUG
-    
-#ifdef RENDERING
-    // check for image files
-#ifdef DEBUG
-    if (!mOpts->noDebugGraph) 
-    {
-        file_name = mOpts->output_fastq + "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
-        if (checkFileOrError(file_name.c_str())) 
-        {
-            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
-        } 
-        else 
-        {
-            logError("Could not find the Debug .eps file at "<<absolute_dir <<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
-        }
         
-        file_name = mOpts->output_fastq + "Clean_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
+    #endif // DEBUG
         
+    #ifdef RENDERING
+        // check for image files
+    #ifdef DEBUG
+        if (!mOpts->noDebugGraph) 
+        {
+            file_name = mOpts->output_fastq + "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
+            if (checkFileOrError(file_name.c_str())) 
+            {
+                xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+            }
+            
+            file_name = mOpts->output_fastq + "Clean_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
+            
+            if (checkFileOrError(file_name.c_str())) 
+            {
+                xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+            }
+        }
+
+    #endif // DEBUG
+        if (!mOpts->noRendering) 
+        {
+            file_name = mOpts->output_fastq + "Spacers_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
+            if (checkFileOrError(file_name.c_str())) 
+            {
+                xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+            }
+        } 
+
+
+    #endif // RENDERING
+        
+        // check the sequence file
+        file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".fa";
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("sequence", absolute_dir + file_name, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the cleaned debug .eps file at "<<absolute_dir +file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
         }
-    }
-
-#endif // DEBUG
-    if (!mOpts->noRendering) 
-    {
-        file_name = mOpts->output_fastq + "Spacers_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
-        if (checkFileOrError(file_name.c_str())) 
-        {
-            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
-        } 
-        else 
-        {
-            logError("Could not find the Spacer .eps file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
-        }
-    } 
-
-
-#endif // RENDERING
-    
-    // check the sequence file
-    file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".fa";
-    if (checkFileOrError(file_name.c_str())) 
-    {
-        xmlDoc->addFileToMetadata("sequence", absolute_dir + file_name, metadata_elem);
-    } 
-    else 
-    {
-        logError("Could not find the fasta file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
-    }
-    
-    
-    // check the spacer dictionary 
-    file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".spacers";
-    if (checkFileOrError(file_name.c_str())) 
-    {
-        xmlDoc->addFileToMetadata("data", absolute_dir + file_name, metadata_elem);
-    } 
-    else 
-    {
-        logError("Could not find the spacer dictionary file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+    } catch(crispr::no_file_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    } catch(std::exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    } catch(xercesc::DOMException& e) {
+        
     }
     return 0;
     
