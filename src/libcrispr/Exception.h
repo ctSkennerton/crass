@@ -93,6 +93,7 @@ namespace crispr {
     
     class runtime_exception: public exception{
     public:
+        runtime_exception(){}
         runtime_exception(const char * file, int line, const char * function ,const char * message)
         {
             std::stringstream ss;
@@ -103,6 +104,26 @@ namespace crispr {
         }
         // destructor
         ~runtime_exception(){}
+        
+        virtual std::string what(void)
+        {
+            return errorMsg;
+        }
+    protected:
+        std::string errorMsg;
+    };
+    class no_file_exception: public runtime_exception{
+        public:
+        no_file_exception(const char * file, int line, const char * function ,const char * nofile)
+        {
+            std::stringstream ss;
+            ss<<"[NO_FILE_ERROR]: Cannot find file ";
+            ss<< nofile<<std::endl;
+            ss<<file<<" : "<<line<<" : "<<function;
+            errorMsg = ss.str();
+        }
+        // destructor
+        ~no_file_exception(){}
         
         virtual std::string what(void)
         {

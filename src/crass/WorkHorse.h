@@ -88,7 +88,7 @@ class WorkHorse {
         //**************************************
         //void write_spacerID(direct_repeat &dr_match, kseq_t *seq);
         //void write_direct_repeatID(direct_repeat &dr_match, kseq_t *seq);
-        void writeLookupToFile(string &outFileName, lookupTable &outLookup);
+        //void writeLookupToFile(string &outFileName, lookupTable &outLookup);
         int numOfReads(void);
         
     private:
@@ -113,7 +113,7 @@ class WorkHorse {
         bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string kmer, const std::string * DR);
         int getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
         int getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
-        
+        int getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR);
         //**************************************
         // spacer graphs
         //**************************************
@@ -129,7 +129,7 @@ class WorkHorse {
         // file IO
         //**************************************
         int dumpReads(DR_Cluster_Map * DR2GID_map, bool split);		// dump the reads for this group to file
-        int dumpSpacers(void);										// Dump the spacers for this group to file
+        //int dumpSpacers(void);										// Dump the spacers for this group to file
         int renderDebugGraphs(void);							// render debug graphs
         int renderDebugGraphs(std::string namePrefix);
         int renderSpacerGraphs(void);							// render debug graphs

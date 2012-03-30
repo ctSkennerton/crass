@@ -65,9 +65,22 @@
 typedef std::pair<std::string, std::string> stringPair;
 
 double findMax(double a, double b, double c, double d, int * index);
-
+//-----
+// The SW you've grown to know and love
+//
 stringPair smithWaterman(std::string& seqA, std::string& seqB);
+//-----
+// Same as below but ignore similarity
+//
 stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aEndSearch, double similarity);
+
+//-----
+// Trickle-ier verison of the original version of the smith waterman algorithm I found in this file
+// 
+// This function is seqA centric, it will align ALL of seqB to the parts of seqA which lie INCLUSIVELY
+// between aStartSearch and aEndSearch. It will return the UNIMPUTED alignment strings for A and B respectively
+// in the stringPair variable AND it also stores the start and end indexes used to cut the seqA substring in the 
+// two int references  aStartAlign, aEndAlign 
 stringPair smithWaterman(std::string& seqA, std::string& seqB, int * aStartAlign, int * aEndAlign, int aStartSearch, int aEndSearch);
 
 #endif // __SMITH_WATERMAN_H
