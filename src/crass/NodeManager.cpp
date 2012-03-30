@@ -1769,36 +1769,39 @@ bool NodeManager::printSpacerGraph(std::string& outFileName, std::string title, 
     //-----
     // Print a graphviz style graph of the DRs and spacers
     //
+    std::stringstream tmp_out;
+    setSpacerColourLimits();
+    gvGraphHeader(tmp_out, title);
+    bool at_least_one_spacer=false;        
+    SpacerListIterator spi_iter = NM_Spacers.begin();
+    while (spi_iter != NM_Spacers.end()) 
+    {
+        if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
+        {
+            at_least_one_spacer = true;
+            // print the graphviz nodes
+            std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
+            
+            // print the node attribute
+            if ((spi_iter->second)->isFlanker()) {
+                gvFlanker(tmp_out, label, NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
+            } else {
+                gvSpacer(tmp_out,label,NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
+                
+            }
+        }
+        spi_iter++;
+    }
+    if (!at_least_one_spacer) 
+    {
+        return false;
+    }  
+    
     std::ofstream data_out;
     data_out.open(outFileName.c_str());
     if (data_out.good()) 
     {
-        setSpacerColourLimits();
-        gvGraphHeader(data_out, title);
-        bool at_least_one_spacer=false;        
-        SpacerListIterator spi_iter = NM_Spacers.begin();
-        while (spi_iter != NM_Spacers.end()) 
-        {
-            if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
-            {
-                at_least_one_spacer = true;
-                // print the graphviz nodes
-                std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
-                
-                // print the node attribute
-                if ((spi_iter->second)->isFlanker()) {
-                    gvFlanker(data_out, label, NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
-                } else {
-                    gvSpacer(data_out,label,NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
-                    
-                }
-            }
-            spi_iter++;
-        }
-        if (!at_least_one_spacer) 
-        {
-            return false;
-        }
+        data_out<<tmp_out;
         spi_iter = NM_Spacers.begin();
         while (spi_iter != NM_Spacers.end()) 
         {
