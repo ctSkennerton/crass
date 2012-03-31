@@ -230,8 +230,6 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
             double diff = difftime(time_current, time_start);
             time_start = time_current;
             std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<" ...";
-            //std::cout.setf(std::ios::fixed);
-            //std::cout.precision(2);
             std::cout<<diff<<"sec"<<std::endl;
             log_counter = 0;
         }
@@ -383,7 +381,11 @@ int longReadSearch(const char * inputFastq, const options& opts, ReadMap * mRead
     gzclose(fp);       // close the file handler  
     //delete tmp_holder;
     logInfo("finished processing file:"<<inputFastq, 1);    
-    std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<<"Processed "<<read_counter<<std::endl;
+    time(&time_current);
+    double diff = difftime(time_current, time_start);
+    time_start = time_current;
+    std::cout<<"["<<PACKAGE_NAME<<"_longReadFinder]: "<< "Processed "<<read_counter<<" ...";
+    std::cout<<diff<<std::endl;
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
     return 0;
 }
@@ -547,8 +549,11 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
     kseq_destroy(seq); // destroy seq  
     gzclose(fp);       // close the file handler  
     logInfo("Finished processing file:"<<inputFastq, 1);
-    std::cout<<"["<<PACKAGE_NAME<<"_shortReadFinder]: "<<"Processed "<<read_counter<<std::endl;
-    logInfo("So far " << mReads->size()<<" direct repeat variants have been found", 2);
+    time(&time_current);
+    double diff = difftime( time_current, time_start);
+    time_start = time_current;
+    std::cout<<"["<<PACKAGE_NAME<<"_shortReadFinder]: "<<"Processed "<<read_counter<<" ...";
+    std::cout<<diff<<std::endl;    logInfo("So far " << mReads->size()<<" direct repeat variants have been found", 2);
     return 0;
 }
 
@@ -581,7 +586,6 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     int cut_start = 0;
     int cut_length = CRASS_DEF_MAX_SING_PATTERNS;
     int total_pattern_size = (int)patterns.size();
-    std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: " << total_pattern_size << " patterns."<<std::endl;
     std::vector<std::string>::iterator start_iter, end_iter;
     while(total_pattern_size > 0)
     {
@@ -757,7 +761,11 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
         }
         wm_iter++;
     }
-    std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<std::endl;
+    time(&time_current);
+    double diff = difftime(time_current, time_start);
+    time_start = time_current;
+    std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
+    std::cout<<diff<<std::endl;
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 
