@@ -459,24 +459,15 @@ int WorkHorse::removeLowSpacerNodeManagers(void)
 	{
 		if(NULL != drg_iter->second)
 		{            
-#ifdef DEBUG
-            if (NULL == mDRs[mTrueDRs[drg_iter->first]])
+            if (NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
-                logWarn("Before Low Spacer Removal: NodeManager "<<drg_iter->first<<" is NULL",6);
-            }
-            else
-            {
-#endif
                 if((mDRs[mTrueDRs[drg_iter->first]])->getSpacerCount(false) < mOpts->covCutoff) 
                 {
                     logInfo("Deleting NodeManager "<<drg_iter->first<<" as it contained less than "<<mOpts->covCutoff<<" attached spacers",4);
                     delete mDRs[mTrueDRs[drg_iter->first]];
                     mDRs[mTrueDRs[drg_iter->first]] = NULL;
                 }
-#ifdef DEBUG
             }
-#endif
-            
 		}
 		drg_iter++;
 	}
