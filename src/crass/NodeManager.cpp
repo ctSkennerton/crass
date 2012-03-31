@@ -1635,33 +1635,6 @@ void NodeManager::printAssemblyToDOM(crispr::XML * xmlDoc, xercesc::DOMElement *
 
 }
 
-
-// Spacer dictionaries
-void NodeManager::dumpSpacerDict(std::string spacerFileName, bool showDetached)
-{
-    //-----
-    // Dump a spacer dictionary to file
-    //
-    std::ofstream spacer_file;
-    spacer_file.open(spacerFileName.c_str());
-    if (spacer_file.good()) 
-    {
-        spacer_file <<"SEQ,ID,COUNT" << std::endl;
-        SpacerListIterator spacer_iter = NM_Spacers.begin();
-        while(spacer_iter != NM_Spacers.end())
-        {
-            SpacerInstance * SI = spacer_iter->second;
-            if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
-            {
-                std::string spacer = NM_StringCheck.getString(SI->getID());
-                spacer_file << spacer << "," << SI->getID() << "," << SI->getCount() << std::endl;
-            }
-            spacer_iter++;
-        }
-        spacer_file.close();
-    }
-}
-
 // Making purdy colours
 void NodeManager::setDebugColourLimits(void)
 {
@@ -1796,36 +1769,39 @@ bool NodeManager::printSpacerGraph(std::string& outFileName, std::string title, 
     //-----
     // Print a graphviz style graph of the DRs and spacers
     //
+    std::stringstream tmp_out;
+    setSpacerColourLimits();
+    gvGraphHeader(tmp_out, title);
+    bool at_least_one_spacer=false;        
+    SpacerListIterator spi_iter = NM_Spacers.begin();
+    while (spi_iter != NM_Spacers.end()) 
+    {
+        if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
+        {
+            at_least_one_spacer = true;
+            // print the graphviz nodes
+            std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
+            
+            // print the node attribute
+            if ((spi_iter->second)->isFlanker()) {
+                gvFlanker(tmp_out, label, NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
+            } else {
+                gvSpacer(tmp_out,label,NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
+                
+            }
+        }
+        spi_iter++;
+    }
+    if (!at_least_one_spacer) 
+    {
+        return false;
+    }  
+    
     std::ofstream data_out;
     data_out.open(outFileName.c_str());
     if (data_out.good()) 
     {
-        setSpacerColourLimits();
-        gvGraphHeader(data_out, title);
-        bool at_least_one_spacer=false;        
-        SpacerListIterator spi_iter = NM_Spacers.begin();
-        while (spi_iter != NM_Spacers.end()) 
-        {
-            if ((spi_iter->second)->isAttached() && (showSingles || (0 != (spi_iter->second)->getSpacerRank()))) 
-            {
-                at_least_one_spacer = true;
-                // print the graphviz nodes
-                std::string label = getSpacerGraphLabel(spi_iter->second, longDesc);
-                
-                // print the node attribute
-                if ((spi_iter->second)->isFlanker()) {
-                    gvFlanker(data_out, label, NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
-                } else {
-                    gvSpacer(data_out,label,NM_SpacerRainbow.getColour((spi_iter->second)->getCount()));
-                    
-                }
-            }
-            spi_iter++;
-        }
-        if (!at_least_one_spacer) 
-        {
-            return false;
-        }
+        data_out<<tmp_out;
         spi_iter = NM_Spacers.begin();
         while (spi_iter != NM_Spacers.end()) 
         {

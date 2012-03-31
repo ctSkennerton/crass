@@ -88,7 +88,7 @@ class WorkHorse {
         //**************************************
         //void write_spacerID(direct_repeat &dr_match, kseq_t *seq);
         //void write_direct_repeatID(direct_repeat &dr_match, kseq_t *seq);
-        void writeLookupToFile(string &outFileName, lookupTable &outLookup);
+        //void writeLookupToFile(string &outFileName, lookupTable &outLookup);
         int numOfReads(void);
         
     private:
@@ -106,14 +106,14 @@ class WorkHorse {
         int mungeDRs(void);                         			// cluster potential DRs and make node managers
         bool clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
         bool findMasterDR(int GID, std::vector<std::string> * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence);
-        bool populateCoverageArray(int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY);
+        bool populateCoverageArray(int numMers4Mode, int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY);
         std::string calculateDRConsensus(int GID, std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, int * nextFreeGID);
-        bool parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID);
+        bool parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID);
         int numberOfReadsInGroup(DR_Cluster * currentGroup);
         bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string kmer, const std::string * DR);
-        bool getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
-        bool getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
-        
+        int getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
+        int getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
+        int getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR);
         //**************************************
         // spacer graphs
         //**************************************
@@ -129,7 +129,7 @@ class WorkHorse {
         // file IO
         //**************************************
         int dumpReads(DR_Cluster_Map * DR2GID_map, bool split);		// dump the reads for this group to file
-        int dumpSpacers(void);										// Dump the spacers for this group to file
+        //int dumpSpacers(void);										// Dump the spacers for this group to file
         int renderDebugGraphs(void);							// render debug graphs
         int renderDebugGraphs(std::string namePrefix);
         int renderSpacerGraphs(void);							// render debug graphs

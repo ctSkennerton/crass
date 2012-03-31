@@ -228,11 +228,12 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     }
     
     // dump the spacers to file
-	if(dumpSpacers())
-	{
-        logError("FATAL ERROR: dumpSpacers failed");
-        return 8;
-	}
+    // Not needed any more since we have the crispr file
+//	if(dumpSpacers())
+//	{
+//        logError("FATAL ERROR: dumpSpacers failed");
+//        return 8;
+//	}
     
     // print the reads to a file if requested
 	if(dumpReads(&mDR2GIDMap, false))
@@ -324,35 +325,39 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         }
 
 
-        // Check to see if we found anything, should return if we haven't
-        if (patterns_lookup.empty()) 
-        {
-            logInfo("No direct repeat sequences were identified for file: "<<input_fastq, 1);
-        }
-        logInfo("Finished file: " << *seq_iter, 1);
-        
-        seq_iter++;
-    }
-    
-    if (patterns_lookup.size() > 0) 
-    {
-        seq_iter = seqFiles.begin();
-        while (seq_iter != seqFiles.end()) {
-            
-            logInfo("Parsing file: " << *seq_iter, 1);
-            
-            // Need to make the string into something more old-skool so that
-            // the search functions don't cry!
-            char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
-            strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
-            
-            logInfo("Begining Second iteration through files to recruit singletons", 2);
-            
-            findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            // Check to see if we found anything, should return if we haven't
+            if (patterns_lookup.empty()) 
+            {
+                logInfo("No direct repeat sequences were identified for file: "<<input_fastq, 1);
+            }
+            logInfo("Finished file: " << *seq_iter, 1);
             
             seq_iter++;
         }
-    }
+        
+        if (patterns_lookup.size() > 0) 
+        {
+            std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: " << patterns_lookup.size() << " patterns."<<std::endl;
+            seq_iter = seqFiles.begin();
+            while (seq_iter != seqFiles.end()) {
+                
+                logInfo("Parsing file: " << *seq_iter, 1);
+                
+                try {
+                    // Need to make the string into something more old-skool so that
+                    // the search functions don't cry!
+                    char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
+                    strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
+                    
+                    logInfo("Begining Second iteration through files to recruit singletons", 2);
+                    
+                    findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+                } catch (crispr::exception& e) {
+                    std::cerr<<e.what()<<std::endl;
+                }
+                seq_iter++;
+            }
+        }
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
     
@@ -458,24 +463,15 @@ int WorkHorse::removeLowSpacerNodeManagers(void)
 	{
 		if(NULL != drg_iter->second)
 		{            
-#ifdef DEBUG
-            if (NULL == mDRs[mTrueDRs[drg_iter->first]])
+            if (NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
-                logWarn("Before Low Spacer Removal: NodeManager "<<drg_iter->first<<" is NULL",6);
-            }
-            else
-            {
-#endif
                 if((mDRs[mTrueDRs[drg_iter->first]])->getSpacerCount(false) < mOpts->covCutoff) 
                 {
                     logInfo("Deleting NodeManager "<<drg_iter->first<<" as it contained less than "<<mOpts->covCutoff<<" attached spacers",4);
                     delete mDRs[mTrueDRs[drg_iter->first]];
                     mDRs[mTrueDRs[drg_iter->first]] = NULL;
                 }
-#ifdef DEBUG
             }
-#endif
-            
 		}
 		drg_iter++;
 	}
@@ -538,10 +534,12 @@ int WorkHorse::mungeDRs(void)
             // it's real, so parse this group
             // get the N top kmers
             std::vector<std::string> n_top_kmers;
-            if (getNMostAbundantKmers((mDR2GIDMap[group_count_iter->first])->size(), n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second)) 
+            int num_mers_found = getNMostAbundantKmers((int)(mDR2GIDMap[group_count_iter->first])->size(), n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second);
+            if (0 != num_mers_found) 
             {
                 // a return value of false indicates that this function has deleted clustered_DRs
-                parseGroupedDRs(group_count_iter->first, &n_top_kmers, &next_free_GID);
+            	//std::cout << "found " << num_mers_found << " : " << CRASS_DEF_NUM_KMERS_4_MODE << std::endl; 
+                parseGroupedDRs(num_mers_found, group_count_iter->first, &n_top_kmers, &next_free_GID);
             }
             else
             {
@@ -640,7 +638,7 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, Stri
     return false;
 }
 
-bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
+bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
 {
 	//-----
 	// Use the data structures initialised in parseGroupedDRs
@@ -732,31 +730,35 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
         // we've already done the master DR
         if(master_DR_token != *dr_iter)
         {
+
             // set this guy to -1 for now
             (*DR_offset_map)[*dr_iter] = -1;
             
             // this is a DR we have yet to add to the coverage array
             // First we need to find the positions of the kmers in this DR
-            for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+
+            for(int i = 0; i < numMers4Mode; i++)
             {
                 isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), (*nTopKmers)[i], &tmp_DR);
-            }
-            
+                
+            }            
             // we need to have at least half of the mode k-mers present to continue
             // Where they are not found, the position gets set to -1
             int num_neg1 = 0;
-            for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+            for(int i = 0; i < numMers4Mode; i++)
             {
                 if(-1 == (kmer_positions_DR)[i])
                     num_neg1++; 
             }
-            if(num_neg1 < CRASS_DEF_NUM_KMERS_4_MODE_HALF)
+            int numMers4Mode_half = numMers4Mode / 2;
+            //std::cout<<numMers4Mode_half<<" : " <<numMers4Mode<< " : "<<num_neg1<<std::endl;
+            if(num_neg1 < numMers4Mode_half)
             {
                 // all is good! ...so far
                 // now we can determine if the DR is the reverse complement...
                 int num_agree = 0;
                 int num_disagree = 0;
-                for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+                for(int i = 0; i < numMers4Mode; i++)
                 {
                     if((kmer_rcs_DR_master)[i] == (kmer_rcs_DR)[i])
                         num_agree++;
@@ -787,7 +789,17 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                         (*DR_offset_map)[*dr_iter] = -1;
                     }
                     
-                    for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+                    // TODO: Maybe we should use the smith-waterman here
+                    // So now that all of the variants are in the same 
+                    // orientation, perform a pair-wise alignment against the 
+                    // master to get the offset in the array
+                    //std::string master_dr_seq = mStringCheck.getString(master_DR_token);
+                    //getOffsetAgainstMaster(master_dr_seq, tmp_DR);
+                    
+                    
+                    // find the position of the kmers in the direct repeat
+                    // store whether it was revcomp'd or not
+                    for(int i = 0; i < numMers4Mode; i++)
                     {
                         isKmerPresent(((kmer_rcs_DR) + i), ((kmer_positions_DR) + i), (*nTopKmers)[i], &tmp_DR);
                     }
@@ -797,7 +809,7 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                     int positioning_kmer_index = 0;
                     bool found_kmer = false;
                     // first find the first non -1 entry, there must be at least CRASS_DEF_NUM_KMERS_4_MODE_HALF
-                    while(positioning_kmer_index < CRASS_DEF_NUM_KMERS_4_MODE)
+                    while(positioning_kmer_index < numMers4Mode)
                     {
                         if(-1 != (kmer_positions_DR)[positioning_kmer_index])
                             break;
@@ -805,7 +817,7 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
                     }
                     // start here, now we look to the differences between this kmer and the next kmer
                     // and make sure that that difference is upheld in the master
-                    while(positioning_kmer_index < (CRASS_DEF_NUM_KMERS_4_MODE - 1))
+                    while(positioning_kmer_index < (numMers4Mode - 1))
                     {
                         if(((kmer_positions_DR)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index+1]) == ((kmer_positions_DR_master)[positioning_kmer_index] - (kmer_positions_DR_master)[positioning_kmer_index+1]))
                         {
@@ -961,6 +973,15 @@ bool WorkHorse::populateCoverageArray(int GID, std::string master_DR_sequence, S
     }
     return true;
 } 
+int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR)
+{
+    // call smith-waterman
+    int a_start_align, a_end_align;
+    stringPair pair = smithWaterman(masterDR, slaveDR, &a_start_align, &a_end_align, 0, (int)masterDR.size());
+    std::cout<<"a_start_align: "<<a_start_align<< " a_end_align: "<<a_end_align<<std::endl;
+    std::cout<<pair.first<<std::endl<<pair.second<<std::endl;
+    return a_start_align;
+}
 
 std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, int * nextFreeGID)
 {
@@ -1163,7 +1184,7 @@ std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> 
 	return true_DR;
 }
 
-bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID) 
+bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID) 
 {
 	
     //-----
@@ -1246,14 +1267,18 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
     kmer_positions_ARRAY[0] = (int)(array_len*CRASS_DEF_CONS_ARRAY_START);
     isKmerPresent(kmer_rcs_DR, kmer_positions_DR, (*nTopKmers)[0], &master_DR_sequence);
     
-    for(int i = 1; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+    for(int i = 1; i < numMers4Mode; i++)
     {
+    	//std::cout << "1" << (kmer_rcs_DR + i) << std::endl;
+    	//std::cout << "2" << (kmer_positions_DR + i) << std::endl;
+    	//std::cout << "3" << (*nTopKmers)[i] << std::endl;
+    	//std::cout << "4" << &master_DR_sequence << std::endl;
         isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), (*nTopKmers)[i], &master_DR_sequence);
         kmer_positions_ARRAY[i] = kmer_positions_DR[i] - kmer_positions_DR[0] + kmer_positions_ARRAY[0];
     }
     
     // store the first results away as the master results
-    for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
+    for(int i = 0; i < numMers4Mode; i++)
     {
         kmer_rcs_DR_master[i] = kmer_rcs_DR[i];
         kmer_positions_DR_master[i] = kmer_positions_DR[i];
@@ -1264,7 +1289,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Set up the master DR's array and insert this guy into the main array
-    populateCoverageArray(GID, master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, coverage_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
+    populateCoverageArray(numMers4Mode, GID, master_DR_sequence, master_DR_token, &DR_offset_map, &dr_zone_start, &dr_zone_end, nTopKmers, coverage_array, kmer_positions_DR, kmer_rcs_DR, kmer_positions_DR_master, kmer_rcs_DR_master, kmer_positions_ARRAY);
     
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // calculate consensus and diversity
@@ -1659,7 +1684,7 @@ bool WorkHorse::parseGroupedDRs(int GID, std::vector<std::string> * nTopKmers, i
         std::map<char, int>::iterator cc_iter = coll_char_to_GID_map.begin();
         while(cc_iter != coll_char_to_GID_map.end())
         {
-            parseGroupedDRs(cc_iter->second, nTopKmers, nextFreeGID);
+            parseGroupedDRs(numMers4Mode, cc_iter->second, nTopKmers, nextFreeGID);
             cc_iter++;
         }
     }
@@ -1742,8 +1767,8 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
         {
             // found the kmer in the reverse direction!
         	// make sure I found it once only
-            pos = DR->find(tmp_kmer, pos+1);
-            if(pos != string::npos)
+            size_t pos2 = DR->find(tmp_kmer, pos+1);
+            if(pos2 != string::npos)
             {
             	// found it twice
                 *startPosition = -1;
@@ -1751,16 +1776,16 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
             } // else OK
             
             *didRevComp = true;
-            *startPosition = (int)pos;           
+            *startPosition = (int)pos;    
             return true;
         }
     }
     else
     {
         // found the kmer in the forward direction!
-    	// search for more in the forward direction
-    	pos = DR->find(kmer, pos+1);
-        if(pos != string::npos)
+        // search for more in the forward direction
+        size_t pos2 = DR->find(kmer, pos+1);
+        if(pos2 != string::npos)
         {
         	// found it twice    	
             *startPosition = -1;
@@ -1769,8 +1794,8 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
         else
         {
             // none? -> search in the reverse direction from start
-            pos = DR->find(tmp_kmer);
-            if(pos != string::npos)
+            pos2 = DR->find(tmp_kmer);
+            if(pos2 != string::npos)
             {
             	// found in both dirs!
                 *startPosition = -1;
@@ -1786,7 +1811,7 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
     return false;
 }
 
-bool WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
+int WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
 {
 	//-----
 	// True to it's name get MOST abundant kmers.
@@ -1794,17 +1819,17 @@ bool WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmer
 	return getNMostAbundantKmers(1000000, mostAbundantKmers, num2Get, kmer_CountMap);
 }
 
-bool WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
+int WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
 {
 	//-----
-	// gte the most abundant kmers under a certain amount.
+	// get the most abundant kmers under a certain amount.
 	//
     std::string top_kmer;    
     std::map<std::string, bool> top_kmer_map;
     
     if ((int)(kmer_CountMap->size()) < num2Get) 
     {
-        return false;
+        return 0;
     } 
     else 
     {
@@ -1815,23 +1840,28 @@ bool WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& m
             
             while (map_iter != kmer_CountMap->end()) 
             {
+            	//std::cout << map_iter->first << " : " << map_iter->second << " : " << max_count << " : " << maxAmount << std::endl;
                 if((map_iter->second > max_count) && (map_iter->second <= maxAmount) && (top_kmer_map.find(map_iter->first) == top_kmer_map.end()))
                 {
                     max_count = map_iter->second;
                     top_kmer = map_iter->first;
+                    //std::cout << "NT: " << top_kmer << std::endl;
                 }
                 map_iter++;
             }
+            //std::cout << "ADDING: " << top_kmer << std::endl;            
             top_kmer_map[top_kmer] = true;
         }
+        int num_mers_found = 0;
         std::map<std::string, bool>::iterator tkm_iter = top_kmer_map.begin();
         while(tkm_iter != top_kmer_map.end())
         {
             //std::cout<<tkm_iter->first<<std::endl;
+        	num_mers_found++;
             mostAbundantKmers.push_back(tkm_iter->first);
             tkm_iter++;
         }
-        return true;
+        return num_mers_found;
     }
 }
 
@@ -2167,42 +2197,42 @@ int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
 	return 0;
 }
 
-int WorkHorse::dumpSpacers(void)
-{
-	//-----
-	// Wrapper for graph cleaning
-	//
-	// create a spacer dictionary
-	logInfo("Dumping spacers", 1);
-	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
-	while(drg_iter != mDR2GIDMap.end())
-	{
-		if(NULL != drg_iter->second)
-		{            
-			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
-            {
-                (mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers", false);
-		    }
-        }
-		drg_iter++;
-	}
-	return 0;
-}
+//int WorkHorse::dumpSpacers(void)
+//{
+//	//-----
+//	// Wrapper for graph cleaning
+//	//
+//	// create a spacer dictionary
+//	logInfo("Dumping spacers", 1);
+//	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+//	while(drg_iter != mDR2GIDMap.end())
+//	{
+//		if(NULL != drg_iter->second)
+//		{            
+//			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
+//            {
+//                (mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers", false);
+//		    }
+//        }
+//		drg_iter++;
+//	}
+//	return 0;
+//}
 
-void WorkHorse::writeLookupToFile(string &outFileName, lookupTable &outLookup)
-{
-    std::ofstream outLookupFile;
-    outLookupFile.open(outFileName.c_str());
-    
-    lookupTable::iterator ter = outLookup.begin();
-    while (ter != outLookup.end()) 
-    {
-        outLookupFile<<ter->first<<"\t"<<ter->second<<endl;
-        
-        ter++;
-    }
-    outLookupFile.close();
-}
+//void WorkHorse::writeLookupToFile(string &outFileName, lookupTable &outLookup)
+//{
+//    std::ofstream outLookupFile;
+//    outLookupFile.open(outFileName.c_str());
+//    
+//    lookupTable::iterator ter = outLookup.begin();
+//    while (ter != outLookup.end()) 
+//    {
+//        outLookupFile<<ter->first<<"\t"<<ter->second<<endl;
+//        
+//        ter++;
+//    }
+//    outLookupFile.close();
+//}
 
 int WorkHorse::renderDebugGraphs(void)
 {
@@ -2488,128 +2518,126 @@ bool WorkHorse::addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupEl
 
 bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
 {
-    std::stringstream notes;
-    notes << PACKAGE_NAME <<" ("<<PACKAGE_VERSION<<") run on "<<mTimeStamp<<" with command: ";
-    notes <<mCommandLine;
-    xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
-    
-    std::string file_name;
-    char * buf = NULL;
-    std::string absolute_dir = getcwd(buf, 4096);
-    absolute_dir += "/";
-    delete buf;
-    // add in files if they exist
-    if (!mOpts->logToScreen) 
-    {
-        // we whould have a log file
-        file_name = mOpts->output_fastq + PACKAGE_NAME + "." + mTimeStamp + ".log";
-        if (checkFileOrError(file_name.c_str())) 
+    try{
+        
+        std::stringstream notes;
+        notes << PACKAGE_NAME <<" ("<<PACKAGE_VERSION<<") run on "<<mTimeStamp<<" with command: ";
+        notes <<mCommandLine;
+        xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
+        
+        std::string file_name;
+        char * buf = NULL;
+        std::string absolute_dir = getcwd(buf, 4096);
+        absolute_dir += "/";
+        delete buf;
+        // add in files if they exist
+        if (!mOpts->logToScreen) 
         {
-            xmlDoc->addFileToMetadata("log", absolute_dir + file_name, metadata_elem);
-        }
-        else
-        {
-            logError("Could not find the log file at "<<absolute_dir + file_name<<" but I think it should be there... wierd");
-        }
-    }
-    
-    
-#ifdef DEBUG
-    // check for debuging .gv files
-    if (!mOpts->noDebugGraph) 
-    {
-        file_name = mOpts->output_fastq + "Group_"; 
-        std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_debug.gv";
-        if (checkFileOrError((file_name + file_sufix).c_str())) 
-        {
-            xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
-        } 
-        else 
-        {
-            logError("Could not find the Debug .gv file at "<< absolute_dir << file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            // we whould have a log file
+            file_name = mOpts->output_fastq + PACKAGE_NAME + "." + mTimeStamp + ".log";
+            if (checkFileOrError(file_name.c_str())) 
+            {
+                xmlDoc->addFileToMetadata("log", absolute_dir + file_name, metadata_elem);
+            }
+            else
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+            }
         }
         
-        // and now for the cleaned .gv
-        file_name = mOpts->output_fastq + "Clean_";
-        if (checkFileOrError((file_name + file_sufix).c_str())) 
+        
+    #ifdef DEBUG
+        // check for debuging .gv files
+        if (!mOpts->noDebugGraph) 
         {
-            xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
-        } 
-        else 
-        {
-            logError("Could not find the Debug .gv file at "<<absolute_dir <<file_name << file_sufix <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            file_name = mOpts->output_fastq + "Group_"; 
+            std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_debug.gv";
+            if (checkFileOrError((file_name + file_sufix).c_str())) 
+            {
+                xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, (absolute_dir + file_name + file_sufix).c_str() );
+            }
             
+            // and now for the cleaned .gv
+            file_name = mOpts->output_fastq + "Clean_";
+            if (checkFileOrError((file_name + file_sufix).c_str())) 
+            {
+                xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, (absolute_dir + file_name + file_sufix).c_str() );                
+            }
         }
-    }
 
-    
-#endif // DEBUG
-    
-#ifdef RENDERING
-    // check for image files
-#ifdef DEBUG
-    if (!mOpts->noDebugGraph) 
-    {
-        file_name = mOpts->output_fastq + "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
-        if (checkFileOrError(file_name.c_str())) 
-        {
-            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
-        } 
-        else 
-        {
-            logError("Could not find the Debug .eps file at "<<absolute_dir <<file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
-        }
         
-        file_name = mOpts->output_fastq + "Clean_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
+    #endif // DEBUG
         
+    #ifdef RENDERING
+        // check for image files
+    #ifdef DEBUG
+        if (!mOpts->noDebugGraph) 
+        {
+            file_name = mOpts->output_fastq + "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
+            if (checkFileOrError(file_name.c_str())) 
+            {
+                xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+            }
+            
+            file_name = mOpts->output_fastq + "Clean_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
+            
+            if (checkFileOrError(file_name.c_str())) 
+            {
+                xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+            }
+        }
+
+    #endif // DEBUG
+        if (!mOpts->noRendering) 
+        {
+            file_name = mOpts->output_fastq + "Spacers_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
+            if (checkFileOrError(file_name.c_str())) 
+            {
+                xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
+            } 
+            else 
+            {
+                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+            }
+        } 
+
+
+    #endif // RENDERING
+        
+        // check the sequence file
+        file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".fa";
         if (checkFileOrError(file_name.c_str())) 
         {
-            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
+            xmlDoc->addFileToMetadata("sequence", absolute_dir + file_name, metadata_elem);
         } 
         else 
         {
-            logError("Could not find the cleaned debug .eps file at "<<absolute_dir +file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+            throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
         }
-    }
-
-#endif // DEBUG
-    if (!mOpts->noRendering) 
-    {
-        file_name = mOpts->output_fastq + "Spacers_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
-        if (checkFileOrError(file_name.c_str())) 
-        {
-            xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
-        } 
-        else 
-        {
-            logError("Could not find the Spacer .eps file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
-        }
-    } 
-
-
-#endif // RENDERING
-    
-    // check the sequence file
-    file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".fa";
-    if (checkFileOrError(file_name.c_str())) 
-    {
-        xmlDoc->addFileToMetadata("sequence", absolute_dir + file_name, metadata_elem);
-    } 
-    else 
-    {
-        logError("Could not find the fasta file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
-    }
-    
-    
-    // check the spacer dictionary 
-    file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".spacers";
-    if (checkFileOrError(file_name.c_str())) 
-    {
-        xmlDoc->addFileToMetadata("data", absolute_dir + file_name, metadata_elem);
-    } 
-    else 
-    {
-        logError("Could not find the spacer dictionary file at "<<absolute_dir + file_name <<" for group " <<groupNumber<<", but I think it should be there... wierd");
+    } catch(crispr::no_file_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    } catch(std::exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    } catch(xercesc::DOMException& e) {
+        
     }
     return 0;
     

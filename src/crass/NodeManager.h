@@ -184,7 +184,6 @@ class NodeManager {
 
     // Spacer dictionaries
         void printAllSpacers(void);
-		void dumpSpacerDict(std::string spacerFileName, bool showDetached);
     
     // Flankers
         void generateFlankers(bool showDetached=false);

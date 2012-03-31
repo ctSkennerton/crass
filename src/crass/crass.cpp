@@ -475,7 +475,7 @@ int main(int argc, char *argv[])
     opts.highSpacerSize        = CRASS_DEF_MAX_SPACER_SIZE;              // the upper size limit for a spacer
     opts.output_fastq          = CRASS_DEF_OUTPUT_DIR;                   // the output directory for the output files
     opts.delim                 = CRASS_DEF_STATS_REPORT_DELIM;           // delimiter used in stats report currently not used
-    opts.kmer_clust_size             = CRASS_DEF_K_CLUST_MIN;                  // number of kmers needed to be shared to add to a cluser
+    opts.kmer_clust_size       = CRASS_DEF_K_CLUST_MIN;                  // number of kmers needed to be shared to add to a cluser
     opts.searchWindowLength    = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH; // option 'w'used in long read search only
     opts.minNumRepeats         = CRASS_DEF_DEFAULT_MIN_NUM_REPEATS;      // option 'n'used in long read search only
     opts.logToScreen           = CRASS_DEF_LOGTOSCREEN;                  // log to std::cout rather than to the log file
