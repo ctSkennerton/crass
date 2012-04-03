@@ -61,9 +61,28 @@
 #include "config.h"
 #include "Exception.h"
 
-bool sortDirectRepeatByLength( const std::string &a, const std::string &b)
+bool sortLengthDecending( const std::string& a, const std::string& b)
 {
     return a.length() > b.length();
+}
+
+bool sortLengthAssending( const std::string& a, const std::string& b)
+{
+    return a.length() < b.length();
+}
+
+// a should be shorter than b if sorted correctly
+bool includeSubstring(const std::string& a, const std::string& b)
+{
+    if (b.find(a)) {
+        return true;
+    } 
+    return false;
+}
+
+bool isNotEmpty(const std::string& a)
+{
+    return !a.empty();
 }
 
 WorkHorse::~WorkHorse()
@@ -325,46 +344,47 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         }
 
 
-            // Check to see if we found anything, should return if we haven't
-            if (patterns_lookup.empty()) 
-            {
-                logInfo("No direct repeat sequences were identified for file: "<<input_fastq, 1);
-            }
-            logInfo("Finished file: " << *seq_iter, 1);
+        // Check to see if we found anything, should return if we haven't
+        if (patterns_lookup.empty()) 
+        {
+            logInfo("No direct repeat sequences were identified for file: "<<input_fastq, 1);
+        }
+        logInfo("Finished file: " << *seq_iter, 1);
+        
+        seq_iter++;
+    }
+    std::map<int, std::map<std::string, int> * > group_kmer_counts_map;
+    int next_free_GID = 1;
+    std::vector<std::string> * non_redundant_set = createNonRedundantSet(group_kmer_counts_map, next_free_GID);
+    //return 1;
+    if (non_redundant_set->size() > 0) 
+    {
+        std::cout<<"["<<PACKAGE_NAME<<"_clusterCore]: " << non_redundant_set->size() << " non-redundant patterns."<<std::endl;
+        seq_iter = seqFiles.begin();
+        logInfo("Begining Second iteration through files to recruit singletons", 2);
+        while (seq_iter != seqFiles.end()) {
             
+            logInfo("Parsing file: " << *seq_iter, 1);
+            
+            try {
+                findSingletons(seq_iter->c_str(), *mOpts, non_redundant_set, reads_found, &mReads, &mStringCheck);
+            } catch (crispr::exception& e) {
+                std::cerr<<e.what()<<std::endl;
+                delete non_redundant_set;
+                return 1;
+            }
             seq_iter++;
         }
-        
-        if (patterns_lookup.size() > 0) 
-        {
-            std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: " << patterns_lookup.size() << " patterns."<<std::endl;
-            seq_iter = seqFiles.begin();
-            while (seq_iter != seqFiles.end()) {
-                
-                logInfo("Parsing file: " << *seq_iter, 1);
-                
-                try {
-                    // Need to make the string into something more old-skool so that
-                    // the search functions don't cry!
-                    char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
-                    strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
-                    
-                    logInfo("Begining Second iteration through files to recruit singletons", 2);
-                    
-                    findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
-                } catch (crispr::exception& e) {
-                    std::cerr<<e.what()<<std::endl;
-                }
-                seq_iter++;
-            }
-        }
+    }
+    
+    delete non_redundant_set;
+    
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
     
-    // There will be an abundance of forms for each direct repeat.
-    // We needs to do somes clustering! Then trim and concatenate the direct repeats
+    // trim and concatenate the direct repeats
     try {
-        if (mungeDRs())
+        if (findConsensusDRs(group_kmer_counts_map, next_free_GID))
         {
             return 1;
             logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
@@ -458,85 +478,46 @@ int WorkHorse::cleanGraph(void)
 int WorkHorse::removeLowSpacerNodeManagers(void)
 {
     logInfo("Removing CRISPRs with low numbers of spacers", 1);
-	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+	int counter = 0;
+    DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
 	while(drg_iter != mDR2GIDMap.end())
 	{
 		if(NULL != drg_iter->second)
 		{            
-#ifdef DEBUG
-            if (NULL == mDRs[mTrueDRs[drg_iter->first]])
+            if (NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
-                logWarn("Before Low Spacer Removal: NodeManager "<<drg_iter->first<<" is NULL",6);
-            }
-            else
-            {
-#endif
+
                 if((mDRs[mTrueDRs[drg_iter->first]])->getSpacerCount(false) < mOpts->covCutoff) 
                 {
-                    logInfo("Deleting NodeManager "<<drg_iter->first<<" as it contained less than "<<mOpts->covCutoff<<" attached spacers",4);
+                    logInfo("Deleting NodeManager "<<drg_iter->first<<" as it contained less than "<<mOpts->covCutoff<<" attached spacers",5);
                     delete mDRs[mTrueDRs[drg_iter->first]];
                     mDRs[mTrueDRs[drg_iter->first]] = NULL;
+                } else {
+                    counter++;
                 }
-#ifdef DEBUG
             }
-#endif
             
 		}
 		drg_iter++;
 	}
+    std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<counter<<" putative CRISPRs have passed all checks"<<std::endl;
 	return 0;
 }
 
 //**************************************
 // Functions used to cluster DRs into groups and identify the "true" DR
 //**************************************
-int WorkHorse::mungeDRs(void)
+int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, int& nextFreeGID)
 {
     //-----
     // Cluster potential DRs and work out their true sequences
     // make the node managers while we're at it!
     //
-    int next_free_GID = 1;
-    std::map<std::string, int> k2GID_map;
-    logInfo("Reducing list of potential DRs (1): Initial clustering", 1);
-    logInfo("Reticulating splines...", 1);
-    std::map<int, std::map<std::string, int> * > group_kmer_counts_map;
-    
-    // go through all of the read holder objects
-    ReadMapIterator read_map_iter = mReads.begin();
-    while (read_map_iter != mReads.end()) 
-    {
-        clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &group_kmer_counts_map);
-        ++read_map_iter;
-    }
-    std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: "<<mReads.size()<<" variants mapped to "<<mDR2GIDMap.size()<<" clusters"<<std::endl;
-
-    if(isLogging(4))
-    {
-        DR_Cluster_MapIterator dcg_iter = mDR2GIDMap.begin();
-        while(dcg_iter != mDR2GIDMap.end())
-        {
-            DR_ClusterIterator dc_iter = (dcg_iter->second)->begin();
-            if (dcg_iter->second != NULL) 
-            {
-                logInfo("-------------", 4);
-                logInfo("Group: " << dcg_iter->first, 4);
-                while(dc_iter != (dcg_iter->second)->end())
-                {
-                    logInfo(mStringCheck.getString(*dc_iter), 4);
-                    dc_iter++;
-                }
-                logInfo("-------------", 4);
-            }
-            dcg_iter++;
-        } 
-    }
-
     logInfo("Reducing list of potential DRs (2): Cluster refinement and true DR finding", 1);
     
     // go through all the counts for each group
-    std::map<int, std::map<std::string, int> * >::iterator group_count_iter = group_kmer_counts_map.begin();
-    while(group_count_iter != group_kmer_counts_map.end())
+    std::map<int, std::map<std::string, int> * >::iterator group_count_iter = groupKmerCountsMap.begin();
+    while(group_count_iter != groupKmerCountsMap.end())
     {
         if(NULL != mDR2GIDMap[group_count_iter->first])
         {
@@ -548,7 +529,7 @@ int WorkHorse::mungeDRs(void)
             {
                 // a return value of false indicates that this function has deleted clustered_DRs
             	//std::cout << "found " << num_mers_found << " : " << CRASS_DEF_NUM_KMERS_4_MODE << std::endl; 
-                parseGroupedDRs(num_mers_found, group_count_iter->first, &n_top_kmers, &next_free_GID);
+                parseGroupedDRs(num_mers_found, group_count_iter->first, &n_top_kmers, &nextFreeGID);
             }
             else
             {
@@ -576,6 +557,95 @@ int WorkHorse::mungeDRs(void)
     }
     
     return 0;
+}
+void WorkHorse::removeRedundantRepeats(std::vector<std::string>& repeatVector)
+{
+    // given a vector of repeat sequences, will order the vector based on repeat
+    // length and then remove longer repeats if there is a shorter one that is
+    // a perfect substring
+    std::sort(repeatVector.begin(), repeatVector.end(), sortLengthAssending);
+    std::vector<std::string>::iterator iter;
+//    for (iter = repeatVector.begin(); iter != repeatVector.end(); iter++) {
+//        std::cout<<*iter<<std::endl;
+//    }
+//    std::cout<<"------------------------------"<<std::endl;
+    // go though all of the patterns and determine which are substrings
+    // clear the string if it is
+    for (iter = repeatVector.begin(); iter != repeatVector.end(); iter++) {
+        if (!iter->empty()) {
+            std::vector<std::string>::iterator iter2;
+            for (iter2 = iter+1; iter2 != repeatVector.end(); iter2++) {
+                if (!iter->empty()) {
+                    //pass both itererators into the comparison function
+                    if (includeSubstring(*iter, *iter2)) {
+                        iter2->clear();
+                    }
+                }
+            }
+        }
+    }
+
+    // ok so now partition the vector so that all the empties are at one end
+    // will return an iterator postion to the first position where the string
+    // is empty
+    std::vector<std::string>::iterator empty_iter = std::partition(repeatVector.begin(), repeatVector.end(), isNotEmpty);
+
+    // remove all the empties from the list
+    repeatVector.erase(empty_iter, repeatVector.end());
+//    for (iter = repeatVector.begin(); iter != repeatVector.end(); iter++) {
+//        std::cout<<*iter<<std::endl;
+//    }
+//    std::cout<<"------------------------------"<<std::endl;
+}
+
+
+std::vector<std::string> * WorkHorse::createNonRedundantSet(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, int& nextFreeGID)
+{
+    // cluster the direct repeats then remove the redundant ones
+    // creates a vector dynamic in dynamic memory, so don't forget to delete 
+    //-----
+    // Cluster potential DRs and work out their true sequences
+    // make the node managers while we're at it!
+    //
+    std::map<std::string, int> k2GID_map;
+    logInfo("Reducing list of potential DRs (1): Initial clustering", 1);
+    logInfo("Reticulating splines...", 1);    
+    // go through all of the read holder objects
+    ReadMapIterator read_map_iter = mReads.begin();
+    while (read_map_iter != mReads.end()) 
+    {
+        clusterDRReads(read_map_iter->first, &nextFreeGID, &k2GID_map, &groupKmerCountsMap);
+        ++read_map_iter;
+    }
+    std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: "<<mReads.size()<<" variants mapped to "<<mDR2GIDMap.size()<<" clusters"<<std::endl;
+    std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: creating non-redundant set"<<std::endl;
+
+    std::vector<std::string> * non_redundant_repeats = new std::vector<std::string>();
+
+    DR_Cluster_MapIterator dcg_iter = mDR2GIDMap.begin();
+    while(dcg_iter != mDR2GIDMap.end())
+    {
+        DR_ClusterIterator dc_iter = (dcg_iter->second)->begin();
+        if (dcg_iter->second != NULL) 
+        {
+            logInfo("-------------", 4);
+            logInfo("Group: " << dcg_iter->first, 4);
+            
+            std::vector<std::string> clustered_repeats;
+            while(dc_iter != (dcg_iter->second)->end())
+            {
+                clustered_repeats.push_back(mStringCheck.getString(*dc_iter));
+                logInfo(mStringCheck.getString(*dc_iter), 4);
+                dc_iter++;
+            }
+            logInfo("-------------", 4);
+            
+            removeRedundantRepeats(clustered_repeats);
+            non_redundant_repeats->insert(non_redundant_repeats->end(), clustered_repeats.begin(), clustered_repeats.end());
+        }
+        dcg_iter++;
+    } 
+    return non_redundant_repeats;
 }
 
 bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence)
@@ -669,8 +739,8 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
         int dr_start_index = 0;
         int dr_end_index = 1;
 
-        // Find the DR which is the reported length. 
-        // NOTE: If you -1 from the master_DR_sequence.length() this loop will throw an error as it will never be true
+        // Find the DR which is the master DR length.
+        // compensates for partial repeats
         while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(master_DR_sequence.length()) - 1))
         {
             dr_start_index += 2;

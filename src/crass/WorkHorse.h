@@ -65,8 +65,10 @@ typedef std::map<int, DR_Cluster *>::iterator DR_Cluster_MapIterator;
 typedef std::map<int, DR_Cluster *> DR_Cluster_Map;
 
 
-bool sortDirectRepeatByLength( const std::string &a, const std::string &b);
-
+bool sortLengthAssending( const std::string &a, const std::string &b);
+bool sortLengthDecending( const std::string &a, const std::string &b);
+bool includeSubstring(const std::string& a, const std::string& b);
+bool isNotEmpty(const std::string& a);
 
 class WorkHorse {
     public:
@@ -103,9 +105,15 @@ class WorkHorse {
         int buildGraph(void);									// build the basic graph structue
         int cleanGraph(void);									// clean the graph structue
         int removeLowSpacerNodeManagers(void);
-        int mungeDRs(void);                         			// cluster potential DRs and make node managers
+    // cluster potential DRs and make node managers
+        int findConsensusDRs(std::map<int, std::map<std::string, int> * >& group_kmer_counts_map, int& nextFreeGID);                         			
         bool clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
-        bool findMasterDR(int GID, std::vector<std::string> * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence);
+    void removeRedundantRepeats(std::vector<std::string>& repeatVector);
+    std::vector<std::string> * createNonRedundantSet(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, int& nextFreeGID);
+    
+    bool findMasterDR(int GID, std::vector<std::string> * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence);
+        
+    
         bool populateCoverageArray(int numMers4Mode, int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY);
         std::string calculateDRConsensus(int GID, std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, int * nextFreeGID);
         bool parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID);
