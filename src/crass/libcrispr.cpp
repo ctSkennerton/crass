@@ -557,34 +557,19 @@ int shortReadSearch(const char * inputFastq, const options& opts, lookupTable& p
 }
 
 
-void findSingletons(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+void findSingletons(const char *inputFastq, const options &opts, std::vector<std::string> * nonRedundantPatterns, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
 {
     //-----
     // given a potentially large set of patterns, call an innefficent function
     // on a possible broken down subset
-    //
-    std::vector<std::string> patterns;
-    mapToVector(patternsHash, patterns);
-    try
-    {
-        if (patterns.empty())
-        {
-            logError("No patterns in vector for multimatch");
-            throw "No patterns in vector for multimatch";
-        }
-    }
-    catch (char * c)
-    {
-        std::cerr << c << std::endl;
-        return;
-    }   
+    //  
 
     // If the patterns vector is too long, we'll need to break it up!
     // in any case, we need to pass through a vector of vectors
     std::vector<std::vector<std::string> * > vec_vec_patterns;
     int cut_start = 0;
     int cut_length = CRASS_DEF_MAX_SING_PATTERNS;
-    int total_pattern_size = (int)patterns.size();
+    int total_pattern_size = (int)nonRedundantPatterns->size();
     std::vector<std::string>::iterator start_iter, end_iter;
     while(total_pattern_size > 0)
     {
@@ -602,7 +587,7 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
         }
         
         // make out iterators
-        start_iter = patterns.begin() + cut_start;
+        start_iter = nonRedundantPatterns->begin() + cut_start;
         end_iter = start_iter + cut_length;
         
         // get a new vector to work with
@@ -742,20 +727,8 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
                 break;
             
             pats_iter++;
-<<<<<<< HEAD
-    		wm_iter++;
-    	}
-    	
-    	if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
-        {
-            std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<std::endl;
-            log_counter = 0;
-        }
-        
-=======
             wm_iter++;
         }
->>>>>>> 7be45d1bb26e57993dedcf7d54d20eaf470a1a3a
         log_counter++;
         read_counter++;
     }
