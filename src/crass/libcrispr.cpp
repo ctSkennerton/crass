@@ -742,20 +742,8 @@ void findSingletonsMultiVector(const char *inputFastq, const options &opts, std:
                 break;
             
             pats_iter++;
-<<<<<<< HEAD
-    		wm_iter++;
-    	}
-    	
-    	if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
-        {
-            std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<std::endl;
-            log_counter = 0;
-        }
-        
-=======
             wm_iter++;
         }
->>>>>>> 7be45d1bb26e57993dedcf7d54d20eaf470a1a3a
         log_counter++;
         read_counter++;
     }
