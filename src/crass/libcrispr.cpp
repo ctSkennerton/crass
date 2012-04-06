@@ -139,6 +139,7 @@ float decideWhichSearch(const char *inputFastq,
         }
 
         total_base += l;
+        log_counter++;
         read_counter++;
     }
     kseq_destroy(seq); // destroy seq
