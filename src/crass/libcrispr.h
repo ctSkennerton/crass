@@ -54,6 +54,18 @@
 #include "SeqUtils.h"
 #include "StringCheck.h"
 
+
+/* 
+ declare the type of file handler and the read() function
+ as described here:
+ http://lh3lh3.users.sourceforge.net/parsefastq.shtml
+ 
+ THIS JUST DEFINES A BUNCH OF **templated** structs
+ 
+ */
+KSEQ_INIT(gzFile, gzread)
+
+
 typedef std::map<std::string, bool> lookupTable;
 
 typedef std::vector<ReadHolder *> ReadList;
@@ -77,11 +89,11 @@ enum side{rightSide, leftSide};
 // search functions
 //**************************************
 
-READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength, const options &opts);
+float decideWhichSearch(const char *inputFile, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound);
 
-int longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
+int longReadSearch(kseq_t * seq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
 
-int shortReadSearch(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
+int shortReadSearch(kseq_t * seq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
 
 void findSingletons(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 void findSingletonsMultiVector(const char *inputFastq, const options &opts, std::vector<std::vector<std::string> *> &patterns, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);

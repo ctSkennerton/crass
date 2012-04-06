@@ -283,81 +283,35 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     while(seq_iter != seqFiles.end())
     {
         logInfo("Parsing file: " << *seq_iter, 1);
-        
-        // Need to make the string into something more old-skool so that
-        // the search functions don't cry!
-        char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
-        strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
-        
-        // Use a different search routine, depending on if we allow mismatches or not.
-        READ_TYPE rt = decideWhichSearch(input_fastq, &mAveReadLength, *mOpts);
-        
-        // Die if the average read length falls below 2DR + SP
-        if (mAveReadLength < (2*mOpts->lowDRsize) + mOpts->lowSpacerSize) 
-        {
-            logInfo("The average read length "<<mAveReadLength<<" is below the minimum threshold of "<<(2*mOpts->lowDRsize) + mOpts->lowSpacerSize, 1);
-            return 1;
-        }
         try {
-            if(rt == LONG_READ)
-            {
-                logInfo("Long read algorithm selected", 2);
-                if (longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found))
-                {
-                    return 1;
-                }
-                logInfo("Number of reads found: "<<this->numOfReads(), 2);
-                
-            }
-            else
-            {
-                logInfo("Short read algorithm selected", 2);
-                if (shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck)) 
-                {
-                    return 1;
-                }
-                logInfo("number of reads found so far: "<<this->numOfReads(), 2);
-                
-            }
+            mAveReadLength += decideWhichSearch(seq_iter->c_str(), *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found);
+            logInfo("Finished file: " << *seq_iter, 1);
+
         } catch (crispr::exception& e) {
             std::cerr<<e.what()<<std::endl;
             return 1;
-        }
-
-
-            // Check to see if we found anything, should return if we haven't
-            if (patterns_lookup.empty()) 
-            {
-                logInfo("No direct repeat sequences were identified for file: "<<input_fastq, 1);
-            }
-            logInfo("Finished file: " << *seq_iter, 1);
+        }        
+        seq_iter++;
+    }
+    mAveReadLength /= (double)seqFiles.size();
+    if (patterns_lookup.size() > 0) 
+    {
+        logInfo("Begining Second iteration through files to recruit singletons", 2);
+        std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: " << patterns_lookup.size() << " patterns."<<std::endl;
+        seq_iter = seqFiles.begin();
+        while (seq_iter != seqFiles.end()) {
             
+            logInfo("Parsing file: " << *seq_iter, 1);
+            
+            try {
+                findSingletons(seq_iter->c_str(), *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
+            } catch (crispr::exception& e) {
+                std::cerr<<e.what()<<std::endl;
+                return 1;
+            }
             seq_iter++;
         }
-        
-        if (patterns_lookup.size() > 0) 
-        {
-            std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: " << patterns_lookup.size() << " patterns."<<std::endl;
-            seq_iter = seqFiles.begin();
-            while (seq_iter != seqFiles.end()) {
-                
-                logInfo("Parsing file: " << *seq_iter, 1);
-                
-                try {
-                    // Need to make the string into something more old-skool so that
-                    // the search functions don't cry!
-                    char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
-                    strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
-                    
-                    logInfo("Begining Second iteration through files to recruit singletons", 2);
-                    
-                    findSingletons(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck);
-                } catch (crispr::exception& e) {
-                    std::cerr<<e.what()<<std::endl;
-                }
-                seq_iter++;
-            }
-        }
+    }
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
     
@@ -366,8 +320,8 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     try {
         if (mungeDRs())
         {
-            return 1;
             logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
+            return 1;
         }
     } catch(crispr::exception& e) {
         std::cerr<<e.what()<<std::endl;
