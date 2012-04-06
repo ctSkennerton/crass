@@ -61,7 +61,15 @@
 #include "config.h"
 #include "Exception.h"
 
-
+/* 
+ declare the type of file handler and the read() function
+ as described here:
+ http://lh3lh3.users.sourceforge.net/parsefastq.shtml
+ 
+ THIS JUST DEFINES A BUNCH OF **templated** structs
+ 
+ */
+KSEQ_INIT(gzFile, gzread)
 
 float decideWhichSearch(const char *inputFastq, 
                         const options& opts, 
@@ -102,12 +110,26 @@ float decideWhichSearch(const char *inputFastq,
             log_counter = 0;
         }
         try {
+            // grab a readholder
+            ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+            // test if it has a comment entry and a quality entry (fastq input file)
+            if (seq->comment.s) 
+            {
+                tmp_holder->setComment(seq->comment.s);
+            }
+            if (seq->qual.s) 
+            {
+                tmp_holder->setQual(seq->qual.s);
+            }
+            
             if (l > long_read_cutoff) {
                 // perform long read seqrch
-                longReadSearch(seq, opts, mReads, mStringCheck, patternsHash, readsFound);
+                longReadSearch(tmp_holder, opts, mReads, mStringCheck, patternsHash, readsFound);
             } else if (l >= short_read_cutoff){
                 // perform short read search
-                shortReadSearch(seq, opts, mReads, mStringCheck, patternsHash, readsFound);
+                shortReadSearch(tmp_holder, opts, mReads, mStringCheck, patternsHash, readsFound);
+            } else {
+                delete tmp_holder;
             }
         } catch (crispr::exception& e) {
             std::cerr<<e.what()<<std::endl;
@@ -134,7 +156,10 @@ float decideWhichSearch(const char *inputFastq,
 
 
 // CRT search
-int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpacerLength, unsigned int scanRange)
+int scanRight(ReadHolder * tmp_holder, 
+              std::string& pattern, 
+              unsigned int minSpacerLength, 
+              unsigned int scanRange)
 {
     #ifdef DEBUG
     logInfo("Scanning Right for more repeats:", 9);
@@ -226,7 +251,7 @@ int scanRight(ReadHolder * tmp_holder, std::string& pattern, unsigned int minSpa
     return begin_search + position;
 }
 
-int longReadSearch(kseq_t * seq, 
+int longReadSearch(ReadHolder * tmpHolder, 
                    const options& opts, 
                    ReadMap * mReads, 
                    StringCheck * mStringCheck, 
@@ -237,27 +262,15 @@ int longReadSearch(kseq_t * seq,
     // Code lifted from CRT, ported by Connor and hacked by Mike.
     // Should do well at finding crisprs in long reads
     //
-
-    // grab a readholder
-    ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
-    // test if it has a comment entry and a quality entry
-    if (seq->comment.s) 
-    {
-        tmp_holder->setComment(seq->comment.s);
-    }
-    if (seq->qual.s) 
-    {
-        tmp_holder->setQual(seq->qual.s);
-    }
     
     bool match_found = false;
 
     if (opts.removeHomopolymers)
     {
         // RLE is necessary...
-        tmp_holder->encode();
+        tmpHolder->encode();
     }
-    std::string read = tmp_holder->getSeq();
+    std::string read = tmpHolder->getSeq();
     
     // get the length of this sequence
     unsigned int seq_length = (unsigned int)read.length();
@@ -275,8 +288,8 @@ int longReadSearch(kseq_t * seq,
     
     if (searchEnd < 0) 
     {
-        logError("Read: "<<tmp_holder->getHeader()<<" length is less than "<<opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength + 1<<"bp");
-        delete tmp_holder;
+        logError("Read: "<<tmpHolder->getHeader()<<" length is less than "<<opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength + 1<<"bp");
+        delete tmpHolder;
         return 1;
     }
     
@@ -302,12 +315,24 @@ int longReadSearch(kseq_t * seq,
             text = read.substr(beginSearch, (endSearch - beginSearch));
 
         } catch (std::exception& e) {
-            throw crispr::substring_exception(e.what(), text.c_str(), beginSearch, (endSearch - beginSearch), __FILE__, __LINE__, __PRETTY_FUNCTION__);
+            throw crispr::substring_exception(e.what(), 
+                                              text.c_str(), 
+                                              beginSearch, 
+                                              (endSearch - beginSearch), 
+                                              __FILE__, 
+                                              __LINE__, 
+                                              __PRETTY_FUNCTION__);
         }
         try {
             pattern = read.substr(j, opts.searchWindowLength);
         } catch (std::exception& e) {
-            throw crispr::substring_exception(e.what(), read.c_str(), j, opts.searchWindowLength, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+            throw crispr::substring_exception(e.what(), 
+                                              read.c_str(), 
+                                              j, 
+                                              opts.searchWindowLength, 
+                                              __FILE__, 
+                                              __LINE__, 
+                                              __PRETTY_FUNCTION__);
         }
 
         //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
@@ -316,21 +341,21 @@ int longReadSearch(kseq_t * seq,
 
         if (pattern_in_text_index >= 0)
         {
-            tmp_holder->startStopsAdd(j,  j + opts.searchWindowLength);
+            tmpHolder->startStopsAdd(j,  j + opts.searchWindowLength);
             unsigned int found_pattern_start_index = beginSearch + (unsigned int)pattern_in_text_index;
             
-            tmp_holder->startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength);
-            scanRight(tmp_holder, pattern, opts.lowSpacerSize, 24);
+            tmpHolder->startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength);
+            scanRight(tmpHolder, pattern, opts.lowSpacerSize, 24);
         }
 
-        if ( (tmp_holder->numRepeats() > opts.minNumRepeats) ) //tmp_holder->numRepeats is half the size of the StartStopList
+        if ( (tmpHolder->numRepeats() > opts.minNumRepeats) ) //tmp_holder->numRepeats is half the size of the StartStopList
         {
 #ifdef DEBUG
-            logInfo(tmp_holder->getHeader(), 8);
-            logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " ("<<tmp_holder->numRepeats()<<") repeated kmers found", 8);
+            logInfo(tmpHolder->getHeader(), 8);
+            logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " ("<<tmpHolder->numRepeats()<<") repeated kmers found", 8);
 #endif
 
-            unsigned int actual_repeat_length = extendPreRepeat(tmp_holder, opts.searchWindowLength);
+            unsigned int actual_repeat_length = extendPreRepeat(tmpHolder, opts.searchWindowLength);
 
             if ( (actual_repeat_length >= opts.lowDRsize) && (actual_repeat_length <= opts.highDRsize) )
             {
@@ -340,71 +365,65 @@ int longReadSearch(kseq_t * seq,
 #endif
                 if (opts.removeHomopolymers) 
                 {
-                    tmp_holder->decode();
+                    tmpHolder->decode();
                 }
                 
                 // drop partials
-                tmp_holder->dropPartials();
-                if (qcFoundRepeats(tmp_holder, opts.lowSpacerSize, opts.highSpacerSize))
+                tmpHolder->dropPartials();
+                if (qcFoundRepeats(tmpHolder, opts.lowSpacerSize, opts.highSpacerSize))
                 {
 #ifdef DEBUG
                     logInfo("Passed all tests!", 8);
-                    logInfo("Potential CRISPR containing read found: "<<tmp_holder->getHeader(), 7);
-                    logInfo(tmp_holder->getSeq(), 9);
+                    logInfo("Potential CRISPR containing read found: "<<tmpHolder->getHeader(), 7);
+                    logInfo(tmpHolder->getSeq(), 9);
                     logInfo("-------------------", 7)
 #endif                            
 
                     //ReadHolder * candidate_read = new ReadHolder();
                     //*candidate_read = *tmp_holder;
                     //addReadHolder(mReads, mStringCheck, candidate_read);
-                    addReadHolder(mReads, mStringCheck, tmp_holder);
+                    addReadHolder(mReads, mStringCheck, tmpHolder);
                     match_found = true;
-                    patternsHash[tmp_holder->repeatStringAt(0)] = true;
-                    readsFound[tmp_holder->getHeader()] = true;
+                    patternsHash[tmpHolder->repeatStringAt(0)] = true;
+                    readsFound[tmpHolder->getHeader()] = true;
                     break;
                 }
             }
 #ifdef DEBUG                
             else
             {
-                logInfo("\tFailed test 2. Repeat length: "<<tmp_holder->getRepeatLength() << " : " << match_found, 8); 
+                logInfo("\tFailed test 2. Repeat length: "<<tmpHolder->getRepeatLength() << " : " << match_found, 8); 
             }
 #endif
-            j = tmp_holder->back() - 1;
+            j = tmpHolder->back() - 1;
         }
-        tmp_holder->clearStartStops();
+        tmpHolder->clearStartStops();
     }
     if (!match_found) 
     {
-        delete tmp_holder;
+        delete tmpHolder;
     }
     return 0;
 }
 
-int shortReadSearch(kseq_t * seq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patternsHash, lookupTable &readsFound)
+int shortReadSearch(ReadHolder * tmpHolder, 
+                    const options &opts, 
+                    ReadMap * mReads, 
+                    StringCheck * mStringCheck, 
+                    lookupTable &patternsHash, 
+                    lookupTable &readsFound)
 {
 
         
     bool match_found = false;
-
-    // create the read holder
-    ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
-    if (seq->comment.s) 
-    {
-        tmp_holder->setComment(seq->comment.s);
-    }
-    if (seq->qual.s) 
-    {
-        tmp_holder->setQual(seq->qual.s);
-    }
     
     if (opts.removeHomopolymers)
     {
         // RLE is necessary...
-        tmp_holder->encode();
+        tmpHolder->encode();
     }
     
-    std::string read = tmp_holder->getSeq();
+    std::string read = tmpHolder->getSeq();
 
     unsigned int seq_length = (unsigned int)read.length();
     unsigned int search_end = seq_length - opts.lowDRsize - 1;
@@ -424,7 +443,10 @@ int shortReadSearch(kseq_t * seq, const options &opts, ReadMap * mReads, StringC
         try {
             second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
         } catch (std::exception& e) {
-            throw crispr::exception( __FILE__, __LINE__, __PRETTY_FUNCTION__,e.what());
+            throw crispr::exception( __FILE__, 
+                                    __LINE__, 
+                                    __PRETTY_FUNCTION__, 
+                                    e.what());
         }
 
         // check to see if we found something
@@ -456,66 +478,71 @@ int shortReadSearch(kseq_t * seq, const options &opts, ReadMap * mReads, StringC
 #ifdef DEBUG
                 logInfo("A: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end<<" EX: "<<extenstion_length, 8);
 #endif
-                tmp_holder->startStopsAdd(first_start, first_end + extenstion_length);
-                tmp_holder->startStopsAdd(second_start, second_end + extenstion_length);
-                tmp_holder->setRepeatLength(second_end - second_start + extenstion_length);
+                tmpHolder->startStopsAdd(first_start, first_end + extenstion_length);
+                tmpHolder->startStopsAdd(second_start, second_end + extenstion_length);
+                tmpHolder->setRepeatLength(second_end - second_start + extenstion_length);
             }
             else
             {
 #ifdef DEBUG
                 logInfo("B: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end, 8);
 #endif
-                tmp_holder->startStopsAdd(first_start, first_end);
-                tmp_holder->startStopsAdd(second_start, second_end);
-                tmp_holder->setRepeatLength(second_end - second_start);
+                tmpHolder->startStopsAdd(first_start, first_end);
+                tmpHolder->startStopsAdd(second_start, second_end);
+                tmpHolder->setRepeatLength(second_end - second_start);
             }
             
             // the low side will always be true since we search for the lowDRSize
-            if ( tmp_holder->getRepeatLength() <= opts.highDRsize )
+            if ( tmpHolder->getRepeatLength() <= opts.highDRsize )
             {
 
-                if ((tmp_holder->getAverageSpacerLength() >= opts.lowSpacerSize) && (tmp_holder->getAverageSpacerLength() <= opts.highSpacerSize))
+                if ((tmpHolder->getAverageSpacerLength() >= opts.lowSpacerSize) && (tmpHolder->getAverageSpacerLength() <= opts.highSpacerSize))
                 {
-                    if (qcFoundRepeats(tmp_holder, opts.lowSpacerSize, opts.highSpacerSize)) 
+                    if (qcFoundRepeats(tmpHolder, opts.lowSpacerSize, opts.highSpacerSize)) 
                     {
 
                         match_found = true;
 #ifdef DEBUG
-                        logInfo("Potential CRISPR containing read found: "<<tmp_holder->getHeader(), 7);
+                        logInfo("Potential CRISPR containing read found: "<<tmpHolder->getHeader(), 7);
                         logInfo(read, 9);
                         logInfo("-------------------", 7)
 #endif
-                        patternsHash[tmp_holder->repeatStringAt(0)] = true;
-                        readsFound[tmp_holder->getHeader()] = true;
-                        addReadHolder(mReads, mStringCheck, tmp_holder);
+                        patternsHash[tmpHolder->repeatStringAt(0)] = true;
+                        readsFound[tmpHolder->getHeader()] = true;
+                        addReadHolder(mReads, mStringCheck, tmpHolder);
                         break;
                     }
                 }
 #ifdef DEBUG
                 else
                 {
-                    logInfo("\tFailed test 2. The spacer length is not between "<<opts.lowSpacerSize<<" and "<<opts.highSpacerSize<<": "<<tmp_holder->getAverageSpacerLength(), 8);
+                    logInfo("\tFailed test 2. The spacer length is not between "<<opts.lowSpacerSize<<" and "<<opts.highSpacerSize<<": "<<tmpHolder->getAverageSpacerLength(), 8);
                 }
 #endif
             }
 #ifdef DEBUG
             else
             {
-                logInfo("\tFailed test 1. The repeat length is larger than "<<opts.highDRsize<<": " << tmp_holder->getRepeatLength(), 8);
+                logInfo("\tFailed test 1. The repeat length is larger than "<<opts.highDRsize<<": " << tmpHolder->getRepeatLength(), 8);
             }
 #endif
-            first_start = tmp_holder->back();
+            first_start = tmpHolder->back();
         }
     }
     if (!match_found)
     {
-        delete tmp_holder;
+        delete tmpHolder;
     }
     return 0;
 }
 
 
-void findSingletons(const char *inputFastq, const options &opts, lookupTable &patternsHash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+void findSingletons(const char *inputFastq, 
+                    const options &opts, 
+                    lookupTable &patternsHash, 
+                    lookupTable &readsFound, 
+                    ReadMap * mReads, 
+                    StringCheck * mStringCheck)
 {
     //-----
     // given a potentially large set of patterns, call an innefficent function
@@ -592,7 +619,12 @@ void findSingletons(const char *inputFastq, const options &opts, lookupTable &pa
     
 }
 
-void findSingletonsMultiVector(const char *inputFastq, const options &opts, std::vector<std::vector<std::string> *> &patterns, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck)
+void findSingletonsMultiVector(const char *inputFastq, 
+                               const options &opts, 
+                               std::vector<std::vector<std::string> *> &patterns, 
+                               lookupTable &readsFound, 
+                               ReadMap * mReads, 
+                               StringCheck * mStringCheck)
 {
     //-----
     // Find sings given a vector of vectors of patterns
