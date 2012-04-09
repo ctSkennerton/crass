@@ -450,18 +450,19 @@ int extractMain (int argc, char ** argv)
 
 void extractUsage (void)
 {
-	std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" extract [-ghyxsdfCoO] file.crispr"<<std::endl;
+	std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" extract [-ghyxsdfCoOH] file.crispr"<<std::endl;
 	std::cout<<"Options:"<<std::endl;
 	std::cout<<"-h					print this handy help message"<<std::endl;
     std::cout<<"-o DIR              output file directory  [default: .]" <<std::endl; 
     std::cout<<"-O STRING           Give a custom prefix to each of the outputed files [default: ""]"<<std::endl;
-    std::cout<<"-g INT[,n]          a comma separated list of group IDs that you would like to extract data from."<<std::endl;
+    std::cout<<"-g INT[,INT]        A comma separated list of group IDs that you would like to extract data from."<<std::endl;
 	std::cout<<"					Note that only the group number is needed, do not use prefixes like 'Group' or 'G', which"<<std::endl;
 	std::cout<<"					are sometimes used in file names or in a .crispr file"<<std::endl;
 	std::cout<<"-s                  Extract the spacers of the listed group"<<std::endl;
 	std::cout<<"-d					Extract the direct repeats of the listed group"<<std::endl;
 	std::cout<<"-f					Extract the flanking sequences of the listed group"<<std::endl;
     std::cout<<"-C                  Supress coverage information when printing spacers"<<std::endl;
+    std::cout<<"-H STRING           Print a prefix to each of the headers [default: ""]"<<std::endl;
     std::cout<<"-x					Split the results into different files for each group.  If multiple types are set i.e. -sd"<<std::endl;
 	std::cout<<"					then both the spacers and direct repeats from each group will be in the one file"<<std::endl;
 	std::cout<<"-y					Split the results into different files for each type of sequence from all selected groups."<<std::endl;

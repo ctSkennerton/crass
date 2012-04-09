@@ -54,6 +54,7 @@
 #include "SeqUtils.h"
 #include "StringCheck.h"
 
+
 typedef std::map<std::string, bool> lookupTable;
 
 typedef std::vector<ReadHolder *> ReadList;
@@ -77,11 +78,11 @@ enum side{rightSide, leftSide};
 // search functions
 //**************************************
 
-READ_TYPE decideWhichSearch(const char *inputFastq, float * aveReadLength, const options &opts);
+float decideWhichSearch(const char *inputFile, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound);
 
-int longReadSearch(const char *input_fastq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
+int longReadSearch(ReadHolder * seq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
 
-int shortReadSearch(const char *input_fastq, const options &opts, lookupTable &patterns_hash, lookupTable &readsFound, ReadMap * mReads, StringCheck * mStringCheck);
+int shortReadSearch(ReadHolder * seq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
 
 void findSingletons(const char *input_fastq, const options &opts, std::vector<std::string> * nonRedundantPatterns, lookupTable &readsFound, ReadMap *mReads, StringCheck * mStringCheck);
 

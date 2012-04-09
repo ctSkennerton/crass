@@ -1801,7 +1801,7 @@ bool NodeManager::printSpacerGraph(std::string& outFileName, std::string title, 
     data_out.open(outFileName.c_str());
     if (data_out.good()) 
     {
-        data_out<<tmp_out;
+        data_out<<tmp_out.str();
         spi_iter = NM_Spacers.begin();
         while (spi_iter != NM_Spacers.end()) 
         {

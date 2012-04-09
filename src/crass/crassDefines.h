@@ -75,7 +75,7 @@
 #define CRASS_DEF_PARTIAL_SIM_CUT_OFF           (0.85)              // The similarity needed to exted into partial matches
 #define CRASS_DEF_DR_ZONE_TRIM_AMOUNT           (3)                 // trim this many bases off the start and end of the DR
 #define CRASS_DEF_MIN_PARTIAL_LENGTH            (4)                 // The mininum length allowed for a partial direct repeat at the beginning or end of a read 
-#define CRASS_DEF_MAX_SING_PATTERNS				(10000)				// the maximum number of patterns we'll search for in a single hit
+#define CRASS_DEF_MAX_SING_PATTERNS				(5000)				// the maximum number of patterns we'll search for in a single hit
 // --------------------------------------------------------------------
 // GENOME ALGORITHM DEFINES
 // --------------------------------------------------------------------

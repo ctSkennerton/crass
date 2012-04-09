@@ -33,8 +33,8 @@
  */
 
 #include <iostream>
+#include <cstdio>
 #include "RemoveTool.h"
-#include "Xml.h"
 #include "Exception.h"
 #include "StlExt.h"
 #include "config.h"
@@ -46,7 +46,8 @@ int removeMain(int argc, char ** argv)
         
         std::set<std::string> groups;
         std::string output_file;
-        int opt_index = processRemoveOptions(argc, argv, groups, output_file);
+        bool remove_files = true;
+        int opt_index = processRemoveOptions(argc, argv, groups, output_file, remove_files);
         if(argc <= opt_index) {
             throw crispr::input_exception("Please specify an input file");
         }
@@ -70,7 +71,9 @@ int removeMain(int argc, char ** argv)
                 std::string group_id = c_group_id;
                 if (groups.find(group_id.substr(1)) != groups.end() ) {
                     bad_children.push_back(currentElement);
-                    //root_elem->removeChild(currentElement);
+                    if (remove_files) {
+                        removeAssociatedData(currentElement, xml_obj);
+                    }
                 }
                 xr(&c_group_id);
             }
@@ -110,20 +113,42 @@ int removeMain(int argc, char ** argv)
     return 0;
 }
 
+void removeAssociatedData(xercesc::DOMElement * groupElement, crispr::XML& xmlParser)
+{
+    for (xercesc::DOMElement * currentElement = groupElement->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
+        if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getMetadata())) {
+            parseMetadata(currentElement, xmlParser);
+        }
+    }
+}
+
+void parseMetadata(xercesc::DOMElement * parentNode, crispr::XML& xmlParser) {
+    for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
+        if (xercesc::XMLString::equals(currentElement->getTagName(), xmlParser.getFile())) {
+            char * c_url = tc(currentElement->getAttribute(xmlParser.getUrl()));
+            if (remove(c_url)) {
+                perror("Cannot remove file");
+            }
+            xr(&c_url);
+        }
+    }
+}
+
 void removeUsage(void)
 {
-    std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" rm [-ho] -g <groups> file.crispr"<<std::endl;
+    std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" rm [-hor] -g <groups> file.crispr"<<std::endl;
 	std::cout<<"Options:"<<std::endl;
     std::cout<<"-h					print this handy help message"<<std::endl;
 	std::cout<<"-g INT[,n]          a comma separated list of group IDs that you would like to remove"<<std::endl;
     std::cout<<"-o FILE             output file name. Default behaviour changes file inplace"<<std::endl;
+    std::cout<<"-r                  Do not remove associated files"<<std::endl;
 }
-int processRemoveOptions(int argc, char ** argv, std::set<std::string>& groups, std::string& outputFile )
+int processRemoveOptions(int argc, char ** argv, std::set<std::string>& groups, std::string& outputFile, bool& rem )
 {
     try {
         int c;
         
-        while((c = getopt(argc, argv, "hg:o:")) != -1)
+        while((c = getopt(argc, argv, "hg:o:r")) != -1)
         {
             switch(c)
             {
@@ -145,6 +170,10 @@ int processRemoveOptions(int argc, char ** argv, std::set<std::string>& groups, 
                     outputFile = optarg;
                     break;
                 } 
+                case 'r':
+                {
+                    rem = false;
+                }
                 default:
                 {
                     removeUsage();
@@ -167,8 +196,4 @@ int processRemoveOptions(int argc, char ** argv, std::set<std::string>& groups, 
     }
     return optind;
 
-}
-void generateGroupsFromString( std::string groupString, std::set<std::string>& groups)
-{
-    
 }

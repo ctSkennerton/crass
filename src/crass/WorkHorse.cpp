@@ -302,66 +302,35 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     while(seq_iter != seqFiles.end())
     {
         logInfo("Parsing file: " << *seq_iter, 1);
-        
-        // Need to make the string into something more old-skool so that
-        // the search functions don't cry!
-        char input_fastq[CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH] = { '\0' };
-        strncpy(input_fastq, seq_iter->c_str(), CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH);
-        
-        // Use a different search routine, depending on if we allow mismatches or not.
-        READ_TYPE rt = decideWhichSearch(input_fastq, &mAveReadLength, *mOpts);
-        
-        // Die if the average read length falls below 2DR + SP
-        if (mAveReadLength < (2*mOpts->lowDRsize) + mOpts->lowSpacerSize) 
-        {
-            logInfo("The average read length "<<mAveReadLength<<" is below the minimum threshold of "<<(2*mOpts->lowDRsize) + mOpts->lowSpacerSize, 1);
-            return 1;
-        }
         try {
-            if(rt == LONG_READ)
-            {
-                logInfo("Long read algorithm selected", 2);
-                if (longReadSearch(input_fastq, *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found))
-                {
-                    return 1;
-                }
-                logInfo("Number of reads found: "<<this->numOfReads(), 2);
-                
-            }
-            else
-            {
-                logInfo("Short read algorithm selected", 2);
-                if (shortReadSearch(input_fastq, *mOpts, patterns_lookup, reads_found, &mReads, &mStringCheck)) 
-                {
-                    return 1;
-                }
-                logInfo("number of reads found so far: "<<this->numOfReads(), 2);
-                
-            }
+            mAveReadLength += decideWhichSearch(seq_iter->c_str(), *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found);
+            logInfo("Finished file: " << *seq_iter, 1);
+
         } catch (crispr::exception& e) {
             std::cerr<<e.what()<<std::endl;
             return 1;
         }
-
-
+        
         // Check to see if we found anything, should return if we haven't
         if (patterns_lookup.empty()) 
         {
-            logInfo("No direct repeat sequences were identified for file: "<<input_fastq, 1);
+            logInfo("No direct repeat sequences were identified for file: "<<seq_iter->c_str(), 1);
         }
         logInfo("Finished file: " << *seq_iter, 1);
         
         seq_iter++;
     }
+    mAveReadLength /= (double)seqFiles.size();
     std::map<int, std::map<std::string, int> * > group_kmer_counts_map;
     int next_free_GID = 1;
     std::vector<std::string> * non_redundant_set = createNonRedundantSet(group_kmer_counts_map, next_free_GID);
-    //return 1;
+
     if (non_redundant_set->size() > 0) 
     {
         std::cout<<"["<<PACKAGE_NAME<<"_clusterCore]: " << non_redundant_set->size() << " non-redundant patterns."<<std::endl;
         seq_iter = seqFiles.begin();
         logInfo("Begining Second iteration through files to recruit singletons", 2);
+
         while (seq_iter != seqFiles.end()) {
             
             logInfo("Parsing file: " << *seq_iter, 1);
@@ -376,9 +345,8 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
             seq_iter++;
         }
     }
-    
     delete non_redundant_set;
-    
+
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
     
@@ -386,8 +354,8 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     try {
         if (findConsensusDRs(group_kmer_counts_map, next_free_GID))
         {
-            return 1;
             logError("Wierd stuff happend when trying to get the 'true' direct repeat");            
+            return 1;
         }
     } catch(crispr::exception& e) {
         std::cerr<<e.what()<<std::endl;
@@ -486,7 +454,6 @@ int WorkHorse::removeLowSpacerNodeManagers(void)
 		{            
             if (NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
-
                 if((mDRs[mTrueDRs[drg_iter->first]])->getSpacerCount(false) < mOpts->covCutoff) 
                 {
                     logInfo("Deleting NodeManager "<<drg_iter->first<<" as it contained less than "<<mOpts->covCutoff<<" attached spacers",5);
@@ -496,7 +463,6 @@ int WorkHorse::removeLowSpacerNodeManagers(void)
                     counter++;
                 }
             }
-            
 		}
 		drg_iter++;
 	}
@@ -565,10 +531,7 @@ void WorkHorse::removeRedundantRepeats(std::vector<std::string>& repeatVector)
     // a perfect substring
     std::sort(repeatVector.begin(), repeatVector.end(), sortLengthAssending);
     std::vector<std::string>::iterator iter;
-//    for (iter = repeatVector.begin(); iter != repeatVector.end(); iter++) {
-//        std::cout<<*iter<<std::endl;
-//    }
-//    std::cout<<"------------------------------"<<std::endl;
+
     // go though all of the patterns and determine which are substrings
     // clear the string if it is
     for (iter = repeatVector.begin(); iter != repeatVector.end(); iter++) {
@@ -592,17 +555,13 @@ void WorkHorse::removeRedundantRepeats(std::vector<std::string>& repeatVector)
 
     // remove all the empties from the list
     repeatVector.erase(empty_iter, repeatVector.end());
-//    for (iter = repeatVector.begin(); iter != repeatVector.end(); iter++) {
-//        std::cout<<*iter<<std::endl;
-//    }
-//    std::cout<<"------------------------------"<<std::endl;
 }
 
 
 std::vector<std::string> * WorkHorse::createNonRedundantSet(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, int& nextFreeGID)
 {
     // cluster the direct repeats then remove the redundant ones
-    // creates a vector dynamic in dynamic memory, so don't forget to delete 
+    // creates a vector in dynamic memory, so don't forget to delete 
     //-----
     // Cluster potential DRs and work out their true sequences
     // make the node managers while we're at it!
