@@ -78,7 +78,7 @@ enum side{rightSide, leftSide};
 // search functions
 //**************************************
 
-float decideWhichSearch(const char *inputFile, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound);
+int decideWhichSearch(const char *inputFile, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound);
 
 int longReadSearch(ReadHolder * seq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
 

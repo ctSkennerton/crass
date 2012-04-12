@@ -284,7 +284,8 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     {
         logInfo("Parsing file: " << *seq_iter, 1);
         try {
-            mAveReadLength += decideWhichSearch(seq_iter->c_str(), *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found);
+            int max_len = decideWhichSearch(seq_iter->c_str(), *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found);
+            mMaxReadLength = (max_len > mMaxReadLength) ? max_len : mMaxReadLength;
             logInfo("Finished file: " << *seq_iter, 1);
 
         } catch (crispr::exception& e) {
@@ -293,7 +294,6 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         }        
         seq_iter++;
     }
-    mAveReadLength /= (double)seqFiles.size();
     if (patterns_lookup.size() > 0) 
     {
         logInfo("Begining Second iteration through files to recruit singletons", 2);
@@ -601,7 +601,8 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
 	logInfo("Populating consensus array", 1);
 
 	bool first_run = true;          // we only need to do this once
-	int array_len = ((int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
+	int array_len = (CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? 
+                   CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 
 	// chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
@@ -948,7 +949,8 @@ std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> 
 		logInfo("DR zone: " << *dr_zone_start << " -> " << *dr_zone_end, 1);
 #endif
 	
-	int array_len = ((int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
+	int array_len = (CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? 
+                   CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 	// chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
     std::map<char, int> reverse_alphabet;
@@ -1159,7 +1161,8 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
     // Initialise variables we'll need
     // chars we luv!
     char alphabet[4] = {'A', 'C', 'G', 'T'};
-    int array_len = ((int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? (int)CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mAveReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
+    int array_len = (CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? 
+                     CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 
     // first we need a 4 * array_len
     int ** coverage_array = new int*[4];

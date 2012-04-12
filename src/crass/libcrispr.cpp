@@ -70,7 +70,7 @@
  */
 KSEQ_INIT(gzFile, gzread)
 
-float decideWhichSearch(const char *inputFastq, 
+int decideWhichSearch(const char *inputFastq, 
                         const options& opts, 
                         ReadMap * mReads, 
                         StringCheck * mStringCheck, 
@@ -87,9 +87,8 @@ float decideWhichSearch(const char *inputFastq,
 
     // initialize seq
     seq = kseq_init(fp);
-    int l, log_counter;
-    long total_base;
-    total_base = log_counter = 0;
+    int l, log_counter, max_read_length;
+    log_counter = max_read_length = 0;
     static int read_counter = 0;
     time_t time_start, time_current;
     time(&time_start);
@@ -99,6 +98,7 @@ float decideWhichSearch(const char *inputFastq,
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
+        max_read_length = (l > max_read_length) ? l : max_read_length;
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             time(&time_current);
@@ -150,7 +150,7 @@ float decideWhichSearch(const char *inputFastq,
     std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "<< "Processed "<<read_counter<<" ...";
     std::cout<<diff<<std::endl;
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
-    return total_base / read_counter;
+    return max_read_length;
     
 }
 
