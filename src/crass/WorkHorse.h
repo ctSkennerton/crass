@@ -73,7 +73,7 @@ class WorkHorse {
     WorkHorse (const options * opts, std::string timestamp, std::string commandLine) 
         { 
             mOpts = opts; 
-            mAveReadLength = 0;
+            mMaxReadLength = 0;
             mStringCheck.setName("WH");
             mTimeStamp = timestamp;
             mCommandLine = commandLine;
@@ -146,7 +146,7 @@ class WorkHorse {
         ReadMap mReads;                             // reads containing possible double DRs
         const options * mOpts;                      // search options
         std::string mOutFileDir;                    // where to spew text to
-        float mAveReadLength;                       // the average seen read length
+        int mMaxReadLength;                       // the average seen read length
         StringCheck mStringCheck;                   // Place to swap strings for tokens
         std::string mTimeStamp;						// hold the timestmp so we can make filenames
         std::string mCommandLine;                   // holds the exact command line string for logging purposes
