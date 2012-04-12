@@ -136,8 +136,6 @@ int decideWhichSearch(const char *inputFastq,
             gzclose(fp);
             throw crispr::exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,"Fatal error in search algorithm!");
         }
-
-        total_base += l;
         log_counter++;
         read_counter++;
     }
@@ -150,8 +148,8 @@ int decideWhichSearch(const char *inputFastq,
     std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "<< "Processed "<<read_counter<<" ...";
     std::cout<<diff<<std::endl;
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
+
     return max_read_length;
-    
 }
 
 
