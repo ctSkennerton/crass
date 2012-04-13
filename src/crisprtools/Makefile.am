@@ -9,7 +9,6 @@ crisprtools_LDADD = $(top_builddir)/src/libcrispr/libcrispr.la
 crisprtools_LDFLAGS = @GV_LIBS@
 crisprtools_SOURCES = \
 	main.cpp \
-	StlExt.h \
 	MergeTool.cpp \
 	MergeTool.h \
 	SplitTool.cpp \
