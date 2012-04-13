@@ -30,7 +30,6 @@ StringCheck.cpp StringCheck.h\
 kseq.h\
 GraphDrawingDefines.h\
 crassDefines.h\
-StlExt.h\
 StatsManager.h
 
 if ASSEMBLY_WRAPPER
