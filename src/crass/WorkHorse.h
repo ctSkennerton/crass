@@ -102,7 +102,7 @@ class WorkHorse {
         int parseSeqFiles(std::vector<std::string> seqFiles);	// parse the raw read files
         int buildGraph(void);									// build the basic graph structue
         int cleanGraph(void);									// clean the graph structue
-        int removeLowSpacerNodeManagers(void);
+        int removeLowConfidenceNodeManagers(void);
         int mungeDRs(void);                         			// cluster potential DRs and make node managers
         bool clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
         bool findMasterDR(int GID, std::vector<std::string> * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence);
