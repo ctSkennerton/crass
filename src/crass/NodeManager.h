@@ -187,7 +187,10 @@ class NodeManager {
     
     // Flankers
         void generateFlankers(bool showDetached=false);
-
+    
+    // Stats
+        inline size_t meanSpacerLength(void) { return NM_SpacerLenStat.mean();}
+        inline double stdevSpacerLength(void) { return NM_SpacerLenStat.standardDeviation();}
     private:
 		
 	// functions
