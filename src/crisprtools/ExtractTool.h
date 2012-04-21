@@ -37,7 +37,7 @@ class ExtractTool
 		~ExtractTool();
 
 		// option processing
-		void generateGroupsFromString( std::string groupString);
+		//void generateGroupsFromString( std::string groupString);
 		int processOptions(int argc, char ** argv);
 
 		// process the input

@@ -100,7 +100,7 @@ void tokenize(const std::string& str, ContainerT& tokens, const std::string& del
 }
 
 template < class ContainerT >
-void split(const std::string& str, ContainerT& tokens, const std::string& delimiters = " ", const bool trimEmpty = false)
+void split(const std::string& str, ContainerT& tokens, const std::string& delimiters = ",", const bool trimEmpty = false)
 {
     std::string::size_type pos, lastPos = 0;
     while(true)
