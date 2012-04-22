@@ -41,14 +41,14 @@ ExtractTool::ExtractTool (void)
 ExtractTool::~ExtractTool (void)
 {}
 
-void ExtractTool::generateGroupsFromString ( std::string str)
-{
-	std::set<std::string> vec;
-	split ( str, vec, ",");
-	ET_Group = vec;
-	// set the 'do subset' bit
-    ET_BitMask.set(0);
-}
+//void ExtractTool::generateGroupsFromString ( std::string str)
+//{
+//	std::set<std::string> vec;
+//	split ( str, vec, ",");
+//	ET_Group = vec;
+//	// set the 'do subset' bit
+//    ET_BitMask.set(0);
+//}
 
 int ExtractTool::processOptions (int argc, char ** argv)
 {
@@ -79,7 +79,16 @@ int ExtractTool::processOptions (int argc, char ** argv)
             }
 			case 'g':
 			{
-				generateGroupsFromString (optarg);
+                if(fileOrString(optarg)) {
+                    // its a file
+                    parseFileForGroups(ET_Group, optarg);
+                    //ST_Subset = true;
+                    
+                } else {
+                    // its a string 
+                    generateGroupsFromString(optarg, ET_Group);
+                }
+                ET_BitMask.set(0);
 				break;
 			}
 			case 's':

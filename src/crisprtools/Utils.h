@@ -34,10 +34,11 @@
 
 #ifndef crisprtools_Utils_h
 #define crisprtools_Utils_h
-
+#include <set>
 #include <string>
 
 void recursiveMkdir(std::string dir);
-
-
+bool fileOrString(const char * str);
+void parseFileForGroups(std::set<std::string>& groups, const char * filePath);
+void generateGroupsFromString(std::string str, std::set<std::string>& groups);
 #endif

@@ -81,30 +81,30 @@ int assemblyMain(int argc, char * argv[]);
 
 
 // templated function to split a string on delimeters and return it in a container of class T
-template < class ContainerT >
-void tokenize(const std::string& str, ContainerT& tokens, const std::string& delimiters = " ", const bool trimEmpty = false)
-{
-    std::string::size_type pos, lastPos = 0;
-    while(true)
-    {
-        pos = str.find_first_of(delimiters, lastPos);
-        if(pos == std::string::npos)
-        {
-            pos = str.length();
-            
-            if(pos != lastPos || !trimEmpty)
-                tokens.push_back( typename ContainerT::value_type(str.data()+lastPos, (typename ContainerT::value_type::size_type)pos - lastPos ));
-            
-            break;
-        }
-        else
-        {
-            if(pos != lastPos || !trimEmpty)
-                tokens.push_back(typename ContainerT::value_type(str.data()+lastPos, (typename ContainerT::value_type::size_type)pos-lastPos ));
-        }
-        
-        lastPos = pos + 1;
-    }
-}
+//template < class ContainerT >
+//void tokenize(const std::string& str, ContainerT& tokens, const std::string& delimiters = " ", const bool trimEmpty = false)
+//{
+//    std::string::size_type pos, lastPos = 0;
+//    while(true)
+//    {
+//        pos = str.find_first_of(delimiters, lastPos);
+//        if(pos == std::string::npos)
+//        {
+//            pos = str.length();
+//            
+//            if(pos != lastPos || !trimEmpty)
+//                tokens.push_back( typename ContainerT::value_type(str.data()+lastPos, (typename ContainerT::value_type::size_type)pos - lastPos ));
+//            
+//            break;
+//        }
+//        else
+//        {
+//            if(pos != lastPos || !trimEmpty)
+//                tokens.push_back(typename ContainerT::value_type(str.data()+lastPos, (typename ContainerT::value_type::size_type)pos-lastPos ));
+//        }
+//        
+//        lastPos = pos + 1;
+//    }
+//}
 
 #endif

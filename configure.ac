@@ -22,10 +22,10 @@ AC_DEFINE([PACKAGE_REVISION],[5],[Define the revision of the package])
 
 AC_DEFINE([CRISPRTOOLS_PACKAGE_FULL_NAME],["Crisprtools"],[Define the full name of the package])
 AC_DEFINE([CRISPRTOOLS_PACKAGE_NAME],["Crisprtools"],[Define the full name of the package])
-AC_DEFINE([CRISPRTOOLS_PACKAGE_VERSION],["0.1.2"],[Define the full name of the package])
+AC_DEFINE([CRISPRTOOLS_PACKAGE_VERSION],["0.1.3"],[Define the full name of the package])
 AC_DEFINE([CRISPRTOOLS_PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
 AC_DEFINE([CRISPRTOOLS_PACKAGE_MINOR_VERSION],[1],[Define the minor version of the package])
-AC_DEFINE([CRISPRTOOLS_PACKAGE_REVISION],[2],[Define the revision of the package])
+AC_DEFINE([CRISPRTOOLS_PACKAGE_REVISION],[3],[Define the revision of the package])
 
 # extra configure options
 #

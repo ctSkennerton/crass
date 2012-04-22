@@ -19,6 +19,7 @@
 #include "StlExt.h"
 #include "config.h"
 #include "Exception.h"
+#include "Utils.h"
 #include <iostream>
 #include <fstream>
 #include <getopt.h>
@@ -33,13 +34,13 @@ StatTool::~StatTool()
     }
 }
 
-void StatTool::generateGroupsFromString ( std::string str)
-{
-	std::set<std::string> vec;
-	split ( str, vec, ",");
-	ST_Groups = vec;
-	ST_Subset = true;
-}
+//void StatTool::generateGroupsFromString ( std::string str)
+//{
+//	std::set<std::string> vec;
+//	split ( str, vec, ",");
+//	ST_Groups = vec;
+//	ST_Subset = true;
+//}
 int StatTool::processOptions (int argc, char ** argv)
 {
 	int c;
@@ -76,7 +77,16 @@ int StatTool::processOptions (int argc, char ** argv)
 
             case 'g':
             {
-                generateGroupsFromString(optarg);
+                if(fileOrString(optarg)) {
+                    // its a file
+                    parseFileForGroups(ST_Groups, optarg);
+                    //ST_Subset = true;
+
+                } else {
+                    // its a string 
+                    generateGroupsFromString(optarg, ST_Groups);
+                }
+                ST_Subset = true;
                 break;
             }
             case 's':
