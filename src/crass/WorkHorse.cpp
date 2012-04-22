@@ -346,7 +346,7 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         }
     }
     delete non_redundant_set;
-
+    std::cout<<numOfReads()<<std::endl;
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
     
@@ -486,7 +486,7 @@ int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& gr
     while(group_count_iter != groupKmerCountsMap.end())
     {
         if(NULL != mDR2GIDMap[group_count_iter->first])
-        {
+        {            
             // it's real, so parse this group
             // get the N top kmers
             std::vector<std::string> n_top_kmers;
@@ -552,7 +552,6 @@ void WorkHorse::removeRedundantRepeats(std::vector<std::string>& repeatVector)
     // will return an iterator postion to the first position where the string
     // is empty
     std::vector<std::string>::iterator empty_iter = std::partition(repeatVector.begin(), repeatVector.end(), isNotEmpty);
-
     // remove all the empties from the list
     repeatVector.erase(empty_iter, repeatVector.end());
 }
@@ -600,10 +599,21 @@ std::vector<std::string> * WorkHorse::createNonRedundantSet(std::map<int, std::m
             logInfo("-------------", 4);
             
             removeRedundantRepeats(clustered_repeats);
+            std::vector<std::string>::iterator cr_iter;
+            std::vector<std::string> tmp_vec;
+            for (cr_iter = clustered_repeats.begin(); cr_iter != clustered_repeats.end(); ++cr_iter) {
+                tmp_vec.push_back(reverseComplement(*cr_iter));
+            }
             non_redundant_repeats->insert(non_redundant_repeats->end(), clustered_repeats.begin(), clustered_repeats.end());
+            non_redundant_repeats->insert(non_redundant_repeats->end(), tmp_vec.begin(), tmp_vec.end());
+
         }
         dcg_iter++;
-    } 
+    }
+    std::vector<std::string>::iterator nr_iter;
+    for (nr_iter = non_redundant_repeats->begin(); nr_iter != non_redundant_repeats->end(); ++nr_iter) {
+        std::cout<<*nr_iter<<std::endl;
+    }
     return non_redundant_repeats;
 }
 
