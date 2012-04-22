@@ -48,7 +48,6 @@
 #include <stdlib.h>
 #include <exception>
 #include <ctime>
-
 // local includes
 #include "libcrispr.h"
 #include "LoggerSimp.h"
