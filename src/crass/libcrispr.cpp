@@ -101,7 +101,7 @@ int decideWhichSearch(const char *inputFastq,
             double diff = difftime(time_current, time_start);
             time_start = time_current;
             std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "<< "Processed "<<read_counter<<" ...";
-            std::cout<<diff<<std::endl;
+            std::cout<<diff<<" sec"<<std::endl;
             log_counter = 0;
         }
         try {
@@ -142,7 +142,7 @@ int decideWhichSearch(const char *inputFastq,
     double diff = difftime(time_current, time_start);
     time_start = time_current;
     std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "<< "Processed "<<read_counter<<" ...";
-    std::cout<<diff<<std::endl;
+    std::cout<<diff<<" sec"<<std::endl;
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
 
     return max_read_length;
@@ -733,7 +733,7 @@ void findSingletonsMultiVector(const char *inputFastq,
     double diff = difftime(time_current, time_start);
     time_start = time_current;
     std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
-    std::cout<<diff<<std::endl;
+    std::cout<<diff<<" sec"<<std::endl;
     logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 
