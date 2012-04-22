@@ -1265,8 +1265,40 @@ bool isRepeatLowComplexity(std::string& repeat)
     return false;
 }
 
-
-
+bool drHasHighlyAbundantKmers(std::string& directRepeat)
+{
+    // cut kmers from the direct repeat to test whether
+    // a particular kmer is vastly over represented
+    std::map<std::string, int> kmer_counter;
+    size_t kmer_length = 3;
+    std::string kmer;
+    int total_count = 0;
+    try {
+        for (size_t i = 0; i < (directRepeat.length() - kmer_length); i += kmer_length) {
+            kmer = directRepeat.substr(i, kmer_length);
+            addOrIncrement(kmer_counter, kmer);
+            total_count++;
+        }
+    } catch (std::exception& e) {
+        throw crispr::runtime_exception(__FILE__, 
+                                        __LINE__, 
+                                        __PRETTY_FUNCTION__, 
+                                        e.what());
+    }
+    
+    std::map<std::string, int>::iterator iter;
+    int max_count = 0;
+    for (iter = kmer_counter.begin(); iter != kmer_counter.end(); ++iter) {
+        if (iter->second > max_count) {
+            max_count = iter->second;
+        }
+    }
+    if ((max_count /total_count) > 0.7) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
 void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder)
 {
