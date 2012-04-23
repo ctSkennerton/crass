@@ -123,6 +123,9 @@ int StatTool::processInputFile(const char * inputFile)
         }
         xercesc::DOMDocument * input_doc_obj = xml_parser.setFileParser(inputFile);
         xercesc::DOMElement * root_elem = input_doc_obj->getDocumentElement();
+        if (!root_elem) {
+            throw crispr::xml_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, "problem when parsing xml file");
+        }
         int num_groups_to_process = static_cast<int>(ST_Groups.size());
         //std::cout<<num_groups_to_process<<std::endl;
         for (xercesc::DOMElement * currentElement = root_elem->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
@@ -203,6 +206,9 @@ int StatTool::processInputFile(const char * inputFile)
         std::cerr<<e.what()<<std::endl;
         return 1;
     } catch (crispr::input_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    } catch (crispr::exception& e) {
         std::cerr<<e.what()<<std::endl;
         return 1;
     }

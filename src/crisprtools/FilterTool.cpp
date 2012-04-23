@@ -84,7 +84,9 @@ int FilterTool::processInputFile(const char * inputFile)
         crispr::XML xml_parser;
         xercesc::DOMDocument * input_doc_obj = xml_parser.setFileParser(inputFile);
         xercesc::DOMElement * root_elem = input_doc_obj->getDocumentElement();
-        
+        if (!root_elem) {
+            throw crispr::xml_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, "problem when parsing xml file");
+        }
         if (FT_OutputFile.empty()) {
             FT_OutputFile = inputFile;
         }
