@@ -670,7 +670,7 @@ void findSingletonsMultiVector(const char *inputFastq,
             std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
             //std::cout.setf(std::ios::fixed);
             //std::cout.precision(2);
-            std::cout<<diff<<"sec"<<std::endl;
+            std::cout<<diff<<" sec"<<std::endl;
             log_counter = 0;
         }
         // reset these mofos
@@ -1265,8 +1265,46 @@ bool isRepeatLowComplexity(std::string& repeat)
     return false;
 }
 
-
-
+bool drHasHighlyAbundantKmers(std::string& directRepeat)
+{
+    // cut kmers from the direct repeat to test whether
+    // a particular kmer is vastly over represented
+    std::map<std::string, int> kmer_counter;
+    size_t kmer_length = 3;
+    size_t max_index = (directRepeat.length() - kmer_length);
+    std::string kmer;
+    int total_count = 0;
+    try {
+        for (size_t i = 0; i < max_index; i++) {
+            kmer = directRepeat.substr(i, kmer_length);
+            //std::cout << kmer << ", ";
+            addOrIncrement(kmer_counter, kmer);
+            total_count++;
+        }
+    } catch (std::exception& e) {
+        throw crispr::runtime_exception(__FILE__, 
+                                        __LINE__, 
+                                        __PRETTY_FUNCTION__, 
+                                        e.what());
+    }
+    //std::cout << std::endl;
+    
+    std::map<std::string, int>::iterator iter;
+    //std::cout << directRepeat << std::endl;
+    int max_count = 0;
+    for (iter = kmer_counter.begin(); iter != kmer_counter.end(); ++iter) {
+        if (iter->second > max_count) {
+            max_count = iter->second;
+        }
+        //std::cout << "{" << iter->first << ", " << iter->second << ", " << (float(iter->second)/float(total_count)) << "}, ";
+    }
+    //std::cout << std::endl;
+    if ((float)max_count/(float)total_count > CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
 void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder)
 {

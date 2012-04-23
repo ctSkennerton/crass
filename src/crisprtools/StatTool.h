@@ -153,7 +153,7 @@ public:
 
 
     
-    void generateGroupsFromString(std::string str);
+    //void generateGroupsFromString(std::string str);
     int processOptions(int argc, char ** argv);
     int processInputFile(const char * inputFile);
     void parseGroup(xercesc::DOMElement * parentNode, crispr::XML& xmlParser);

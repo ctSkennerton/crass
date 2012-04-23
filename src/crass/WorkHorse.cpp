@@ -513,8 +513,9 @@ int WorkHorse::mungeDRs(void)
                 }
                 if(NULL != mDR2GIDMap[group_count_iter->first])
                 {
-                	delete mDR2GIDMap[group_count_iter->first];
-                	mDR2GIDMap[group_count_iter->first] = NULL;
+                	cleanGroup(group_count_iter->first);
+//                    delete mDR2GIDMap[group_count_iter->first];
+//                	mDR2GIDMap[group_count_iter->first] = NULL;
                 }
             }
         }
@@ -591,8 +592,7 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, Stri
         logInfo("Could not identify a master DR", 4);
         if(NULL != mDR2GIDMap[GID])
         {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
+            cleanGroup(GID);
             mDR2GIDMap.erase(GID);
         }
     }
@@ -1162,6 +1162,7 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
     std::string master_DR_sequence = "**unset**";
     if(!findMasterDR(GID, nTopKmers, &master_DR_token, &master_DR_sequence)) { return false; }
     
+    
     // now we have the n most abundant kmers and one DR which contains them all
     // time to rock and rrrroll!
 
@@ -1268,106 +1269,39 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
     // check to make sure that the DR is not just some random long RE
     if((unsigned int)(true_DR.length()) > mOpts->highDRsize)
     {
-        // probably a dud. throw it out
-        // free the memory and clean up
-        if(NULL != mDR2GIDMap[GID])
-        {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
-        }
-
+        removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
         logInfo("Killed: {" << true_DR << "} cause' it was too long", 1);
-
-        //++++++++++++++++++++++++++++++++++++++++++++++++
-        // clean up the mess we made
-        
-        if(NULL != consensus_array)
-        	delete[] consensus_array;
-        if(NULL != conservation_array)
-        	delete[] conservation_array;
-        if(coverage_array != NULL)
-        {
-    		for(int i = 0; i < 4; i++)
-    		{
-    			if(NULL != coverage_array[i])
-    				delete[] coverage_array[i];
-    		}
-    		delete[] coverage_array;
-    		coverage_array = NULL;
-        }
         return false;
     }
     
-    if(((unsigned int)(true_DR.length()) < mOpts->lowDRsize) && (collapsed_options.size() == 0))
-    {
-        // probably a dud. throw it out
-        // free the memory and clean up
-        if(NULL != mDR2GIDMap[GID])
+    if (collapsed_options.size() == 0) {
+        if((unsigned int)(true_DR.length()) < mOpts->lowDRsize)
         {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
+            removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+            logInfo("Killed: {" << true_DR << "} cause' the consensus was too short... (" << true_DR.length() << " ," << collapsed_options.size() << ")", 1);
+            return false;
         }
-        
-        logInfo("Killed: {" << true_DR << "} cause' the consensus was too short... (" << true_DR.length() << " ," << collapsed_options.size() << ")", 1);
+        // QC the DR again for low complexity
+        if (isRepeatLowComplexity(true_DR)) 
+        {
+            removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+            logInfo("Killed: {" << true_DR << "} cause' the consensus was low complexity...", 1);
+            return false;
+        }
+        try {
+            if (drHasHighlyAbundantKmers(true_DR) ) {
+                removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+                logInfo("Killed: {" << true_DR << "} cause' the consensus contained highly abundant kmers...", 1);
+                return false;
+            }
+        } catch (crispr::exception& e) {
+            cleanArrays(coverage_array, consensus_array, conservation_array);
+            std::cerr<<e.what()<<std::endl;
+            throw crispr::runtime_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, true_DR.c_str());
+        }
+        // test our true DR for highly abundant kmers
 
-        //++++++++++++++++++++++++++++++++++++++++++++++++
-        // clean up the mess we made
         
-        if(NULL != consensus_array)
-        	delete[] consensus_array;
-        if(NULL != conservation_array)
-        	delete[] conservation_array;
-        if(coverage_array != NULL)
-        {
-    		for(int i = 0; i < 4; i++)
-    		{
-    			if(NULL != coverage_array[i])
-    				delete[] coverage_array[i];
-    		}
-    		delete[] coverage_array;
-    		coverage_array = NULL;
-        }
-        return false;
-    }
-    
-    
-    // QC the DR again for low complexity
-    if (isRepeatLowComplexity(true_DR) && collapsed_options.size() == 0) 
-    {
-        // probably a dud. throw it out
-        // free the memory and clean up
-        if(NULL != mDR2GIDMap[GID])
-        {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
-        }
-        
-        logInfo("Killed: {" << true_DR << "} cause' the consensus was low complexity...", 1);
-        
-        //++++++++++++++++++++++++++++++++++++++++++++++++
-        // clean up the mess we made
-        
-        if(NULL != consensus_array)
-        	delete[] consensus_array;
-        if(NULL != conservation_array)
-        	delete[] conservation_array;
-        if(coverage_array != NULL)
-        {
-    		for(int i = 0; i < 4; i++)
-    		{
-    			if(NULL != coverage_array[i])
-    				delete[] coverage_array[i];
-    		}
-    		delete[] coverage_array;
-    		coverage_array = NULL;
-        }
-        return false;
-    }
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++
-    // Update the refined starts and ends of the DR 
-    if(0 == collapsed_options.size())
-    {
         // update the DR start and ends
         int diffs = dr_zone_end - dr_zone_start + 1 - (int)true_DR.length();
         while(0 < diffs)
@@ -1429,31 +1363,12 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
             }
             logInfo(ss.str(), 3);
         }
-    }
-    
+    } 
+
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // clean up the mess we made
-    
-    if(NULL != consensus_array)
-    {
-        delete[] consensus_array;
-    }
-    if(NULL != conservation_array)
-    {
-        delete[] conservation_array;
-    }
-    if(coverage_array != NULL)
-    {
-		for(int i = 0; i < 4; i++)
-		{
-			if(NULL != coverage_array[i])
-            {
-                delete[] coverage_array[i];
-            }
-		}
-		delete[] coverage_array;
-		coverage_array = NULL;
-    }
+    cleanArrays(coverage_array, consensus_array, conservation_array);
+
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // possibly split the DR group
@@ -1637,11 +1552,7 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
         }
         
         // time to delete the old clustered DRs and the group from the DR2GID_map
-        if(NULL != mDR2GIDMap[GID])
-        {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
-        }
+        cleanGroup(GID);
         
         logInfo("Calling the parser recursively", 4);
         
@@ -1702,6 +1613,44 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
         }
     }
     return true;
+}
+
+void WorkHorse::removeDRAndCleanMemory(int ** coverageArray, char * consensusArray, float * conservationArray, int GID)
+{
+    cleanGroup(GID);
+    cleanArrays(coverageArray, consensusArray, conservationArray);
+    
+}
+void WorkHorse::cleanGroup(int GID)
+{
+    if(NULL != mDR2GIDMap[GID])
+    {
+        delete mDR2GIDMap[GID];
+        mDR2GIDMap[GID] = NULL;
+    }
+}
+void WorkHorse::cleanArrays(int ** coverageArray, char * consensusArray, float * conservationArray)
+{
+    if(NULL != consensusArray)
+    {
+        delete[] consensusArray;
+    }
+    if(NULL != conservationArray)
+    {
+        delete[] conservationArray;
+    }
+    if(coverageArray != NULL)
+    {
+		for(int i = 0; i < 4; i++)
+		{
+			if(NULL != coverageArray[i])
+            {
+                delete[] coverageArray[i];
+            }
+		}
+		delete[] coverageArray;
+		coverageArray = NULL;
+    }
 }
 
 int WorkHorse::numberOfReadsInGroup(DR_Cluster * currentGroup)

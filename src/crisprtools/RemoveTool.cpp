@@ -38,6 +38,7 @@
 #include "Exception.h"
 #include "StlExt.h"
 #include "config.h"
+#include "Utils.h"
 
 int removeMain(int argc, char ** argv)
 {
@@ -160,8 +161,15 @@ int processRemoveOptions(int argc, char ** argv, std::set<std::string>& groups, 
                 }
                 case 'g':
                 {
-                    split ( optarg, groups, ",");
-                    //generateGroupsFromString (optarg, groups);
+                    if(fileOrString(optarg)) {
+                        // its a file
+                        parseFileForGroups(groups, optarg);
+                        //ST_Subset = true;
+                        
+                    } else {
+                        // its a string 
+                        generateGroupsFromString(optarg, groups);
+                    }
                     break;
                 }
                     

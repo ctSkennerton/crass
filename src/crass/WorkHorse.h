@@ -114,6 +114,9 @@ class WorkHorse {
         int getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
         int getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
         int getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR);
+        void removeDRAndCleanMemory(int ** coverageArray, char * consensusArray, float * conservationArray, int GID);
+        void cleanGroup(int GID);
+        void cleanArrays(int ** coverageArray, char * consensusArray, float * conservationArray);
         //**************************************
         // spacer graphs
         //**************************************

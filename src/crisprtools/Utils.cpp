@@ -33,8 +33,15 @@
  */
 
 #include <iostream>
+#include <fstream>
+#include <set>
+#include <string>
 #include <sys/stat.h>
+#include <errno.h>
 #include "Utils.h"
+#include "StlExt.h"
+#include "Exception.h"
+
 
 void recursiveMkdir(std::string dir) 
 {
@@ -45,4 +52,49 @@ void recursiveMkdir(std::string dir)
         mkdir(tmp.c_str(), (S_IRWXU | S_IRWXG));
     }
     mkdir(dir.c_str(), (S_IRWXU | S_IRWXG));
+}
+
+bool fileOrString(const char * str) {
+    struct stat file_stats;
+    if (-1 == stat(str, &file_stats)) {
+        // some sort of error occured but 
+        // it might still be a file as input
+        // with just a weird error
+        switch (errno) {
+            case ENOENT:
+                // no such file or directory
+                // it's a string
+                return false;
+                break;
+                
+            default:
+                // it was a file but there is some other error
+                throw crispr::input_exception(strerror(errno));
+                break;
+        }
+    } else {
+        return true;
+    }
+}
+
+void parseFileForGroups(std::set<std::string>& groups, const char * filePath) {
+    // read through a file of group numbers
+    
+    std::string line;
+    std::fstream in_file;
+    
+    in_file.open(filePath);
+    if ( in_file.good()) {
+        while (in_file >> line) {
+            groups.insert(line);
+        }
+    } else {
+        // error
+        std::string s = "cannot read file ";
+        throw crispr::input_exception( (s + filePath).c_str());
+    }
+}
+
+void generateGroupsFromString(std::string str, std::set<std::string>& groups) {
+    split(str, groups);
 }
