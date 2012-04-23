@@ -28,24 +28,24 @@
 
 class ExtractTool 
 {
-	public:
+public:
     enum ELEMENT_TYPE{REPEAT,SPACER,CONSENSUS,FLANKER};
-		// constructor
+    // constructor
     ExtractTool();
 
-		// destructor
-		~ExtractTool();
+    // destructor
+    ~ExtractTool();
 
-		// option processing
-		//void generateGroupsFromString( std::string groupString);
-		int processOptions(int argc, char ** argv);
-
-		// process the input
-		int processInputFile(const char * inputFile);
-        void parseWantedGroups(crispr::XML& xmlObj, xercesc::DOMElement * rootElement);
-        void extractDataFromGroup(crispr::XML& xmlDoc, xercesc::DOMElement * currentGroup);
+    // option processing
+    //void generateGroupsFromString( std::string groupString);
+    int processOptions(int argc, char ** argv);
+    void setOutputBuffer(std::ofstream& out, const char * file);
+    // process the input
+    int processInputFile(const char * inputFile);
+    void parseWantedGroups(crispr::XML& xmlObj, xercesc::DOMElement * rootElement);
+    void extractDataFromGroup(crispr::XML& xmlDoc, xercesc::DOMElement * currentGroup);
     void processData(crispr::XML& xmlDoc, xercesc::DOMElement * currentType, ELEMENT_TYPE wantedType, std::string gid, std::ostream& outStream);
-	private:
+private:
         std::set<std::string> ET_Group;             // holds a comma separated list of groups that need to be extracted
         std::ofstream ET_RepeatStream;
         std::ofstream ET_FlankerStream;
