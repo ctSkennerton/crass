@@ -487,6 +487,7 @@ int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& gr
     {
         if(NULL != mDR2GIDMap[group_count_iter->first])
         {            
+            std::cout<<numberOfReadsInGroup(mDR2GIDMap[group_count_iter->first])<<std::endl;
             // it's real, so parse this group
             // get the N top kmers
             std::vector<std::string> n_top_kmers;
