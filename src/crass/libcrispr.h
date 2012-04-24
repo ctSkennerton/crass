@@ -53,6 +53,9 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "StringCheck.h"
+#if DEBUG
+#include "SearchChecker.h"
+#endif
 
 
 typedef std::map<std::string, bool> lookupTable;
@@ -77,9 +80,12 @@ enum side{rightSide, leftSide};
 //**************************************
 // search functions
 //**************************************
+#if DEBUG
+int decideWhichSearch(const char *inputFile, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound, SearchChecker& searchDebugger );
 
+#else
 int decideWhichSearch(const char *inputFile, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable& patternsHash, lookupTable& readsFound);
-
+#endif
 int longReadSearch(ReadHolder * seq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);
 
 int shortReadSearch(ReadHolder * seq, const options &opts, ReadMap * mReads, StringCheck * mStringCheck, lookupTable &patterns_hash, lookupTable &readsFound);

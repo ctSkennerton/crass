@@ -69,13 +69,25 @@
  
  */
 KSEQ_INIT(gzFile, gzread)
-
+#if DEBUG
 int decideWhichSearch(const char *inputFastq, 
-                        const options& opts, 
-                        ReadMap * mReads, 
-                        StringCheck * mStringCheck, 
-                        lookupTable& patternsHash, 
-                        lookupTable& readsFound)
+                      const options& opts, 
+                      ReadMap * mReads, 
+                      StringCheck * mStringCheck, 
+                      lookupTable& patternsHash, 
+                      lookupTable& readsFound,
+                      SearchChecker& searchDebugger
+                      )
+#else
+int decideWhichSearch(const char *inputFastq, 
+                      const options& opts, 
+                      ReadMap * mReads, 
+                      StringCheck * mStringCheck, 
+                      lookupTable& patternsHash, 
+                      lookupTable& readsFound
+                      )
+#endif
+
 {
     //-----
     // Wrapper used for searching reads for DRs
@@ -112,6 +124,15 @@ int decideWhichSearch(const char *inputFastq,
             // grab a readholder
             ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
             // test if it has a comment entry and a quality entry (fastq input file)
+#if DEBUG
+            if (searchDebugger.hasHeader(seq->name.s)) {
+                changeLogLevel(8);
+                SearchData sd;
+                sd.read(tmp_holder);
+            } else {
+                changeLogLevel(opts.logLevel);
+            }
+#endif
             if (seq->comment.s) 
             {
                 tmp_holder->setComment(seq->comment.s);

@@ -51,6 +51,9 @@
 #include "ReadHolder.h"
 #include "StringCheck.h"
 #include "Xml.h"
+#if DEBUG
+#include "SearchChecker.h"
+#endif
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
@@ -157,6 +160,9 @@ class WorkHorse {
         std::map<int, bool> mGroupMap;				// list of valid group IDs
         DR_Cluster_Map mDR2GIDMap;					// map a DR (StringToken) to a GID
         std::map<int, std::string> mTrueDRs;		// map GId to true DR strings
+#if DEBUG
+        SearchChecker WH_SeachChecker;              // our debugging object      
+#endif
 };
 
 #endif //WorkHorse_h

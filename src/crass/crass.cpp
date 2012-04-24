@@ -394,6 +394,7 @@ int processOptions(int argc, char *argv[], options *opts)
 #endif  
 #ifdef DEBUG
                 else if (strcmp( "noDebugGraph", long_options[index].name ) == 0 ) opts->noDebugGraph = true;
+                else if (strcmp("searchChecker", long_options[index].name) == 0) opts->searchChecker = optarg;
 #endif
                 break;
             default: 
@@ -490,6 +491,7 @@ int main(int argc, char *argv[])
     opts.cNodeKmerLength       = CRASS_DEF_NODE_KMER_SIZE;               // length of the kmers making up a crisprnode
     #ifdef DEBUG
     opts.noDebugGraph          = false;                                  // Even if DEBUG preprocessor macro is set do not produce debug graph files
+    opts.searchChecker        = "";                                     // Name of file containing 
     #endif
     #ifdef RENDERING
     opts.layoutAlgorithm       = DEFAULT_RENDERING_ALGORITHM;            // the graphviz layout algorithm to use
