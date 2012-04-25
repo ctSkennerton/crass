@@ -274,14 +274,6 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         second_kmer_node = NM_Nodes[st2];
         second_kmer_node->incrementCount();
     }
-#ifdef SEARCH_SINGLETON
-    SearchCheckerList::iterator debug_iter = debugger->find(NM_StringCheck.getString(headerSt));
-    if (debug_iter != debugger->end()) {
-        // interesting read
-        debug_iter->second.addNode(st1);       
-        debug_iter->second.addNode(st2);
-    }
-#endif
     // add in the read headers for the two CrisprNodes
     first_kmer_node->addReadHeader(headerSt);
     second_kmer_node->addReadHeader(headerSt);
@@ -298,6 +290,14 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         }
     }
     
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(NM_StringCheck.getString(headerSt));
+    if (debug_iter != debugger->end()) {
+        // interesting read
+        debug_iter->second.addNode(st1);       
+        debug_iter->second.addNode(st2);
+    }
+#endif
     // now it's time to add the spacer
     SpacerInstance * curr_spacer;
     
@@ -314,7 +314,12 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     	}
         curr_spacer = new SpacerInstance(sp_str_token, first_kmer_node, second_kmer_node);
         NM_Spacers[this_sp_key] = curr_spacer;
-        
+#ifdef SEARCH_SINGLETON
+        if (debug_iter != debugger->end()) {
+            debug_iter->second.addSpacer(workingString);
+        }
+#endif
+
         // make the inner edge
         first_kmer_node->addEdge(second_kmer_node, CN_EDGE_FORWARD);
         second_kmer_node->addEdge(first_kmer_node, CN_EDGE_BACKWARD);
