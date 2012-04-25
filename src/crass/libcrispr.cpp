@@ -1332,15 +1332,18 @@ void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tm
         st = mStringCheck->addString(dr_lowlexi);
         (*mReads)[st] = new ReadList();
     }
-#ifdef SEARCH_SINGLETON
+#ifdef DEBUG
     logInfo("String Token: "<<st, 10);
+#endif
+
+#ifdef SEARCH_SINGLETON
     SearchCheckerList::iterator debug_iter = debugger->find(tmpReadholder->getHeader());
     if (debug_iter != debugger->end()) {
         // our read got through to this stage
         debug_iter->second.token(st);
     }
-
 #endif
+    
     (*mReads)[st]->push_back(tmpReadholder);
 }
 
