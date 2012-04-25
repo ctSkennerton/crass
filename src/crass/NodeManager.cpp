@@ -60,6 +60,7 @@
 #include "Exception.h"
 
 
+
 SpacerInstance * WalkingManager::shift(SpacerInstance * newNode)
 {
     SpacerInstance * old_node = WM_WalkingElem.first;
@@ -144,8 +145,15 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 	CrisprNode * prev_node = NULL;
 	
 	// add the header of this read to our stringcheck
+
 	StringToken header_st = NM_StringCheck.addString(RH->getHeader());
-	
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(RH->getHeader());
+    if ( debug_iter != debugger->end()) {
+        // an interesting read
+        debug_iter->second.nmtoken(header_st);
+    }
+#endif
 	//MI std::cout << std::endl << "----------------------------------\n" << RH->getHeader() << std::endl; 
 	//MI std::cout << RH->splitApartSimple() << std::endl;
 	
@@ -266,7 +274,14 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         second_kmer_node = NM_Nodes[st2];
         second_kmer_node->incrementCount();
     }
-    
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(NM_StringCheck.getString(headerSt));
+    if (debug_iter != debugger->end()) {
+        // interesting read
+        debug_iter->second.addNode(st1);       
+        debug_iter->second.addNode(st2);
+    }
+#endif
     // add in the read headers for the two CrisprNodes
     first_kmer_node->addReadHeader(headerSt);
     second_kmer_node->addReadHeader(headerSt);
@@ -341,7 +356,13 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
         second_kmer_node = NM_Nodes[st2];
         (NM_Nodes[st2])->incrementCount();
     }
-    
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(NM_StringCheck.getString(headerSt));
+    if (debug_iter != debugger->end()) {
+        // interesting read
+        debug_iter->second.addNode(st2);
+    }
+#endif
     // add in the read headers for the this CrisprNode
     second_kmer_node->addReadHeader(headerSt);
     
@@ -378,7 +399,13 @@ void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workin
         first_kmer_node = NM_Nodes[st1];
         (NM_Nodes[st1])->incrementCount();
     }
-    
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(NM_StringCheck.getString(headerSt));
+    if (debug_iter != debugger->end()) {
+        // interesting read
+        debug_iter->second.addNode(st1);       
+    }
+#endif
     // add in the read headers for the this CrisprNode
     first_kmer_node->addReadHeader(headerSt);
     

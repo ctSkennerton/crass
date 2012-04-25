@@ -164,6 +164,8 @@ typedef struct {
     int                 cNodeKmerLength;                                    // length of the kmers making up a crisprnode
 #ifdef DEBUG
     bool                noDebugGraph;                                       // Even if DEBUG preprocessor macro is set do not produce debug graph files
+#endif
+#ifdef SEARCH_SINGLETON
     std::string         searchChecker;                                     // A file containing headers to reads that need to be tracked through crass
 #endif
 #ifdef RENDERING

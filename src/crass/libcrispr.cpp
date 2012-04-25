@@ -112,16 +112,16 @@ int decideWhichSearch(const char *inputFastq,
         try {
             // grab a readholder
             ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
-            // test if it has a comment entry and a quality entry (fastq input file)
-#if DEBUG
-            if (debugger->hasHeader(seq->name.s)) {
+#if SEARCH_SINGLETON
+            SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
+            if (debug_iter != debugger->end()) {
                 changeLogLevel(8);
-                SearchData sd;
-                sd.read(tmp_holder);
+                debug_iter->second.read(tmp_holder);
             } else {
                 changeLogLevel(opts.logLevel);
             }
 #endif
+            // test if it has a comment entry and a quality entry (fastq input file)
             if (seq->comment.s) 
             {
                 tmp_holder->setComment(seq->comment.s);
@@ -1325,15 +1325,21 @@ void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tm
     logInfo("Direct repeat: "<<dr_lowlexi, 10);
 #endif
     StringToken st = mStringCheck->getToken(dr_lowlexi);
-
+    
     if(0 == st)
     {
         // new guy
         st = mStringCheck->addString(dr_lowlexi);
         (*mReads)[st] = new ReadList();
     }
-#ifdef DEBUG
+#ifdef SEARCH_SINGLETON
     logInfo("String Token: "<<st, 10);
+    SearchCheckerList::iterator debug_iter = debugger->find(tmpReadholder->getHeader());
+    if (debug_iter != debugger->end()) {
+        // our read got through to this stage
+        debug_iter->second.token(st);
+    }
+
 #endif
     (*mReads)[st]->push_back(tmpReadholder);
 }

@@ -53,7 +53,8 @@ void SearchChecker::processHeaderFile() {
     if (in.good()) {
         std::string line;
         while (in >> line) {
-            SC_Headers.insert(line);
+            SearchData s;
+            SC_Data[line] = s; 
         }
     } else {
         throw crispr::runtime_exception(__FILE__, 

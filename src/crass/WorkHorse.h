@@ -51,7 +51,7 @@
 #include "ReadHolder.h"
 #include "StringCheck.h"
 #include "Xml.h"
-#if DEBUG
+#if SEARCH_SINGLETON
 #include "SearchChecker.h"
 #endif
 

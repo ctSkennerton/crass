@@ -35,45 +35,77 @@
 #ifndef crass_SearchChecker_h
 #define crass_SearchChecker_h
 
-#include <set>
+#include <map>
 #include <string>
 #include <vector>
+#include <stack>
 #include "ReadHolder.h"
 #include "StringCheck.h"
+//#include "libcrispr.h"
+//#include "NodeManager.h"
 
+
+typedef std::vector<StringToken> SearchDataNodes;
 
 class SearchData {
-    ReadHolder * SD_ReadHolder;
-    StringToken SD_Token;
-    
-    
+    ReadHolder * SD_holder;
+    StringToken SD_drtoken;
+    StringToken SD_nmHeaderToken;
+    //NodeManager * SD_nodeManager;
+    SearchDataNodes SD_nodes;
+    std::string SD_truedr;
+    int SD_groupNumber;
+
 public:
     SearchData() {
-        SD_ReadHolder = NULL;
-        SD_Token = 0;
+        SD_holder = NULL;
+        //SD_nodeManager = NULL;
+        SD_drtoken = 0;
+        SD_nmHeaderToken = 0;
+        SD_groupNumber = 0;
     }
     
-    inline StringToken token(){ return SD_Token;}
-    inline void token(StringToken i) {SD_Token = i;}
+    inline StringToken token(){ return SD_drtoken;}
+    inline void token(StringToken i) {SD_drtoken = i;}
     
-    inline ReadHolder * read() {return SD_ReadHolder;}
-    inline void read(ReadHolder * r) {SD_ReadHolder = r;}
+    inline StringToken nmtoken() {return SD_nmHeaderToken;}
+    inline void nmtoken(StringToken s) {SD_nmHeaderToken = s;}
+    
+    inline ReadHolder * read() {return SD_holder;}
+    inline void read(ReadHolder * r) {SD_holder = r;}
+    
+    inline std::string truedr() {return SD_truedr;}
+    inline void truedr(std::string s) {SD_truedr = s;}
+
+    inline int gid() {return SD_groupNumber;}
+    inline void gid(int i) {SD_groupNumber = i;}
+    
+    inline void addNode(StringToken t) {SD_nodes.push_back(t);}
+    
+    
+    inline SearchDataNodes::iterator begin() {return SD_nodes.begin();}
+    inline SearchDataNodes::iterator end() {return SD_nodes.end();}
 };
 
+
+typedef std::map<std::string, SearchData> SearchCheckerList;
 
 class SearchChecker
 {
     static SearchChecker *SC_instance;
     SearchChecker(){};
     std::string SC_FileName;             //a file containing a list of headers for interesting reads
-    std::set<std::string> SC_Headers;    // a lookup for our interesting headers
-    std::vector<SearchData> SC_Data;     // data about individual reads
+    SearchCheckerList SC_Data;     // data about individual reads
     
 public:
     // get/set
-    inline bool hasHeader(std::string s) {return (SC_Headers.find(s) != SC_Headers.end());}
+    inline bool hasHeader(std::string s) {return (find(s) != end());}
     inline void headerFile(std::string s ) {SC_FileName = s;}
-    
+    inline void add(std::string a, SearchData& s) {SC_Data[a] = s;}
+    inline SearchCheckerList::iterator find(std::string s) {return SC_Data.find(s);}
+    inline SearchCheckerList::iterator begin() {return SC_Data.begin();}
+    inline SearchCheckerList::iterator end() {return SC_Data.end();}
+
     void processHeaderFile(void);
     static SearchChecker * instance();
 };

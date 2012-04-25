@@ -86,6 +86,8 @@ static struct option long_options [] = {
 #endif
 #ifdef DEBUG
     {"noDebugGraph",no_argument,NULL,0},
+#endif
+#ifdef SEARCH_SINGLETON
     {"searchChecker", required_argument, NULL, 0},
 #endif
     {NULL, no_argument, NULL, 0}

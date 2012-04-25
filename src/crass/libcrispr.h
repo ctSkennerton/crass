@@ -53,7 +53,7 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "StringCheck.h"
-#if DEBUG
+#if SEARCH_SINGLETON
 #include "SearchChecker.h"
 #endif
 

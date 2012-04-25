@@ -174,7 +174,17 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         logError("FATAL ERROR: buildGraph failed");
         return 3;
     }
-
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter;
+    for (debug_iter = debugger->begin(); debug_iter != debugger->end(); debug_iter++) {
+        std::cout<<debug_iter->first<<std::endl;
+        std::cout<<"NodeManager: "<<debug_iter->second.gid()<<" "<<debug_iter->second.truedr()<<std::endl;
+        std::vector<StringToken>::iterator node_iter;
+        for (node_iter = debug_iter->second.begin(); node_iter != debug_iter->second.end(); node_iter++) {
+            std::cout<<"\tnode -> "<<*node_iter<<std::endl;
+        }
+    }
+#endif
 	
 #if DEBUG
 	if (!mOpts->noDebugGraph) // this option will only exist if DEBUG is set anyway
@@ -362,6 +372,15 @@ int WorkHorse::buildGraph(void)
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
                 	//MI std::cout<<'.'<<std::flush;
+#ifdef SEARCH_SINGLETON
+                    SearchCheckerList::iterator debug_iter = debugger->find((*read_iter)->getHeader());
+                    if (debug_iter != debugger->end()) {
+                        //found one of our interesting reads
+                        // add in the true DR
+                        debug_iter->second.truedr(mTrueDRs[drg_iter->first]);
+                        debug_iter->second.gid(drg_iter->first);
+                    }
+#endif
                     mDRs[mTrueDRs[drg_iter->first]]->addReadHolder(*read_iter);
                     read_iter++;
                 }
