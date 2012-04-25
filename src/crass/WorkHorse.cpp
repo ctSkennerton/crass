@@ -159,16 +159,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     // wrapper for the various processes needed to assemble crisprs
     //
     
-#if DEBUG
-    try {
-        WH_SeachChecker.headerFile(mOpts->searchChecker);
-        WH_SeachChecker.processHeaderFile();
-    } catch (crispr::exception& e) {
-        std::cerr<<e.what()<<std::endl;
-        return 1;
-    }
 
-#endif
     
 	logInfo("Parsing reads in " << (seqFiles.size()) << " files", 1);
 	if(parseSeqFiles(seqFiles))
@@ -295,11 +286,7 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     {
         logInfo("Parsing file: " << *seq_iter, 1);
         try {
-#if DEBUG
-            int max_len = decideWhichSearch(seq_iter->c_str(), *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found, WH_SeachChecker);
-#else
             int max_len = decideWhichSearch(seq_iter->c_str(), *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found);
-#endif
             mMaxReadLength = (max_len > mMaxReadLength) ? max_len : mMaxReadLength;
             logInfo("Finished file: " << *seq_iter, 1);
 

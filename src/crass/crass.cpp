@@ -57,6 +57,7 @@
 #include "WorkHorse.h"
 #include "Rainbow.h"
 #include "StlExt.h"
+#include "Exception.h"
 #ifdef PERFORM_CRASS_ASSEMBLY
     #include "AssemblyWrapper.h"
 #endif
@@ -556,9 +557,20 @@ int main(int argc, char *argv[])
         cmd_line += argv[i];
         cmd_line += ' ';
     }
-    
     WorkHorse * mHorse = new WorkHorse(&opts, timestamp,cmd_line);
+#if DEBUG
+    try {
+        debugger->headerFile(opts.searchChecker);
+        debugger->processHeaderFile();
+    } catch (crispr::exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    }
+    
+#endif
+    
     int error_code = mHorse->doWork(seq_files);
+    delete debugger;
     delete mHorse;
     return error_code;
 }

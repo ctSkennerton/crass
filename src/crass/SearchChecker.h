@@ -40,23 +40,7 @@
 #include <vector>
 #include "ReadHolder.h"
 #include "StringCheck.h"
-class SearchData;
-class SearchChecker {
-    std::string SC_FileName;             //a file containing a list of headers for interesting reads
-    std::set<std::string> SC_Headers;    // a lookup for our interesting headers
-    std::vector<SearchData> SC_Data;     // data about individual reads
-    
-public:
-    SearchChecker(){}
-    ~SearchChecker(){}
-    
-    
-    // get/set
-    inline bool hasHeader(std::string s) {return (SC_Headers.find(s) != SC_Headers.end());}
-    inline void headerFile(std::string s ) {SC_FileName = s;}
-    void processHeaderFile(void);
 
-};
 
 class SearchData {
     ReadHolder * SD_ReadHolder;
@@ -75,5 +59,24 @@ public:
     inline ReadHolder * read() {return SD_ReadHolder;}
     inline void read(ReadHolder * r) {SD_ReadHolder = r;}
 };
+
+
+class SearchChecker
+{
+    static SearchChecker *SC_instance;
+    SearchChecker(){};
+    std::string SC_FileName;             //a file containing a list of headers for interesting reads
+    std::set<std::string> SC_Headers;    // a lookup for our interesting headers
+    std::vector<SearchData> SC_Data;     // data about individual reads
+    
+public:
+    // get/set
+    inline bool hasHeader(std::string s) {return (SC_Headers.find(s) != SC_Headers.end());}
+    inline void headerFile(std::string s ) {SC_FileName = s;}
+    
+    void processHeaderFile(void);
+    static SearchChecker * instance();
+};
+static SearchChecker * debugger = SearchChecker::instance();
 
 #endif

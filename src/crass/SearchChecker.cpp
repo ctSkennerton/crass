@@ -37,6 +37,15 @@
 #include "SearchChecker.h"
 #include "Exception.h"
 
+SearchChecker * SearchChecker::SC_instance = NULL;
+
+
+SearchChecker * SearchChecker::instance()
+{
+    if (!SC_instance)
+        SC_instance = new SearchChecker;
+        return SC_instance;
+}
 
 void SearchChecker::processHeaderFile() {
     std::fstream in;
