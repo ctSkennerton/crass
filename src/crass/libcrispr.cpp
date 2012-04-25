@@ -117,6 +117,7 @@ int decideWhichSearch(const char *inputFastq,
             if (debug_iter != debugger->end()) {
                 changeLogLevel(8);
                 debug_iter->second.read(tmp_holder);
+                std::cout<<"Processing interesting read: "<<debug_iter->first<<std::endl;
             } else {
                 changeLogLevel(opts.logLevel);
             }
@@ -1338,6 +1339,7 @@ void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tm
     if (debug_iter != debugger->end()) {
         // our read got through to this stage
         debug_iter->second.token(st);
+        std::cout<<debug_iter->first<<" " <<st<<std::endl;
     }
 
 #endif

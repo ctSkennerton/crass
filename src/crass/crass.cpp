@@ -575,6 +575,12 @@ int main(int argc, char *argv[])
     try {
         debugger->headerFile(opts.searchChecker);
         debugger->processHeaderFile();
+/*        
+        SearchCheckerList::iterator debug_iter;
+        for (debug_iter  = debugger->begin(); debug_iter != debugger->end(); debug_iter++) {
+            std::cout<<debug_iter->first<<std::endl;
+        }
+ */
     } catch (crispr::exception& e) {
         std::cerr<<e.what()<<std::endl;
         return 1;

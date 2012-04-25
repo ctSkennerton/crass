@@ -55,6 +55,7 @@ class SearchData {
     SearchDataNodes SD_nodes;
     std::string SD_truedr;
     int SD_groupNumber;
+    std::vector<std::string> SD_spacerStringList;
 
 public:
     SearchData() {
@@ -77,6 +78,10 @@ public:
     inline std::string truedr() {return SD_truedr;}
     inline void truedr(std::string s) {SD_truedr = s;}
 
+    inline void addSpacer(std::string s) {SD_spacerStringList.push_back(s);}
+    inline std::vector<std::string>::iterator beginSp() {return SD_spacerStringList.begin();}
+    inline std::vector<std::string>::iterator endSp() {return SD_spacerStringList.end();}
+    
     inline int gid() {return SD_groupNumber;}
     inline void gid(int i) {SD_groupNumber = i;}
     

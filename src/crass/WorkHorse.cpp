@@ -175,14 +175,34 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         return 3;
     }
 #ifdef SEARCH_SINGLETON
-    SearchCheckerList::iterator debug_iter;
-    for (debug_iter = debugger->begin(); debug_iter != debugger->end(); debug_iter++) {
-        std::cout<<debug_iter->first<<std::endl;
-        std::cout<<"NodeManager: "<<debug_iter->second.gid()<<" "<<debug_iter->second.truedr()<<std::endl;
-        std::vector<StringToken>::iterator node_iter;
-        for (node_iter = debug_iter->second.begin(); node_iter != debug_iter->second.end(); node_iter++) {
-            std::cout<<"\tnode -> "<<*node_iter<<std::endl;
+    std::ofstream debug_out;
+    std::stringstream debug_out_file_name;
+    debug_out_file_name << "crass.debug."<<mTimeStamp<<".report";
+    debug_out.open((debug_out_file_name.str()).c_str());
+    if(debug_out.good()) {
+        SearchCheckerList::iterator debug_iter;
+        for (debug_iter = debugger->begin(); debug_iter != debugger->end(); debug_iter++) {
+            debug_out<<debug_iter->first<<"\t"<<debug_iter->second.gid()<<"\t"<<debug_iter->second.truedr()<<"\t";
+            std::vector<StringToken>::iterator node_iter = debug_iter->second.begin();
+            if(node_iter != debug_iter->second.end()) {
+                debug_out <<*node_iter;
+                for ( ; node_iter != debug_iter->second.end(); node_iter++) {
+                    debug_out<<":"<<*node_iter;
+                }
+            }
+            debug_out<<"\t";
+            std::vector<std::string>::iterator sp_iter = debug_iter->second.beginSp();
+            if(sp_iter != debug_iter->second.endSp()) {
+                debug_out<<*sp_iter;
+                for ( ; sp_iter != debug_iter->second.endSp(); sp_iter++) {
+                    debug_out<<":"<<*sp_iter;
+                }
+            }
+            debug_out<<std::endl;
         }
+    } else {
+        std::cerr<<"error printing debugging report"<<std::endl;
+        return 200;
     }
 #endif
 	
