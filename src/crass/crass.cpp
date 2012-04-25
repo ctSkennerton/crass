@@ -100,6 +100,12 @@ void usage(void)
 #else
     std::cout<<" 0"<<std::endl;
 #endif
+    std::cout<<"Search Debugger = ";
+#ifdef SEARCH_SINGLETON
+    std::cout<<" 1"<<std::endl;
+#else
+    std::cout<<" 0"<<std::endl;
+#endif
     std::cout<<std::endl;
     std::cout<<"Usage:  "<<PACKAGE_NAME<<"  [options] { inputFile ...}"<<std::endl<<std::endl;
     std::cout<<"General Options:"<<std::endl;
@@ -169,6 +175,9 @@ void usage(void)
 #endif
 #ifdef RENDERING
     std::cout<<"--noRendering                 Stops rendering of .gv files even if the RENDERING preprocessor macro is set [Default: false]"<<std::endl;
+#endif
+#ifdef SEARCH_SINGLETON
+    std::cout<<"--searchChecker       <FILE>  A file containing read headers that should be tracked through "<<PACKAGE_NAME<<std::endl;
 #endif
 }
 
