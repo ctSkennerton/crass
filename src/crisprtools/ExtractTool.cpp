@@ -316,7 +316,7 @@ void ExtractTool::extractDataFromGroup(crispr::XML& xmlDoc, xercesc::DOMElement 
                     // get spacers
                     processData(xmlDoc, currentElement, SPACER, c_gid, ET_SpacerStream);
                 }
-            } else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc.getFflankers())) {
+            } else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc.getFlankers())) {
                 if (ET_BitMask[3]) {
                     // get flankers
                     processData(xmlDoc, currentElement, FLANKER, c_gid, ET_FlankerStream);
