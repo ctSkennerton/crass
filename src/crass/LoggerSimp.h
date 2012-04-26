@@ -109,6 +109,8 @@ static LoggerSimp* logger = LoggerSimp::Inst();                     // this make
 // get the log level
 #define isLogging(ll) (logger->getLogLevel() >= ll) 
 
+// set the log level
+#define changeLogLevel(ll) (logger->setLogLevel(ll))
 
 // for logging info
 #define logInfo(cOUTsTRING, ll) { \

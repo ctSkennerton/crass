@@ -30,7 +30,9 @@ StringCheck.cpp StringCheck.h\
 kseq.h\
 GraphDrawingDefines.h\
 crassDefines.h\
-StatsManager.h
+StatsManager.h\
+SearchChecker.cpp\
+SearchChecker.h
 
 if ASSEMBLY_WRAPPER
 crass_SOURCES +=\

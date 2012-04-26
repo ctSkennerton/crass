@@ -69,13 +69,14 @@
  
  */
 KSEQ_INIT(gzFile, gzread)
-
 int decideWhichSearch(const char *inputFastq, 
-                        const options& opts, 
-                        ReadMap * mReads, 
-                        StringCheck * mStringCheck, 
-                        lookupTable& patternsHash, 
-                        lookupTable& readsFound)
+                      const options& opts, 
+                      ReadMap * mReads, 
+                      StringCheck * mStringCheck, 
+                      lookupTable& patternsHash, 
+                      lookupTable& readsFound
+                      )
+
 {
     //-----
     // Wrapper used for searching reads for DRs
@@ -111,6 +112,16 @@ int decideWhichSearch(const char *inputFastq,
         try {
             // grab a readholder
             ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+#if SEARCH_SINGLETON
+            SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
+            if (debug_iter != debugger->end()) {
+                changeLogLevel(8);
+                debug_iter->second.read(tmp_holder);
+                std::cout<<"Processing interesting read: "<<debug_iter->first<<std::endl;
+            } else {
+                changeLogLevel(opts.logLevel);
+            }
+#endif
             // test if it has a comment entry and a quality entry (fastq input file)
             if (seq->comment.s) 
             {
@@ -1315,7 +1326,7 @@ void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tm
     logInfo("Direct repeat: "<<dr_lowlexi, 10);
 #endif
     StringToken st = mStringCheck->getToken(dr_lowlexi);
-
+    
     if(0 == st)
     {
         // new guy
@@ -1325,6 +1336,16 @@ void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tm
 #ifdef DEBUG
     logInfo("String Token: "<<st, 10);
 #endif
+
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(tmpReadholder->getHeader());
+    if (debug_iter != debugger->end()) {
+        // our read got through to this stage
+        debug_iter->second.token(st);
+        std::cout<<debug_iter->first<<" " <<st<<std::endl;
+    }
+#endif
+    
     (*mReads)[st]->push_back(tmpReadholder);
 }
 

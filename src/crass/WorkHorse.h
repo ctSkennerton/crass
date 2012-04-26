@@ -51,6 +51,9 @@
 #include "ReadHolder.h"
 #include "StringCheck.h"
 #include "Xml.h"
+#if SEARCH_SINGLETON
+#include "SearchChecker.h"
+#endif
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;

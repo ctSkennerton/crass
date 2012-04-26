@@ -80,13 +80,15 @@ static struct option long_options [] = {
     {"repeatScalling",required_argument,NULL,'y'},
     {"logToScreen", no_argument, NULL, 0},
     {"removeHomopolymers",no_argument,NULL,0},
-
     {"noScalling",required_argument,NULL,0},
 #ifdef RENDERING
     {"noRendering",no_argument,NULL,0},
 #endif
 #ifdef DEBUG
     {"noDebugGraph",no_argument,NULL,0},
+#endif
+#ifdef SEARCH_SINGLETON
+    {"searchChecker", required_argument, NULL, 0},
 #endif
     {NULL, no_argument, NULL, 0}
 };

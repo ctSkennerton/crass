@@ -160,10 +160,13 @@ typedef struct {
     bool                dontPerformScalling;                                // turn all scalling off for the user to define variables
     std::string         layoutAlgorithm;                                    // the graphviz layout algorithm to use 
     bool                longDescription;                                    // print a long description for the final spacer graph
-    bool                 showSingles;                                        // print singletons when making the spacer graph
+    bool                 showSingles;                                       // print singletons when making the spacer graph
     int                 cNodeKmerLength;                                    // length of the kmers making up a crisprnode
 #ifdef DEBUG
     bool                noDebugGraph;                                       // Even if DEBUG preprocessor macro is set do not produce debug graph files
+#endif
+#ifdef SEARCH_SINGLETON
+    std::string         searchChecker;                                     // A file containing headers to reads that need to be tracked through crass
 #endif
 #ifdef RENDERING
     bool                noRendering;                                        // Even if RENDERING preprocessor macro is set do not produce any rendered images
