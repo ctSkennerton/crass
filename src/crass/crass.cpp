@@ -589,7 +589,9 @@ int main(int argc, char *argv[])
 #endif
     
     int error_code = mHorse->doWork(seq_files);
+#ifdef SEARCH_SINGLETON
     delete debugger;
+#endif
     delete mHorse;
     return error_code;
 }
