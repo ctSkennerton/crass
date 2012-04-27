@@ -54,7 +54,7 @@ Sanitise the direct repeats
 .It Fl f
 Sanitise the flanking sequences
 .El
-.It extract [-ghyxsdfCoO] file.crispr
+.It extract [-ghx -s [FILE] -d [FILE] -f [FILE] -aCoO] file.crispr
 get data out of a .crispr file
 .Bl -tag -width -indent
 .It 
@@ -64,24 +64,31 @@ print this handy help message
 Output file directory  [default: .]  
 .It Fl O Ar STRING
 Give a custom prefix to each of the outputed files [default: ]
-.It Fl g Ar INT[,n]
+.It Fl g Ar INT Op Ar ,n
 A comma separated list of group IDs that you would like to extract data from.
 Note that only the group number is needed, do not use prefixes like 'Group' or 'G', which
 are sometimes used in file names or in a .crispr file
-.It Fl s
-Extract the spacers of the listed group
-.It Fl d
-Extract the direct repeats of the listed group
-.It Fl f
-Extract the flanking sequences of the listed group
+.It Fl s Op Ar FILE
+Extract the spacers of the listed groups.  By default prints to stdout however
+if a file is given prints to that file.  The output file is automatically
+set when used in conjunction with -x; see below.
+.It Fl d Op Ar FILE
+Extract the direct repeats of the listed group.  By default prints to stdout however
+if a file is given as an arguement, prints to that file.  The output file is automatically
+set when used in conjunction with -x; see below.
+.It Fl f Op Ar FILE
+Extract the flanking sequences of the listed group.  By default prints to stdout however
+if a file is given as an arguement, prints to that file.  The output file is automatically
+set when used in conjunction with -x; see below.
 .It Fl C
 Supress coverage information when printing spacers
 .It Fl x
-Split the results into different files for each group.  If multiple types are set i.e. -sd
-then both the spacers and direct repeats from each group will be in the one file
-.It Fl y
-Split the results into different files for each type of sequence from all selected groups.
-Only has an effect if multiple types are set.
+Split the results into different files for each group.  If multiple types are set  (ie. -s -d
+-f) then each type will be outputted in a different file: 
+group_id_[spacers|direct_repeats|flankers].fa
+.It Fl a
+Outputs all information about a selected group; equivelent to -s -d -f. This is the default
+behaviour.
 .El
 .It stat [-aghpst] [--header] file.crispr
 get some statistics of the CRISPRs described 
@@ -92,12 +99,12 @@ print out aggregate summary, can be combined with -t -p
 print this handy help message
 .It Fl H
 print out column headers in tabular output
-.It Fl g Ar INT[,n]
+.It Fl g Ar INT Op Ar ,n
 a comma separated list of group IDs that you would like to see stats for.
 .It Fl p
 pretty print
 .It Fl s
-separator string for tabular output [default: '\t']
+separator string for tabular output [default: "\\t"]
 .It Fl t
 tabular output
 .El
@@ -106,9 +113,9 @@ remove a group
 .Bl -tag -width -indent
 .It Fl h
 Output help message
-.It fl g Ar INT[,n]
+.It Fl g Ar INT Op Ar ,n
 A comma separated list of group IDs that you would like to remove
-.It fl o Ar OUTFILE 
+.It Fl o Ar OUTFILE 
 Output file name. Default behaviour changes file inplace
 .El
 .It draw [-ghyoaf] file.crispr
@@ -118,7 +125,7 @@ render a graphviz image of some or all of the CRISPRs described in the file
 print this handy help message
 .It Fl o Ar DIR
 output file directory  [default: .]
-.It Fl g Ar INT[,n]
+.It Fl g Ar INT Op Ar ,n
 A comma separated list of group IDs that you would like to extract data from.
 Note that only the group number is needed, do not use prefixes like 'Group' or 'G', which
 are sometimes used in file names or in a .crispr file
