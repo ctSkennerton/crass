@@ -61,6 +61,9 @@
 #include "Xml.h"
 #include "StatsManager.h"
 
+#ifdef SEARCH_SINGLETON
+#include "SearchChecker.h"
+#endif
 
 // typedefs
 typedef std::map<StringToken, CrisprNode *> NodeList;

@@ -57,6 +57,7 @@
 #include "WorkHorse.h"
 #include "Rainbow.h"
 #include "StlExt.h"
+#include "Exception.h"
 #ifdef PERFORM_CRASS_ASSEMBLY
     #include "AssemblyWrapper.h"
 #endif
@@ -95,6 +96,12 @@ void usage(void)
 #endif
     std::cout<<"VERBOSE_LOGGER =";
 #ifdef SUPER_LOGGING
+    std::cout<<" 1"<<std::endl;
+#else
+    std::cout<<" 0"<<std::endl;
+#endif
+    std::cout<<"Search Debugger = ";
+#ifdef SEARCH_SINGLETON
     std::cout<<" 1"<<std::endl;
 #else
     std::cout<<" 0"<<std::endl;
@@ -168,6 +175,9 @@ void usage(void)
 #endif
 #ifdef RENDERING
     std::cout<<"--noRendering                 Stops rendering of .gv files even if the RENDERING preprocessor macro is set [Default: false]"<<std::endl;
+#endif
+#ifdef SEARCH_SINGLETON
+    std::cout<<"--searchChecker       <FILE>  A file containing read headers that should be tracked through "<<PACKAGE_NAME<<std::endl;
 #endif
 }
 
@@ -395,6 +405,9 @@ int processOptions(int argc, char *argv[], options *opts)
 #ifdef DEBUG
                 else if (strcmp( "noDebugGraph", long_options[index].name ) == 0 ) opts->noDebugGraph = true;
 #endif
+#ifdef SEARCH_SINGLETON
+                else if (strcmp("searchChecker", long_options[index].name) == 0) opts->searchChecker = optarg;
+#endif
                 break;
             default: 
                 versionInfo(); 
@@ -488,15 +501,18 @@ int main(int argc, char *argv[])
     opts.longDescription       = CRASS_DEF_SPACER_LONG_DESC;             // print a long description for the final spacer graph
     opts.showSingles           = CRASS_DEF_SPACER_SHOW_SINGLES;          // print singletons when making the spacer graph
     opts.cNodeKmerLength       = CRASS_DEF_NODE_KMER_SIZE;               // length of the kmers making up a crisprnode
-    #ifdef DEBUG
+#ifdef DEBUG
     opts.noDebugGraph          = false;                                  // Even if DEBUG preprocessor macro is set do not produce debug graph files
-    #endif
-    #ifdef RENDERING
+#endif
+#ifdef SEARCH_SINGLETON
+    opts.searchChecker        = "";                                     // Name of file containing 
+#endif
+#ifdef RENDERING
     opts.layoutAlgorithm       = DEFAULT_RENDERING_ALGORITHM;            // the graphviz layout algorithm to use
     opts.noRendering           = false;                                  // Even if RENDERING preprocessor macro is set do not produce any rendered images
-    #else
+#else
     opts.layoutAlgorithm       = "unset";
-    #endif
+#endif
     opts.covCutoff             = CRASS_DEF_COVCUTOFF;
 
     int opt_idx = processOptions(argc, argv, &opts);
@@ -554,9 +570,26 @@ int main(int argc, char *argv[])
         cmd_line += argv[i];
         cmd_line += ' ';
     }
-    
     WorkHorse * mHorse = new WorkHorse(&opts, timestamp,cmd_line);
+#if SEARCH_SINGLETON
+    try {
+        debugger->headerFile(opts.searchChecker);
+        debugger->processHeaderFile();
+/*        
+        SearchCheckerList::iterator debug_iter;
+        for (debug_iter  = debugger->begin(); debug_iter != debugger->end(); debug_iter++) {
+            std::cout<<debug_iter->first<<std::endl;
+        }
+ */
+    } catch (crispr::exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    }
+    
+#endif
+    
     int error_code = mHorse->doWork(seq_files);
+    delete debugger;
     delete mHorse;
     return error_code;
 }

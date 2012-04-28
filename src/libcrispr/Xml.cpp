@@ -330,8 +330,13 @@ DOMDocument * crispr::XML::setFileParser(const char * XMLFile)
         CX_FileParser->parse( XMLFile );
         return CX_FileParser->getDocument();        
     }
-    catch( xercesc::XMLException& e )
-    {
+    catch( xercesc::XMLException& e ) {
+        char* message = xercesc::XMLString::transcode( e.getMessage() );
+        std::stringstream errBuf;
+        errBuf << "Error parsing file: " << message << std::flush;
+        XMLString::release( &message );
+        throw crispr::xml_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(errBuf.str()).c_str());
+    } catch (xercesc::DOMException& e) {
         char* message = xercesc::XMLString::transcode( e.getMessage() );
         std::stringstream errBuf;
         errBuf << "Error parsing file: " << message << std::flush;

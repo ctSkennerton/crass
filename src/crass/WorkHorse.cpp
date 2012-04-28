@@ -159,6 +159,8 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     // wrapper for the various processes needed to assemble crisprs
     //
     
+
+    
 	logInfo("Parsing reads in " << (seqFiles.size()) << " files", 1);
 	if(parseSeqFiles(seqFiles))
 	{
@@ -172,7 +174,37 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         logError("FATAL ERROR: buildGraph failed");
         return 3;
     }
-
+#ifdef SEARCH_SINGLETON
+    std::ofstream debug_out;
+    std::stringstream debug_out_file_name;
+    debug_out_file_name << "crass.debug."<<mTimeStamp<<".report";
+    debug_out.open((debug_out_file_name.str()).c_str());
+    if(debug_out.good()) {
+        SearchCheckerList::iterator debug_iter;
+        for (debug_iter = debugger->begin(); debug_iter != debugger->end(); debug_iter++) {
+            debug_out<<debug_iter->first<<"\t"<<debug_iter->second.gid()<<"\t"<<debug_iter->second.truedr()<<"\t";
+            std::vector<StringToken>::iterator node_iter = debug_iter->second.begin();
+            if(node_iter != debug_iter->second.end()) {
+                debug_out <<*node_iter;
+                for ( ; node_iter != debug_iter->second.end(); node_iter++) {
+                    debug_out<<":"<<*node_iter;
+                }
+            }
+            debug_out<<"\t";
+            std::vector<std::string>::iterator sp_iter = debug_iter->second.beginSp();
+            if(sp_iter != debug_iter->second.endSp()) {
+                debug_out<<*sp_iter;
+                for ( ; sp_iter != debug_iter->second.endSp(); sp_iter++) {
+                    debug_out<<":"<<*sp_iter;
+                }
+            }
+            debug_out<<std::endl;
+        }
+    } else {
+        std::cerr<<"error printing debugging report"<<std::endl;
+        return 200;
+    }
+#endif
 	
 #if DEBUG
 	if (!mOpts->noDebugGraph) // this option will only exist if DEBUG is set anyway
@@ -362,6 +394,15 @@ int WorkHorse::buildGraph(void)
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
                 	//MI std::cout<<'.'<<std::flush;
+#ifdef SEARCH_SINGLETON
+                    SearchCheckerList::iterator debug_iter = debugger->find((*read_iter)->getHeader());
+                    if (debug_iter != debugger->end()) {
+                        //found one of our interesting reads
+                        // add in the true DR
+                        debug_iter->second.truedr(mTrueDRs[drg_iter->first]);
+                        debug_iter->second.gid(drg_iter->first);
+                    }
+#endif
                     mDRs[mTrueDRs[drg_iter->first]]->addReadHolder(*read_iter);
                     read_iter++;
                 }

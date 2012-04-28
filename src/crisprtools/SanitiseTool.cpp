@@ -71,6 +71,9 @@ int SanitiseTool::processOptions (int argc, char ** argv)
             }
 		}
 	}
+    if (!(ST_contigs | ST_Spacers | ST_Repeats | ST_Flank)) {
+        throw crispr::input_exception("Please specify one of -s -f -d -c");
+    }
 	return optind;
 }
 
@@ -80,12 +83,13 @@ int SanitiseTool::processInputFile(const char * inputFile)
         crispr::XML xml_parser;
         xercesc::DOMDocument * input_doc_obj = xml_parser.setFileParser(inputFile);
         xercesc::DOMElement * root_elem = input_doc_obj->getDocumentElement();
-        
+        if (!root_elem) {
+            throw crispr::xml_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, "problem when parsing xml file");
+        }
         if (ST_OutputFile.empty()) {
             ST_OutputFile = inputFile;
         }
-        
-        
+
         for (xercesc::DOMElement * currentElement = root_elem->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) {
 
                 
@@ -337,14 +341,15 @@ int sanitiseMain (int argc, char ** argv)
 
 void sanitiseUsage(void)
 {
-    std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" sanitise [-ohcsdf] file.crispr"<<std::endl;
+    std::cout<<CRISPRTOOLS_PACKAGE_NAME<<" sanitise [-ohcsdfa] file.crispr"<<std::endl;
 	std::cout<<"Options:"<<std::endl;
-	std::cout<<"-h					Print this handy help message"<<std::endl;
+	std::cout<<"-h                  Print this handy help message"<<std::endl;
     std::cout<<"-o FILE             Output file name, creates a sanitised copy of the input file  [default: sanitise input file inplace]" <<std::endl; 
-	std::cout<<"-s					Sanitise the spacers "<<std::endl;
-	std::cout<<"-d					Sanitise the direct repeats "<<std::endl;
-	std::cout<<"-f					Sanitise the flanking sequences "<<std::endl;
-	std::cout<<"-c					Sanitise the contigs "<<std::endl;
+    std::cout<<"-a                  Sanitise all features. Equivelent to -sdfc"<<std::endl;
+    std::cout<<"-s                  Sanitise the spacers "<<std::endl;
+	std::cout<<"-d                  Sanitise the direct repeats "<<std::endl;
+	std::cout<<"-f                  Sanitise the flanking sequences "<<std::endl;
+	std::cout<<"-c                  Sanitise the contigs "<<std::endl;
 
     
 
