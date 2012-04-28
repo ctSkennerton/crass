@@ -466,12 +466,12 @@ int WorkHorse::removeLowConfidenceNodeManagers(void)
                 if( current_manager->getSpacerCountAndStats(false) < mOpts->covCutoff) 
                 {
                     logInfo("Deleting NodeManager "<<drg_iter->first<<" as it contained less than "<<mOpts->covCutoff<<" attached spacers",4);
-                    delete current_manager;
-                    current_manager = NULL;
+                    delete mDRs[mTrueDRs[drg_iter->first]];
+                     mDRs[mTrueDRs[drg_iter->first]] = NULL;
                 } else if (current_manager->stdevSpacerLength() > CRASS_DEF_STDEV_SPACER_LENGTH) {
                     logInfo("Deleting NodeManager "<<drg_iter->first<<" as the stdev of the spacer lengths was greater than "<<CRASS_DEF_STDEV_SPACER_LENGTH, 4);
-                    delete current_manager;
-                    current_manager = NULL;
+                    delete mDRs[mTrueDRs[drg_iter->first]];
+                     mDRs[mTrueDRs[drg_iter->first]] = NULL;
                 }
                 
             }
