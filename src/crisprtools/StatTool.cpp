@@ -43,8 +43,9 @@ StatTool::~StatTool()
 //}
 int StatTool::processOptions (int argc, char ** argv)
 {
-	int c;
-	while((c = getopt(argc, argv, "ahHg:pPs:o:")) != -1)
+	int c, index;
+    struct option long_opts [] = { {"header", no_argument, NULL, 'H'} };
+	while((c = getopt_long(argc, argv, "ahHg:pPs:o:", long_opts, &index)) != -1)
 	{
         switch(c)
 		{

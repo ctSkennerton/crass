@@ -949,7 +949,7 @@ EDGE_TYPE NodeManager::getOppositeEdgeType(EDGE_TYPE currentEdgeType)
     }
 }
 
-int NodeManager::getSpacerCount(bool showDetached)
+int NodeManager::getSpacerCountAndStats(bool showDetached)
 {
     int number_of_spacers = 0;
     SpacerListIterator sp_iter = NM_Spacers.begin();
@@ -957,6 +957,9 @@ int NodeManager::getSpacerCount(bool showDetached)
     {
         if (showDetached || (sp_iter->second)->isAttached()) 
         {
+            // add in some stats for the spacers
+            std::string spacer = NM_StringCheck.getString((sp_iter->second)->getID());
+            NM_SpacerLenStat.add(spacer.length());
             number_of_spacers++;
         }
         ++sp_iter;
@@ -1935,18 +1938,18 @@ void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, std::strin
 
 void NodeManager::generateFlankers(bool showDetached)
 {
-    // First populate the stats manager with the remaining spacers
-    SpacerListIterator spacer_iter = NM_Spacers.begin();
-    while(spacer_iter != NM_Spacers.end())
-    {
-        SpacerInstance * SI = spacer_iter->second;
-        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
-        {
-            std::string spacer = NM_StringCheck.getString(SI->getID());
-            NM_SpacerLenStat.add(spacer.length());
-        }
-        spacer_iter++;
-    }
+//    // First populate the stats manager with the remaining spacers
+//    SpacerListIterator spacer_iter = NM_Spacers.begin();
+//    while(spacer_iter != NM_Spacers.end())
+//    {
+//        SpacerInstance * SI = spacer_iter->second;
+//        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+//        {
+//            std::string spacer = NM_StringCheck.getString(SI->getID());
+//            NM_SpacerLenStat.add(spacer.length());
+//        }
+//        spacer_iter++;
+//    }
     
     // do some maths
     double stdev = NM_SpacerLenStat.standardDeviation();
@@ -1959,7 +1962,8 @@ void NodeManager::generateFlankers(bool showDetached)
     {
         logInfo("Ave SP Length: "<<mean<<" Deviation: "<<stdev<<" UB: "<<upper_bound<<" LB: "<<lower_bound, 3);
         // call a spacer a 'flanker' if it's length is more than 1 standard deviation from the mean length
-        spacer_iter = NM_Spacers.begin();
+        SpacerListIterator spacer_iter = NM_Spacers.begin();
+        //spacer_iter = NM_Spacers.begin();
         while(spacer_iter != NM_Spacers.end())
         {
             SpacerInstance * SI = spacer_iter->second;

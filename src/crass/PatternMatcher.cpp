@@ -197,7 +197,7 @@ int PatternMatcher::levenstheinDistance( std::string& source,  std::string& targ
 float PatternMatcher::getStringSimilarity(std::string& s1, std::string& s2)
 {
     float max_length = std::max(s1.length(), s2.length());
-    if(max_length > 10 || s1.length() < 3 || s2.length() < 3)
+    if(/*max_length > 10 ||*/ s1.length() < 3 || s2.length() < 3)
     	return 0;
     float edit_distance =  levenstheinDistance(s1 ,  s2);
     return 1.0 - (edit_distance/max_length);
