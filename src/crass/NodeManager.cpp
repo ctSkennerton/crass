@@ -1962,6 +1962,8 @@ void NodeManager::generateFlankers(bool showDetached)
     {
         logInfo("Ave SP Length: "<<mean<<" Deviation: "<<stdev<<" UB: "<<upper_bound<<" LB: "<<lower_bound, 3);
         // call a spacer a 'flanker' if it's length is more than 1 standard deviation from the mean length
+        // and it is a cap node
+
         SpacerListIterator spacer_iter = NM_Spacers.begin();
         //spacer_iter = NM_Spacers.begin();
         while(spacer_iter != NM_Spacers.end())
@@ -1970,10 +1972,12 @@ void NodeManager::generateFlankers(bool showDetached)
  
             if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
             {
-                int spacer_length = (int)(NM_StringCheck.getString(SI->getID())).length();
-                if (spacer_length > upper_bound || spacer_length < lower_bound) {
-                    SI->setFlanker(true);
-                    NM_FlankerNodes.push_back(SI);
+                if(SI->isCap()) {
+                    int spacer_length = (int)(NM_StringCheck.getString(SI->getID())).length();
+                    if (spacer_length > upper_bound || spacer_length < lower_bound) {
+                        SI->setFlanker(true);
+                        NM_FlankerNodes.push_back(SI);
+                    }
                 }
             }
             spacer_iter++;
