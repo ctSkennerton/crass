@@ -1,3 +1,29 @@
+commit 846ac751c33d7ddbbda64ca1c008190d9144572a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 00:56:41 2012 +1000
+
+    Fixed a bug in WorkHorse::removeLowConfidenceNodeManagers that was causing some node managers to not get deleted when they should have been
+
+commit c53120dc833a0d60fe2f59c59fec5af658848239
+Merge: faa8884 dc89c00
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 00:25:30 2012 +1000
+
+    Merge branch 'spacer_length_investigation' of github.com:ctSkennerton/crass into spacer_length_investigation
+
+commit dc89c00ad419dd65fe4ed845bfe9116dd9ee40c3
+Merge: 75d7db2 3c7002f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 00:11:27 2012 +1000
+
+    Merge branch 'master' into spacer_length_investigation
+
+commit faa88846cde01e0177141f5a419f62f96fd6149a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Apr 26 15:46:08 2012 +1000
+
+    Fixed a compiler bug and upped the version number
+
 commit 3c7002fa8bdc2b026c8f17fc1000d1d56be5c1f2
 Merge: dfad298 631f487
 Author: ctSkennerton <c.skennerton@gmail.com>
@@ -72,6 +98,21 @@ Date:   Mon Apr 23 21:32:27 2012 +1000
 
     SanitiseTool::processOptions will now throw an error if no option is given.  A new shortcut option has been added for sanitising all features.  Fixes issue #46
 
+commit 75d7db2c491447be1c35bae008c199f4568ebbb3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 21:01:58 2012 +1000
+
+    Fixed a test in WorkHorse::removeLowConfidenceNodeManagers
+
+commit d74693080582f531adae0977e8e6e464ea079506
+Merge: 6dbf4b6 8c6ac3e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 20:54:04 2012 +1000
+
+    Merge branch 'master' into spacer_length_investigation
+    
+    Conflicts:
+
 commit 8c6ac3ed73d24e25b60818512318ae5370a6ef88
 Author: minillinim <mike@mikeimelfort.com>
 Date:   Mon Apr 23 16:21:21 2012 +1000
@@ -119,6 +160,54 @@ Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Fri Apr 20 14:55:37 2012 +1000
 
     moved StlExt.h into libcrispr
+
+commit 6dbf4b6b0f4fedc678c0d96fed597e726eec2812
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 20 14:50:30 2012 +1000
+
+    added in an extra test after graph building so that node managers with a large standard deviation in lengths get removed
+
+commit 560fac8b734771da8bff108ddf3aec30365a1c02
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 20 14:47:43 2012 +1000
+
+    added in CRASS_DEF_STDEV_SPACER_LENGTH to control the cutoff  for node managers to get removed if their spacers differ too much in size
+
+commit b86e2d14352c9424f8f807be2324199511521079
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 20 14:45:54 2012 +1000
+
+    added in NodeManager::meanSpacerLength and NodeManager::stdevSpacerLength getter methods
+
+commit f125c4ad322e985bcf4d1406e7b1b64f6dc73212
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 18 16:23:09 2012 +1000
+
+    call to get opt long implemented properly in StatTool::processOptions. resolves issue #38
+
+commit 0d8043f701a2abc54a5ca9272516c0b39ce43f0b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 18 16:17:28 2012 +1000
+
+    Initialized StatManager::SM_ReadCount properly in constructor.  resolve issue #43
+
+commit c2e8174e12b77fc1580fc79b52dedd1bbbe598d9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 13 17:21:25 2012 +1000
+
+    removed a while loop out of NodeManager::generateFlankers as it should be combined with NodeManager::getSpacerCount.  Changed name to NodeManager::getSpacerCountAndStats to better reflect it's new function
+
+commit e0cb212d819f464662058c6305e89cafa5fd6ce6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 13 16:37:11 2012 +1000
+
+    transferred StlExt.h into libcrispr and made associated changes to the make files
+
+commit e033792206cda22e8d2400af22ba6138ef3baeae
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 13 15:53:05 2012 +1000
+
+    Removed a statement in PatternMatcher::getStringSimilarity that was causing comparisons between spacer similarities to continually fail.
 
 commit dcf4989f08f7fb4eaa31b13e25111556ce1fbed9
 Author: ctSkennerton <c.skennerton@gmail.com>
