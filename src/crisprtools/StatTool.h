@@ -61,6 +61,7 @@ public:
         SM_FlankerCount = 0;
         SM_RepeatCount = 0;
         SM_SpacerCount = 0;
+        SM_ReadCount = 0;
     }
     
     inline std::string getConcensus(void){return SM_ConsensusRepeat;}

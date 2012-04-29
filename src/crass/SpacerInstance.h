@@ -129,7 +129,7 @@ public:
         inline void setAttached(bool attached) { SI_Attached = attached; }
         inline bool isFlanker(void){return SI_isFlanker;}
         inline void setFlanker(bool f){SI_isFlanker = f;}
-        
+        inline int isCap(void) {return (getSpacerRank() == 1);}
         //
         // contig functions
         //

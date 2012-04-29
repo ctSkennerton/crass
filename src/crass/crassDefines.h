@@ -111,6 +111,8 @@
 // --------------------------------------------------------------------
 #define CRASS_DEF_NODE_KMER_SIZE                7                   // size of the kmer that defines a crispr node
 #define CRASS_DEF_MAX_CLEANING                  2                   // the maximum length that a branch can be before it's cleaned
+#define CRASS_DEF_STDEV_SPACER_LENGTH           6.0                 // the maximum standard deviation allowed in the length of spacers 
+                                                                    // after the true DR is found that is allowable before it is removed
 // --------------------------------------------------------------------
  // USER OPTION STRUCTURE
 // --------------------------------------------------------------------

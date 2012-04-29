@@ -248,7 +248,9 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	}
     
     //remove NodeManagers with low numbers of spacers
-    if (removeLowSpacerNodeManagers())
+    // and where the standard deviation of the spacer length 
+    // is too high
+    if (removeLowConfidenceNodeManagers())
     {
         logError("FATAL ERROR: removeLowSpacerNodeManagers failed");
         return 7;
@@ -450,7 +452,7 @@ int WorkHorse::cleanGraph(void)
 	return 0;
 }
 
-int WorkHorse::removeLowSpacerNodeManagers(void)
+int WorkHorse::removeLowConfidenceNodeManagers(void)
 {
     logInfo("Removing CRISPRs with low numbers of spacers", 1);
 	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
@@ -460,12 +462,18 @@ int WorkHorse::removeLowSpacerNodeManagers(void)
 		{            
             if (NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
-                if((mDRs[mTrueDRs[drg_iter->first]])->getSpacerCount(false) < mOpts->covCutoff) 
+                NodeManager * current_manager = mDRs[mTrueDRs[drg_iter->first]];
+                if( current_manager->getSpacerCountAndStats(false) < mOpts->covCutoff) 
                 {
                     logInfo("Deleting NodeManager "<<drg_iter->first<<" as it contained less than "<<mOpts->covCutoff<<" attached spacers",4);
                     delete mDRs[mTrueDRs[drg_iter->first]];
-                    mDRs[mTrueDRs[drg_iter->first]] = NULL;
+                     mDRs[mTrueDRs[drg_iter->first]] = NULL;
+                } else if (current_manager->stdevSpacerLength() > CRASS_DEF_STDEV_SPACER_LENGTH) {
+                    logInfo("Deleting NodeManager "<<drg_iter->first<<" as the stdev of the spacer lengths was greater than "<<CRASS_DEF_STDEV_SPACER_LENGTH, 4);
+                    delete mDRs[mTrueDRs[drg_iter->first]];
+                     mDRs[mTrueDRs[drg_iter->first]] = NULL;
                 }
+                
             }
 		}
 		drg_iter++;

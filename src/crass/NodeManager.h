@@ -137,7 +137,7 @@ class NodeManager {
 		void findAllNodes(NodeVector * capNodes, NodeVector * otherNodes);
 		int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
         EDGE_TYPE getOppositeEdgeType(EDGE_TYPE currentEdgeType);
-        int getSpacerCount( bool showDetached);
+        int getSpacerCountAndStats( bool showDetached);
         inline bool haveAnyFlankers(void){return (0 != NM_FlankerNodes.size());}
 
     // Walking
@@ -190,7 +190,10 @@ class NodeManager {
     
     // Flankers
         void generateFlankers(bool showDetached=false);
-
+    
+    // Stats
+        inline size_t meanSpacerLength(void) { return NM_SpacerLenStat.mean();}
+        inline double stdevSpacerLength(void) { return NM_SpacerLenStat.standardDeviation();}
     private:
 		
 	// functions
