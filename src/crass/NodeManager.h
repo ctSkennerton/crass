@@ -162,7 +162,7 @@ class NodeManager {
         void contigiseForwardSpacers(std::queue<SpacerInstance *> * walkingQueue, SpacerInstance * SI);
         bool getForwardSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI);
         bool getPrevSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI);
-
+        void assignReadsToContigs(std::map<std::string, int>& readToContigMap, bool showDetached);
     // Making purdy colours
         void setDebugColourLimits(void);
         void setSpacerColourLimits(void);

@@ -1391,6 +1391,39 @@ void NodeManager::setContigIDForSpacers(SpacerInstanceVector * currentContigNode
     }
 }
 
+void NodeManager::assignReadsToContigs(std::map<std::string, int>& readToContigMap, bool showDetached)
+{
+    SpacerListIterator spacer_iter = NM_Spacers.begin();
+    while(spacer_iter != NM_Spacers.end())
+    {
+        SpacerInstance * SI = spacer_iter->second;
+        int CID = SI->getContigID();
+        
+        // get the crisprnodes for these guys
+        CrisprNode * Cleader = SI->getLeader();
+        CrisprNode * Clast = SI->getLast();
+        
+        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+        {
+            std::vector<std::string> headers = Cleader->getReadHeaders(&NM_StringCheck);
+            std::vector<std::string>::iterator h_iter = headers.begin();
+            while(h_iter != headers.end())
+            {
+                readToContigMap[*h_iter] = CID;
+                h_iter++;
+            }
+            
+            headers = Clast->getReadHeaders(&NM_StringCheck);
+            h_iter = headers.begin();
+            while(h_iter != headers.end())
+            {
+                readToContigMap[*h_iter] = CID;
+                h_iter++;
+            }
+        }
+        spacer_iter++;
+    }
+}
 // Printing / IO
 
 void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool split)
@@ -1399,40 +1432,13 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
     // dump reads to this file
     //
     std::map<std::string, int> read_2_contig_map; 
+    
+    assignReadsToContigs(read_2_contig_map, showDetached);
+
     std::ofstream reads_file;
     reads_file.open(readsFileName.c_str());
     if (reads_file.good()) 
     {
-        SpacerListIterator spacer_iter = NM_Spacers.begin();
-        while(spacer_iter != NM_Spacers.end())
-        {
-            SpacerInstance * SI = spacer_iter->second;
-            int CID = SI->getContigID();
-            
-            // get the crisprnodes for these guys
-            CrisprNode * Cleader = SI->getLeader();
-            CrisprNode * Clast = SI->getLast();
-            
-            if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
-            {
-                std::vector<std::string> headers = Cleader->getReadHeaders(&NM_StringCheck);
-                std::vector<std::string>::iterator h_iter = headers.begin();
-                while(h_iter != headers.end())
-                {
-                    read_2_contig_map[*h_iter] = CID;
-                    h_iter++;
-                }
-                
-                headers = Clast->getReadHeaders(&NM_StringCheck);
-                h_iter = headers.begin();
-                while(h_iter != headers.end())
-                {
-                    read_2_contig_map[*h_iter] = CID;
-                    h_iter++;
-                }
-            }
-            spacer_iter++;
-        }
         
         // now we can print all the reads to file
         ReadListIterator read_iter = NM_ReadList.begin();
