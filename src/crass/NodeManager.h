@@ -156,12 +156,8 @@ class NodeManager {
 		int cleanSpacerGraph(void);
 		void removeSpacerBubbles(void);
 		int splitIntoContigs(void);
-		void findAllForwardAttachedNodes(NodeVector * nodes);
 		int buildSpacerGraph(void);
         void clearContigs(void);
-        void contigiseForwardSpacers(std::queue<SpacerInstance *> * walkingQueue, SpacerInstance * SI);
-        bool getForwardSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI);
-        bool getPrevSpacer(SpacerInstance ** retSpacer, SpacerInstance * SI);
         void assignReadsToContigs(std::map<std::string, int>& readToContigMap, bool showDetached);
     // Making purdy colours
         void setDebugColourLimits(void);
@@ -183,10 +179,6 @@ class NodeManager {
         void addSpacersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
         void addFlankersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
         void printAssemblyToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
-
-
-    // Spacer dictionaries
-        void printAllSpacers(void);
     
     // Flankers
         void generateFlankers(bool showDetached=false);

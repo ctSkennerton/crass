@@ -991,23 +991,6 @@ void NodeManager::clearContigs(void)
     NM_NextContigID = 0;
 }
 
-void NodeManager::findAllForwardAttachedNodes(NodeVector * nodes)
-{
-    //-----
-    // make nodevectors of all of the nodes, split between cap, cross, path and other 
-    //
-    nodes->clear();
-    
-    NodeListIterator all_node_iter = NM_Nodes.begin();
-    while (all_node_iter != NM_Nodes.end()) 
-    {
-        if((all_node_iter->second)->isAttached()&& (all_node_iter->second)->isForward())
-        {
-            nodes->push_back(all_node_iter->second);
-        }
-        all_node_iter++;
-    }
-}
 
 int NodeManager::buildSpacerGraph(void)
 {
@@ -1907,17 +1890,6 @@ std::string NodeManager::getSpacerGraphLabel(SpacerInstance * spacer, bool longD
     return se.str();
 }
 
-void NodeManager::printAllSpacers(void)
-{
-    SpacerListIterator sp_iter = NM_Spacers.begin();
-    
-    // first we build up the contents of the walking queue
-    while(sp_iter != NM_Spacers.end())
-    {
-        (sp_iter->second)->printContents(); 
-        sp_iter++;
-    }
-}
 
 void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, std::string groupNumber)
 {
