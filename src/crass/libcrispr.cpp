@@ -1032,35 +1032,32 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         int max_spacer_length = 0;
         int num_compared = 0;
         
-        // we need to do things a little differently depending on whether of not this guy starts 
-        // or ends on a spacer...
-        int sp_start_offset = 0;
-        int sp_end_offset = 1;
-        if (tmp_holder->startStopsAt(0) != 0)
-        {
-            // starts with a spacer
-            //MI std::cout << "sp_start" << std::endl;
-            sp_start_offset++;
-        }
-        if (tmp_holder->getSeqLength() != (int)tmp_holder->back() + 1) 
-        {
-            // ends with a spacer
-            //MI std::cout << "sp_end" << std::endl;
-            sp_end_offset++;
-        }
-
         // now go through the spacers and check for similarities
         std::vector<std::string> spacer_vec = tmp_holder->getAllSpacerStrings();
         std::vector<std::string>::iterator spacer_iter = spacer_vec.begin();
         std::vector<std::string>::iterator spacer_last = spacer_vec.end();
-        spacer_iter += sp_start_offset;
-        spacer_last -= sp_end_offset;
+
+        spacer_last--;
         while (spacer_iter != spacer_last) 
         {
             num_compared++;
-            ave_repeat_to_spacer_difference += PatternMatcher::getStringSimilarity(repeat, *spacer_iter);
-            float ss_diff = PatternMatcher::getStringSimilarity(*spacer_iter, *(spacer_iter + 1));
+            try {
+            	ave_repeat_to_spacer_difference += PatternMatcher::getStringSimilarity(repeat, *spacer_iter);
+            } catch (std::exception& e) {
+            	std::cerr << e.what()<<std::endl;
+            	std::cerr<< repeat <<" : "<< *spacer_iter<<std::endl;
+            	return false;
+            }
+            float ss_diff = 0;
+            try {
+            	ss_diff += PatternMatcher::getStringSimilarity(*spacer_iter, *(spacer_iter + 1));
+			} catch (std::exception& e) {
+				std::cerr << e.what()<<std::endl;
+				std::cerr<< repeat <<" : "<< *spacer_iter<<std::endl;
+				return false;
+			}
             ave_spacer_to_spacer_difference += ss_diff;
+
             //MI std::cout << ss_diff << " : " << *spacer_iter << " : " << *(spacer_iter + 1) << std::endl;
             ave_spacer_to_spacer_len_difference += ((float)(spacer_iter->size()) - (float)((spacer_iter + 1)->size()));
             ave_repeat_to_spacer_len_difference +=  ((float)(repeat.size()) - (float)(spacer_iter->size()));
@@ -1068,11 +1065,10 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         }
 
         // now look for max and min lengths!
-        spacer_iter = spacer_vec.begin() + sp_start_offset;
-        spacer_last++;
+        spacer_iter = spacer_vec.begin();
+        spacer_last = spacer_vec.end();
         while (spacer_iter != spacer_last) 
         {
-            num_compared++;
             if((int)(spacer_iter->length()) < min_spacer_length)
             {
                 min_spacer_length = (int)(spacer_iter->length()); 
@@ -1095,10 +1091,10 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         else
         {
             // we can keep going!
-            ave_spacer_to_spacer_difference /= num_compared;
-            ave_repeat_to_spacer_difference /= num_compared;
-            ave_spacer_to_spacer_len_difference = abs(ave_spacer_to_spacer_len_difference /= num_compared);
-            ave_repeat_to_spacer_len_difference = abs(ave_repeat_to_spacer_len_difference /= num_compared);
+            ave_spacer_to_spacer_difference /= static_cast<float>(num_compared);
+            ave_repeat_to_spacer_difference /= static_cast<float>(num_compared);
+            ave_spacer_to_spacer_len_difference = abs(ave_spacer_to_spacer_len_difference /= static_cast<float>(num_compared));
+            ave_repeat_to_spacer_len_difference = abs(ave_repeat_to_spacer_len_difference /= static_cast<float>(num_compared));
             
             /*
              * MAX AND MIN SPACER LENGTHS

@@ -214,7 +214,6 @@ void ReadHolder::dropPartials(void)
     {
         logInfo("\tDropping end partial repeat", 8);
         // this is a partial
-        // TODO This -2 may only need to be -1
         RH_StartStops.erase(r_iter-1, RH_StartStops.end());
     }
 }

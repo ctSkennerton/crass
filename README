@@ -1,7 +1,7 @@
 ==============================================================================
 ==============================================================================
 
-    crass -- CRisprASSembler -- version 0 subversion 2 revision 8 (0.2.8)
+    crass -- CRisprASSembler -- version 0 subversion 2 revision 9 (0.2.9)
 
 ==============================================================================
 
@@ -44,6 +44,8 @@ Bland, C., Ramsey, T.L., Sabree, F., Lowe, M., Brown, K., Kyrpides, N.C., and Hu
 CRISPR Recognition Tool (CRT): a tool for automatic detection of clustered regularly interspaced palindromic repeats. 
 BMC Bioinformatics 8: 209.
 
+SaSSY - Short read assembler:
+http://sassy.mikeimelfort.com
 
 INSTALLATION
 Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) 
