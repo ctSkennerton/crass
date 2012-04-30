@@ -162,6 +162,7 @@ int StatTool::processInputFile(const char * inputFile)
         agregate_stats.total_spacer_cov = 0;
         agregate_stats.total_dr_length = 0;
         agregate_stats.total_flanker_length = 0;
+        agregate_stats.total_reads = 0;
         // go through each of the groups and print out a pretty picture
         std::vector<StatManager *>::iterator iter = this->begin();
         int longest_consensus = 0;
