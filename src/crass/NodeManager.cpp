@@ -1711,7 +1711,7 @@ void NodeManager::setSpacerColourLimits(void)
         {
             max_coverage = coverage;
         }
-        else if(coverage < min_coverage)
+        if(coverage < min_coverage)
         {
             min_coverage = coverage;
         }
