@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(crass, 0.2.9, c.skennerton@gmail.com)
+AC_INIT(crass, 0.2.10, c.skennerton@gmail.com)
 
 AC_CONFIG_AUX_DIR(build)
 AC_CONFIG_MACRO_DIR([m4])
@@ -17,15 +17,15 @@ LT_LANG([C++])
 AC_DEFINE([PACKAGE_FULL_NAME],["CRisprASSembler"],[Define the full name of the package])
 AC_DEFINE([PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
 AC_DEFINE([PACKAGE_MINOR_VERSION],[2],[Define the minor version of the package])
-AC_DEFINE([PACKAGE_REVISION],[9],[Define the revision of the package])
+AC_DEFINE([PACKAGE_REVISION],[10],[Define the revision of the package])
 
 
 AC_DEFINE([CRISPRTOOLS_PACKAGE_FULL_NAME],["Crisprtools"],[Define the full name of the package])
 AC_DEFINE([CRISPRTOOLS_PACKAGE_NAME],["Crisprtools"],[Define the full name of the package])
-AC_DEFINE([CRISPRTOOLS_PACKAGE_VERSION],["0.1.4"],[Define the full name of the package])
+AC_DEFINE([CRISPRTOOLS_PACKAGE_VERSION],["0.1.5"],[Define the full name of the package])
 AC_DEFINE([CRISPRTOOLS_PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
 AC_DEFINE([CRISPRTOOLS_PACKAGE_MINOR_VERSION],[1],[Define the minor version of the package])
-AC_DEFINE([CRISPRTOOLS_PACKAGE_REVISION],[4],[Define the revision of the package])
+AC_DEFINE([CRISPRTOOLS_PACKAGE_REVISION],[5],[Define the revision of the package])
 
 # extra configure options
 #

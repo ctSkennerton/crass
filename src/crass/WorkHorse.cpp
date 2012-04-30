@@ -2204,7 +2204,10 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
 	// Print the debug graph
 	//
 	// go through the DR2GID_map and make all reads in each group into nodes
+#ifdef RENDERING
+    std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering Debugging graphs using Graphviz"<<std::endl;
     logInfo("Rendering debug graphs" , 1);
+#endif
     
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
     while(drg_iter != mDR2GIDMap.end())
@@ -2224,6 +2227,7 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
                     if (!mOpts->noRendering) 
                     {
                         // create a command string and call neato to make the image file
+                        std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering group "<<drg_iter->first<<std::endl;
                         std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
                         if (system(cmd.c_str()))
                         {
@@ -2259,8 +2263,10 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
 	// Print the cleaned? spacer graph
 	//
 	// go through the DR2GID_map and make all reads in each group into nodes
+#ifdef RENDERING
+    std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering final spacer graphs using Graphviz"<<std::endl;
     logInfo("Rendering spacer graphs" , 1);
-    
+#endif
     // make a single file with all of the keys for the groups
     std::ofstream key_file;
     
@@ -2304,6 +2310,7 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
                 if (!mOpts->noRendering) 
                 {
                     // create a command string and call graphviz to make the image file
+                    std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering group "<<drg_iter->first<<std::endl;
                     std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
                     if(system(cmd.c_str()))
                     {

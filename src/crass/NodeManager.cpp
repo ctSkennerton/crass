@@ -1311,6 +1311,7 @@ int NodeManager::splitIntoContigs(void)
         } 
         cap_node_iter++;
     }
+    NM_NextContigID++;
     walkFromCross(&cross_nodes);
 
     delete walk_elem;
