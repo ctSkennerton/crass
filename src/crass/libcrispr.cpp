@@ -80,7 +80,8 @@ int decideWhichSearch(const char *inputFastq,
 {
     //-----
     // Wrapper used for searching reads for DRs
-    // depending on the length of the read. this funciton may use the boyer moore algorithm
+    // depending on the length of the read. 
+	// this funciton may use the boyer moore algorithm
     // or the CRT search algorithm
     //
     gzFile fp = getFileHandle(inputFastq);
@@ -105,8 +106,9 @@ int decideWhichSearch(const char *inputFastq,
             time(&time_current);
             double diff = difftime(time_current, time_start);
             time_start = time_current;
-            std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "<< "Processed "<<read_counter<<" ...";
-            std::cout<<diff<<std::endl;
+            std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "
+					 << "Processed "<<read_counter<<" ...";
+            std::cout<<diff<<" sec"<<std::endl;
             log_counter = 0;
         }
         try {
@@ -132,12 +134,30 @@ int decideWhichSearch(const char *inputFastq,
                 tmp_holder->setQual(seq->qual.s);
             }
             
+            if (opts.removeHomopolymers)
+            {
+                // RLE is necessary...
+                tmp_holder->encode();
+                // update the value of l based on if we arre removing homopolymers
+                l = static_cast<int>(tmp_holder->getSeq().length());
+            }
+
             if (l > long_read_cutoff) {
                 // perform long read seqrch
-                longReadSearch(tmp_holder, opts, mReads, mStringCheck, patternsHash, readsFound);
+                longReadSearch(tmp_holder, 
+                               opts, 
+                               mReads, 
+                               mStringCheck, 
+                               patternsHash, 
+                               readsFound);
             } else if (l >= short_read_cutoff){
                 // perform short read search
-                shortReadSearch(tmp_holder, opts, mReads, mStringCheck, patternsHash, readsFound);
+                shortReadSearch(tmp_holder, 
+                                opts, 
+                                mReads, 
+                                mStringCheck, 
+                                patternsHash, 
+                                readsFound);
             } else {
                 delete tmp_holder;
             }
@@ -145,7 +165,10 @@ int decideWhichSearch(const char *inputFastq,
             std::cerr<<e.what()<<std::endl;
             kseq_destroy(seq);
             gzclose(fp);
-            throw crispr::exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,"Fatal error in search algorithm!");
+            throw crispr::exception(__FILE__, 
+                                    __LINE__, 
+                                    __PRETTY_FUNCTION__,
+                                    "Fatal error in search algorithm!");
         }
         log_counter++;
         read_counter++;
@@ -157,7 +180,7 @@ int decideWhichSearch(const char *inputFastq,
     double diff = difftime(time_current, time_start);
     time_start = time_current;
     std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "<< "Processed "<<read_counter<<" ...";
-    std::cout<<diff<<std::endl;
+    std::cout<<diff<<" sec"<<std::endl;
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
 
     return max_read_length;
@@ -170,9 +193,9 @@ int scanRight(ReadHolder * tmp_holder,
               unsigned int minSpacerLength, 
               unsigned int scanRange)
 {
-    #ifdef DEBUG
+#ifdef DEBUG
     logInfo("Scanning Right for more repeats:", 9);
-    #endif
+#endif
     unsigned int start_stops_size = tmp_holder->getStartStopListSize();
     
     unsigned int pattern_length = (unsigned int)pattern.length();
@@ -185,9 +208,9 @@ int scanRight(ReadHolder * tmp_holder,
     
     unsigned int repeat_spacing = last_repeat_index - second_last_repeat_index;
     
-    #ifdef DEBUG
+#ifdef DEBUG
     logInfo(start_stops_size<<" : "<<pattern_length<<" : "<<last_repeat_index<<" : "<<second_last_repeat_index<<" : "<<repeat_spacing, 9);
-    #endif
+#endif
     
     int candidate_repeat_index, position;
     
@@ -274,11 +297,6 @@ int longReadSearch(ReadHolder * tmpHolder,
     
     bool match_found = false;
 
-    if (opts.removeHomopolymers)
-    {
-        // RLE is necessary...
-        tmpHolder->encode();
-    }
     std::string read = tmpHolder->getSeq();
     
     // get the length of this sequence
@@ -425,12 +443,6 @@ int shortReadSearch(ReadHolder * tmpHolder,
 
     bool match_found = false;
     
-    if (opts.removeHomopolymers)
-    {
-        // RLE is necessary...
-        tmpHolder->encode();
-    }
-    
     std::string read = tmpHolder->getSeq();
 
     unsigned int seq_length = (unsigned int)read.length();
@@ -449,12 +461,17 @@ int shortReadSearch(ReadHolder * tmpHolder,
         int second_start = -1;
 
         try {
-            second_start = PatternMatcher::bmpSearch( read.substr(search_begin), read.substr(first_start, opts.lowDRsize) );
+            second_start = PatternMatcher::bmpSearch(read.substr(search_begin), 
+                                                     read.substr(first_start, opts.lowDRsize) );
         } catch (std::exception& e) {
-            throw crispr::exception( __FILE__, 
+			//std::cerr<<__FILE__<<__LINE__<<__PRETTY_FUNCTION__<<e.what()<<std::endl;
+			std::stringstream ss;
+            ss<<read<<"\n";
+            ss<<search_begin<<" : "<<first_start<<" : "<<opts.lowDRsize;
+            throw crispr::runtime_exception( __FILE__, 
                                     __LINE__, 
                                     __PRETTY_FUNCTION__, 
-                                    e.what());
+                                    ss);
         }
 
         // check to see if we found something
@@ -1313,11 +1330,23 @@ bool drHasHighlyAbundantKmers(std::string& directRepeat)
     }
 }
 
-void addReadHolder(ReadMap * mReads, StringCheck * mStringCheck, ReadHolder * tmpReadholder)
+void addReadHolder(ReadMap * mReads, 
+                   StringCheck * mStringCheck, 
+                   ReadHolder * tmpReadholder)
 {
 
 
-    std::string dr_lowlexi = tmpReadholder->DRLowLexi();
+    std::string dr_lowlexi;
+	try {
+		dr_lowlexi = tmpReadholder->DRLowLexi();
+	} catch(crispr::exception& e) {
+		std::cerr<<e.what()<<std::endl;
+		throw crispr::exception(__FILE__,
+		                        __LINE__,
+		                        __PRETTY_FUNCTION__,
+		                        "Cannot obtain read in lowlexi form"
+		                        );
+	}
 #ifdef DEBUG
     logInfo("Direct repeat: "<<dr_lowlexi, 10);
 #endif

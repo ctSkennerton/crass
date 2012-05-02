@@ -500,7 +500,10 @@ int WorkHorse::mungeDRs(void)
     ReadMapIterator read_map_iter = mReads.begin();
     while (read_map_iter != mReads.end()) 
     {
-        clusterDRReads(read_map_iter->first, &next_free_GID, &k2GID_map, &group_kmer_counts_map);
+        clusterDRReads(read_map_iter->first, 
+                       &next_free_GID, 
+                       &k2GID_map, 
+                       &group_kmer_counts_map);
         ++read_map_iter;
     }
     std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: "<<mReads.size()<<" variants mapped to "<<mDR2GIDMap.size()<<" clusters"<<std::endl;
@@ -537,7 +540,10 @@ int WorkHorse::mungeDRs(void)
             // it's real, so parse this group
             // get the N top kmers
             std::vector<std::string> n_top_kmers;
-            int num_mers_found = getNMostAbundantKmers((int)(mDR2GIDMap[group_count_iter->first])->size(), n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second);
+            int num_mers_found = getNMostAbundantKmers((int)(mDR2GIDMap[group_count_iter->first])->size(), 
+                                                       n_top_kmers, 
+                                                       CRASS_DEF_NUM_KMERS_4_MODE, 
+                                                       group_count_iter->second);
             if (0 != num_mers_found) 
             {
                 // a return value of false indicates that this function has deleted clustered_DRs
@@ -777,13 +783,20 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
                     if(num_agree < num_disagree)
                     {
                         // we need to reverse all the reads and the DR for these reads
+						try {
                         ReadListIterator read_iter = mReads[*dr_iter]->begin();
                         while (read_iter != mReads[*dr_iter]->end()) 
                         {
                             (*read_iter)->reverseComplementSeq();
                             read_iter++;
                         }
-                        
+						} catch(crispr::exception& e) {
+							std::cerr<<e.what()<<std::endl;
+							throw crispr::exception(__FILE__,
+							                        __LINE__,
+							                        __PRETTY_FUNCTION__,
+							                        "cannot reverse complement sequence");
+						}
                         // fix the places where the DR is stored
                         tmp_DR = reverseComplement(tmp_DR);
                         StringToken st = mStringCheck.addString(tmp_DR);
@@ -1644,7 +1657,15 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
 						// reverse complement sequence if the true DR is not in its laurenized form
 						if (rev_comp) 
 						{
-							(*read_iter)->reverseComplementSeq();
+							try {
+								(*read_iter)->reverseComplementSeq();
+							} catch (crispr::exception& e) {
+								std::cerr<<e.what()<<std::endl;
+								throw crispr::exception(__FILE__,
+								                        __LINE__,
+								                        __PRETTY_FUNCTION__,
+								                        "Failed to reverse complement sequence");
+							}
 						}
 						read_iter++;
 					}
@@ -1820,7 +1841,10 @@ int WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mo
     }
 }
 
-bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap)
+bool WorkHorse::clusterDRReads(StringToken DRToken, 
+                               int * nextFreeGID, 
+                               std::map<std::string, int> * k2GIDMap, 
+                               std::map<int, std::map<std::string, int> * > * groupKmerCountsMap)
 {
     //-----
     // hash a DR!
@@ -1875,18 +1899,35 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     //
     
     // make a 2d array for the kmers!
-    char ** kmers = new char*[num_mers];
-    for(int i = 0; i < num_mers; i++)
-    {
-        kmers[i] = new char [CRASS_DEF_KMER_SIZE+1];
-    }
-    
-    int * kmer_offsets = new int[num_mers];              // use these offsets when we cut kmers, they are a component of the algorithm
-    for(int i = 0; i < num_mers; i++)
-    {
-        kmer_offsets[i] = i * -1; // Starts at [0, -1, -2, -3, -4, ...]
-    }
-    
+	char ** kmers = NULL;
+	int * kmer_offsets = NULL;
+	try {
+		kmers = new char*[num_mers];
+	} catch(std::exception& e) {
+		std::cerr<<"Attempting to alloc "<<num_mers<<std::endl;
+		throw crispr::exception(__FILE__, 
+		                        __LINE__, 
+		                        __PRETTY_FUNCTION__, 
+		                        e.what());
+	}
+	try {
+		for(int i = 0; i < num_mers; i++)
+		{
+			kmers[i] = new char [CRASS_DEF_KMER_SIZE+1];
+		}
+// use these offsets when we cut kmers, they are a component of the algorithm
+		kmer_offsets = new int[num_mers];              
+		for(int i = 0; i < num_mers; i++)
+		{
+			kmer_offsets[i] = i * -1; // Starts at [0, -1, -2, -3, -4, ...]
+		}
+	} catch(std::exception& e) {
+		std::cerr<<"Attempting to alloc "<<CRASS_DEF_KMER_SIZE+1<<std::endl;
+		throw crispr::exception(__FILE__, 
+		                        __LINE__, 
+		                        __PRETTY_FUNCTION__, 
+		                        e.what());
+	}
     int pos_counter = 0;
     
     // a slow-ish first part

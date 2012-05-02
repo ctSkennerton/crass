@@ -32,7 +32,10 @@ namespace crispr {
     public:
         // constructor
         exception(){}
-        exception(const char * file, int line, const char * function ,const char * message)
+        exception(const char * file, 
+                  int line, 
+                  const char * function,
+                  const char * message)
         {
             std::stringstream ss;
             ss<<"[ERROR]: ";
@@ -40,7 +43,17 @@ namespace crispr {
             ss<<file<<" : "<<line<<" : "<<function;
             errorMsg = ss.str();
         }
-
+        exception(const char * file, 
+                  int line, 
+                  const char * function,
+                  std::stringstream& message)
+        {
+            std::stringstream ss;
+            ss<<"[ERROR]: ";
+            ss<< message.str()<<std::endl;
+            ss<<file<<" : "<<line<<" : "<<function;
+            errorMsg = ss.str();
+        }
         // destructor
         ~exception(){}
 
@@ -59,6 +72,10 @@ namespace crispr {
         {
             errorMsg = message;
         }
+		input_exception(std::stringstream& message)
+        {
+            errorMsg = message.str();
+        }
         // destructor
         ~input_exception(){}
         
@@ -72,11 +89,25 @@ namespace crispr {
     
     class xml_exception: public exception{
     public:
-        xml_exception(const char * file, int line, const char * function ,const char * message)
+        xml_exception(const char * file, 
+                      int line, 
+                      const char * function,
+                      const char * message)
         {
             std::stringstream ss;
             ss<<"[XML_ERROR]: ";
             ss<< message<<std::endl;
+            ss<<file<<" : "<<line<<" : "<<function;
+            errorMsg = ss.str();
+        }
+		xml_exception(const char * file, 
+		              int line, 
+		              const char * function, 
+		              std::stringstream& message)
+        {
+            std::stringstream ss;
+            ss<<"[XML_ERROR]: ";
+            ss<< message.str()<<std::endl;
             ss<<file<<" : "<<line<<" : "<<function;
             errorMsg = ss.str();
         }
@@ -94,11 +125,25 @@ namespace crispr {
     class runtime_exception: public exception{
     public:
         runtime_exception(){}
-        runtime_exception(const char * file, int line, const char * function ,const char * message)
+        runtime_exception(const char * file, 
+                          int line, 
+                          const char * function,
+                          const char * message)
         {
             std::stringstream ss;
             ss<<"[RUNTIME_ERROR]: ";
             ss<< message<<std::endl;
+            ss<<file<<" : "<<line<<" : "<<function;
+            errorMsg = ss.str();
+        }
+		runtime_exception(const char * file, 
+		                  int line, 
+		                  const char * function,
+		                  std::stringstream& message)
+        {
+            std::stringstream ss;
+            ss<<"[RUNTIME_ERROR]: ";
+            ss<< message.str()<<std::endl;
             ss<<file<<" : "<<line<<" : "<<function;
             errorMsg = ss.str();
         }
@@ -114,11 +159,25 @@ namespace crispr {
     };
     class no_file_exception: public runtime_exception{
         public:
-        no_file_exception(const char * file, int line, const char * function ,const char * nofile)
+        no_file_exception(const char * file, 
+                          int line, 
+                          const char * function,
+                          const char * nofile)
         {
             std::stringstream ss;
             ss<<"[NO_FILE_ERROR]: Cannot find file ";
             ss<< nofile<<std::endl;
+            ss<<file<<" : "<<line<<" : "<<function;
+            errorMsg = ss.str();
+        }
+		no_file_exception(const char * file, 
+		                  int line, 
+		                  const char * function, 
+		                  std::stringstream& nofile)
+        {
+            std::stringstream ss;
+            ss<<"[NO_FILE_ERROR]: Cannot find file ";
+            ss<< nofile.str()<<std::endl;
             ss<<file<<" : "<<line<<" : "<<function;
             errorMsg = ss.str();
         }
@@ -135,11 +194,37 @@ namespace crispr {
     
     class substring_exception: public exception{
     public:
-        substring_exception(const char * message, const char * base_str, int start_pos, int length, const char * file, int line, const char * function)
+        substring_exception(const char * message, 
+                            const char * base_str, 
+                            int start_pos, 
+                            int length, 
+                            const char * file, 
+                            int line, 
+                            const char * function
+                            )
         {
             std::stringstream ss;
             ss<<"[SUBSTRING_ERROR]: ";
             ss<< message<<std::endl;
+            ss<<file<<" : "<<line<<" : "<<function<<std::endl;
+            ss<<"Cutting substr: "<<start_pos<<" : "<<length<<std::endl;
+            ss<<"From Read: "<<base_str<<std::endl;
+            ss<<"Length: "<<strlen(base_str)<<std::endl;
+            errorMsg = ss.str();
+            
+        }
+		substring_exception(std::stringstream& message, 
+                            const char * base_str, 
+                            int start_pos, 
+                            int length, 
+                            const char * file, 
+                            int line, 
+                            const char * function
+                            )
+        {
+            std::stringstream ss;
+            ss<<"[SUBSTRING_ERROR]: ";
+            ss<< message.str()<<std::endl;
             ss<<file<<" : "<<line<<" : "<<function<<std::endl;
             ss<<"Cutting substr: "<<start_pos<<" : "<<length<<std::endl;
             ss<<"From Read: "<<base_str<<std::endl;
