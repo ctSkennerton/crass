@@ -538,7 +538,7 @@ int assemblyMain(int argc, char * argv[])
     std::list<std::string> spacers_for_assembly;
 
     //parse xml file
-    crispr::XML xml_parser;  
+    crispr::xml::reader xml_parser;  
     std::string direct_repeat;
     std::string group_as_string = "G" + to_string(opts.group);
 

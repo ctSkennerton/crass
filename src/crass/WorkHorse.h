@@ -144,8 +144,8 @@ class WorkHorse {
     
         bool printXML(void) { return printXML(mOpts->output_fastq + "crass"); } // print all the assembly gossip to XML
         bool printXML(std::string namePrefix);
-        bool addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
-        bool addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
+        bool addDataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
+        bool addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
         
     // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat

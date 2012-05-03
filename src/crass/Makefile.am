@@ -26,7 +26,6 @@ WorkHorse.cpp WorkHorse.h\
 SpacerInstance.cpp SpacerInstance.h\
 ReadHolder.cpp ReadHolder.h\
 SmithWaterman.cpp SmithWaterman.h\
-StringCheck.cpp StringCheck.h\
 kseq.h\
 GraphDrawingDefines.h\
 crassDefines.h\

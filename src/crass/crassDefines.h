@@ -104,14 +104,14 @@
 // --------------------------------------------------------------------
 #define CRASS_DEF_CRISPR_HEADER                 "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<crass_assem version=\"1.0\">\n"
 #define CRASS_DEF_ROOT_ELEMENT                  "crispr"
-#define CRASS_DEF_XML_VERSION                   "1.0"
+#define CRASS_DEF_XML_VERSION                   "1.1"
 #define CRASS_DEF_CRISPR_FOOTER                 "</crass_assem>\n"
 // --------------------------------------------------------------------
 // GRAPH BUILDING
 // --------------------------------------------------------------------
 #define CRASS_DEF_NODE_KMER_SIZE                7                   // size of the kmer that defines a crispr node
 #define CRASS_DEF_MAX_CLEANING                  2                   // the maximum length that a branch can be before it's cleaned
-#define CRASS_DEF_STDEV_SPACER_LENGTH           6.0                 // the maximum standard deviation allowed in the length of spacers 
+#define CRASS_DEF_STDEV_SPACER_LENGTH           10.0                 // the maximum standard deviation allowed in the length of spacers 
                                                                     // after the true DR is found that is allowable before it is removed
 // --------------------------------------------------------------------
  // USER OPTION STRUCTURE

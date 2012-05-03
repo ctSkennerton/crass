@@ -5,4 +5,6 @@ libcrispr_la_SOURCES = \
 Xml.cpp \
 Xml.h \
 Exception.h \ 
-StlExt.h
+StlExt.h \
+StringCheck.h \
+StringCheck.cpp

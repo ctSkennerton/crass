@@ -40,7 +40,7 @@
 
 // local includes
 #include "StringCheck.h"
-#include "LoggerSimp.h"
+#include "Exception.h"
 
 
 StringToken StringCheck::addString(std::string newStr)
@@ -59,16 +59,15 @@ std::string StringCheck::getString(StringToken token)
     //-----
     // return the string for a given token or spew
     //
-    if(mT2S_map.find(token) != mT2S_map.end())
-    {
+    if(mT2S_map.find(token) != mT2S_map.end()) {
         return mT2S_map[token];
+    } else {
+        throw crispr::exception(__FILE__, 
+                                __LINE__, 
+                                __PRETTY_FUNCTION__,
+                                "Token not stored");
     }
-    logError("Token: " << token << " not stored");
-    stringstream ss;
-    ss << "ERROR_" << token;
-    std::string bob;
-    ss >> bob;
-    return bob;
+
 }
 
 StringToken StringCheck::getToken(std::string queryStr)

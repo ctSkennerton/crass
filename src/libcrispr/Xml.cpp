@@ -51,140 +51,172 @@
 // local includes
 #include "Xml.h"
 #include "Exception.h"
+#include "StringCheck.h"
+#include "StlExt.h"
 
-using namespace xercesc;
-
-crispr::XML::XML(void)
+crispr::xml::base::base()
 {
-    try  // Initialize Xerces infrastructure
+    try  
     {
-      XMLPlatformUtils::Initialize();
+        // Initialize Xerces infrastructure   
+        this->init();
+        // transcode all the member variables
+        this->alloc();
     }
-    catch( XMLException& e )
+    catch( xercesc::XMLException& e )
     {
-      char* message = XMLString::transcode( e.getMessage() );
+      char * message = xercesc::XMLString::transcode( e.getMessage() );
       std::cerr << "XML toolkit initialization error: " << message << std::endl;
-      XMLString::release( &message );
+      xercesc::XMLString::release( &message );
       // throw exception here to return ERROR_XERCES_INIT
     }
-    CX_FileParser = new XercesDOMParser;
-    CX_DocElem = NULL;
-    
-    // USE sed
-    // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%TAG_\1 = XMLString::transcode(\"\1\");%" | sort | uniq
-    // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%XMLString::release( \&TAG_\1 );%" | sort | uniq
-    // grep ATTLIST crass.dtd | sed -e "s%[^ ]* [^ ]* \([^ ]*\) .*%ATTR_\1 = XMLString::transcode(\"\1\");%" | sort | uniq
-    // grep ATTLIST crass.dtd | sed -e "s%[^ ]* [^ ]* \([^ ]*\) .*%XMLString::release( \&ATTR_\1 );%" | sort | uniq
-    TAG_assembly = XMLString::transcode("assembly");
-    TAG_bf = XMLString::transcode("bf");
-    TAG_bflankers = XMLString::transcode("bflankers");
-    TAG_bs = XMLString::transcode("bs");
-    TAG_bspacers = XMLString::transcode("bspacers");
-    TAG_consensus = XMLString::transcode("consensus");
-    TAG_contig = XMLString::transcode("contig");
-    TAG_crispr = XMLString::transcode("crispr");
-    TAG_cspacer = XMLString::transcode("cspacer");
-    TAG_data = XMLString::transcode("data");
-    TAG_dr = XMLString::transcode("dr");
-    TAG_drs = XMLString::transcode("drs");
-    TAG_ff = XMLString::transcode("ff");
-    TAG_fflankers = XMLString::transcode("fflankers");
-    TAG_file = XMLString::transcode("file");
-    TAG_flanker = XMLString::transcode("flanker");
-    TAG_flankers = XMLString::transcode("flankers");
-    TAG_fs = XMLString::transcode("fs");
-    TAG_fspacers = XMLString::transcode("fspacers");
-    TAG_group = XMLString::transcode("group");
-    TAG_metadata = XMLString::transcode("metadata");
-    TAG_notes = XMLString::transcode("notes");
-    TAG_spacer = XMLString::transcode("spacer");
-    TAG_spacers = XMLString::transcode("spacers");
-    
-    ATTR_cid = XMLString::transcode("cid");
-    ATTR_confcnt = XMLString::transcode("confcnt");
-    ATTR_directjoin = XMLString::transcode("directjoin");
-    ATTR_drconf = XMLString::transcode("drconf");
-    ATTR_drid = XMLString::transcode("drid");
-    ATTR_drseq = XMLString::transcode("drseq");
-    ATTR_flid = XMLString::transcode("flid");
-    ATTR_gid = XMLString::transcode("gid");
-    ATTR_seq = XMLString::transcode("seq");
-    ATTR_spid = XMLString::transcode("spid");
-    ATTR_cov = XMLString::transcode("cov");
-
-    ATTR_totcnt = XMLString::transcode("totcnt");
-    ATTR_type = XMLString::transcode("type");
-    ATTR_url = XMLString::transcode("url");
-    ATTR_version = XMLString::transcode("version");
-
 }
 
 
-crispr::XML::~XML(void)
+crispr::xml::base::~base(void)
 {
-    // Free memory
-    delete CX_FileParser;
-    if (CX_DocElem != NULL) 
+    try 
     {
-        CX_DocElem->release();
-    }
-    try // Free memory
-    {
-        
-        XMLString::release( &TAG_assembly );
-        XMLString::release( &TAG_bf );
-        XMLString::release( &TAG_bflankers );
-        XMLString::release( &TAG_bs );
-        XMLString::release( &TAG_bspacers );
-        XMLString::release( &TAG_consensus );
-        XMLString::release( &TAG_contig );
-        XMLString::release( &TAG_crispr );
-        XMLString::release( &TAG_cspacer );
-        XMLString::release( &TAG_data );
-        XMLString::release( &TAG_dr );
-        XMLString::release( &TAG_drs );
-        XMLString::release( &TAG_ff );
-        XMLString::release( &TAG_fflankers );
-        XMLString::release( &TAG_file );
-        XMLString::release( &TAG_flanker );
-        XMLString::release( &TAG_flankers );
-        XMLString::release( &TAG_fs );
-        XMLString::release( &TAG_fspacers );
-        XMLString::release( &TAG_group );
-        XMLString::release( &TAG_metadata );
-        XMLString::release( &TAG_notes );
-        XMLString::release( &TAG_spacer );
-        XMLString::release( &TAG_spacers );
-        
-        XMLString::release( &ATTR_cid );
-        XMLString::release( &ATTR_confcnt );
-        XMLString::release( &ATTR_directjoin );
-        XMLString::release( &ATTR_drconf );
-        XMLString::release( &ATTR_drid );
-        XMLString::release( &ATTR_drseq );
-        XMLString::release( &ATTR_flid );
-        XMLString::release( &ATTR_gid );
-        XMLString::release( &ATTR_seq );
-        XMLString::release( &ATTR_spid );
-        XMLString::release( &ATTR_cov );
-
-        XMLString::release( &ATTR_totcnt );
-        XMLString::release( &ATTR_type );
-        XMLString::release( &ATTR_url );
-        XMLString::release( &ATTR_version );
-        
-
+        // Free memory
+        this->dealloc();
     }
     catch( ... )
     {
         std::cerr << "Unknown exception encountered in TagNamesdtor" << std::endl;
     }
 
-    XMLPlatformUtils::Terminate();  // Terminate after release of memory
+    xercesc::XMLPlatformUtils::Terminate();  // Terminate after release of memory
+}
+void crispr::xml::base::init(void) {
+    xercesc::XMLPlatformUtils::Initialize();
+}
+void crispr::xml::base::alloc(void) {
+    // USE sed
+    // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%TAG_\1 = XMLString::transcode(\"\1\");%" | sort | uniq
+    // grep ATTLIST crass.dtd | sed -e "s%[^ ]* [^ ]* \([^ ]*\) .*%ATTR_\1 = XMLString::transcode(\"\1\");%" | sort | uniq
+    TAG_assembly = xercesc::XMLString::transcode("assembly");
+    TAG_bf = xercesc::XMLString::transcode("bf");
+    TAG_bflankers = xercesc::XMLString::transcode("bflankers");
+    TAG_bs = xercesc::XMLString::transcode("bs");
+    TAG_bspacers = xercesc::XMLString::transcode("bspacers");
+    TAG_command = xercesc::XMLString::transcode("command");
+    TAG_consensus = xercesc::XMLString::transcode("consensus");
+    TAG_contig = xercesc::XMLString::transcode("contig");
+    TAG_crispr = xercesc::XMLString::transcode("crispr");
+    TAG_cspacer = xercesc::XMLString::transcode("cspacer");
+    TAG_data = xercesc::XMLString::transcode("data");
+    TAG_dr = xercesc::XMLString::transcode("dr");
+    TAG_drs = xercesc::XMLString::transcode("drs");
+    TAG_epos = xercesc::XMLString::transcode("epos");
+    TAG_ff = xercesc::XMLString::transcode("ff");
+    TAG_fflankers = xercesc::XMLString::transcode("fflankers");
+    TAG_file = xercesc::XMLString::transcode("file");
+    TAG_flanker = xercesc::XMLString::transcode("flanker");
+    TAG_flankers = xercesc::XMLString::transcode("flankers");
+    TAG_fs = xercesc::XMLString::transcode("fs");
+    TAG_fspacers = xercesc::XMLString::transcode("fspacers");
+    TAG_group = xercesc::XMLString::transcode("group");
+    TAG_metadata = xercesc::XMLString::transcode("metadata");
+    TAG_name = xercesc::XMLString::transcode("name");
+    TAG_notes = xercesc::XMLString::transcode("notes");
+    TAG_program = xercesc::XMLString::transcode("program");
+    TAG_source = xercesc::XMLString::transcode("source");
+    TAG_sources = xercesc::XMLString::transcode("sources");
+    TAG_spacer = xercesc::XMLString::transcode("spacer");
+    TAG_spacers = xercesc::XMLString::transcode("spacers");
+    TAG_spos = xercesc::XMLString::transcode("spos");
+    TAG_version = xercesc::XMLString::transcode("version");
+    
+    ATTR_accession = xercesc::XMLString::transcode("accession");
+    ATTR_cid = xercesc::XMLString::transcode("cid");
+    ATTR_confcnt = xercesc::XMLString::transcode("confcnt");
+    ATTR_cov = xercesc::XMLString::transcode("cov");
+    ATTR_directjoin = xercesc::XMLString::transcode("directjoin");
+    ATTR_drconf = xercesc::XMLString::transcode("drconf");
+    ATTR_drid = xercesc::XMLString::transcode("drid");
+    ATTR_drseq = xercesc::XMLString::transcode("drseq");
+    ATTR_flid = xercesc::XMLString::transcode("flid");
+    ATTR_gid = xercesc::XMLString::transcode("gid");
+    ATTR_seq = xercesc::XMLString::transcode("seq");
+    ATTR_soid = xercesc::XMLString::transcode("soid");
+    ATTR_spid = xercesc::XMLString::transcode("spid");
+    ATTR_totcnt = xercesc::XMLString::transcode("totcnt");
+    ATTR_type = xercesc::XMLString::transcode("type");
+    ATTR_url = xercesc::XMLString::transcode("url");
+    ATTR_version = xercesc::XMLString::transcode("version");
+}
+
+void crispr::xml::base::dealloc(void) {
+    // grep ELEMENT crass.dtd | sed -e "s%[^ ]* \([^ ]*\) .*%XMLString::release( \&TAG_\1 );%" | sort | uniq
+    // grep ATTLIST crass.dtd | sed -e "s%[^ ]* [^ ]* \([^ ]*\) .*%XMLString::release( \&ATTR_\1 );%" | sort | uniq
+    
+    xercesc::XMLString::release( &TAG_assembly );
+    xercesc::XMLString::release( &TAG_bf );
+    xercesc::XMLString::release( &TAG_bflankers );
+    xercesc::XMLString::release( &TAG_bs );
+    xercesc::XMLString::release( &TAG_bspacers );
+    xercesc::XMLString::release( &TAG_command );
+    xercesc::XMLString::release( &TAG_consensus );
+    xercesc::XMLString::release( &TAG_contig );
+    xercesc::XMLString::release( &TAG_crispr );
+    xercesc::XMLString::release( &TAG_cspacer );
+    xercesc::XMLString::release( &TAG_data );
+    xercesc::XMLString::release( &TAG_dr );
+    xercesc::XMLString::release( &TAG_drs );
+    xercesc::XMLString::release( &TAG_epos );
+    xercesc::XMLString::release( &TAG_ff );
+    xercesc::XMLString::release( &TAG_fflankers );
+    xercesc::XMLString::release( &TAG_file );
+    xercesc::XMLString::release( &TAG_flanker );
+    xercesc::XMLString::release( &TAG_flankers );
+    xercesc::XMLString::release( &TAG_fs );
+    xercesc::XMLString::release( &TAG_fspacers );
+    xercesc::XMLString::release( &TAG_group );
+    xercesc::XMLString::release( &TAG_metadata );
+    xercesc::XMLString::release( &TAG_name );
+    xercesc::XMLString::release( &TAG_notes );
+    xercesc::XMLString::release( &TAG_program );
+    xercesc::XMLString::release( &TAG_source );
+    xercesc::XMLString::release( &TAG_sources );
+    xercesc::XMLString::release( &TAG_spacer );
+    xercesc::XMLString::release( &TAG_spacers );
+    xercesc::XMLString::release( &TAG_spos );
+    xercesc::XMLString::release( &TAG_version );
+    
+    xercesc::XMLString::release( &ATTR_accession );
+    xercesc::XMLString::release( &ATTR_cid );
+    xercesc::XMLString::release( &ATTR_confcnt );
+    xercesc::XMLString::release( &ATTR_cov );
+    xercesc::XMLString::release( &ATTR_directjoin );
+    xercesc::XMLString::release( &ATTR_drconf );
+    xercesc::XMLString::release( &ATTR_drid );
+    xercesc::XMLString::release( &ATTR_drseq );
+    xercesc::XMLString::release( &ATTR_flid );
+    xercesc::XMLString::release( &ATTR_gid );
+    xercesc::XMLString::release( &ATTR_seq );
+    xercesc::XMLString::release( &ATTR_soid );
+    xercesc::XMLString::release( &ATTR_spid );
+    xercesc::XMLString::release( &ATTR_totcnt );
+    xercesc::XMLString::release( &ATTR_type );
+    xercesc::XMLString::release( &ATTR_url );
+    xercesc::XMLString::release( &ATTR_version );
 }
 
 
-void crispr::XML::parseXMLFile(std::string XMLFile, std::string& wantedGroup, std::string * directRepeat, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly)
+crispr::xml::reader::reader()
+{
+    init();
+    alloc();
+    CX_FileParser = new xercesc::XercesDOMParser;
+}
+
+crispr::xml::reader::~reader()
+{
+    delete CX_FileParser;
+    dealloc();
+    
+}
+void crispr::xml::reader::parseXMLFile(std::string XMLFile, std::string& wantedGroup, std::string * directRepeat, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly)
 {
     //-----
     // why not!
@@ -196,7 +228,7 @@ void crispr::XML::parseXMLFile(std::string XMLFile, std::string& wantedGroup, st
 
     
     // Configure DOM parser.
-    CX_FileParser->setValidationScheme( XercesDOMParser::Val_Never );
+    CX_FileParser->setValidationScheme( xercesc::XercesDOMParser::Val_Never );
     CX_FileParser->setDoNamespaces( false );
     CX_FileParser->setDoSchema( false );
     CX_FileParser->setLoadExternalDTD( false );
@@ -233,27 +265,27 @@ void crispr::XML::parseXMLFile(std::string XMLFile, std::string& wantedGroup, st
         char* message = xercesc::XMLString::transcode( e.getMessage() );
         std::ostringstream errBuf;
         errBuf << "Error parsing file: " << message << std::flush;
-        XMLString::release( &message );
+        xercesc::XMLString::release( &message );
     }
 }
 
            
-xercesc::DOMElement * crispr::XML::getWantedGroupFromRoot(xercesc::DOMElement * parentNode, std::string& wantedGroup, std::string * directRepeat)
+xercesc::DOMElement * crispr::xml::reader::getWantedGroupFromRoot(xercesc::DOMElement * parentNode, std::string& wantedGroup, std::string * directRepeat)
 {
     for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling())        
     {
-        if (XMLString::equals(currentElement->getTagName(), TAG_group))
+        if (xercesc::XMLString::equals(currentElement->getTagName(), tag_Group()))
         {
             // new group
             // test if it's one that we want
             //std::cout << "Group_" << XMLCH_2_STR(element->getAttribute(ATTR_gid)) << "_" << XMLCH_2_STR(element->getAttribute(ATTR_drseq)) << ".fa" << std::endl;
-            char * c_group_name = tc(currentElement->getAttribute(ATTR_gid));
+            char * c_group_name = tc(currentElement->getAttribute(attr_Gid()));
             std::string current_group_name = c_group_name;
             xr(&c_group_name);
             if (current_group_name == wantedGroup) 
             {
                 // get the length of the direct repeat
-                char * c_dr = tc(currentElement->getAttribute(ATTR_drseq));
+                char * c_dr = tc(currentElement->getAttribute(attr_Drseq()));
                 *directRepeat = c_dr;
                 return currentElement;
             }
@@ -266,11 +298,11 @@ xercesc::DOMElement * crispr::XML::getWantedGroupFromRoot(xercesc::DOMElement * 
     return NULL;
 }
 
-xercesc::DOMElement * crispr::XML::parseGroupForAssembly(xercesc::DOMElement* parentNode)
+xercesc::DOMElement * crispr::xml::reader::parseGroupForAssembly(xercesc::DOMElement* parentNode)
 {
     for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling())        
     {
-       if( XMLString::equals(currentElement->getTagName(), TAG_assembly))
+       if( xercesc::XMLString::equals(currentElement->getTagName(), tag_Assembly()))
        {
            // assembly section
            // the child nodes will be the contigs
@@ -281,14 +313,14 @@ xercesc::DOMElement * crispr::XML::parseGroupForAssembly(xercesc::DOMElement* pa
     return NULL;
 } 
 
-void crispr::XML::parseAssemblyForContigIds(xercesc::DOMElement* parentNode, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly)
+void crispr::xml::reader::parseAssemblyForContigIds(xercesc::DOMElement* parentNode, std::set<std::string>& wantedContigs, std::list<std::string>& spacersForAssembly)
 {
     for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling())        
     {
-       if( XMLString::equals(currentElement->getTagName(), TAG_contig))
+       if( xercesc::XMLString::equals(currentElement->getTagName(), tag_Contig()))
        {
            // check to see if the current contig is one that we want
-           char * c_current_contig = tc(currentElement->getAttribute(ATTR_cid));
+           char * c_current_contig = tc(currentElement->getAttribute(attr_Cid()));
            std::string current_contig = c_current_contig;
            std::set<std::string>::iterator contig_iter = wantedContigs.find(current_contig);
            if( contig_iter != wantedContigs.end())
@@ -303,13 +335,13 @@ void crispr::XML::parseAssemblyForContigIds(xercesc::DOMElement* parentNode, std
    }
 }
 
-void crispr::XML::getSpacerIdForAssembly(xercesc::DOMElement* parentNode, std::list<std::string>& spacersForAssembly)
+void crispr::xml::reader::getSpacerIdForAssembly(xercesc::DOMElement* parentNode, std::list<std::string>& spacersForAssembly)
 {
     for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling())        
     {
-        if( XMLString::equals(currentElement->getTagName(), TAG_cspacer))
+        if( xercesc::XMLString::equals(currentElement->getTagName(), tag_Cspacer()))
         {
-            char * c_cspacer = tc(currentElement->getAttribute(ATTR_spid));
+            char * c_cspacer = tc(currentElement->getAttribute(attr_Spid()));
             std::string str = c_cspacer;
             spacersForAssembly.push_back(str);
             xr(&c_cspacer);
@@ -317,65 +349,76 @@ void crispr::XML::getSpacerIdForAssembly(xercesc::DOMElement* parentNode, std::l
     }
 }
 
-DOMDocument * crispr::XML::setFileParser(const char * XMLFile)
-{
-    // Configure DOM parser.
-    CX_FileParser->setValidationScheme( XercesDOMParser::Val_Never );
-    CX_FileParser->setDoNamespaces( false );
-    CX_FileParser->setDoSchema( false );
-    CX_FileParser->setLoadExternalDTD( false );
+//DOMDocument * crispr::xml::base::setFileParser(const char * XMLFile)
+//{
+//    // Configure DOM parser.
+//    xercesc::XercesDOMParser * d->setValidationScheme( XercesDOMParser::Val_Never );
+//    xercesc::XercesDOMParser * d->setDoNamespaces( false );
+//    xercesc::XercesDOMParser * d->setDoSchema( false );
+//    xercesc::XercesDOMParser * d->setLoadExternalDTD( false );
+//    
+//    try
+//    {
+//        CX_FileParser->parse( XMLFile );
+//        return CX_FileParser->getDocument();        
+//    }
+//    catch( xercesc::XMLException& e ) {
+//        char* message = xercesc::XMLString::transcode( e.getMessage() );
+//        std::stringstream errBuf;
+//        errBuf << "Error parsing file: " << message << std::flush;
+//        xercesc::XMLString::release( &message );
+//        throw crispr::xml_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(errBuf.str()).c_str());
+//    } catch (xercesc::DOMException& e) {
+//        char* message = xercesc::XMLString::transcode( e.getMessage() );
+//        std::stringstream errBuf;
+//        errBuf << "Error parsing file: " << message << std::flush;
+//        xercesc::XMLString::release( &message );
+//        throw crispr::xml_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(errBuf.str()).c_str());
+//    }
+//}
+
+crispr::xml::writer::writer() {
+    XW_DocElem = NULL;
+    init();
+    alloc();
     
-    try
-    {
-        CX_FileParser->parse( XMLFile );
-        return CX_FileParser->getDocument();        
-    }
-    catch( xercesc::XMLException& e ) {
-        char* message = xercesc::XMLString::transcode( e.getMessage() );
-        std::stringstream errBuf;
-        errBuf << "Error parsing file: " << message << std::flush;
-        XMLString::release( &message );
-        throw crispr::xml_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(errBuf.str()).c_str());
-    } catch (xercesc::DOMException& e) {
-        char* message = xercesc::XMLString::transcode( e.getMessage() );
-        std::stringstream errBuf;
-        errBuf << "Error parsing file: " << message << std::flush;
-        XMLString::release( &message );
-        throw crispr::xml_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(errBuf.str()).c_str());
-    }
 }
 
-DOMElement * crispr::XML::createDOMDocument(std::string rootElement, std::string versionNumber, int& errorNumber )   
+crispr::xml::writer::~writer() {
+    dealloc();
+}
+
+xercesc::DOMElement * crispr::xml::writer::createDOMDocument(std::string rootElement, std::string versionNumber, int& errorNumber )   
 {
     XMLCh * core = tc("Core");
-    DOMImplementation* impl =  DOMImplementationRegistry::getDOMImplementation(core);
+    xercesc::DOMImplementation* impl =  xercesc::DOMImplementationRegistry::getDOMImplementation(core);
     xr(&core);
     if (impl != NULL)
     {
         try
         {
             XMLCh * x_root_elem = tc(rootElement.c_str());
-            CX_DocElem = impl->createDocument( 0, x_root_elem, 0);  
+            XW_DocElem = impl->createDocument( 0, x_root_elem, 0);  
             xr(&x_root_elem);
 
-            if (CX_DocElem != NULL) 
+            if (XW_DocElem != NULL) 
             {
-                DOMElement* rootElem = CX_DocElem->getDocumentElement();
+                xercesc::DOMElement* rootElem = XW_DocElem->getDocumentElement();
                 XMLCh * x_version_num = tc(versionNumber.c_str());
 
-                rootElem->setAttribute(ATTR_version, x_version_num);
+                rootElem->setAttribute(attr_Version(), x_version_num);
                 xr(&x_version_num);
 
                 errorNumber = 0;
                 return rootElem;
             }
         }
-        catch (const OutOfMemoryException&)
+        catch (const xercesc::OutOfMemoryException&)
         {
             XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
             errorNumber =  5;
         }
-        catch (const DOMException& e)
+        catch (const xercesc::DOMException& e)
         {
             XERCES_STD_QUALIFIER cerr << "DOMException code is:  " << e.code << XERCES_STD_QUALIFIER endl;
             errorNumber =  2;
@@ -394,38 +437,38 @@ DOMElement * crispr::XML::createDOMDocument(std::string rootElement, std::string
     return NULL;
 }
 
-DOMElement * crispr::XML::createDOMDocument(const char * rootElement, const char * versionNumber, int& errorNumber )   
+xercesc::DOMElement * crispr::xml::writer::createDOMDocument(const char * rootElement, const char * versionNumber, int& errorNumber )   
 {
     XMLCh * core = tc("Core");
-    DOMImplementation* impl =  DOMImplementationRegistry::getDOMImplementation(core);
+    xercesc::DOMImplementation* impl =  xercesc::DOMImplementationRegistry::getDOMImplementation(core);
     xr(&core);
     if (impl != NULL)
     {
         try
         {
             XMLCh * x_root_elem = tc(rootElement);
-            CX_DocElem = impl->createDocument(0, x_root_elem, 0);
+            XW_DocElem = impl->createDocument(0, x_root_elem, 0);
             
             xr(&x_root_elem);
             
-            if (CX_DocElem != NULL) 
+            if (XW_DocElem != NULL) 
             {
-                DOMElement* rootElem = CX_DocElem->getDocumentElement();
+                xercesc::DOMElement* rootElem = XW_DocElem->getDocumentElement();
                 XMLCh * x_version_num = tc(versionNumber);
                 
-                rootElem->setAttribute(ATTR_version, x_version_num );
+                rootElem->setAttribute(attr_Version(), x_version_num );
                 
                 xr(&x_version_num);
                 errorNumber = 0;
                 return rootElem;
             }
         }
-        catch (const OutOfMemoryException&)
+        catch (const xercesc::OutOfMemoryException&)
         {
             XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
             errorNumber =  5;
         }
-        catch (const DOMException& e)
+        catch (const xercesc::DOMException& e)
         {
             XERCES_STD_QUALIFIER cerr << "DOMException code is:  " << e.code << XERCES_STD_QUALIFIER endl;
             errorNumber =  2;
@@ -444,12 +487,20 @@ DOMElement * crispr::XML::createDOMDocument(const char * rootElement, const char
     return NULL;
 }
 
-xercesc::DOMElement * crispr::XML::addMetaData(std::string notes, DOMElement * parentNode)
+xercesc::DOMElement * crispr::xml::writer::addMetaData(xercesc::DOMElement * parentNode)
 {
-    DOMElement * meta_data_elem = CX_DocElem->createElement(TAG_metadata);
-    DOMElement * notes_elem = CX_DocElem->createElement(TAG_notes);
+    xercesc::DOMElement * meta_data_elem = XW_DocElem->createElement(tag_Metadata());
+    parentNode->appendChild(meta_data_elem);    
+    return meta_data_elem;
+    
+}
+
+xercesc::DOMElement * crispr::xml::writer::addMetaData(std::string notes, xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * meta_data_elem = XW_DocElem->createElement(tag_Metadata());
+    xercesc::DOMElement * notes_elem = XW_DocElem->createElement(tag_Notes());
     XMLCh * x_notes = tc(notes.c_str());
-    DOMText * meta_data_notes = CX_DocElem->createTextNode(x_notes);
+    xercesc::DOMText * meta_data_notes = XW_DocElem->createTextNode(x_notes);
     xr(&x_notes);
     notes_elem->appendChild(meta_data_notes);
     meta_data_elem->appendChild(notes_elem);
@@ -458,27 +509,39 @@ xercesc::DOMElement * crispr::XML::addMetaData(std::string notes, DOMElement * p
     return meta_data_elem;
     
 }
-void crispr::XML::addFileToMetadata(std::string type, std::string url, DOMElement * parentNode)
+
+void crispr::xml::writer::addFileToMetadata(std::string type, std::string url, xercesc::DOMElement * parentNode)
 {
-    DOMElement * file = CX_DocElem->createElement(TAG_file);
+    xercesc::DOMElement * file = XW_DocElem->createElement(tag_File());
     XMLCh * x_type = tc(type.c_str());
     XMLCh * x_url = tc(url.c_str());
-    file->setAttribute(ATTR_type, x_type);
-    file->setAttribute(ATTR_url, x_url);
+    file->setAttribute(attr_Type(), x_type);
+    file->setAttribute(attr_Url(), x_url);
     xr(&x_type);
     xr(&x_url);
     parentNode->appendChild(file);
 }
-xercesc::DOMElement * crispr::XML::addGroup(std::string& gID, std::string& drConsensus, DOMElement * parentNode)
+
+void crispr::xml::writer::addNotesToMetadata(std::string notes, xercesc::DOMElement *parentNode)
 {
-    DOMElement * group = CX_DocElem->createElement(TAG_group);
+    xercesc::DOMElement * notes_elem = XW_DocElem->createElement(tag_Notes());
+    XMLCh * x_notes = tc(notes.c_str());
+    xercesc::DOMText * meta_data_notes = XW_DocElem->createTextNode(x_notes);
+    xr(&x_notes);
+    notes_elem->appendChild(meta_data_notes);
+    parentNode->appendChild(notes_elem);
+}
+
+xercesc::DOMElement * crispr::xml::writer::addGroup(std::string& gID, std::string& drConsensus, xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * group = XW_DocElem->createElement(tag_Group());
     
     // Set the attributes of the group
     XMLCh * x_gID = tc(gID.c_str());
     XMLCh * x_drConsensus = tc(drConsensus.c_str());
     
-    group->setAttribute(ATTR_gid, x_gID);
-    group->setAttribute(ATTR_drseq, x_drConsensus);
+    group->setAttribute(attr_Gid(), x_gID);
+    group->setAttribute(attr_Drseq(), x_drConsensus);
     
     xr(&x_gID);
     xr(&x_drConsensus);
@@ -486,129 +549,133 @@ xercesc::DOMElement * crispr::XML::addGroup(std::string& gID, std::string& drCon
     parentNode->appendChild(group);
     return group;
 }
-xercesc::DOMElement * crispr::XML::addData(xercesc::DOMElement * parentNode)
+xercesc::DOMElement * crispr::xml::writer::addData(xercesc::DOMElement * parentNode)
 {
-    // create the data node with spacer and drs as child elements 
-    DOMElement * data = CX_DocElem->createElement(TAG_data);
-    DOMElement * drs = CX_DocElem->createElement(TAG_drs);
-    DOMElement * spacers = CX_DocElem->createElement(TAG_spacers);
+    // create the data node with spacer and drs as child elements
+    xercesc::DOMElement * sources = XW_DocElem->createElement(tag_Sources());
+    xercesc::DOMElement * data = XW_DocElem->createElement(tag_Data());
+    xercesc::DOMElement * drs = XW_DocElem->createElement(tag_Drs());
+    xercesc::DOMElement * spacers = XW_DocElem->createElement(tag_Spacers());
+    data->appendChild(sources);
     data->appendChild(drs);
     data->appendChild(spacers);
     parentNode->appendChild(data);
     return data;
 }
-xercesc::DOMElement * crispr::XML::addAssembly(xercesc::DOMElement * parentNode)
+xercesc::DOMElement * crispr::xml::writer::addAssembly(xercesc::DOMElement * parentNode)
 {
-    DOMElement * assembly = CX_DocElem->createElement(TAG_assembly);
+    xercesc::DOMElement * assembly = XW_DocElem->createElement(tag_Assembly());
     parentNode->appendChild(assembly);
     return assembly;
 }
-void crispr::XML::addDirectRepeat(std::string& drid, std::string& seq, DOMElement * parentNode)
+void crispr::xml::writer::addDirectRepeat(std::string& drid, std::string& seq, xercesc::DOMElement * parentNode)
 {
-    DOMElement * dr = CX_DocElem->createElement(TAG_dr);
+    xercesc::DOMElement * dr = XW_DocElem->createElement(tag_Dr());
     
     XMLCh * x_seq = tc(seq.c_str());
     XMLCh * x_drid = tc(drid.c_str());
     
-    dr->setAttribute(ATTR_seq, x_seq);
-    dr->setAttribute(ATTR_drid, x_drid);
+    dr->setAttribute(attr_Seq(), x_seq);
+    dr->setAttribute(attr_Drid(), x_drid);
     
     xr(&x_seq);
     xr(&x_drid);
     
     parentNode->appendChild(dr);
 }
-void crispr::XML::addSpacer(std::string& seq, std::string& spid, DOMElement * parentNode, std::string cov)
+xercesc::DOMElement * crispr::xml::writer::addSpacer(std::string& seq, std::string& spid, xercesc::DOMElement * parentNode, std::string cov)
 {
-    DOMElement * sp = CX_DocElem->createElement(TAG_spacer);
+    xercesc::DOMElement * sp = XW_DocElem->createElement(tag_Spacer());
     XMLCh * x_seq = tc(seq.c_str());
     XMLCh * x_cov = tc(cov.c_str());
     XMLCh * x_spid = tc(spid.c_str());
     
-    sp->setAttribute(ATTR_seq, x_seq);
-    sp->setAttribute(ATTR_spid, x_spid);
-    sp->setAttribute(ATTR_cov, x_cov);
+    sp->setAttribute(attr_Seq(), x_seq);
+    sp->setAttribute(attr_Spid(), x_spid);
+    sp->setAttribute(attr_Cov(), x_cov);
     
     xr(&x_seq);
     xr(&x_cov);
     xr(&x_spid);
     
     parentNode->appendChild(sp);
+    return sp;
 }
-xercesc::DOMElement * crispr::XML::createFlankers(xercesc::DOMElement * parentNode)
+xercesc::DOMElement * crispr::xml::writer::createFlankers(xercesc::DOMElement * parentNode)
 {
-    DOMElement * flankers = CX_DocElem->createElement(TAG_flankers);
+    xercesc::DOMElement * flankers = XW_DocElem->createElement(tag_Flankers());
     parentNode->appendChild(flankers);
     return flankers;
 }
-void crispr::XML::addFlanker(std::string& seq, std::string& flid, xercesc::DOMElement * parentNode)
+xercesc::DOMElement * crispr::xml::writer::addFlanker(std::string& seq, std::string& flid, xercesc::DOMElement * parentNode)
 {
     XMLCh * x_seq = tc(seq.c_str());
     XMLCh * x_flid = tc(flid.c_str());
 
-    DOMElement * flanker = CX_DocElem->createElement(TAG_flanker);
-    flanker->setAttribute(ATTR_seq, x_seq);
-    flanker->setAttribute(ATTR_flid, x_flid);
+    xercesc::DOMElement * flanker = XW_DocElem->createElement(tag_Flanker());
+    flanker->setAttribute(attr_Seq(), x_seq);
+    flanker->setAttribute(attr_Flid(), x_flid);
     
     xr(&x_seq);
     xr(&x_flid);
     
     parentNode->appendChild(flanker);
+    return flanker;
 }
-xercesc::DOMElement * crispr::XML::addContig(std::string& cid, DOMElement * parentNode)
+xercesc::DOMElement * crispr::xml::writer::addContig(std::string& cid, xercesc::DOMElement * parentNode)
 {
-    DOMElement * contig = CX_DocElem->createElement(TAG_contig);
+    xercesc::DOMElement * contig = XW_DocElem->createElement(tag_Contig());
     
     XMLCh * x_cid = tc(cid.c_str());
-    contig->setAttribute(ATTR_cid, x_cid);
+    contig->setAttribute(attr_Cid(), x_cid);
     xr(&x_cid);
     parentNode->appendChild(contig);
     return contig;
 }
-void crispr::XML::createConsensus(std::string& concensus, xercesc::DOMElement * parentNode)
+void crispr::xml::writer::createConsensus(std::string& concensus, xercesc::DOMElement * parentNode)
 {
-    DOMElement * concensus_elem = CX_DocElem->createElement(TAG_consensus);
+    xercesc::DOMElement * concensus_elem = XW_DocElem->createElement(tag_Consensus());
     XMLCh * x_consensus = tc(concensus.c_str());
-    DOMText * concensus_text = CX_DocElem->createTextNode(x_consensus);
+    xercesc::DOMText * concensus_text = XW_DocElem->createTextNode(x_consensus);
     
     xr(&x_consensus);
     
     concensus_elem->appendChild(concensus_text);
     parentNode->appendChild(concensus_elem);
 }
-xercesc::DOMElement * crispr::XML::addSpacerToContig(std::string& spid, DOMElement * parentNode)
+xercesc::DOMElement * crispr::xml::writer::addSpacerToContig(std::string& spid, xercesc::DOMElement * parentNode)
 {
-    DOMElement * cspacer = CX_DocElem->createElement(TAG_cspacer);
+    xercesc::DOMElement * cspacer = XW_DocElem->createElement(tag_Cspacer());
     XMLCh * x_spid = tc(spid.c_str());
-    cspacer->setAttribute(ATTR_spid, x_spid);
+    cspacer->setAttribute(attr_Spid(), x_spid);
     xr(&x_spid);
     parentNode->appendChild(cspacer);
     return cspacer;
 }
-xercesc::DOMElement * crispr::XML::createSpacers(std::string tag)
+xercesc::DOMElement * crispr::xml::writer::createSpacers(std::string tag)
 {
     XMLCh * x_tag = tc(tag.c_str());
-    DOMElement * spacers = CX_DocElem->createElement(x_tag);
+    xercesc::DOMElement * spacers = XW_DocElem->createElement(x_tag);
     xr(&x_tag);
     return spacers;
 }
 
-xercesc::DOMElement * crispr::XML::createFlankers(std::string tag)
+xercesc::DOMElement * crispr::xml::writer::createFlankers(std::string tag)
 {
     return createSpacers(tag);
 }
 
-void crispr::XML::addSpacer(std::string tag, std::string& spid, std::string& drid, std::string& drconf, DOMElement * parentNode)
+void crispr::xml::writer::addSpacer(std::string tag, std::string& spid, std::string& drid, std::string& drconf, xercesc::DOMElement * parentNode)
 {
     XMLCh * x_tag = tc(tag.c_str());
     XMLCh * x_drid = tc(drid.c_str());
     XMLCh * x_drconf = tc(drconf.c_str());
     XMLCh * x_spid = tc(spid.c_str());
 
-    DOMElement * fs = CX_DocElem->createElement(x_tag);
-    fs->setAttribute(ATTR_drid, x_drid);
-    fs->setAttribute(ATTR_drconf, x_drconf);
-    fs->setAttribute(ATTR_spid, x_spid);
+    xercesc::DOMElement * fs = XW_DocElem->createElement(x_tag);
+    fs->setAttribute(attr_Drid(), x_drid);
+    fs->setAttribute(attr_Drconf(), x_drconf);
+    fs->setAttribute(attr_Spid(), x_spid);
     
     xr(&x_tag);
     xr(&x_drid);
@@ -617,17 +684,17 @@ void crispr::XML::addSpacer(std::string tag, std::string& spid, std::string& dri
     
     parentNode->appendChild(fs);
 }
-void crispr::XML::addFlanker(std::string tag, std::string& flid, std::string& drconf, std::string& directjoin, xercesc::DOMElement * parentNode)
+void crispr::xml::writer::addFlanker(std::string tag, std::string& flid, std::string& drconf, std::string& directjoin, xercesc::DOMElement * parentNode)
 {
     XMLCh * x_tag = tc(tag.c_str());
     XMLCh * x_flid = tc(flid.c_str());
     XMLCh * x_drconf = tc(drconf.c_str());
     XMLCh * x_directjoin = tc(directjoin.c_str());
     
-    DOMElement * bf = CX_DocElem->createElement(x_tag);
-    bf->setAttribute(ATTR_flid, x_flid);
-    bf->setAttribute(ATTR_drconf, x_drconf);
-    bf->setAttribute(ATTR_directjoin, x_directjoin);
+    xercesc::DOMElement * bf = XW_DocElem->createElement(x_tag);
+    bf->setAttribute(attr_Flid(), x_flid);
+    bf->setAttribute(attr_Drconf(), x_drconf);
+    bf->setAttribute(attr_Directjoin(), x_directjoin);
     
     xr(&x_tag);
     xr(&x_flid);
@@ -637,41 +704,133 @@ void crispr::XML::addFlanker(std::string tag, std::string& flid, std::string& dr
     parentNode->appendChild(bf);
 }
 
+//create the sources tag for a group <sources>
+xercesc::DOMElement * crispr::xml::writer::addSources(xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * sources = XW_DocElem->createElement(tag_Sources());
+    parentNode->appendChild(sources);
+    return sources;
+}
+
+// create a source tag for either the sources in <group> 
+xercesc::DOMElement * crispr::xml::writer::addSource(std::string accession, std::string soid, xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * source = XW_DocElem->createElement(tag_Source());
+    XMLCh * x_acc = tc(accession.c_str());
+    source->setAttribute(attr_Accession(), x_acc);
+    XMLCh * x_soid = tc(soid.c_str());
+    source->setAttribute(attr_Soid(), x_soid);
+    parentNode->appendChild(source);
+    xr(&x_acc);
+    xr(&x_soid);
+    return source;
+                        
+}
+
+xercesc::DOMElement * crispr::xml::writer::addSpacerSource(std::string soid, xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * source = XW_DocElem->createElement(tag_Source());
+    XMLCh * x_soid = tc(soid.c_str());
+    source->setAttribute(attr_Soid(), x_soid);
+    parentNode->appendChild(source);
+    xr(&x_soid);
+    return source;
+}
+
+
+// add start and end positions for <source> in <spacer>
+void crispr::xml::writer::addStartAndEndPos(std::string start, std::string end, xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * start_tag = XW_DocElem->createElement(tag_Spos());
+    xercesc::DOMElement * end_tag = XW_DocElem->createElement(tag_Epos());
+    XMLCh * x_start_site = tc(start.c_str());
+    XMLCh * x_end_site = tc(end.c_str());
+    xercesc::DOMText * start_text = XW_DocElem->createTextNode(x_start_site);
+    xercesc::DOMText * end_text = XW_DocElem->createTextNode(x_end_site);
+    start_tag->appendChild(start_text);
+    end_tag->appendChild(end_text);
+    parentNode->appendChild(start_tag);
+    parentNode->appendChild(end_tag);
+    xr(&x_start_site);
+    xr(&x_end_site);
+}
+
+// add a <program> tag to <metadata>
+xercesc::DOMElement * crispr::xml::writer::addProgram(xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * program = XW_DocElem->createElement(tag_Program());
+    parentNode->appendChild(program);
+    return program;
+}
+
+//add a <name> tag to <program>
+void crispr::xml::writer::addProgName(std::string progName, xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * name_tag = XW_DocElem->createElement(tag_Name());
+    XMLCh * x_prog_name = tc(progName.c_str());
+    xercesc::DOMText * name_text = XW_DocElem->createTextNode(x_prog_name);
+    name_tag->appendChild(name_text);
+    parentNode->appendChild(name_tag);
+    xr(&x_prog_name);
+}
+
+// add a <version> tag to <program>
+void crispr::xml::writer::addProgVersion(std::string progVersion, xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * version_tag = XW_DocElem->createElement(tag_Version());
+    XMLCh * x_prog_version = tc(progVersion.c_str());
+    xercesc::DOMText * version_text = XW_DocElem->createTextNode(x_prog_version);
+    version_tag->appendChild(version_text);
+    parentNode->appendChild(version_tag);
+    xr(&x_prog_version);
+}
+
+//add a <command> tag to <program>
+void crispr::xml::writer::addProgCommand(std::string progCommand, xercesc::DOMElement * parentNode)
+{
+    xercesc::DOMElement * command_tag = XW_DocElem->createElement(tag_Command());
+    XMLCh * x_prog_version = tc(progCommand.c_str());
+    xercesc::DOMText * command_text = XW_DocElem->createTextNode(x_prog_version);
+    command_tag->appendChild(command_text);
+    parentNode->appendChild(command_tag);
+    xr(&x_prog_version);
+}
+
 //
  // File IO / Printing
 //
 
-bool crispr::XML::printDOMToFile(std::string outFileName )
+bool crispr::xml::writer::printDOMToFile(std::string outFileName )
 {
     bool retval;
     
     try
     {
         // get a serializer, an instance of DOMLSSerializer
-        XMLCh tempStr[3] = {chLatin_L, chLatin_S, chNull};
-        DOMImplementation *impl          = DOMImplementationRegistry::getDOMImplementation(tempStr);
-        DOMLSSerializer   *theSerializer = ((DOMImplementationLS*)impl)->createLSSerializer();
-        DOMLSOutput       *theOutputDesc = ((DOMImplementationLS*)impl)->createLSOutput();
+        XMLCh tempStr[3] = {xercesc::chLatin_L, xercesc::chLatin_S, xercesc::chNull};
+        xercesc::DOMImplementation *impl          = xercesc::DOMImplementationRegistry::getDOMImplementation(tempStr);
+        xercesc::DOMLSSerializer   *theSerializer = ((xercesc::DOMImplementationLS*)impl)->createLSSerializer();
+        xercesc::DOMLSOutput       *theOutputDesc = ((xercesc::DOMImplementationLS*)impl)->createLSOutput();
         
         // set user specified output encoding
         XMLCh * x_encoding = tc("ISO8859-1");
         theOutputDesc->setEncoding(x_encoding);
         xr(&x_encoding);
 
-        DOMConfiguration* serializerConfig=theSerializer->getDomConfig();
+        xercesc::DOMConfiguration* serializerConfig=theSerializer->getDomConfig();
         
         // set feature if the serializer supports the feature/mode
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTSplitCdataSections, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTSplitCdataSections, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTSplitCdataSections, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTSplitCdataSections, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTDiscardDefaultContent, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTDiscardDefaultContent, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTFormatPrettyPrint, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTFormatPrettyPrint, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTBOM, false))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTBOM, false);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTBOM, false))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTBOM, false);
         
         //
         // Plug in a format target to receive the resultant
@@ -680,13 +839,13 @@ bool crispr::XML::printDOMToFile(std::string outFileName )
         // StdOutFormatTarget prints the resultant XML stream
         // to stdout once it receives any thing from the serializer.
         //
-        XMLFormatTarget *myFormTarget;
-        myFormTarget = new LocalFileFormatTarget(outFileName.c_str());
+        xercesc::XMLFormatTarget *myFormTarget;
+        myFormTarget = new xercesc::LocalFileFormatTarget(outFileName.c_str());
         //myFormTarget=new StdOutFormatTarget();
         
         theOutputDesc->setByteStream(myFormTarget);
 
-        theSerializer->write(CX_DocElem, theOutputDesc);
+        theSerializer->write(XW_DocElem, theOutputDesc);
         
         theOutputDesc->release();
         theSerializer->release();
@@ -699,12 +858,12 @@ bool crispr::XML::printDOMToFile(std::string outFileName )
         retval = true;
         
     }
-    catch (const OutOfMemoryException&)
+    catch (const xercesc::OutOfMemoryException&)
     {
         XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
         retval = false;
     }
-    catch (XMLException& e)
+    catch (xercesc::XMLException& e)
     {
         char * c_exept = tc(e.getMessage());
         XERCES_STD_QUALIFIER cerr << "An error occurred during creation of output transcoder. Msg is:"
@@ -718,37 +877,37 @@ return retval;
 
 }
 
-bool crispr::XML::printDOMToScreen(void )
+bool crispr::xml::writer::printDOMToScreen(void )
 {
     bool retval;
     
     try
     {
         // get a serializer, an instance of DOMLSSerializer
-        XMLCh tempStr[3] = {chLatin_L, chLatin_S, chNull};
-        DOMImplementation *impl          = DOMImplementationRegistry::getDOMImplementation(tempStr);
-        DOMLSSerializer   *theSerializer = ((DOMImplementationLS*)impl)->createLSSerializer();
-        DOMLSOutput       *theOutputDesc = ((DOMImplementationLS*)impl)->createLSOutput();
+        XMLCh tempStr[3] = {xercesc::chLatin_L, xercesc::chLatin_S, xercesc::chNull};
+        xercesc::DOMImplementation *impl          = xercesc::DOMImplementationRegistry::getDOMImplementation(tempStr);
+        xercesc::DOMLSSerializer   *theSerializer = ((xercesc::DOMImplementationLS*)impl)->createLSSerializer();
+        xercesc::DOMLSOutput       *theOutputDesc = ((xercesc::DOMImplementationLS*)impl)->createLSOutput();
         
         // set user specified output encoding
         XMLCh * x_encoding = tc("ISO8859-1");
         theOutputDesc->setEncoding(x_encoding);
         xr(&x_encoding);
         
-        DOMConfiguration* serializerConfig=theSerializer->getDomConfig();
+        xercesc::DOMConfiguration* serializerConfig=theSerializer->getDomConfig();
         
         // set feature if the serializer supports the feature/mode
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTSplitCdataSections, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTSplitCdataSections, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTSplitCdataSections, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTSplitCdataSections, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTDiscardDefaultContent, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTDiscardDefaultContent, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTFormatPrettyPrint, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTFormatPrettyPrint, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTBOM, false))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTBOM, false);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTBOM, false))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTBOM, false);
         
         //
         // Plug in a format target to receive the resultant
@@ -757,12 +916,12 @@ bool crispr::XML::printDOMToScreen(void )
         // StdOutFormatTarget prints the resultant XML stream
         // to stdout once it receives any thing from the serializer.
         //
-        XMLFormatTarget *myFormTarget;
-        myFormTarget=new StdOutFormatTarget();
+        xercesc::XMLFormatTarget *myFormTarget;
+        myFormTarget=new xercesc::StdOutFormatTarget();
         
         theOutputDesc->setByteStream(myFormTarget);
         
-        theSerializer->write(CX_DocElem, theOutputDesc);
+        theSerializer->write(XW_DocElem, theOutputDesc);
         
         theOutputDesc->release();
         theSerializer->release();
@@ -775,12 +934,12 @@ bool crispr::XML::printDOMToScreen(void )
         retval = true;
         
     }
-    catch (const OutOfMemoryException&)
+    catch (const xercesc::OutOfMemoryException&)
     {
         XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
         retval = false;
     }
-    catch (XMLException& e)
+    catch (xercesc::XMLException& e)
     {
         char * c_exept = tc(e.getMessage());
         XERCES_STD_QUALIFIER cerr << "An error occurred during creation of output transcoder. Msg is:"
@@ -794,17 +953,17 @@ bool crispr::XML::printDOMToScreen(void )
     
 }
 
-bool crispr::XML::printDOMToFile(std::string outFileName, DOMDocument * docDOM )
+bool crispr::xml::writer::printDOMToFile(std::string outFileName, xercesc::DOMDocument * docDOM )
 {
     bool retval;
     
     try
     {
         // get a serializer, an instance of DOMLSSerializer
-        XMLCh tempStr[3] = {chLatin_L, chLatin_S, chNull};
-        DOMImplementation *impl          = DOMImplementationRegistry::getDOMImplementation(tempStr);
-        DOMLSSerializer   *theSerializer = ((DOMImplementationLS*)impl)->createLSSerializer();
-        DOMLSOutput       *theOutputDesc = ((DOMImplementationLS*)impl)->createLSOutput();
+        XMLCh tempStr[3] = {xercesc::chLatin_L, xercesc::chLatin_S, xercesc::chNull};
+        xercesc::DOMImplementation *impl          = xercesc::DOMImplementationRegistry::getDOMImplementation(tempStr);
+        xercesc::DOMLSSerializer   *theSerializer = ((xercesc::DOMImplementationLS*)impl)->createLSSerializer();
+        xercesc::DOMLSOutput       *theOutputDesc = ((xercesc::DOMImplementationLS*)impl)->createLSOutput();
         
         // set user specified output encoding
         XMLCh * x_encoding = tc("ISO8859-1");
@@ -812,20 +971,20 @@ bool crispr::XML::printDOMToFile(std::string outFileName, DOMDocument * docDOM )
         xr(&x_encoding);
         
         
-        DOMConfiguration* serializerConfig = theSerializer->getDomConfig();
+        xercesc::DOMConfiguration* serializerConfig = theSerializer->getDomConfig();
         
         // set feature if the serializer supports the feature/mode
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTSplitCdataSections, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTSplitCdataSections, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTSplitCdataSections, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTSplitCdataSections, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTDiscardDefaultContent, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTDiscardDefaultContent, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTFormatPrettyPrint, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTFormatPrettyPrint, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTBOM, false))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTBOM, false);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTBOM, false))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTBOM, false);
         
         //
         // Plug in a format target to receive the resultant
@@ -834,8 +993,8 @@ bool crispr::XML::printDOMToFile(std::string outFileName, DOMDocument * docDOM )
         // StdOutFormatTarget prints the resultant XML stream
         // to stdout once it receives any thing from the serializer.
         //
-        XMLFormatTarget *myFormTarget;
-        myFormTarget = new LocalFileFormatTarget(outFileName.c_str());
+        xercesc::XMLFormatTarget *myFormTarget;
+        myFormTarget = new xercesc::LocalFileFormatTarget(outFileName.c_str());
         //myFormTarget=new StdOutFormatTarget();
         
         theOutputDesc->setByteStream(myFormTarget);
@@ -853,12 +1012,12 @@ bool crispr::XML::printDOMToFile(std::string outFileName, DOMDocument * docDOM )
         retval = true;
         
     }
-    catch (const OutOfMemoryException&)
+    catch (const xercesc::OutOfMemoryException&)
     {
         XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
         retval = false;
     }
-    catch (XMLException& e)
+    catch (xercesc::XMLException& e)
     {
         char * c_msg = tc(e.getMessage());
         XERCES_STD_QUALIFIER cerr << "An error occurred during creation of output transcoder. Msg is:"
@@ -872,17 +1031,17 @@ bool crispr::XML::printDOMToFile(std::string outFileName, DOMDocument * docDOM )
     
 }
 
-bool crispr::XML::printDOMToScreen(DOMDocument * domDoc )
+bool crispr::xml::writer::printDOMToScreen(xercesc::DOMDocument * domDoc )
 {
     bool retval;
     
     try
     {
         // get a serializer, an instance of DOMLSSerializer
-        XMLCh tempStr[3] = {chLatin_L, chLatin_S, chNull};
-        DOMImplementation *impl          = DOMImplementationRegistry::getDOMImplementation(tempStr);
-        DOMLSSerializer   *theSerializer = ((DOMImplementationLS*)impl)->createLSSerializer();
-        DOMLSOutput       *theOutputDesc = ((DOMImplementationLS*)impl)->createLSOutput();
+        XMLCh tempStr[3] = {xercesc::chLatin_L, xercesc::chLatin_S, xercesc::chNull};
+        xercesc::DOMImplementation *impl          = xercesc::DOMImplementationRegistry::getDOMImplementation(tempStr);
+        xercesc::DOMLSSerializer   *theSerializer = ((xercesc::DOMImplementationLS*)impl)->createLSSerializer();
+        xercesc::DOMLSOutput       *theOutputDesc = ((xercesc::DOMImplementationLS*)impl)->createLSOutput();
         
         // set user specified output encoding
         XMLCh * x_encoding = tc("ISO8859-1");
@@ -891,20 +1050,20 @@ bool crispr::XML::printDOMToScreen(DOMDocument * domDoc )
         xr(&x_encoding);
         
         
-        DOMConfiguration* serializerConfig=theSerializer->getDomConfig();
+        xercesc::DOMConfiguration* serializerConfig=theSerializer->getDomConfig();
         
         // set feature if the serializer supports the feature/mode
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTSplitCdataSections, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTSplitCdataSections, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTSplitCdataSections, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTSplitCdataSections, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTDiscardDefaultContent, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTDiscardDefaultContent, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTDiscardDefaultContent, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTFormatPrettyPrint, true))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTFormatPrettyPrint, true);
         
-        if (serializerConfig->canSetParameter(XMLUni::fgDOMWRTBOM, false))
-            serializerConfig->setParameter(XMLUni::fgDOMWRTBOM, false);
+        if (serializerConfig->canSetParameter(xercesc::XMLUni::fgDOMWRTBOM, false))
+            serializerConfig->setParameter(xercesc::XMLUni::fgDOMWRTBOM, false);
         
         //
         // Plug in a format target to receive the resultant
@@ -913,8 +1072,8 @@ bool crispr::XML::printDOMToScreen(DOMDocument * domDoc )
         // StdOutFormatTarget prints the resultant XML stream
         // to stdout once it receives any thing from the serializer.
         //
-        XMLFormatTarget *myFormTarget;
-        myFormTarget=new StdOutFormatTarget();
+        xercesc::XMLFormatTarget *myFormTarget;
+        myFormTarget=new xercesc::StdOutFormatTarget();
         
         theOutputDesc->setByteStream(myFormTarget);
         
@@ -931,12 +1090,12 @@ bool crispr::XML::printDOMToScreen(DOMDocument * domDoc )
         retval = true;
         
     }
-    catch (const OutOfMemoryException&)
+    catch (const xercesc::OutOfMemoryException&)
     {
         XERCES_STD_QUALIFIER cerr << "OutOfMemoryException" << XERCES_STD_QUALIFIER endl;
         retval = false;
     }
-    catch (XMLException& e)
+    catch (xercesc::XMLException& e)
     {
         char * c_msg = tc(e.getMessage());
         XERCES_STD_QUALIFIER cerr << "An error occurred during creation of output transcoder. Msg is:"

@@ -45,8 +45,6 @@
 #include <iostream>
 #include <map>
 
-// local includes
-#include "crassDefines.h"
 
 // typedefs
 typedef int StringToken;
