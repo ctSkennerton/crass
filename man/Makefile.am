@@ -1,2 +1,2 @@
-man_MANS = crass.1 crisprtools.1
+man_MANS = crass.1
 
