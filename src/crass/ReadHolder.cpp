@@ -174,10 +174,6 @@ unsigned int ReadHolder::getAverageSpacerLength()
                                 "No Spacers!");
     }
     return 0;
-
-
-    		
-
 }
 
 std::vector<std::string> ReadHolder::getAllSpacerStrings(void)
@@ -291,7 +287,8 @@ void ReadHolder::reverseStartStops(void)
 		this->printContents();
 		std::stringstream ss;
 		ss<<"The first direct repeat position is a negative number: "
-		  <<true_start_offset<<"\nRead: "<<this->getHeader();
+		  <<true_start_offset<<"\nSeq_len: "<<seq_len
+		  << "Final spacer index: "<<RH_StartStops.back();
 		throw crispr::exception(__FILE__,
                                 __LINE__,
                                 __PRETTY_FUNCTION__,
@@ -341,7 +338,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
     // Take this opportunity to look for partials at either end of the read
     //
     
-    int DR_length = (int)DR->length();
+    int DR_length = static_cast<int>(DR->length());
     
     StartStopListIterator ss_iter = RH_StartStops.begin();
     while(ss_iter != RH_StartStops.end())
@@ -350,10 +347,10 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         int usable_length = DR_length - 1;
         
         // the first guy is the start of the DR
-        if(frontOffset >= (int)(*ss_iter))
+        if(frontOffset >= static_cast<int>((*ss_iter)))
         {
             // this will be less than 0
-            int amount_below_zero = frontOffset - (int)(*ss_iter);
+            int amount_below_zero = frontOffset - static_cast<int>((*ss_iter));
             usable_length = DR_length - amount_below_zero - 1;
             *ss_iter = 0;
         }
@@ -362,7 +359,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
             *ss_iter -= frontOffset;
         }
 #ifdef DEBUG
-        if(*ss_iter > (unsigned int)RH_Seq.length()) { 
+        if(*ss_iter > static_cast<unsigned int>(RH_Seq.length())) { 
 			std::stringstream ss;
 			ss<<"Something wrong with front offset! " 
 				<<"ss iter: "<<*ss_iter << " \n " 
@@ -380,7 +377,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         // correct if we have gone beyond the end of the read
         if(*ss_iter >= RH_Seq.length())
         {
-            *ss_iter = (unsigned int)RH_Seq.length() - 1;
+            *ss_iter = static_cast<unsigned int>(RH_Seq.length()) - 1;
         }
         ss_iter++;
         
@@ -395,7 +392,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
         int part_s, part_e;
         part_s = part_e = 0;
 
-		stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, 0, ((int)(*ss_iter) - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
+		stringPair sp = smithWaterman(RH_Seq, *DR, &part_s, &part_e, 0, (static_cast<int>((*ss_iter)) - opts->lowSpacerSize), CRASS_DEF_PARTIAL_SIM_CUT_OFF);
 		if(0 != part_e)
 		{
 			if (part_e - part_s >= CRASS_DEF_MIN_PARTIAL_LENGTH) 
@@ -431,7 +428,7 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
 		}
     }
     // then the back
-    unsigned int end_dist = (unsigned int)RH_Seq.length() - RH_StartStops.back();
+    unsigned int end_dist = static_cast<unsigned int>(RH_Seq.length()) - RH_StartStops.back();
     if(end_dist > (unsigned int)(opts->lowSpacerSize))
     {
         // we should look for a DR here
@@ -493,7 +490,7 @@ std::string ReadHolder::DRLowLexi(void)
         }
         
         // take the first
-        else if (RH_StartStops.back() == (unsigned int)RH_Seq.length())
+        else if (RH_StartStops.back() == static_cast<unsigned int>(RH_Seq.length()))
         {
             tmp_dr = repeatStringAt(0);
             rev_comp = reverseComplement(tmp_dr);
@@ -550,7 +547,15 @@ void ReadHolder::reverseComplementSeq(void)
     //-----
     // Reverse complement the read and fix the start stops
     // 
+
     RH_Seq = reverseComplement(RH_Seq);
+	if(RH_Seq.empty()) {
+		throw crispr::runtime_exception(__FILE__,
+		                                __LINE__,
+		                                __PRETTY_FUNCTION__,
+		                                "Sequence corrupted during reverse complement!"
+		                                );
+	}
     reverseStartStops();
     RH_WasLowLexi = !RH_WasLowLexi;
 }
@@ -576,7 +581,10 @@ void ReadHolder::encode(void)
         std::stringstream rle, seq;
         rle<<this->RH_Seq[0];
         seq<<this->RH_Seq[0];
-        for (int  i = 1; i < (int)(this->RH_Seq.length()); i++) 
+		//std::cout<<"seq length: "<<RH_Seq.length()<<std::endl;
+		//std::cout<<"orig seq: "<<RH_Seq<<std::endl;
+		int length = static_cast<int>(this->RH_Seq.length());
+        for (int  i = 1; i < length; i++) 
         {
             if (this->RH_Seq[i] == this->RH_Seq[i - 1]) 
             {
@@ -584,17 +592,30 @@ void ReadHolder::encode(void)
                 do {
                     count++;
                     i++;
-                } while (this->RH_Seq[i] == this->RH_Seq[i - 1]); 
-                
-                rle << count << this->RH_Seq[i];
-                seq<<this->RH_Seq[i];
+                } while ((i < length) && (this->RH_Seq[i] == this->RH_Seq[i - 1])); 
+
+				if(i < length) {
+                	rle << count << this->RH_Seq[i];
+                	seq<<this->RH_Seq[i];
+					//std::cout<<"b-index: "<<i<<" base: "<<this->RH_Seq[i]<<std::endl;
+				} else {
+					rle <<count;
+					/*throw crispr::runtime_exception(__FILE__,
+					                                __LINE__,
+					                                __PRETTY_FUNCTION__,
+					                                "Assigning index past end of string");
+													*/
+				}
             }
             else
             {
                 rle << this->RH_Seq[i];
                 seq << this->RH_Seq[i];
+				//std::cout<<"e-index: "<<i<<" base: "<<this->RH_Seq[i]<<std::endl;
             }
         }
+		//std::cout<<"seq: \""<<seq.str().c_str()<<'"'<<std::endl;
+		//std::cout<<"rle: \""<<rle.str().c_str()<<'"'<<std::endl;
         this->RH_Seq = seq.str();
         this->RH_Rle = rle.str();
         this->RH_isSqueezed = true;
@@ -638,7 +659,7 @@ std::string ReadHolder::expand(bool fixStopStarts)
         int main_index = 0;
         int new_index = 0;
         int old_index = 0;
-        int stop_index = (int)RH_Rle.length();
+        int stop_index = static_cast<int>(RH_Rle.length());
         int next_ss_index = -1;
         StartStopListIterator ss_iter = RH_StartStops.begin();
         

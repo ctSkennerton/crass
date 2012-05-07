@@ -198,7 +198,7 @@ int scanRight(ReadHolder * tmp_holder,
 #endif
     unsigned int start_stops_size = tmp_holder->getStartStopListSize();
     
-    unsigned int pattern_length = (unsigned int)pattern.length();
+    unsigned int pattern_length = static_cast<unsigned int>(pattern.length());
     
     // final start index
     unsigned int last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 2);
@@ -216,7 +216,7 @@ int scanRight(ReadHolder * tmp_holder,
     
     unsigned int begin_search, end_search;
     
-    unsigned int read_length = (unsigned int)tmp_holder->getSeqLength();
+    unsigned int read_length = static_cast<unsigned int>(tmp_holder->getSeqLength());
     bool more_to_search = true;
     while (more_to_search)
     {
@@ -300,7 +300,7 @@ int longReadSearch(ReadHolder * tmpHolder,
     std::string read = tmpHolder->getSeq();
     
     // get the length of this sequence
-    unsigned int seq_length = (unsigned int)read.length();
+    unsigned int seq_length = static_cast<unsigned int>(read.length());
     
 
     //the mumber of bases that can be skipped while we still guarantee that the entire search
@@ -320,7 +320,7 @@ int longReadSearch(ReadHolder * tmpHolder,
         return 1;
     }
     
-    for (unsigned int j = 0; j <= (unsigned int)searchEnd; j = j + skips)
+    for (unsigned int j = 0; j <= static_cast<unsigned int>(searchEnd); j = j + skips)
     {
                     
         unsigned int beginSearch = j + opts.lowDRsize + opts.lowSpacerSize;
@@ -369,7 +369,7 @@ int longReadSearch(ReadHolder * tmpHolder,
         if (pattern_in_text_index >= 0)
         {
             tmpHolder->startStopsAdd(j,  j + opts.searchWindowLength);
-            unsigned int found_pattern_start_index = beginSearch + (unsigned int)pattern_in_text_index;
+            unsigned int found_pattern_start_index = beginSearch + static_cast<unsigned int>(pattern_in_text_index);
             
             tmpHolder->startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength);
             scanRight(tmpHolder, pattern, opts.lowSpacerSize, 24);
@@ -445,7 +445,7 @@ int shortReadSearch(ReadHolder * tmpHolder,
     
     std::string read = tmpHolder->getSeq();
 
-    unsigned int seq_length = (unsigned int)read.length();
+    unsigned int seq_length = static_cast<unsigned int>(read.length());
     unsigned int search_end = seq_length - opts.lowDRsize - 1;
     unsigned int final_index = seq_length - 1;
     
@@ -464,7 +464,7 @@ int shortReadSearch(ReadHolder * tmpHolder,
             second_start = PatternMatcher::bmpSearch(read.substr(search_begin), 
                                                      read.substr(first_start, opts.lowDRsize) );
         } catch (std::exception& e) {
-			//std::cerr<<__FILE__<<__LINE__<<__PRETTY_FUNCTION__<<e.what()<<std::endl;
+
 			std::stringstream ss;
             ss<<read<<"\n";
             ss<<search_begin<<" : "<<first_start<<" : "<<opts.lowDRsize;
@@ -479,7 +479,7 @@ int shortReadSearch(ReadHolder * tmpHolder,
         {
             // bingo!
             second_start += search_begin;
-            unsigned int second_end = (unsigned int)second_start + opts.lowDRsize;
+            unsigned int second_end = static_cast<unsigned int>(second_start + opts.lowDRsize);
             unsigned int first_end = first_start + opts.lowDRsize;
 
             unsigned int next_index = second_end + 1;
