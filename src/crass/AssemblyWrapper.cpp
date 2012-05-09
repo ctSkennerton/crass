@@ -62,7 +62,7 @@ void assemblyVersionInfo(void)
 {
     std::cout<<std::endl<<PACKAGE_FULL_NAME<<" ("<<PACKAGE_NAME<<")"<<std::endl<<"version "<<PACKAGE_MAJOR_VERSION<<" subversion "<<PACKAGE_MINOR_VERSION<<" revison "<<PACKAGE_REVISION<<" ("<<PACKAGE_VERSION<<")"<<std::endl<<std::endl;
     std::cout<<"---------------------------------------------------------------"<<std::endl;
-    std::cout<<"Copyright (C) 2011 Connor Skennerton & Michael Imelfort"<<std::endl;
+    std::cout<<"Copyright (C) 2011, 2012 Connor Skennerton & Michael Imelfort"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it"<<std::endl;
     std::cout<<"under certain conditions: See the source for more details"<<std::endl;
@@ -535,14 +535,14 @@ int assemblyMain(int argc, char * argv[])
     std::set<std::string> segments;
     parseSegmentString(opts.segments, segments);
     
-    std::list<std::string> spacers_for_assembly;
+    std::set<std::string> spacers_for_assembly;
 
     //parse xml file
     crispr::xml::reader xml_parser;  
     std::string direct_repeat;
     std::string group_as_string = "G" + to_string(opts.group);
 
-    xml_parser.parseXMLFile(opts.xmlFileName, group_as_string, &direct_repeat, segments, spacers_for_assembly );
+    xml_parser.parseXMLFile(opts.xmlFileName, group_as_string, direct_repeat, segments, spacers_for_assembly );
     
     // parse the read file and create tmp.fa for the right segments
     //build the read file name from what we know
