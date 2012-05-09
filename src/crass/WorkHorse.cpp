@@ -246,6 +246,11 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         logError("FATAL ERROR: splitIntoContigs failed");
         return 6;
 	}
+    // call flanking regions
+    if (generateFlankers()) {
+        logError("FATAL ERROR: generateFlankers failed");
+        return 70;
+    }
     
     //remove NodeManagers with low numbers of spacers
     // and where the standard deviation of the spacer length 
@@ -256,10 +261,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         return 7;
     }
 	
-    if (generateFlankers()) {
-        logError("FATAL ERROR: generateFlankers failed");
-        return 70;
-    }
+
     
     // dump the spacers to file
     // Not needed any more since we have the crispr file
@@ -469,7 +471,7 @@ int WorkHorse::removeLowConfidenceNodeManagers(void)
                     delete mDRs[mTrueDRs[drg_iter->first]];
                      mDRs[mTrueDRs[drg_iter->first]] = NULL;
                 } else if (current_manager->stdevSpacerLength() > CRASS_DEF_STDEV_SPACER_LENGTH) {
-                    logInfo("Deleting NodeManager "<<drg_iter->first<<" as the stdev of the spacer lengths was greater than "<<CRASS_DEF_STDEV_SPACER_LENGTH, 4);
+                    logInfo("Deleting NodeManager "<<drg_iter->first<<" as the stdev ("<<current_manager->stdevSpacerLength()<<") of the spacer lengths was greater than "<<CRASS_DEF_STDEV_SPACER_LENGTH, 4);
                     delete mDRs[mTrueDRs[drg_iter->first]];
                      mDRs[mTrueDRs[drg_iter->first]] = NULL;
                 }

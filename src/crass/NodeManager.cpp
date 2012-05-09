@@ -949,20 +949,23 @@ EDGE_TYPE NodeManager::getOppositeEdgeType(EDGE_TYPE currentEdgeType)
     }
 }
 
-int NodeManager::getSpacerCountAndStats(bool showDetached)
+int NodeManager::getSpacerCountAndStats(bool showDetached, bool excludeFlankers)
 {
     int number_of_spacers = 0;
-    SpacerListIterator sp_iter = NM_Spacers.begin();
-    while (sp_iter != NM_Spacers.end()) 
+    SpacerListIterator sp_iter; NM_Spacers.begin();
+    for (sp_iter = NM_Spacers.begin(); sp_iter != NM_Spacers.end(); ++sp_iter) 
     {
-        if (showDetached || (sp_iter->second)->isAttached()) 
+        SpacerInstance * current_spacer = sp_iter->second;
+        if (showDetached || current_spacer->isAttached()) 
         {
+            if (excludeFlankers & current_spacer->isFlanker()) {
+                continue;
+            }
             // add in some stats for the spacers
             std::string spacer = NM_StringCheck.getString((sp_iter->second)->getID());
             NM_SpacerLenStat.add(spacer.length());
             number_of_spacers++;
         }
-        ++sp_iter;
     }
     return number_of_spacers;
 }
@@ -1967,18 +1970,9 @@ void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, std::strin
 
 void NodeManager::generateFlankers(bool showDetached)
 {
-//    // First populate the stats manager with the remaining spacers
-//    SpacerListIterator spacer_iter = NM_Spacers.begin();
-//    while(spacer_iter != NM_Spacers.end())
-//    {
-//        SpacerInstance * SI = spacer_iter->second;
-//        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
-//        {
-//            std::string spacer = NM_StringCheck.getString(SI->getID());
-//            NM_SpacerLenStat.add(spacer.length());
-//        }
-//        spacer_iter++;
-//    }
+    // generate statistics about length of spacers
+    getSpacerCountAndStats();
+    
     
     // do some maths
     double stdev = NM_SpacerLenStat.standardDeviation();
@@ -2001,13 +1995,13 @@ void NodeManager::generateFlankers(bool showDetached)
  
             if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
             {
-                if(SI->isCap()) {
+                /*if(SI->isCap()) {*/
                     int spacer_length = (int)(NM_StringCheck.getString(SI->getID())).length();
                     if (spacer_length > upper_bound || spacer_length < lower_bound) {
                         SI->setFlanker(true);
                         NM_FlankerNodes.push_back(SI);
-                    }
-                }
+                   }
+                /* }*/
             }
             spacer_iter++;
         }
@@ -2016,4 +2010,7 @@ void NodeManager::generateFlankers(bool showDetached)
     {
         logInfo("not enough length variation to detect flankers", 3);
     }
+    
+    // do this here so that any subsuquent calls don't include the flanking sequences
+    clearStats();
 }

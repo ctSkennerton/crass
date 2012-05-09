@@ -135,10 +135,16 @@ class NodeManager {
 		void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
 		void findAllNodes(NodeVector * allNodes);
 		void findAllNodes(NodeVector * capNodes, NodeVector * otherNodes);
-		int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
-        EDGE_TYPE getOppositeEdgeType(EDGE_TYPE currentEdgeType);
-        int getSpacerCountAndStats( bool showDetached);
-        inline bool haveAnyFlankers(void){return (0 != NM_FlankerNodes.size());}
+		
+    int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
+        
+    EDGE_TYPE getOppositeEdgeType(EDGE_TYPE currentEdgeType);
+        
+    int getSpacerCountAndStats( bool showDetached=false, bool excludeFlankers=true);
+        
+    inline bool haveAnyFlankers(void){return (0 != NM_FlankerNodes.size());}
+    
+    inline void clearStats(void) {NM_SpacerLenStat.clear();}
 
     // Walking
         bool getSpacerEdgeFromCap(WalkingManager * walkElem, SpacerInstance * nextSpacer);
@@ -165,6 +171,7 @@ class NodeManager {
 
     // Making purdy colours
         void setDebugColourLimits(void);
+    
         void setSpacerColourLimits(void);
 
     // Printing / IO
@@ -173,28 +180,33 @@ class NodeManager {
                              std::string title, 
                              bool showDetached, 
                              bool printBackEdges, 
-                             bool longDesc);         
+                             bool longDesc);  
+    
 		void printDebugNodeAttributes(std::ostream& dataOut, 
                                       CrisprNode * currCrisprNode, 
                                       std::string colourCode, 
                                       bool longDesc); 
+    
     // Print a graphviz style graph of the FULL spacers
         bool printSpacerGraph(std::string& outFileName, 
                               std::string title, 
                               bool longDesc, 
                               bool showSingles);         
     // Print a graphviz style graph of the FULL spacers    
-    bool printSpacerGraph(void);         
+    bool printSpacerGraph(void); 
+    
         std::string getSpacerGraphLabel(SpacerInstance * spacer, 
                                         bool longDesc);
 
-    
+    // make a key for the spacer graph 	
+
         void printSpacerKey(std::ostream &dataOut, 
                             int numSteps, 
-                            std::string groupNumber);         													// make a key for the spacer graph 	
+                            std::string groupNumber); 
+    
         void dumpReads(std::string readsFileName, 
                        bool showDetached, 
-                       bool split);												// dump reads to this file
+                       bool split);												
         
     // XML
     // print this node managers portion of the XML file 
@@ -242,7 +254,8 @@ class NodeManager {
     
     // Stats
         inline size_t meanSpacerLength(void) { return NM_SpacerLenStat.mean();}
-        inline double stdevSpacerLength(void) { return NM_SpacerLenStat.standardDeviation();}
+        
+    inline double stdevSpacerLength(void) { return NM_SpacerLenStat.standardDeviation();}
     private:
 		
 	// functions
@@ -250,13 +263,17 @@ class NodeManager {
         void addCrisprNodes(CrisprNode ** prevNode, 
                             std::string& workingString, 
                             StringToken headerSt);
+    
         void addSecondCrisprNode(CrisprNode ** prevNode, 
                                  std::string& workingString, 
                                  StringToken headerSt);
+    
         void addFirstCrisprNode(CrisprNode ** prevNode, 
                                 std::string& workingString, 
                                 StringToken headerSt);
+    
         void setContigIDForSpacers(SpacerInstanceVector * currentContigNodes);
+    
         void setUpperAndLowerCoverage(void);
      
     // members
