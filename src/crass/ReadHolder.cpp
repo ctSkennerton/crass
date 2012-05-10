@@ -1037,14 +1037,17 @@ void ReadHolder::logContents(int logLevel)
 
 std::ostream& ReadHolder::print (std::ostream& s)
 {
+#ifdef OUTPUT_READS_FASTQ
     if (RH_IsFasta) 
     {
+#endif
         s<<'>'<<RH_Header;
         if (RH_Comment.length() > 0) 
         {
             s<<'_'<<RH_Comment;
         }
         s<<std::endl<<RH_Seq;
+#ifdef OUTPUT_READS_FASTQ
     } 
     else 
     {
@@ -1055,6 +1058,7 @@ std::ostream& ReadHolder::print (std::ostream& s)
         }
         s<<RH_Qual;
     }
+#endif
     return s;
 }
 
