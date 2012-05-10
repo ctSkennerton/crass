@@ -1442,7 +1442,7 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
             std::string header = (*read_iter)->getHeader();
             if(reads_set.find(header) != reads_set.end())
             {
-                reads_file <<(*read_iter)<<std::endl;
+                reads_file <<*(*read_iter)<<std::endl;
             }
             read_iter++;
         }
