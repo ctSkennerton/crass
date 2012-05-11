@@ -55,6 +55,7 @@ public:
     double standardDeviation(void);
     void add(typename T::value_type a);
     bool remove(typename T::value_type a);
+    void clear(void);
     
 };
 
@@ -116,5 +117,10 @@ bool StatsManager<T>::remove(typename T::value_type a) {
 template <class T>
 void StatsManager<T>::add(typename T::value_type a) {
     container.push_back(a);
+}
+
+template <class T>
+void StatsManager<T>::clear(void) {
+    container.clear();
 }
 #endif
