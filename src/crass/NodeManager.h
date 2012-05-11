@@ -230,12 +230,8 @@ class NodeManager {
 		
 	// functions
 		bool splitReadHolder(ReadHolder * RH);
-<<<<<<< HEAD
-        void addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
-        void addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
-        void addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
-=======
-        void addCrisprNodes(CrisprNode ** prevNode, 
+
+		void addCrisprNodes(CrisprNode ** prevNode, 
                             std::string& workingString, 
                             StringToken headerSt);
     
@@ -247,7 +243,6 @@ class NodeManager {
                                 std::string& workingString, 
                                 StringToken headerSt);
     
->>>>>>> 627642d... resolved an issue where the number of flanking sequences was inflating the standard deviation of the spacer length, causing groups to be unwittingly destroyed
         void setContigIDForSpacers(SpacerInstanceVector * currentContigNodes);
     
         void setUpperAndLowerCoverage(void);
