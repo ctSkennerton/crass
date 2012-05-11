@@ -175,17 +175,7 @@ class NodeManager {
         void setSpacerColourLimits(void);
 
     // Printing / IO
-<<<<<<< HEAD
-        void printDebugGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc);         // Print a graphviz style graph of the DRs and spacers
-		void printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc); 
-        bool printSpacerGraph(std::string& outFileName, std::string title, bool longDesc, bool showSingles);         // Print a graphviz style graph of the FULL spacers
-        bool printSpacerGraph(void);         // Print a graphviz style graph of the FULL spacers
-        std::string getSpacerGraphLabel(SpacerInstance * spacer, bool longDesc);
 
-    
-        void printSpacerKey(std::ostream &dataOut, int numSteps, std::string groupNumber);         													// make a key for the spacer graph 	
-        void dumpReads(std::string readsFileName, bool showDetached, bool split);												// dump reads to this file
-=======
     // Print a graphviz style graph of the DRs and spacers
         void printDebugGraph(std::ostream &dataOut, 
                              std::string title, 
@@ -218,7 +208,6 @@ class NodeManager {
         void dumpReads(std::string readsFileName, 
                        bool showDetached, 
                        bool split);												
->>>>>>> 627642d... resolved an issue where the number of flanking sequences was inflating the standard deviation of the spacer length, causing groups to be unwittingly destroyed
         
     // XML
         void printXML(std::ofstream * XMLFile, int GID, bool showDetached);						// print this node managers portion of the XML file 
