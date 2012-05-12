@@ -390,10 +390,15 @@ int longReadSearch(ReadHolder * tmpHolder,
 
                 logInfo("\tPassed test 2. The repeat length is between "<<opts.lowDRsize<<" and "<<opts.highDRsize, 8);
 #endif
-                if (opts.removeHomopolymers) 
-                {
-                    tmpHolder->decode();
-                }
+			// Declare a tmp string here to hold the encoded DR if 
+			// removeHolopolymers is in affect.  Later if the read passes all
+			// the tests then add in this encoded string since that is the 
+			// version that the singleton finder should be looking for
+			std::string encoded_repeat;
+			if(opts.removeHomopolymers) {
+				encoded_repeat = tmpHolder->repeatStringAt(0);
+				tmpHolder->decode();
+			}
                 
                 // drop partials
                 tmpHolder->dropPartials();
@@ -411,7 +416,11 @@ int longReadSearch(ReadHolder * tmpHolder,
                     //addReadHolder(mReads, mStringCheck, candidate_read);
                     addReadHolder(mReads, mStringCheck, tmpHolder);
                     match_found = true;
-                    patternsHash[tmpHolder->repeatStringAt(0)] = true;
+					if(opts.removeHomopolymers) {
+							patternsHash[encoded_repeat] = true;
+						} else {
+							patternsHash[tmpHolder->repeatStringAt(0)] = true;
+						}
                     readsFound[tmpHolder->getHeader()] = true;
                     break;
                 }
@@ -517,7 +526,13 @@ int shortReadSearch(ReadHolder * tmpHolder,
                 tmpHolder->setRepeatLength(second_end - second_start);
             }
 
+			// Declare a tmp string here to hold the encoded DR if 
+			// removeHolopolymers is in affect.  Later if the read passes all
+			// the tests then add in this encoded string since that is the 
+			// version that the singleton finder should be looking for
+			std::string encoded_repeat;
 			if(opts.removeHomopolymers) {
+				encoded_repeat = tmpHolder->repeatStringAt(0);
 				tmpHolder->decode();
 			}
 			
@@ -537,7 +552,11 @@ int shortReadSearch(ReadHolder * tmpHolder,
                         logInfo(read, 9);
                         logInfo("-------------------", 7)
 #endif
-                        patternsHash[tmpHolder->repeatStringAt(0)] = true;
+						if(opts.removeHomopolymers) {
+							patternsHash[encoded_repeat] = true;
+						} else {
+							patternsHash[tmpHolder->repeatStringAt(0)] = true;
+						}
                         readsFound[tmpHolder->getHeader()] = true;
                         addReadHolder(mReads, mStringCheck, tmpHolder);
                         break;
@@ -580,19 +599,15 @@ void findSingletons(const char *inputFastq,
     //
     std::vector<std::string> patterns;
     mapToVector(patternsHash, patterns);
-    try
-    {
-        if (patterns.empty())
-        {
-            logError("No patterns in vector for multimatch");
-            throw "No patterns in vector for multimatch";
-        }
-    }
-    catch (char * c)
-    {
-        std::cerr << c << std::endl;
-        return;
-    }   
+	if (patterns.empty())
+	{
+
+		throw crispr::runtime_exception(__FILE__,
+		                                __LINE__,
+		                                __PRETTY_FUNCTION__,
+		                                "No patterns in vector for multimatch");
+	}
+
 
     // If the patterns vector is too long, we'll need to break it up!
     // in any case, we need to pass through a vector of vectors
