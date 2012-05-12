@@ -516,12 +516,17 @@ int shortReadSearch(ReadHolder * tmpHolder,
                 tmpHolder->startStopsAdd(second_start, second_end);
                 tmpHolder->setRepeatLength(second_end - second_start);
             }
-            
+
+			if(opts.removeHomopolymers) {
+				tmpHolder->decode();
+			}
+			
             // the low side will always be true since we search for the lowDRSize
             if ( tmpHolder->getRepeatLength() <= opts.highDRsize )
             {
 
-                if ((tmpHolder->getAverageSpacerLength() >= opts.lowSpacerSize) && (tmpHolder->getAverageSpacerLength() <= opts.highSpacerSize))
+                if ((tmpHolder->getAverageSpacerLength() >= opts.lowSpacerSize) && 
+                    (tmpHolder->getAverageSpacerLength() <= opts.highSpacerSize))
                 {
                     if (qcFoundRepeats(tmpHolder, opts.lowSpacerSize, opts.highSpacerSize)) 
                     {
