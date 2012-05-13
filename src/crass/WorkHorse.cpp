@@ -7,7 +7,7 @@
 // Implementation of WorkHorse functions
 // 
 // --------------------------------------------------------------------
-//  Copyright  2011 Michael Imelfort and Connor Skennerton
+//  Copyright  2011, 2012 Michael Imelfort and Connor Skennerton
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
@@ -168,6 +168,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         return 2;
 	}
 	
+
     // build the spacer end graph
     if(buildGraph())
     {
@@ -350,7 +351,18 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     }
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
-    
+
+    if(mOpts->removeHomopolymers) {
+        // change back the sizes of the direct repeats to 
+        // counter the changes made by mOpts.removeHomopolymers
+        // this way the final DRs and spacer should fall 
+        // inside the correct lengths
+        mOpts->lowDRsize /= mOpts->averageDrScalling;
+        mOpts->highDRsize /= mOpts->averageDrScalling;
+        mOpts->lowSpacerSize /= mOpts->averageSpacerScalling;
+        mOpts->highSpacerSize /= mOpts->averageSpacerScalling;
+    }
+
     // There will be an abundance of forms for each direct repeat.
     // We needs to do somes clustering! Then trim and concatenate the direct repeats
     try {
