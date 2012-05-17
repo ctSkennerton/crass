@@ -194,7 +194,7 @@ class WorkHorse {
         //**************************************
         // file IO
         //**************************************
-        int dumpReads(DR_Cluster_Map * DR2GID_map, bool split);		// dump the reads for this group to file
+        int dumpReads( bool split);		// dump the reads for this group to file
         //int dumpSpacers(void);										// Dump the spacers for this group to file
         
         int renderDebugGraphs(void);							// render debug graphs

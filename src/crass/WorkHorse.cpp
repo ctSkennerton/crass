@@ -262,18 +262,8 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         return 7;
     }
 	
-
-    
-    // dump the spacers to file
-    // Not needed any more since we have the crispr file
-//	if(dumpSpacers())
-//	{
-//        logError("FATAL ERROR: dumpSpacers failed");
-//        return 8;
-//	}
-    
     // print the reads to a file if requested
-	if(dumpReads(&mDR2GIDMap, false))
+	if(dumpReads(false))
 	{
         logError("FATAL ERROR: dumpReads failed");
         return 9;
@@ -2185,14 +2175,14 @@ int WorkHorse::splitIntoContigs(void)
 //**************************************
 
 
-int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
+int WorkHorse::dumpReads( bool split)
 {
     //-----
     // Print the reads from one cluster to a file...
     //
 	logInfo("Dumping reads", 1);
-    DR_Cluster_MapIterator drg_iter = DR2GID_map->begin();
-    while (drg_iter != DR2GID_map->end()) 
+    DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+    while (drg_iter != mDR2GIDMap.end()) 
     {
         // make sure that our cluster is real
         if (drg_iter->second != NULL) 
@@ -2206,43 +2196,6 @@ int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
     }
 	return 0;
 }
-
-//int WorkHorse::dumpSpacers(void)
-//{
-//	//-----
-//	// Wrapper for graph cleaning
-//	//
-//	// create a spacer dictionary
-//	logInfo("Dumping spacers", 1);
-//	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
-//	while(drg_iter != mDR2GIDMap.end())
-//	{
-//		if(NULL != drg_iter->second)
-//		{            
-//			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
-//            {
-//                (mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers", false);
-//		    }
-//        }
-//		drg_iter++;
-//	}
-//	return 0;
-//}
-
-//void WorkHorse::writeLookupToFile(string &outFileName, lookupTable &outLookup)
-//{
-//    std::ofstream outLookupFile;
-//    outLookupFile.open(outFileName.c_str());
-//    
-//    lookupTable::iterator ter = outLookup.begin();
-//    while (ter != outLookup.end()) 
-//    {
-//        outLookupFile<<ter->first<<"\t"<<ter->second<<endl;
-//        
-//        ter++;
-//    }
-//    outLookupFile.close();
-//}
 
 int WorkHorse::renderDebugGraphs(void)
 {
@@ -2439,51 +2392,53 @@ bool WorkHorse::printXML(std::string namePrefix)
 	logInfo("Writing XML output to \"" << namePrefix << "\"", 1);
 	
     crispr::XML * xml_doc = new crispr::XML();
-    int error_num;
+    int error_num = 0;
     xercesc::DOMElement * root_element = xml_doc->createDOMDocument(CRASS_DEF_ROOT_ELEMENT, CRASS_DEF_XML_VERSION, error_num);
     
-    if (root_element && !error_num) 
+    if (!root_element && error_num) 
     {
-        // go through the node managers and print the group info 
-        // print all the inside information
-        DR_Cluster_MapIterator drg_iter =  mDR2GIDMap.begin();
-        while (drg_iter != mDR2GIDMap.end()) 
-        {
-            // make sure that our cluster is real
-            if (drg_iter->second != NULL) 
-            {
-                if(NULL != mDRs[mTrueDRs[drg_iter->first]])
-                {
-                    std::string gid_as_string = "G" + to_string(drg_iter->first);
-                    xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, mTrueDRs[drg_iter->first], root_element);
-                    
-                    
-                    /*
-                     * <data> section
-                     */
-                    addDataToDOM(xml_doc, group_elem, drg_iter->first);
-
-                    /*
-                     * <metadata> section
-                     */
-                    addMetadataToDOM(xml_doc, group_elem, drg_iter->first);
-                    
-                    /*
-                     * <assembly> section
-                     */
-                    xercesc::DOMElement * assem_elem = xml_doc->addAssembly(group_elem);
-                    (mDRs[mTrueDRs[drg_iter->first]])->printAssemblyToDOM(xml_doc, assem_elem, false);
-                    
-                }
-            }
-            drg_iter++;
-        }
-        xml_doc->printDOMToFile(namePrefix);
-    } 
-    else
-    {
-        return 1;
+        delete xml_doc;
+        throw crispr::xml_exception(__FILE__,
+                                    __LINE__,
+                                    __PRETTY_FUNCTION__,
+                                    "Unable to create xml document");
     }
+    // go through the node managers and print the group info 
+    // print all the inside information
+    DR_Cluster_MapIterator drg_iter =  mDR2GIDMap.begin();
+    while (drg_iter != mDR2GIDMap.end()) 
+    {
+        // make sure that our cluster is real
+        if (drg_iter->second != NULL) 
+        {
+            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
+            {
+                std::string gid_as_string = "G" + to_string(drg_iter->first);
+                xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, mTrueDRs[drg_iter->first], root_element);
+                
+                
+                /*
+                 * <data> section
+                 */
+                addDataToDOM(xml_doc, group_elem, drg_iter->first);
+
+                /*
+                 * <metadata> section
+                 */
+                addMetadataToDOM(xml_doc, group_elem, drg_iter->first);
+                
+                /*
+                 * <assembly> section
+                 */
+                xercesc::DOMElement * assem_elem = xml_doc->addAssembly(group_elem);
+                (mDRs[mTrueDRs[drg_iter->first]])->printAssemblyToDOM(xml_doc, assem_elem, false);
+                
+            }
+        }
+        drg_iter++;
+    }
+    xml_doc->printDOMToFile(namePrefix);
+
     delete xml_doc;
 	return 0;
 }
