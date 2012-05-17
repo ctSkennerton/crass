@@ -141,7 +141,14 @@ class CrisprNode
     private:
     
         void setAttach(bool attachState);                               // set the attach state of the node
-        
+        void setEdgeAttachState(edgeList * currentList, bool attachState);
+        int calculateReadCoverage(edgeList * currentList, std::map<StringToken, int>& countingMap);
+    void printEdgesForList(edgeList * currentList,
+                           std::ostream &dataOut, 
+                           StringCheck * ST,
+                           std::string label, 
+                           bool showDetached, 
+                           bool longDesc);        
         // id of the kmer of the cripsr node
         StringToken mid;
         

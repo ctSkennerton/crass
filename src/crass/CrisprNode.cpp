@@ -111,6 +111,33 @@ edgeList * CrisprNode::getEdges(EDGE_TYPE type)
     }
 }
 
+int CrisprNode::calculateReadCoverage(edgeList * currentList, std::map<StringToken, int>& countingMap)
+{
+    int total_inners = 0;
+    edgeListIterator eli;
+    for (eli = currentList->begin(); eli != currentList->end(); eli++)
+    {
+    	// check if he's attached
+    	if(eli->second)
+    	{
+    		total_inners++;
+    		
+    		// get the headers
+    		std::vector<StringToken> * inner_headers = (eli->first)->getReadHeaders();
+    		std::vector<StringToken>::iterator inner_rh_iter = inner_headers->begin();
+    		std::vector<StringToken>::iterator inner_rh_last = inner_headers->end();
+    		while(inner_rh_iter != inner_rh_last)
+    		{
+    			if(countingMap.find(*inner_rh_iter) != countingMap.end())
+    				countingMap[*inner_rh_iter]++;
+    			inner_rh_iter++;
+    		}
+    	}
+    }
+    return total_inners;
+}
+
+
 int CrisprNode::getDiscountedCoverage(void)
 {
 	//-----
@@ -131,51 +158,10 @@ int CrisprNode::getDiscountedCoverage(void)
 	// now update the counting map with reads found on the innner connecting nodes -> perhaps one of these lists is empty?
 	int total_inners = 0;
 	// first forward
-	edgeListIterator eli = mForwardEdges.begin();
-    while(eli != mForwardEdges.end())
-    {
-    	// check if he's attached
-    	if(eli->second)
-    	{
-    		total_inners++;
-    		
-    		// get the headers
-    		std::vector<StringToken> * inner_headers = (eli->first)->getReadHeaders();
-    		std::vector<StringToken>::iterator inner_rh_iter = inner_headers->begin();
-    		std::vector<StringToken>::iterator inner_rh_last = inner_headers->end();
-    		while(inner_rh_iter != inner_rh_last)
-    		{
-    			if(counting_map.find(*inner_rh_iter) != counting_map.end())
-    				counting_map[*inner_rh_iter]++;
-    			inner_rh_iter++;
-    		}
-    	}
-    	eli++;
-    }	
+	total_inners += calculateReadCoverage(&mForwardEdges, counting_map);
 	
 	// then backward
-	eli = mBackwardEdges.begin();
-    while(eli != mBackwardEdges.end())
-    {
-    	// anyone who refactors this is a poo eater...
-    	// check if he's attached
-    	if(eli->second)
-    	{
-    		total_inners++;
-    		
-    		// get the headers
-    		std::vector<StringToken> * inner_headers = (eli->first)->getReadHeaders();
-    		std::vector<StringToken>::iterator inner_rh_iter = inner_headers->begin();
-    		std::vector<StringToken>::iterator inner_rh_last = inner_headers->end();
-    		while(inner_rh_iter != inner_rh_last)
-    		{
-    			if(counting_map.find(*inner_rh_iter) != counting_map.end())
-    				counting_map[*inner_rh_iter]++;
-    			inner_rh_iter++;
-    		}
-    	}
-    	eli++;
-    }	
+	total_inners += calculateReadCoverage(&mBackwardEdges, counting_map);	
 
     int ret_val = 0;
     std::map<StringToken, int>::iterator cm_iter = counting_map.begin();
@@ -194,16 +180,11 @@ int CrisprNode::getDiscountedCoverage(void)
 //
 // Node level functions
 //
-void CrisprNode::setAttach(bool attachState)
+void CrisprNode::setEdgeAttachState(edgeList * currentList, bool attachState)
 {
-    //-----
-    // detach or re-attach this node
-    //
-    
-    // find and attached nodes and set the edges to attachState
-    edgeListIterator eli = mForwardEdges.begin();
-    while(eli != mForwardEdges.end())
-    {
+    edgeListIterator eli;
+    for (eli = currentList->begin(); eli != currentList->end(); eli++) {
+
         // go through each edge, check if it's not the right state
         if((eli->second ^ attachState) && (eli->first)->isAttached())
         {
@@ -215,50 +196,23 @@ void CrisprNode::setAttach(bool attachState)
             if((eli->first)->getTotalRank() == 0)
             	(eli->first)->setAsDetached();
         }
-        eli++;
     }
-    eli = mBackwardEdges.begin();
-    while(eli != mBackwardEdges.end())
-    {
-        if((eli->second ^ attachState) && (eli->first)->isAttached())
-        {
-            edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_FORWARD);
-            (*other_eli)[this] = attachState;
-            eli->second = attachState;
-            (eli->first)->updateRank(attachState, CN_EDGE_FORWARD);
-            if((eli->first)->getTotalRank() == 0)
-            	(eli->first)->setAsDetached();
-        }
-        eli++;
-    }
-    eli = mJumpingForwardEdges.begin();
-    while(eli != mJumpingForwardEdges.end())
-    {
-        if((eli->second ^ attachState) && (eli->first)->isAttached())
-        {
-            edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_JUMPING_B);
-            (*other_eli)[this] = attachState;
-            eli->second = attachState;
-            (eli->first)->updateRank(attachState, CN_EDGE_JUMPING_B);
-            if((eli->first)->getTotalRank() == 0)
-            	(eli->first)->setAsDetached();
-        }
-        eli++;
-    }
-    eli = mJumpingBackwardEdges.begin();
-    while(eli != mJumpingBackwardEdges.end())
-    {
-        if((eli->second ^ attachState) && (eli->first)->isAttached())
-        {
-            edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_JUMPING_F);
-            (*other_eli)[this] = attachState;
-            eli->second = attachState;
-            (eli->first)->updateRank(attachState, CN_EDGE_JUMPING_F);
-            if((eli->first)->getTotalRank() == 0)
-            	(eli->first)->setAsDetached();
-        }
-        eli++;
-    }
+}
+
+void CrisprNode::setAttach(bool attachState)
+{
+    //-----
+    // detach or re-attach this node
+    //
+    
+    // find and attached nodes and set the edges to attachState
+    setEdgeAttachState(&mForwardEdges, attachState);
+
+    setEdgeAttachState(&mBackwardEdges, attachState);
+
+    setEdgeAttachState(&mJumpingForwardEdges, attachState);
+
+    setEdgeAttachState(&mJumpingBackwardEdges, attachState);
     
     // set our state
     mAttached =  attachState;       
@@ -315,16 +269,15 @@ void CrisprNode::updateRank(bool attachState, EDGE_TYPE type)
 //
 // File IO / printing
 //
-void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string label, bool showDetached, bool printBackEdges, bool longDesc)
+void CrisprNode::printEdgesForList(edgeList * currentList,
+                       std::ostream &dataOut,
+                       StringCheck * ST,
+                       std::string label, 
+                       bool showDetached, 
+                       bool longDesc)
 {
-    //-----
-    // print the edges so that the first member of the pair is first
-    //
-        
-    // now print the edges
-    edgeListIterator eli = mForwardEdges.begin();
-    while(eli != mForwardEdges.end())
-    {
+    edgeListIterator eli; 
+    for (eli = currentList->begin(); eli != currentList->end(); eli++) {
         // check if the edge is active
         if((eli->second) || showDetached)
         {
@@ -335,52 +288,32 @@ void CrisprNode::printEdges(std::ostream &dataOut, StringCheck * ST, std::string
         		ss << (eli->first)->getID();
             gvEdge(dataOut,label,ss.str());
         }
-        eli++;
     }
-    eli = mJumpingForwardEdges.begin();
-    while(eli != mJumpingForwardEdges.end())
-    {
-         if((eli->second) || showDetached)
-         {
-         	std::stringstream ss;
-        	if(longDesc)
-        		ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
-        	else
-        		ss << (eli->first)->getID();
-            gvJumpingEdge(dataOut,label,ss.str());
-         }
-        eli++;
-    }
+}
+
+
+
+void CrisprNode::printEdges(std::ostream &dataOut, 
+                            StringCheck * ST, 
+                            std::string label, 
+                            bool showDetached, 
+                            bool printBackEdges, 
+                            bool longDesc)
+{
+    //-----
+    // print the edges so that the first member of the pair is first
+    //
+        
+    // now print the edges
+    printEdgesForList(&mForwardEdges, dataOut, ST, label, showDetached, longDesc);
+    printEdgesForList(&mJumpingForwardEdges, dataOut, ST, label, showDetached, longDesc);
+    
     if(printBackEdges)
     {
-        eli = mBackwardEdges.begin();
-        while(eli != mBackwardEdges.end())
-        {
-            if((eli->second) || showDetached)
-            {
-            	std::stringstream ss;
-            	if(longDesc)
-            		ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
-            	else
-            		ss << (eli->first)->getID();
-                gvEdge(dataOut,label,ss.str());
-            }
-            eli++;
-        }
-        eli = mJumpingBackwardEdges.begin();
-        while(eli != mJumpingBackwardEdges.end())
-        {
-            if((eli->second) || showDetached)
-            {
-            	std::stringstream ss;
-            	if(longDesc)
-            		ss << (eli->first)->getID() << "_" << ST->getString((eli->first)->getID());
-            	else
-            		ss << (eli->first)->getID();
-                gvJumpingEdge(dataOut,label,ss.str());
-            }
-            eli++;
-        }
+        printEdgesForList(&mBackwardEdges, dataOut, ST, label, showDetached, longDesc);
+
+        printEdgesForList(&mJumpingBackwardEdges, dataOut, ST, label, showDetached, longDesc);
+
     }
 }
 
