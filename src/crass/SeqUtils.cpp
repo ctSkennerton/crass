@@ -47,6 +47,7 @@
 
 #include "SeqUtils.h"
 
+
 char comp_tab[] = {
     0,   1,	2,	 3,	  4,   5,	6,	 7,	  8,   9,  10,	11,	 12,  13,  14,	15,
     16,  17,  18,	19,	 20,  21,  22,	23,	 24,  25,  26,	27,	 28,  29,  30,	31,
@@ -60,10 +61,11 @@ char comp_tab[] = {
 
 std::string reverseComplement(std::string str)
 {
-    int l = (int)str.length();
+
+	int l = static_cast<int>(str.length());
     char * revcomp_str = new char[l+1];
     for (int i = 0; i <=l; i++) {
-        revcomp_str[i]=NULL;
+		revcomp_str[i]=NULL;
     }
     int i, c0, c1;
     for (i = 0; i < l>>1; ++i) 
@@ -77,9 +79,10 @@ std::string reverseComplement(std::string str)
     {
         revcomp_str[l>>1] = comp_tab[(int)str[l>>1]];
     }
-    
+
     std::string ret = revcomp_str;
     delete [] revcomp_str;
+
     return ret;
 }
 

@@ -204,6 +204,7 @@ class NodeManager {
                             int numSteps, 
                             std::string groupNumber); 
     
+
         void dumpReads(std::string readsFileName, 
                        bool showDetached, 
                        bool split);												
@@ -260,17 +261,21 @@ class NodeManager {
 		
 	// functions
 		bool splitReadHolder(ReadHolder * RH);
-        void addCrisprNodes(CrisprNode ** prevNode, 
+
+		void addCrisprNodes(CrisprNode ** prevNode, 
                             std::string& workingString, 
-                            StringToken headerSt);
+                            StringToken headerSt,
+                            ReadHolder * RH);
     
         void addSecondCrisprNode(CrisprNode ** prevNode, 
                                  std::string& workingString, 
-                                 StringToken headerSt);
+                                 StringToken headerSt,
+                                 ReadHolder * RH);
     
         void addFirstCrisprNode(CrisprNode ** prevNode, 
                                 std::string& workingString, 
-                                StringToken headerSt);
+                                StringToken headerSt,
+                                ReadHolder * RH);
     
         void setContigIDForSpacers(SpacerInstanceVector * currentContigNodes);
     

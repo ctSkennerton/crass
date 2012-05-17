@@ -137,7 +137,7 @@
 #define CRASS_DEF_NO_SCALLING                   false               // perform scalling by default
 #define CRASS_DEF_HOMOPOLYMER_SCALLING          (0.70)              // the scalling for the spacers and direct repeats when remove homopolymers is set
 #define CRASS_DEF_NUM_OF_BINS                   -1                  // the number of bins to create
-#define CRASS_DEF_GRAPH_COLOUR                  RED_BLUE            // default colour scale for the graphs
+#define CRASS_DEF_GRAPH_COLOUR                  BLUE_RED            // default colour scale for the graphs
 #define CRASS_DEF_SPACER_LONG_DESC              false               // use a long desc of the spacer in the output graph
 #define CRASS_DEF_SPACER_SHOW_SINGLES           false                // do not show singles by default
 

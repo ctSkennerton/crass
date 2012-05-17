@@ -165,13 +165,13 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 			if (RH->startStopsAt(0) == 0) 
 			{
 				//MI std::cout << "both" << std::endl;
-				addCrisprNodes(&prev_node, working_str, header_st);
+				addCrisprNodes(&prev_node, working_str, header_st, RH);
 			} 
 			else 
 			{
 				//MI std::cout << "sec" << std::endl;
 				// we only want to add the second kmer, since it is anchored by the direct repeat
-				addSecondCrisprNode(&prev_node, working_str, header_st);
+				addSecondCrisprNode(&prev_node, working_str, header_st, RH);
 			}
 			
 			// get all the spacers in the middle
@@ -183,7 +183,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 				while (RH->getNextSpacer(&working_str)) 
 				{		
 					//MI std::cout << "SP: " << working_str << std::endl;
-					addCrisprNodes(&prev_node, working_str, header_st);
+					addCrisprNodes(&prev_node, working_str, header_st, RH);
 				}
 			} 
 			else 
@@ -196,7 +196,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 					//std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
 					RH->getNextSpacer(&working_str);
 					//MI std::cout << "SP: " << working_str << std::endl;
-					addCrisprNodes(&prev_node, working_str, header_st);
+					addCrisprNodes(&prev_node, working_str, header_st, RH);
 				} 
 				
 				// get our last spacer
@@ -204,7 +204,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 				{
 					//std::cout<<working_str<<std::endl;
 					//MI std::cout << "last SP: " << working_str << std::endl;
-					addFirstCrisprNode(&prev_node, working_str, header_st);
+					addFirstCrisprNode(&prev_node, working_str, header_st, RH);
 				} 
 			}
 		} catch (crispr::substring_exception& e) {
@@ -225,7 +225,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 //----
 // Private function called from splitReadHolder to cut the kmers and make the nodes
 //
-void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
+void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, ReadHolder * RH)
 {
     //-----
     // Given a spacer string, cut kmers from each end and make crispr nodes
@@ -277,6 +277,8 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     // add in the read headers for the two CrisprNodes
     first_kmer_node->addReadHeader(headerSt);
     second_kmer_node->addReadHeader(headerSt);
+    first_kmer_node->addReadHolder(RH);
+    second_kmer_node->addReadHolder(RH);
     
     // the first kmers pair is the previous node which lay before it therefore bool is true
     // make sure prevNode is not NULL
@@ -333,7 +335,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     *prevNode = second_kmer_node;
 }
 
-void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
+void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, ReadHolder * RH)
 {
     if ((int)workingString.length() < NM_Opts->cNodeKmerLength)
         return;
@@ -370,6 +372,7 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
 #endif
     // add in the read headers for the this CrisprNode
     second_kmer_node->addReadHeader(headerSt);
+    second_kmer_node->addReadHolder(RH);
     
     // add this guy in as the previous node for the next iteration
     *prevNode = second_kmer_node;
@@ -377,7 +380,7 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
     // there is no one yet to make an edge
 }
 
-void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
+void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, ReadHolder * RH)
 {
     if ((int)workingString.length() < NM_Opts->cNodeKmerLength)
         return;
@@ -413,6 +416,7 @@ void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workin
 #endif
     // add in the read headers for the this CrisprNode
     first_kmer_node->addReadHeader(headerSt);
+    first_kmer_node->addReadHolder(RH);
     
     // check to see if we already have it here
     if(NULL != *prevNode)
@@ -897,7 +901,7 @@ bool NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                         // NodeManager to calculate the average and stdev of the coverage and then remove a node only if
                         // it is below 1 stdev of the average, else it could be a biological thing that this bubble exists.
                         
-                        if (first_node->getCoverage() > (curr_edges_iter->first)->getCoverage()) 
+                        if (first_node->getDiscountedCoverage() > (curr_edges_iter->first)->getDiscountedCoverage()) 
                         {
                             // the first guy has greater coverage so detach our current node
                             (curr_edges_iter->first)->detachNode();
@@ -1314,6 +1318,7 @@ int NodeManager::splitIntoContigs(void)
         } 
         cap_node_iter++;
     }
+    NM_NextContigID++;
     walkFromCross(&cross_nodes);
 
     delete walk_elem;

@@ -1,3 +1,73 @@
+commit 9742fe48279a1d2b81c3755fd2e65a8f1ca7af79
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon May 7 17:24:39 2012 +1000
+
+    fixed a bug in ReadHolder::encode() where the output string was getting corrupted causing SeqUtils#reverseComplement() to fail.  Resolves issue #51
+
+commit 5f3360363436414dfbe0ddc1f50268defa53b547
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed May 2 22:08:23 2012 +1000
+
+    added in alot of exception handling for trying to track down some bugs when using --removeHomopolymers option
+
+commit cbd13220406f826d0b8deab00ce594cafef55464
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 30 20:32:00 2012 +1000
+
+    Fixed a bug in NodeManager::splitIntoContigs() that was causing the
+    first cross node to be assigned the same contig ID as the last cap node
+    contig
+
+commit 80eeb68a5364795a81263b6d89064d8d2c50baf3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 30 20:29:59 2012 +1000
+
+    Properly initialized the total read count in
+    StatTool::calculateAgregateSTats()
+
+commit d1b76bac28ea3bec12ab60e26dd990ecc9b704a2
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Mon Apr 30 16:50:58 2012 +1000
+
+    Changed default color scheme
+
+commit bea2b63b275212426c32a474375bd7ff08e987f5
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Mon Apr 30 15:42:25 2012 +1000
+
+    Fixed a bug which let similar spacers get through. Should reduce the number of spacers and DRs quite a bitsy...
+
+commit 422fb6b4eb09e3d652a40c0f84d4a7336ae8a9cf
+Merge: 2e8fb47 ddea4e0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 22:15:45 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+commit 2e8fb47b4feeba4c657ed27d3b1eb174748c8c07
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 22:14:44 2012 +1000
+
+    some small updates to the documentation
+
+commit ddea4e0c4873d4e1434d12214d779284e356bf17
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 16:25:34 2012 +1000
+
+    updated version to 0.2.8
+
+commit 63a79ee4a7aa6b70976ac17edd1042dc9c4e97f6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 16:22:34 2012 +1000
+
+    Added in an extra test in NodeManager::genreateFlankers whereby a spacer instance must be a cap node in the graph for it to be considered
+
+commit eb28dcd06e1bb6b793aa563123bcc51dcf45356e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 15:42:53 2012 +1000
+
+    updated version to 0.2.7
+
 commit 846ac751c33d7ddbbda64ca1c008190d9144572a
 Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Sun Apr 29 00:56:41 2012 +1000
@@ -17,6 +87,12 @@ Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Sun Apr 29 00:11:27 2012 +1000
 
     Merge branch 'master' into spacer_length_investigation
+
+commit a09473ccb96f4107e09d79a1e882525761022426
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 27 23:02:06 2012 +1000
+
+    added in some updated information about crisprtools in the man page
 
 commit faa88846cde01e0177141f5a419f62f96fd6149a
 Author: ctSkennerton <c.skennerton@gmail.com>

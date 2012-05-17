@@ -145,7 +145,7 @@ Direct repeats are defined in the \lstinline[language=XML_new]$<drs>$  tag as a 
 The \lstinline[language=XML_new]$seq$ attribute is the sequence of the direct repeat in its lowest lexicographical form and should not contain any characters other than the IUPAC standard for DNA bases and should be in uppercase.   The \lstinline[language=XML_new]$drid$ attribute is set by the programer, it must be an integer prefixed with "DR" however it does not need to be sequential -- just unique for the \lstinline[language=XML_new]$<group>$ that it is contained in.  
 
 The two implied attributes \lstinline[language=XML_new]$confcnt$ and \lstinline[language=XML_new]$totcnt$
-
+the number of spacers associated with this particular direct repeat variant.
 \subsubsection{Spacers}
 Spacers are defined inside the \lstinline[language=XML_new]$<spacers>$ tag as an empty element containing two required attributes \lstinline[language=XML_new]$seq$ and \lstinline[language=XML_new]$spid$, as well as an implied attribute \lstinline[language=XML_new]$cov$.
 \begin{lstlisting}[language=XML_new]

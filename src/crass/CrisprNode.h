@@ -47,6 +47,8 @@
 #include "crassDefines.h"
 #include "StringCheck.h"
 #include "Rainbow.h"
+#include "libcrispr.h"
+#include "ReadHolder.h"
 
 class CrisprNode;
 
@@ -102,7 +104,11 @@ class CrisprNode
         inline bool isForward(void) { return mIsForward; }
         inline void setForward(bool forward) { mIsForward = forward; }
         inline int getCoverage() {return mCoverage;}
+        int getDiscountedCoverage(void);
         inline void addReadHeader(StringToken readHeader) { mReadHeaders.push_back(readHeader); }
+        inline void addReadHolder(ReadHolder * RH) { mReadHolders.push_back(RH); }
+        inline std::vector<StringToken> * getReadHeaders(void) { return &mReadHeaders; }
+        inline ReadList * getReadHolders(void) { return &mReadHolders; }
         
         //
         // Edge level functions
@@ -182,6 +188,7 @@ class CrisprNode
 
         // we need to know which reads produced these nodes
         std::vector<StringToken> mReadHeaders;  // headers of all reads which contain these spacers
+        ReadList mReadHolders;					// waste of the last var,  shut up.
 };
 
 #endif //CrisprNode_h
