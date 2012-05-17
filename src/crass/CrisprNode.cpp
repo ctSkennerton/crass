@@ -47,7 +47,8 @@
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
 #include "StringCheck.h"
-
+#include "libcrispr.h"
+#include "ReadHolder.h"
 
 //
 // Edge level functions
@@ -109,6 +110,86 @@ edgeList * CrisprNode::getEdges(EDGE_TYPE type)
             return NULL;
     }
 }
+
+int CrisprNode::getDiscountedCoverage(void)
+{
+	//-----
+	// Return a (possibly) lower version of the coverage
+	// used when removing bubbles
+	//
+	std::map<StringToken, int> counting_map;
+	
+	// initialise the counting map to inlcude all the reads we care about
+	std::vector<StringToken>::iterator rh_iter = mReadHeaders.begin();
+	std::vector<StringToken>::iterator rh_last = mReadHeaders.end();
+	while(rh_iter != rh_last)
+	{
+		counting_map[*rh_iter] = 1;
+		rh_iter++;
+	}
+	
+	// now update the counting map with reads found on the innner connecting nodes -> perhaps one of these lists is empty?
+	int total_inners = 0;
+	// first forward
+	edgeListIterator eli = mForwardEdges.begin();
+    while(eli != mForwardEdges.end())
+    {
+    	// check if he's attached
+    	if(eli->second)
+    	{
+    		total_inners++;
+    		
+    		// get the headers
+    		std::vector<StringToken> * inner_headers = (eli->first)->getReadHeaders();
+    		std::vector<StringToken>::iterator inner_rh_iter = inner_headers->begin();
+    		std::vector<StringToken>::iterator inner_rh_last = inner_headers->end();
+    		while(inner_rh_iter != inner_rh_last)
+    		{
+    			if(counting_map.find(*inner_rh_iter) != counting_map.end())
+    				counting_map[*inner_rh_iter]++;
+    			inner_rh_iter++;
+    		}
+    	}
+    	eli++;
+    }	
+	
+	// then backward
+	eli = mBackwardEdges.begin();
+    while(eli != mBackwardEdges.end())
+    {
+    	// anyone who refactors this is a poo eater...
+    	// check if he's attached
+    	if(eli->second)
+    	{
+    		total_inners++;
+    		
+    		// get the headers
+    		std::vector<StringToken> * inner_headers = (eli->first)->getReadHeaders();
+    		std::vector<StringToken>::iterator inner_rh_iter = inner_headers->begin();
+    		std::vector<StringToken>::iterator inner_rh_last = inner_headers->end();
+    		while(inner_rh_iter != inner_rh_last)
+    		{
+    			if(counting_map.find(*inner_rh_iter) != counting_map.end())
+    				counting_map[*inner_rh_iter]++;
+    			inner_rh_iter++;
+    		}
+    	}
+    	eli++;
+    }	
+
+    int ret_val = 0;
+    std::map<StringToken, int>::iterator cm_iter = counting_map.begin();
+    std::map<StringToken, int>::iterator cm_last = counting_map.end();
+    while(cm_iter != cm_last)
+    {
+    	if(cm_iter->second == total_inners)
+    		ret_val++;
+    	cm_iter++;
+    }
+    
+    return ret_val;
+}
+
 
 //
 // Node level functions

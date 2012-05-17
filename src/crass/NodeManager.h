@@ -233,15 +233,18 @@ class NodeManager {
 
 		void addCrisprNodes(CrisprNode ** prevNode, 
                             std::string& workingString, 
-                            StringToken headerSt);
+                            StringToken headerSt,
+                            ReadHolder * RH);
     
         void addSecondCrisprNode(CrisprNode ** prevNode, 
                                  std::string& workingString, 
-                                 StringToken headerSt);
+                                 StringToken headerSt,
+                                 ReadHolder * RH);
     
         void addFirstCrisprNode(CrisprNode ** prevNode, 
                                 std::string& workingString, 
-                                StringToken headerSt);
+                                StringToken headerSt,
+                                ReadHolder * RH);
     
         void setContigIDForSpacers(SpacerInstanceVector * currentContigNodes);
     
