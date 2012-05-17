@@ -180,7 +180,7 @@ int CrisprNode::getDiscountedCoverage(void)
 //
 // Node level functions
 //
-void CrisprNode::setEdgeAttachState(edgeList * currentList, bool attachState)
+void CrisprNode::setEdgeAttachState(edgeList * currentList, bool attachState, EDGE_TYPE currentType)
 {
     edgeListIterator eli;
     for (eli = currentList->begin(); eli != currentList->end(); eli++) {
@@ -189,10 +189,10 @@ void CrisprNode::setEdgeAttachState(edgeList * currentList, bool attachState)
         if((eli->second ^ attachState) && (eli->first)->isAttached())
         {
             // this edge is not the right state and the corresponding node is actually attached
-            edgeList * other_eli = (eli->first)->getEdges(CN_EDGE_BACKWARD);
+            edgeList * other_eli = (eli->first)->getEdges(currentType);
             (*other_eli)[this] = attachState;
             eli->second = attachState;
-            (eli->first)->updateRank(attachState, CN_EDGE_BACKWARD);
+            (eli->first)->updateRank(attachState, currentType);
             if((eli->first)->getTotalRank() == 0)
             	(eli->first)->setAsDetached();
         }
@@ -206,13 +206,13 @@ void CrisprNode::setAttach(bool attachState)
     //
     
     // find and attached nodes and set the edges to attachState
-    setEdgeAttachState(&mForwardEdges, attachState);
+    setEdgeAttachState(&mForwardEdges, attachState, CN_EDGE_FORWARD);
 
-    setEdgeAttachState(&mBackwardEdges, attachState);
+    setEdgeAttachState(&mBackwardEdges, attachState, CN_EDGE_BACKWARD);
 
-    setEdgeAttachState(&mJumpingForwardEdges, attachState);
+    setEdgeAttachState(&mJumpingForwardEdges, attachState, CN_EDGE_JUMPING_F);
 
-    setEdgeAttachState(&mJumpingBackwardEdges, attachState);
+    setEdgeAttachState(&mJumpingBackwardEdges, attachState, CN_EDGE_JUMPING_B);
     
     // set our state
     mAttached =  attachState;       
