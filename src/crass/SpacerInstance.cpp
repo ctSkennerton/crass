@@ -140,6 +140,18 @@ bool SpacerInstance::isViable(void)
 	return false;
 }
 
+SpacerEdgeVector_Iterator SpacerInstance::find(SpacerInstance * si)
+{
+    // check to see if the spacer instance in in the edges
+    SpacerEdgeVector_Iterator iter;
+    for (iter = SI_SpacerEdges.begin(); iter != SI_SpacerEdges.end(); ++iter) {
+        if ((*iter)->edge == si) {
+            return iter;
+        }
+    }
+    return SI_SpacerEdges.end();
+}
+
 void SpacerInstance::detachFromSpacerGraph(void)
 {
 	//-----

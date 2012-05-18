@@ -49,6 +49,7 @@
 #include "StringCheck.h"
 #include "libcrispr.h"
 #include "ReadHolder.h"
+#include "Exception.h"
 
 //
 // Edge level functions
@@ -82,8 +83,10 @@ bool CrisprNode::addEdge(CrisprNode * parterNode, EDGE_TYPE type)
                 mJumpingRank_B++;
                 break;
             default:
-            	logError("Edge error");
-            	return false;
+            	throw crispr::runtime_exception(__FILE__,
+                                                __LINE__,
+                                                __PRETTY_FUNCTION__,
+                                                "Unknown edge type");
         }
         return true;
     }
@@ -106,8 +109,10 @@ edgeList * CrisprNode::getEdges(EDGE_TYPE type)
         case CN_EDGE_JUMPING_B:
             return &mJumpingBackwardEdges;
         default:
-            logError("Edge type not known! Returning NULL...");
-            return NULL;
+            throw crispr::runtime_exception(__FILE__,
+                                            __LINE__,
+                                            __PRETTY_FUNCTION__,
+                                            "Unknown edge type");
     }
 }
 
@@ -118,21 +123,31 @@ int CrisprNode::calculateReadCoverage(edgeList * currentList, std::map<StringTok
     for (eli = currentList->begin(); eli != currentList->end(); eli++)
     {
     	// check if he's attached
-    	if(eli->second)
+    	if(! eli->second)
     	{
-    		total_inners++;
-    		
-    		// get the headers
-    		std::vector<StringToken> * inner_headers = (eli->first)->getReadHeaders();
-    		std::vector<StringToken>::iterator inner_rh_iter = inner_headers->begin();
-    		std::vector<StringToken>::iterator inner_rh_last = inner_headers->end();
-    		while(inner_rh_iter != inner_rh_last)
-    		{
-    			if(countingMap.find(*inner_rh_iter) != countingMap.end())
-    				countingMap[*inner_rh_iter]++;
-    			inner_rh_iter++;
-    		}
-    	}
+            continue;
+        }
+        total_inners++;
+#ifdef DEBUG
+        logInfo("Edge: "<<(eli->first)->getID(), 10);
+#endif
+        // get the headers
+        std::vector<StringToken> * inner_headers = (eli->first)->getReadHeaders();
+        std::vector<StringToken>::iterator inner_rh_iter = inner_headers->begin();
+        std::vector<StringToken>::iterator inner_rh_last = inner_headers->end();
+        while(inner_rh_iter != inner_rh_last)
+        {
+#ifdef DEBUG
+            logInfo("\tHeader: "<<*inner_rh_iter, 10);
+#endif
+            if(countingMap.find(*inner_rh_iter) != countingMap.end()) {
+                countingMap[*inner_rh_iter]++;
+#ifdef DEBUG
+                logInfo("\t\tIncrementing: "<<*inner_rh_iter<<" : "<<countingMap[*inner_rh_iter], 10);
+#endif
+            }
+            inner_rh_iter++;
+        }
     }
     return total_inners;
 }
@@ -148,21 +163,31 @@ int CrisprNode::getDiscountedCoverage(void)
 	
 	// initialise the counting map to inlcude all the reads we care about
 	std::vector<StringToken>::iterator rh_iter = mReadHeaders.begin();
-	std::vector<StringToken>::iterator rh_last = mReadHeaders.end();
-	while(rh_iter != rh_last)
-	{
-		counting_map[*rh_iter] = 1;
-		rh_iter++;
+	for (rh_iter = mReadHeaders.begin(); rh_iter != mReadHeaders.end(); ++rh_iter) {
+		counting_map[*rh_iter] = 0;
+#ifdef DEBUG
+        logInfo("Node :"<<mid<<" Header: "<<*rh_iter, 10);
+#endif
 	}
-	
+#ifdef DEBUG
+    logInfo("Node: "<<mid<<" Headers size:"<<mReadHeaders.size(), 10);
+    logInfo("\tForward: "<<mForwardEdges.size(), 10);
+    logInfo("\tBackward: "<<mBackwardEdges.size(), 10);
+    logInfo("\tJForward: "<<mJumpingForwardEdges.size(), 10);
+    logInfo("\tJBackward: "<<mJumpingBackwardEdges.size(), 10);
+#endif
 	// now update the counting map with reads found on the innner connecting nodes -> perhaps one of these lists is empty?
 	int total_inners = 0;
 	// first forward
 	total_inners += calculateReadCoverage(&mForwardEdges, counting_map);
-	
+#ifdef DEBUG
+	logInfo("Node "<<mid<<": After forward inners: "<<total_inners, 10);
+#endif
 	// then backward
 	total_inners += calculateReadCoverage(&mBackwardEdges, counting_map);	
-
+#ifdef DEBUG
+	logInfo("Node "<<mid<<": After Backward inners: "<<total_inners, 10);
+#endif
     int ret_val = 0;
     std::map<StringToken, int>::iterator cm_iter = counting_map.begin();
     std::map<StringToken, int>::iterator cm_last = counting_map.end();
@@ -234,8 +259,10 @@ int CrisprNode::getRank(EDGE_TYPE type)
         case CN_EDGE_JUMPING_B:
             return mJumpingRank_B;
         default:
-            logError("Edge type not know! Returning -1...")
-            return -1;
+            throw crispr::runtime_exception(__FILE__,
+                                            __LINE__,
+                                            __PRETTY_FUNCTION__,
+                                            "Unknown edge type");
     }
 }
 
@@ -262,7 +289,10 @@ void CrisprNode::updateRank(bool attachState, EDGE_TYPE type)
 			mJumpingRank_B += increment;
             break;
         default:
-        	logError("Edge error");
+        	throw crispr::runtime_exception(__FILE__,
+                                            __LINE__,
+                                            __PRETTY_FUNCTION__,
+                                            "Unknown edge type");
 	}
 }
 
@@ -351,8 +381,10 @@ std::string CrisprNode::sayEdgeTypeLikeAHuman(EDGE_TYPE type)
         case CN_EDGE_JUMPING_B:
             return "JumpingBackward";
         default:
-            logError("Edge type not known! Returning '---'...");
-            return "---";
+            throw crispr::runtime_exception(__FILE__,
+                                            __LINE__,
+                                            __PRETTY_FUNCTION__,
+                                            "Unknown edge type");
     }
 }
 

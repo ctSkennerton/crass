@@ -150,9 +150,14 @@ public:
         //
         inline void addEdge(spacerEdgeStruct * s) { SI_SpacerEdges.push_back(s); }
         void clearEdge(void);
-        SpacerEdgeVector_Iterator begin(void) {return SI_SpacerEdges.begin();}
-        SpacerEdgeVector_Iterator end(void) {return SI_SpacerEdges.end();}
-        inline SpacerEdgeVector * getEdges(void) {return &SI_SpacerEdges;}
+        
+    SpacerEdgeVector_Iterator begin(void) {return SI_SpacerEdges.begin();}
+    
+    SpacerEdgeVector_Iterator end(void) {return SI_SpacerEdges.end();}
+    
+    SpacerEdgeVector_Iterator find(SpacerInstance *);
+    
+    inline SpacerEdgeVector * getEdges(void) {return &SI_SpacerEdges;}
         
         //
         // File /IO

@@ -872,73 +872,80 @@ bool NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
     std::map<int, int> bubble_map;
     
     // now go through each of the edges and make a hashed key for the edge 
-    edgeListIterator curr_edges_iter = curr_edges->begin();
-    while(curr_edges_iter != curr_edges->end())
-    {
-        if ((curr_edges_iter->first)->isAttached()) 
+    edgeListIterator curr_edges_iter; //= curr_edges->begin();
+    for (curr_edges_iter = curr_edges->begin(); curr_edges_iter != curr_edges->end(); ++curr_edges_iter) {
+        
+        if ( !(curr_edges_iter->first)->isAttached()) 
         {
-            // we want to go through all the edges of the nodes above (2nd degree separation)
-            // and since we used the forward edges to get here we now want the opposite (Jummping_F)
-            edgeList * edges_of_curr_edge = (curr_edges_iter->first)->getEdges(getOppositeEdgeType(currentEdgeType));
-            
-            edgeListIterator edges_of_curr_edge_iter = edges_of_curr_edge->begin();
-            while (edges_of_curr_edge_iter != edges_of_curr_edge->end()) 
+            continue;
+        }
+        // we want to go through all the edges of the nodes above (2nd degree separation)
+        // and since we used the forward edges to get here we now want the opposite (Jummping_F)
+        edgeList * edges_of_curr_edge = (curr_edges_iter->first)->getEdges(getOppositeEdgeType(currentEdgeType));
+        
+        edgeListIterator edges_of_curr_edge_iter; //= edges_of_curr_edge->begin();
+        for (edges_of_curr_edge_iter = edges_of_curr_edge->begin(); edges_of_curr_edge_iter != edges_of_curr_edge->end(); ++edges_of_curr_edge_iter) 
+        {
+            // make sue that this guy is attached
+            if (! (edges_of_curr_edge_iter->first)->isAttached()) 
             {
-                // make sue that this guy is attached
-                if ((edges_of_curr_edge_iter->first)->isAttached()) 
+                continue;
+            }
+            // so now we're at the second degree of separation for our edges
+            // again make a key but check to see if the key exists in the hash
+            
+            int new_key = makeKey(rootNode->getID(), (edges_of_curr_edge_iter->first)->getID());
+            if (bubble_map.find(new_key) == bubble_map.end()) 
+            {
+                // first time we've seen him
+                bubble_map[new_key] = (curr_edges_iter->first)->getID();
+            } 
+            else 
+            {
+                // aha! he is pointing back onto the same guy as someone else.  We have a bubble!
+                //get the CrisprNode of the first guy
+                
+                CrisprNode * first_node = NM_Nodes[bubble_map[new_key]];
+#ifdef DEBUG
+                logInfo("Bubble found conecting "<<rootNode->getID()<<" : "<<first_node->getID()<<" : "<<(edges_of_curr_edge_iter->first)->getID()<< " : "<<(curr_edges_iter->first)->getID(), 8);
+#endif
+                //perform a coverage test on the nodes that end up here and kill the one with the least coverage
+                
+                // TODO: this is a pretty dumb test, since the coverage between the two nodes could be very similar
+                // for example one has a coverage of 20 and the other a coverage of 18.  The node with 18 will get
+                // removed but should it have been?  The way to fix this would be to create some infastructure in
+                // NodeManager to calculate the average and stdev of the coverage and then remove a node only if
+                // it is below 1 stdev of the average, else it could be a biological thing that this bubble exists.
+                
+                if (first_node->getDiscountedCoverage() > (curr_edges_iter->first)->getDiscountedCoverage()) 
                 {
-                    // so now we're at the second degree of separation for our edges
-                    // again make a key but check to see if the key exists in the hash
+#ifdef DEBUG
+                    //logInfo("Node "<<first_node->getID()<<" has higher discounted coverage ("<<first_node->getDiscountedCoverage()<<") than Node "<<(curr_edges_iter->first)->getID()<<" ("<<(curr_edges_iter->first)->getDiscountedCoverage()<<")", 8);
+#endif
                     
-                    int new_key = makeKey(rootNode->getID(), (edges_of_curr_edge_iter->first)->getID());
-                    if (bubble_map.find(new_key) == bubble_map.end()) 
-                    {
-                        // first time we've seen him
-                        bubble_map[new_key] = (curr_edges_iter->first)->getID();
-                    } 
-                    else 
-                    {
-                        // aha! he is pointing back onto the same guy as someone else.  We have a bubble!
-                        //get the CrisprNode of the first guy
-                        
-                        CrisprNode * first_node = NM_Nodes[bubble_map[new_key]];
+                    // the first guy has greater coverage so detach our current node
+                    (curr_edges_iter->first)->detachNode();
+                    some_detached = true;
 #ifdef DEBUG
-                        logInfo("Bubble found conecting "<<rootNode->getID()<<" : "<<first_node->getID()<<" : "<<(edges_of_curr_edge_iter->first)->getID(), 8);
+                    logInfo("Detaching "<<(curr_edges_iter->first)->getID()<<" as it has lower coverage", 8);
 #endif
-                        //perform a coverage test on the nodes that end up here and kill the one with the least coverage
-                        
-                        // TODO: this is a pretty dumb test, since the coverage between the two nodes could be very similar
-                        // for example one has a coverage of 20 and the other a coverage of 18.  The node with 18 will get
-                        // removed but should it have been?  The way to fix this would be to create some infastructure in
-                        // NodeManager to calculate the average and stdev of the coverage and then remove a node only if
-                        // it is below 1 stdev of the average, else it could be a biological thing that this bubble exists.
-                        
-                        if (first_node->getDiscountedCoverage() > (curr_edges_iter->first)->getDiscountedCoverage()) 
-                        {
-                            // the first guy has greater coverage so detach our current node
-                            (curr_edges_iter->first)->detachNode();
-                            some_detached = true;
+                } 
+                else 
+                {
 #ifdef DEBUG
-                            logInfo("Detaching "<<(curr_edges_iter->first)->getID()<<" as it has lower coverage", 8);
+                    //logInfo("Node "<<first_node->getID()<<" has lower discounted coverage ("<<first_node->getDiscountedCoverage()<<") than Node "<<(curr_edges_iter->first)->getID()<<" ("<<(curr_edges_iter->first)->getDiscountedCoverage()<<")", 8);
 #endif
-                        } 
-                        else 
-                        {
-                            // the first guy was lower so kill him
-                            first_node->detachNode();
-                            some_detached = true;
+                    // the first guy was lower so kill him
+                    first_node->detachNode();
+                    some_detached = true;
 #ifdef DEBUG
-                            logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 8);
+                    logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 8);
 #endif
-                            // replace the existing key (to check for triple bubbles)
-                            bubble_map[new_key] = (curr_edges_iter->first)->getID();
-                        }
-                    }
+                    // replace the existing key (to check for triple bubbles)
+                    bubble_map[new_key] = (curr_edges_iter->first)->getID();
                 }
-                edges_of_curr_edge_iter++;
             }
         }
-        curr_edges_iter++;
     }
     return some_detached;
 }
@@ -1196,83 +1203,95 @@ void NodeManager::removeSpacerBubbles(void)
     // remove bubbles from the spacer graph
     //
     std::map<SpacerKey, SpacerInstance *> bubble_map;
+    
     SpacerInstanceVector detach_list;
-    SpacerListIterator sp_iter = NM_Spacers.begin();
-    while(sp_iter != NM_Spacers.end())
+    SpacerListIterator sp_iter;
+    
+    for(sp_iter = NM_Spacers.begin(); sp_iter != NM_Spacers.end(); sp_iter++)
     {
-        if((sp_iter->second)->isAttached())
+        SpacerInstance * current_spacer = (sp_iter->second);
+        if( !current_spacer->isAttached())
         {
-            // we only car about rank 2 or over nodes
-            if(2 <= (sp_iter->second)->getSpacerRank())
+            continue;
+        }
+        // we only car about rank 2 or over nodes
+        if(2 > current_spacer->getSpacerRank())
+        {
+            continue;
+        }
+        // first make a list of the forward and backward spacers
+        SpacerEdgeVector_Iterator edge_iter = current_spacer->begin();
+        SpacerInstanceVector f_spacers, r_spacers;
+        while(edge_iter != current_spacer->end())
+        {
+            if((*edge_iter)->d == REVERSE)
+                r_spacers.push_back((*edge_iter)->edge);
+            else
+                f_spacers.push_back((*edge_iter)->edge);
+            edge_iter++;
+        }
+        
+        // now make a list of spacer keys 
+        SpacerInstanceVector_Iterator r_edge_iter; // = r_spacers.begin();
+        for(r_edge_iter = r_spacers.begin(); r_edge_iter != r_spacers.end(); r_edge_iter++)
+        {
+            SpacerInstance * curent_reverse_spacer = *r_edge_iter;
+            
+            SpacerInstanceVector_Iterator f_edge_iter; //=  f_spacers.begin();
+            for(f_edge_iter =  f_spacers.begin(); f_edge_iter != f_spacers.end(); f_edge_iter++)
             {
-                // first make a list of the forward and backward spacers
-                SpacerEdgeVector_Iterator edge_iter = (sp_iter->second)->begin();
-                SpacerInstanceVector f_spacers, r_spacers;
-                while(edge_iter != (sp_iter->second)->end())
-                {
-                    if((*edge_iter)->d == REVERSE)
-                        r_spacers.push_back((*edge_iter)->edge);
-                    else
-                        f_spacers.push_back((*edge_iter)->edge);
-                    edge_iter++;
-                }
+                SpacerInstance * curent_forward_spacer = *f_edge_iter;
+
+                // make a key
+                SpacerKey tmp_key = makeSpacerKey(curent_reverse_spacer->getID(), curent_forward_spacer->getID());
                 
-                // now make a list of spacer keys 
-                SpacerInstanceVector_Iterator r_edge_iter = r_spacers.begin();
-                while(r_edge_iter != r_spacers.end())
+                // check if we've seen this key before
+                std::map<SpacerKey, SpacerInstance *>::iterator bm_iter = bubble_map.find(tmp_key);
+                if(bm_iter == bubble_map.end())
                 {
-                    SpacerInstanceVector_Iterator f_edge_iter =  f_spacers.begin();
-                    while(f_edge_iter != f_spacers.end())
+                    // first time
+                    bubble_map[tmp_key] = sp_iter->second;
+                }
+                else
+                {
+                    // bubble! -- perhaps, settle down son. We need to R-E-S-P-E-C-T directionality.                    
+                    if (curent_reverse_spacer->find(current_spacer) != curent_reverse_spacer->end()) {
+                        if (curent_reverse_spacer->find(bubble_map[tmp_key]) != curent_reverse_spacer->end()) {
+                            continue;
+                        }
+                    }
+                    
+                    std::cout<<"Coverage test: "<<bubble_map[tmp_key]->getID()<<" : "<<current_spacer->getID()<<std::endl;
+                    // -- check the coverages!
+                    if(bubble_map[tmp_key]->getCount() < current_spacer->getCount())
                     {
-                        // make a key
-                        SpacerKey tmp_key = makeSpacerKey((*r_edge_iter)->getID(), (*f_edge_iter)->getID());
-                        // check if we've seen this key before
-                        std::map<SpacerKey, SpacerInstance *>::iterator bm_iter = bubble_map.find(tmp_key);
-                        if(bm_iter == bubble_map.end())
+                        // stored guy has lower coverage!
+                        detach_list.push_back(bubble_map[tmp_key]);
+                        bubble_map[tmp_key] = sp_iter->second;
+                    }
+                    else if(current_spacer->getCount() < bubble_map[tmp_key]->getCount())
+                    {
+                        // new guy has lower coverage!
+                        detach_list.push_back(sp_iter->second);
+                    }
+                    else
+                    {
+                        // coverages are equal, kill the one with the lower rank
+                        if(bubble_map[tmp_key]->getSpacerRank() < current_spacer->getSpacerRank())
                         {
-                            // first time
+                            // stored guy has lower coverage!
+                            detach_list.push_back(bubble_map[tmp_key]);
                             bubble_map[tmp_key] = sp_iter->second;
                         }
                         else
                         {
-                            // bubble! -- perhaps, settle down son. We need to R-E-S-P-E-C-T directionality.
-                        	
-                        	
-                        	// -- check the coverages!
-                            if(bubble_map[tmp_key]->getCount() < (sp_iter->second)->getCount())
-                            {
-                                // stored guy has lower coverage!
-                                detach_list.push_back(bubble_map[tmp_key]);
-                                bubble_map[tmp_key] = sp_iter->second;
-                            }
-                            else if((sp_iter->second)->getCount() < bubble_map[tmp_key]->getCount())
-                            {
-                                // new guy has lower coverage!
-                                detach_list.push_back(sp_iter->second);
-                            }
-                            else
-                            {
-                                // coverages are equal, kill the one with the lower rank
-                                if(bubble_map[tmp_key]->getSpacerRank() < (sp_iter->second)->getSpacerRank())
-                                {
-                                    // stored guy has lower coverage!
-                                    detach_list.push_back(bubble_map[tmp_key]);
-                                    bubble_map[tmp_key] = sp_iter->second;
-                                }
-                                else
-                                {
-                                    // new guy has lower or equal coverage!
-                                    detach_list.push_back(sp_iter->second);
-                                }
-                            }
+                            // new guy has lower or equal coverage!
+                            detach_list.push_back(sp_iter->second);
                         }
-                        f_edge_iter++;
                     }
-                    r_edge_iter++;
                 }
             }
         }
-        sp_iter++;
     }
             
     // detach all on the detach list!
