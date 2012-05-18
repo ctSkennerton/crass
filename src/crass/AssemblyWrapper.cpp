@@ -56,8 +56,6 @@
 #include "SeqUtils.h"
 
 
-KSEQ_INIT(gzFile, gzread)
-
 void assemblyVersionInfo(void) 
 {
     std::cout<<std::endl<<PACKAGE_FULL_NAME<<" ("<<PACKAGE_NAME<<")"<<std::endl<<"version "<<PACKAGE_MAJOR_VERSION<<" subversion "<<PACKAGE_MINOR_VERSION<<" revison "<<PACKAGE_REVISION<<" ("<<PACKAGE_VERSION<<")"<<std::endl<<std::endl;

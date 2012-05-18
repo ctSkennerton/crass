@@ -2511,11 +2511,11 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
         
         std::string file_name;
-        char * buf = NULL;
-        buf = getcwd(buf, 4096);
+        char buf[4096];
+        if(getcwd(buf, 4096) == NULL)
+        	logError("Something went wrong getting the the CWD");
         std::string absolute_dir = buf;
         absolute_dir += "/";
-        delete buf;
         // add in files if they exist
         if (!mOpts->logToScreen) 
         {

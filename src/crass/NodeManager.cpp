@@ -1183,7 +1183,9 @@ int NodeManager::cleanSpacerGraph(void)
         }
         
         // remove bubbles
+        std::cout << "rembubs" << std::endl;
         removeSpacerBubbles();
+        std::cout << "rembubs-over" << std::endl;
     }
     return 0;
 }
@@ -1233,7 +1235,10 @@ void NodeManager::removeSpacerBubbles(void)
                         }
                         else
                         {
-                            // bubble! -- check the coverages!
+                            // bubble! -- perhaps, settle down son. We need to R-E-S-P-E-C-T directionality.
+                        	
+                        	
+                        	// -- check the coverages!
                             if(bubble_map[tmp_key]->getCount() < (sp_iter->second)->getCount())
                             {
                                 // stored guy has lower coverage!

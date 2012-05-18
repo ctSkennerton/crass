@@ -27,7 +27,7 @@ SpacerInstance.cpp SpacerInstance.h\
 ReadHolder.cpp ReadHolder.h\
 SmithWaterman.cpp SmithWaterman.h\
 StringCheck.cpp StringCheck.h\
-kseq.h\
+kseq.cpp kseq.h\
 GraphDrawingDefines.h\
 crassDefines.h\
 StatsManager.h\

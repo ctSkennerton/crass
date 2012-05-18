@@ -48,6 +48,7 @@
 #include <stdlib.h>
 #include <exception>
 #include <ctime>
+
 // local includes
 #include "libcrispr.h"
 #include "LoggerSimp.h"
@@ -68,7 +69,6 @@
  THIS JUST DEFINES A BUNCH OF **templated** structs
  
  */
-KSEQ_INIT(gzFile, gzread)
 int decideWhichSearch(const char *inputFastq, 
                       const options& opts, 
                       ReadMap * mReads, 
@@ -89,6 +89,7 @@ int decideWhichSearch(const char *inputFastq,
 
     // initialize seq
     seq = kseq_init(fp);
+    
     int l, log_counter, max_read_length;
     log_counter = max_read_length = 0;
     static int read_counter = 0;
@@ -173,8 +174,10 @@ int decideWhichSearch(const char *inputFastq,
         log_counter++;
         read_counter++;
     }
+    
     kseq_destroy(seq); // destroy seq
     gzclose(fp);
+    
     logInfo("finished processing file:"<<inputFastq, 1);    
     time(&time_current);
     double diff = difftime(time_current, time_start);
@@ -691,10 +694,8 @@ void findSingletonsMultiVector(const char *inputFastq,
     
     
     // now we got lots of wumanbers, search each string
-
     gzFile fp = getFileHandle(inputFastq);
     kseq_t *seq;
-    
     seq = kseq_init(fp);
 
     int l;
@@ -783,7 +784,10 @@ void findSingletonsMultiVector(const char *inputFastq,
         log_counter++;
         read_counter++;
     }
-    
+
+    gzclose(fp);
+    kseq_destroy(seq); // destroy seq
+
     // clean up
     wm_iter =  wu_mans.begin();
     wm_last =  wu_mans.end();
