@@ -2404,9 +2404,12 @@ bool WorkHorse::printXML(std::string namePrefix)
 	namePrefix += CRASS_DEF_CRISPR_EXT;
 	logInfo("Writing XML output to \"" << namePrefix << "\"", 1);
 	
-    crispr::XML * xml_doc = new crispr::XML();
-    int error_num = 0;
-    xercesc::DOMElement * root_element = xml_doc->createDOMDocument(CRASS_DEF_ROOT_ELEMENT, CRASS_DEF_XML_VERSION, error_num);
+
+    crispr::xml::writer * xml_doc = new crispr::xml::writer();
+    int error_num;
+    xercesc::DOMElement * root_element = xml_doc->createDOMDocument(CRASS_DEF_ROOT_ELEMENT, 
+                                                                    CRASS_DEF_XML_VERSION, 
+                                                                    error_num);
     
     if (!root_element && error_num) 
     {
@@ -2426,26 +2429,32 @@ bool WorkHorse::printXML(std::string namePrefix)
         {
             if(NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
-                std::string gid_as_string = "G" + to_string(drg_iter->first);
-                xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, mTrueDRs[drg_iter->first], root_element);
-                
-                
-                /*
-                 * <data> section
-                 */
-                addDataToDOM(xml_doc, group_elem, drg_iter->first);
+                if(NULL != mDRs[mTrueDRs[drg_iter->first]])
+                {
+                    std::string gid_as_string = "G" + to_string(drg_iter->first);
+                    std::cout<<gid_as_string<<std::endl;
+                    xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, 
+                                                                         mTrueDRs[drg_iter->first], 
+                                                                         root_element);
+                    
+                    
+                    /*
+                     * <data> section
+                     */
+                    addDataToDOM(xml_doc, group_elem, drg_iter->first);
 
-                /*
-                 * <metadata> section
-                 */
-                addMetadataToDOM(xml_doc, group_elem, drg_iter->first);
-                
-                /*
-                 * <assembly> section
-                 */
-                xercesc::DOMElement * assem_elem = xml_doc->addAssembly(group_elem);
-                (mDRs[mTrueDRs[drg_iter->first]])->printAssemblyToDOM(xml_doc, assem_elem, false);
-                
+                    /*
+                     * <metadata> section
+                     */
+                    addMetadataToDOM(xml_doc, group_elem, drg_iter->first);
+                    
+                    /*
+                     * <assembly> section
+                     */
+                    xercesc::DOMElement * assem_elem = xml_doc->addAssembly(group_elem);
+                    (mDRs[mTrueDRs[drg_iter->first]])->printAssemblyToDOM(xml_doc, assem_elem, false);
+                    
+                }
             }
         }
         drg_iter++;
@@ -2456,7 +2465,7 @@ bool WorkHorse::printXML(std::string namePrefix)
 	return 0;
 }
 
-bool WorkHorse::addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
+bool WorkHorse::addDataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
 {
     try 
     {
@@ -2465,30 +2474,35 @@ bool WorkHorse::addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupEl
             xmlDoc->createFlankers(data_elem);
         }
         
+        xercesc::DOMElement * sources_tag = data_elem->getFirstElementChild();
+        std::set<StringToken> all_sources;
+        
         for (xercesc::DOMElement * currentElement = data_elem->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) 
         {
-            if( xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->getDrs()))
+            if( xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->tag_Drs()))
             {
                 // TODO: current implementation in Crass only supports a single DR for a group
                 // in the future this will change, but for now ok to keep as a constant
                 std::string drid = "DR1";
                 xmlDoc->addDirectRepeat(drid, mTrueDRs[groupNumber], currentElement);
             }
-            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->getSpacers()))
+            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->tag_Spacers()))
             {
                 // print out all the spacers for this group
-                (mDRs[mTrueDRs[groupNumber]])->addSpacersToDOM(xmlDoc, currentElement, false);
+                (mDRs[mTrueDRs[groupNumber]])->addSpacersToDOM(xmlDoc, currentElement, false, all_sources);
                 
             }
-            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->getFlankers()))
+            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->tag_Flankers()))
             {
                 // should only get in here if there are flankers for the group
 
                 // print out all the flankers for this group
-                (mDRs[mTrueDRs[groupNumber]])->addFlankersToDOM(xmlDoc, currentElement, false);
+                (mDRs[mTrueDRs[groupNumber]])->addFlankersToDOM(xmlDoc, currentElement, false, all_sources);
 
             }
         }
+        (mDRs[mTrueDRs[groupNumber]])->generateAllsourceTags(xmlDoc, all_sources, sources_tag);
+        
     }
     catch( xercesc::XMLException& e )
     {
@@ -2501,14 +2515,18 @@ bool WorkHorse::addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupEl
     return 0;
 }
 
-bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
+bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
 {
     try{
         
         std::stringstream notes;
-        notes << PACKAGE_NAME <<" ("<<PACKAGE_VERSION<<") run on "<<mTimeStamp<<" with command: ";
-        notes <<mCommandLine;
-        xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
+        notes << "Run on "<< mTimeStamp;
+        xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(groupElement);
+        xercesc::DOMElement * prog_elem = xmlDoc->addProgram(metadata_elem);
+        xmlDoc->addProgName(PACKAGE_NAME, prog_elem);
+        xmlDoc->addProgVersion(PACKAGE_VERSION, prog_elem);
+        xmlDoc->addProgCommand(mCommandLine, prog_elem);
+        xmlDoc->addNotesToMetadata(notes.str(), metadata_elem);
         
         std::string file_name;
         char buf[4096];
@@ -2527,7 +2545,10 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
             }
             else
             {
-                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+                throw crispr::no_file_exception(__FILE__, 
+                                                __LINE__, 
+                                                __PRETTY_FUNCTION__,
+                                                (absolute_dir + file_name).c_str());
             }
         }
         
@@ -2544,7 +2565,10 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
             } 
             else 
             {
-                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, (absolute_dir + file_name + file_sufix).c_str() );
+                throw crispr::no_file_exception(__FILE__, 
+                                                __LINE__, 
+                                                __PRETTY_FUNCTION__, 
+                                                (absolute_dir + file_name + file_sufix).c_str() );
             }
             
             // and now for the cleaned .gv
@@ -2555,7 +2579,10 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
             } 
             else 
             {
-                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, (absolute_dir + file_name + file_sufix).c_str() );                
+                throw crispr::no_file_exception(__FILE__, 
+                                                __LINE__, 
+                                                __PRETTY_FUNCTION__, 
+                                                (absolute_dir + file_name + file_sufix).c_str() );                
             }
         }
 

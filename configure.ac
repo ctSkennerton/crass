@@ -20,13 +20,6 @@ AC_DEFINE([PACKAGE_MINOR_VERSION],[2],[Define the minor version of the package])
 AC_DEFINE([PACKAGE_REVISION],[12],[Define the revision of the package])
 
 
-AC_DEFINE([CRISPRTOOLS_PACKAGE_FULL_NAME],["Crisprtools"],[Define the full name of the package])
-AC_DEFINE([CRISPRTOOLS_PACKAGE_NAME],["Crisprtools"],[Define the full name of the package])
-AC_DEFINE([CRISPRTOOLS_PACKAGE_VERSION],["0.1.5"],[Define the full name of the package])
-AC_DEFINE([CRISPRTOOLS_PACKAGE_MAJOR_VERSION],[0],[Define the major version of the package])
-AC_DEFINE([CRISPRTOOLS_PACKAGE_MINOR_VERSION],[1],[Define the minor version of the package])
-AC_DEFINE([CRISPRTOOLS_PACKAGE_REVISION],[5],[Define the revision of the package])
-
 # extra configure options
 #
 #
@@ -66,26 +59,10 @@ AC_ARG_ENABLE([assembly],
         esac],[assembly=true])
 
 #check that graphviz is installed before defining RENDERING
-GV_LIBS=
-GV_BOOL=false
+
 if test x$rendering = xtrue; then
     AC_CHECK_PROGS([GV_PROGS], [neato fdp sfdp dot circo twopi], [no])
-    #check that graphviz is installed before defining RENDERING
-    AC_CHECK_LIB([gvc],[gvContext],
-                 [GV_LIBS="-lgvc $GV_LIBS" 
-                  GV_BOOL=true
-                 AC_DEFINE([HAVE_LIBGVC],[1],[Defines to one if the gvc library (-lgvc) is found])],
-                 [GV_BOOL=false])
-    AC_CHECK_LIB([cdt],[dtopen],
-                 [GV_LIBS="-lcdt $GV_LIBS"
-                  GV_BOOL=true
-                  AC_DEFINE([HAVE_LIBCDT],[1],[Defines to one if the cdt library (-lcdt) is found])],
-                 [GV_BOOL=false])
-    AC_CHECK_LIB([graph],[agnode],
-                 [GV_LIBS="-lgraph $GV_LIBS"
-                  GV_BOOL=true
-                  AC_DEFINE([HAVE_LIBGRAPH],[1],[Defines to one if the graph library (-lgraph) is found])],
-                 [GV_BOOL=false])
+
     if test x$GV_PROGS != xno; then
         
         AC_DEFINE([RENDERING],[1],[Defines to 1 if image rendering is to be performed])
@@ -99,8 +76,6 @@ if test x$rendering = xtrue; then
         echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
     fi
 fi
-AM_CONDITIONAL([FOUND_GRAPHVIZ_LIBRARIES],[test $GV_BOOL = true])
-AC_SUBST(GV_LIBS)
 
 
 # Checks for different libs, headers, functions & programs
@@ -227,4 +202,4 @@ if test $PERFORM_CRASS_ASSEMBLY = yes; then
     fi 
 fi
 
-AC_OUTPUT(Makefile src/Makefile src/libcrispr/Makefile src/crass/Makefile src/crisprtools/Makefile man/Makefile doc/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/libcrispr/Makefile src/crass/Makefile man/Makefile doc/Makefile)

@@ -1,0 +1,3 @@
+[submodule "src/libcrispr"]
+	path = src/libcrispr
+	url = git://github.com/ctSkennerton/libcrispr.git

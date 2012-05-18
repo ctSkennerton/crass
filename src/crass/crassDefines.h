@@ -104,7 +104,7 @@
 // --------------------------------------------------------------------
 #define CRASS_DEF_CRISPR_HEADER                 "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<crass_assem version=\"1.0\">\n"
 #define CRASS_DEF_ROOT_ELEMENT                  "crispr"
-#define CRASS_DEF_XML_VERSION                   "1.0"
+#define CRASS_DEF_XML_VERSION                   "1.1"
 #define CRASS_DEF_CRISPR_FOOTER                 "</crass_assem>\n"
 // --------------------------------------------------------------------
 // GRAPH BUILDING

@@ -2,7 +2,7 @@
  *  AssemblyWrapper.h is part of the crass project
  *  
  *  Created by Connor Skennerton on 27/10/11.
- *  Copyright 2011 Connor Skennerton and Michael Imelfort. All rights reserved. 
+ *  Copyright 2011, 2012 Connor Skennerton and Michael Imelfort. All rights reserved. 
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -79,32 +79,5 @@ int capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileNam
 
 int assemblyMain(int argc, char * argv[]);
 
-
-// templated function to split a string on delimeters and return it in a container of class T
-//template < class ContainerT >
-//void tokenize(const std::string& str, ContainerT& tokens, const std::string& delimiters = " ", const bool trimEmpty = false)
-//{
-//    std::string::size_type pos, lastPos = 0;
-//    while(true)
-//    {
-//        pos = str.find_first_of(delimiters, lastPos);
-//        if(pos == std::string::npos)
-//        {
-//            pos = str.length();
-//            
-//            if(pos != lastPos || !trimEmpty)
-//                tokens.push_back( typename ContainerT::value_type(str.data()+lastPos, (typename ContainerT::value_type::size_type)pos - lastPos ));
-//            
-//            break;
-//        }
-//        else
-//        {
-//            if(pos != lastPos || !trimEmpty)
-//                tokens.push_back(typename ContainerT::value_type(str.data()+lastPos, (typename ContainerT::value_type::size_type)pos-lastPos ));
-//        }
-//        
-//        lastPos = pos + 1;
-//    }
-//}
 
 #endif

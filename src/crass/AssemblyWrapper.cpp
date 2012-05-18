@@ -60,7 +60,7 @@ void assemblyVersionInfo(void)
 {
     std::cout<<std::endl<<PACKAGE_FULL_NAME<<" ("<<PACKAGE_NAME<<")"<<std::endl<<"version "<<PACKAGE_MAJOR_VERSION<<" subversion "<<PACKAGE_MINOR_VERSION<<" revison "<<PACKAGE_REVISION<<" ("<<PACKAGE_VERSION<<")"<<std::endl<<std::endl;
     std::cout<<"---------------------------------------------------------------"<<std::endl;
-    std::cout<<"Copyright (C) 2011 Connor Skennerton & Michael Imelfort"<<std::endl;
+    std::cout<<"Copyright (C) 2011, 2012 Connor Skennerton & Michael Imelfort"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it"<<std::endl;
     std::cout<<"under certain conditions: See the source for more details"<<std::endl;
@@ -373,7 +373,7 @@ void generateTmpAssemblyFile(std::string fileName, std::set<std::string>& wanted
     
     // initialize an output file handle
     std::ofstream out_file;
-    out_file.open(tmpFileName.c_str());
+    out_file.open((opts.inputDirName + tmpFileName).c_str());
     
     if (out_file.good()) 
     {
@@ -383,12 +383,7 @@ void generateTmpAssemblyFile(std::string fileName, std::set<std::string>& wanted
         // read sequence  
         while ( (l = kseq_read(seq)) >= 0 ) 
         {
-            std::string name = seq->name.s;
-            // get the last char of the name and see if it's from one of our contigs
-            std::stringstream ss;
-            ss << name.substr(name.length() - 2);
-            std::string contig_number = ss.str();
-            if (wantedContigs.find(contig_number) != wantedContigs.end()) 
+            if (wantedContigs.find(seq->name.s) != wantedContigs.end()) 
             {
                 // this read comes from a segment that we want
                 
@@ -471,12 +466,18 @@ int capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileNam
             } 
             else 
             {
-                throw (std::runtime_error("Output file stream is not good"));
+                throw crispr::runtime_exception(__FILE__,
+                                                 __LINE__,
+                                                 __PRETTY_FUNCTION__,
+                                                 "Output file stream is not good");
             }
         } 
         else 
         {
-            throw (std::runtime_error("Input file stream is not good"));
+            throw crispr::runtime_exception(__FILE__,
+                                             __LINE__,
+                                             __PRETTY_FUNCTION__,
+                                             "Input file stream is not good");
         }
         std::string cap3cmd = "cap3 " + opts.outputDirName + tmpFileName + " -o " + to_string(overlapLength) + " -x crass > " + opts.outputDirName + tmpFileName + ".crass.cap3";
         int cap_exit = system(cap3cmd.c_str());
@@ -485,9 +486,9 @@ int capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileNam
             throw (std::runtime_error("cap3 did not exit normally"));
         }
     } 
-    catch (std::exception& e) 
+    catch (crispr::exception& e) 
     {
-        std::cerr<<PACKAGE_NAME<<" [ERROR]: "<<e.what()<<std::endl;
+        std::cerr<<e.what()<<std::endl;
         return 1;
     }
     return 0;
@@ -533,14 +534,24 @@ int assemblyMain(int argc, char * argv[])
     std::set<std::string> segments;
     parseSegmentString(opts.segments, segments);
     
-    std::list<std::string> spacers_for_assembly;
+    std::set<std::string> spacers_for_assembly;
 
     //parse xml file
-    crispr::XML xml_parser;  
+    crispr::xml::reader xml_parser;  
     std::string direct_repeat;
     std::string group_as_string = "G" + to_string(opts.group);
+    try {
+        xml_parser.parseXMLFile(opts.xmlFileName, group_as_string, direct_repeat, segments, spacers_for_assembly );
 
-    xml_parser.parseXMLFile(opts.xmlFileName, group_as_string, &direct_repeat, segments, spacers_for_assembly );
+    } catch (crispr::xml_exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    }
+    
+    std::set<std::string>::iterator read_iter;
+    for (read_iter = spacers_for_assembly.begin(); read_iter != spacers_for_assembly.end(); read_iter++) {
+        std::cout<<*read_iter<<std::endl;
+    }
     
     // parse the read file and create tmp.fa for the right segments
     //build the read file name from what we know
@@ -550,7 +561,7 @@ int assemblyMain(int argc, char * argv[])
     std::string tmp_file_name = PACKAGE_NAME;
     tmp_file_name += "_tmp.fa";
     
-    generateTmpAssemblyFile(group_read_file, segments, opts, tmp_file_name);
+    generateTmpAssemblyFile(group_read_file, spacers_for_assembly, opts, tmp_file_name);
     int return_value = 42;
     switch (wantedAssembler) 
     {

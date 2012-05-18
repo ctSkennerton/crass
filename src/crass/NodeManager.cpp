@@ -1445,7 +1445,7 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
     //-----
     // dump reads to this file
     //
-    std::map<std::string, int> read_2_contig_map; 
+    std::set<std::string> reads_set; 
     std::ofstream reads_file;
     reads_file.open(readsFileName.c_str());
     if (reads_file.good()) 
@@ -1454,7 +1454,6 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
         while(spacer_iter != NM_Spacers.end())
         {
             SpacerInstance * SI = spacer_iter->second;
-            int CID = SI->getContigID();
             
             // get the crisprnodes for these guys
             CrisprNode * Cleader = SI->getLeader();
@@ -1466,7 +1465,7 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
                 std::vector<std::string>::iterator h_iter = headers.begin();
                 while(h_iter != headers.end())
                 {
-                    read_2_contig_map[*h_iter] = CID;
+                    reads_set.insert(*h_iter);
                     h_iter++;
                 }
                 
@@ -1474,7 +1473,7 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
                 h_iter = headers.begin();
                 while(h_iter != headers.end())
                 {
-                    read_2_contig_map[*h_iter] = CID;
+                    reads_set.insert(*h_iter);
                     h_iter++;
                 }
             }
@@ -1486,50 +1485,9 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
         while (read_iter != NM_ReadList.end()) 
         {
             std::string header = (*read_iter)->getHeader();
-            if(read_2_contig_map.find(header) != read_2_contig_map.end())
+            if(reads_set.find(header) != reads_set.end())
             {
-                if ((*read_iter)->getIsFasta()) 
-                {
-                    reads_file<<">"<<header<<"_C"<<read_2_contig_map[header];
-                    if (((*read_iter)->getComment()).length() > 0) 
-                    {
-                        reads_file<<' '<<(*read_iter)->getComment();
-                    }
-                    reads_file<<std::endl;
-                    if(split)
-                    {
-                        reads_file<<(*read_iter)->splitApart()<<std::endl;
-                    }
-                    else
-                    {
-                        reads_file<<(*read_iter)->getSeq()<<std::endl;
-                    }
-                } 
-                else 
-                {
-                    reads_file<<"@"<<header<<"_C"<<read_2_contig_map[header];
-                    if (((*read_iter)->getComment()).length() > 0) 
-                    {
-                        reads_file<<' '<<(*read_iter)->getComment();
-                    }
-                    reads_file<<std::endl;
-                    if(split)
-                    {
-                        reads_file<<(*read_iter)->splitApart()<<std::endl;
-                    }
-                    else
-                    {
-                        reads_file<<(*read_iter)->getSeq()<<std::endl;
-                    }
-                    reads_file<<'+'<<header<<"_C"<<read_2_contig_map[header];
-                    if (((*read_iter)->getComment()).length() > 0) 
-                    {
-                        reads_file<<' '<<(*read_iter)->getComment();
-                    }
-                    reads_file<<std::endl<<(*read_iter)->getQual()<<std::endl;
-                }
-                
-                
+                reads_file <<*(*read_iter)<<std::endl;
             }
             read_iter++;
         }
@@ -1537,8 +1495,12 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
     }
 }
 
+
 // Spacer dictionaries
-void NodeManager::addSpacersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
+void NodeManager::addSpacersToDOM(crispr::xml::writer * xmlDoc, 
+                                  xercesc::DOMElement * parentNode, 
+                                  bool showDetached, 
+                                  std::set<StringToken>& allSources)
 {
     SpacerListIterator spacer_iter = NM_Spacers.begin();
     while(spacer_iter != NM_Spacers.end())
@@ -1546,30 +1508,51 @@ void NodeManager::addSpacersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * pa
         SpacerInstance * SI = spacer_iter->second;
         if((showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached())) && !(SI->isFlanker()))
         {
+            std::set<StringToken> nr_tokens;
+            getHeadersForSpacers(SI, nr_tokens);
+            
+            // generate the spacer tag
             std::string spacer = NM_StringCheck.getString(SI->getID());
             std::string spid = "SP" + to_string(SI->getID());
             std::string cov = to_string(SI->getCount());
-            xmlDoc->addSpacer(spacer, spid, parentNode, cov);
+            xercesc::DOMElement * spacer_node = xmlDoc->addSpacer(spacer, spid, parentNode, cov);
+            appendSourcesForSpacer(spacer_node, 
+                                   nr_tokens, 
+                                   xmlDoc);
+            allSources.insert(nr_tokens.begin(), nr_tokens.end());
+
         }
         spacer_iter++;
     }
 }
 
-void NodeManager::addFlankersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
+void NodeManager::addFlankersToDOM(crispr::xml::writer * xmlDoc, 
+                                   xercesc::DOMElement * parentNode, 
+                                   bool showDetached, 
+                                   std::set<StringToken>& allSources)
 {
     SpacerInstanceVector_Iterator iter;
     for (iter = NM_FlankerNodes.begin(); iter != NM_FlankerNodes.end(); iter++) {
         SpacerInstance * SI = *iter;
         if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
         {
+            std::set<StringToken> nr_tokens;
+            getHeadersForSpacers(SI, nr_tokens);
+            
             std::string spacer = NM_StringCheck.getString(SI->getID());
             std::string flid = "FL" + to_string(SI->getID());
-            xmlDoc->addFlanker(spacer, flid, parentNode);
+            xercesc::DOMElement * spacer_node = xmlDoc->addFlanker(spacer, flid, parentNode);
+            // add in all the source tags for this spacer
+            appendSourcesForSpacer(spacer_node, 
+                                   nr_tokens, 
+                                   xmlDoc);
+            allSources.insert(nr_tokens.begin(), nr_tokens.end());
+
         }
     }
 }
 
-void NodeManager::printAssemblyToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
+void NodeManager::printAssemblyToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
 {
     
     int current_contig_num = 0;
@@ -1718,6 +1701,52 @@ void NodeManager::printAssemblyToDOM(crispr::XML * xmlDoc, xercesc::DOMElement *
 
 }
 
+void NodeManager::getHeadersForSpacers(SpacerInstance * SI, std::set<StringToken>& nrTokens)
+{
+    // go through all the string tokens for both the leader and last nodes
+    // for all the CrisprNodes in the Spacers
+    CrisprNode * first_node = SI->getLeader();
+    CrisprNode * second_node = SI->getLast();
+    std::vector<StringToken>::iterator header_iter;
+    for (header_iter = first_node->beginHeaders(); header_iter != first_node->endHeaders(); header_iter++) {
+        nrTokens.insert(*header_iter);
+    }
+    for (header_iter = second_node->beginHeaders(); header_iter != second_node->endHeaders(); header_iter++) {
+        nrTokens.insert(*header_iter);
+    }
+}
+
+void NodeManager::appendSourcesForSpacer(xercesc::DOMElement * spacerNode, 
+                            std::set<StringToken>& nrTokens,
+                            crispr::xml::writer * xmlDoc)
+{
+    // add in all the source tags for this spacer
+    std::set<StringToken>::iterator nr_iter;
+    for (nr_iter = nrTokens.begin(); nr_iter != nrTokens.end(); nr_iter++) {
+        std::string s = NM_StringCheck.getString(*nr_iter);
+        std::string sid = "SO";
+        sid += to_string(*nr_iter);
+        // add the source to both the current spacer
+        // and to the total sources list
+        //xmlDoc->addSource(s, sid, allSources);
+        xmlDoc->addSpacerSource(sid, spacerNode);
+    }
+}
+
+void NodeManager::generateAllsourceTags(crispr::xml::writer * xmlDoc, 
+                           std::set<StringToken>& allSourcesForNM,
+                           xercesc::DOMElement * parentNode
+                           )
+{
+    // add in all the source tags for this spacer
+    std::set<StringToken>::iterator nr_iter;
+    for (nr_iter = allSourcesForNM.begin(); nr_iter != allSourcesForNM.end(); nr_iter++) {
+        std::string s = NM_StringCheck.getString(*nr_iter);
+        std::string sid = "SO";
+        sid += to_string(*nr_iter);
+        xmlDoc->addSource(s, sid, parentNode);
+    }
+}
 // Making purdy colours
 void NodeManager::setDebugColourLimits(void)
 {

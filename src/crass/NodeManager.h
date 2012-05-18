@@ -175,7 +175,6 @@ class NodeManager {
         void setSpacerColourLimits(void);
 
     // Printing / IO
-
     // Print a graphviz style graph of the DRs and spacers
         void printDebugGraph(std::ostream &dataOut, 
                              std::string title, 
@@ -205,16 +204,48 @@ class NodeManager {
                             int numSteps, 
                             std::string groupNumber); 
     
+
         void dumpReads(std::string readsFileName, 
                        bool showDetached, 
                        bool split);												
         
     // XML
-        void printXML(std::ofstream * XMLFile, int GID, bool showDetached);						// print this node managers portion of the XML file 
-        void addSpacersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
-        void addFlankersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
-        void printAssemblyToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
-
+    // print this node managers portion of the XML file 
+        void printXML(std::ofstream * XMLFile, 
+                      int GID, 
+                      bool showDetached
+                      );
+	
+    void addSpacersToDOM(crispr::xml::writer * xmlDoc, 
+                         xercesc::DOMElement * parentNode, 
+                         bool showDetached, 
+                         std::set<StringToken>&  allSourcesForNM
+                         );
+    
+    void addFlankersToDOM(crispr::xml::writer * xmlDoc, 
+                          xercesc::DOMElement * parentNode, 
+                          bool showDetached,
+                          std::set<StringToken>& allSourcesForNM
+                          );
+    
+    void printAssemblyToDOM(crispr::xml::writer * xmlDoc, 
+                            xercesc::DOMElement * parentNode, 
+                            bool showDetached
+                            );
+    
+    void getHeadersForSpacers(SpacerInstance * SI, 
+                              std::set<StringToken>& nrTokens
+                              );
+    
+    void appendSourcesForSpacer(xercesc::DOMElement * spacerNode, 
+                                std::set<StringToken>& nrTokens,
+                                crispr::xml::writer * xmlDoc
+                                );
+    
+    void generateAllsourceTags(crispr::xml::writer * xmlDoc, 
+                               std::set<StringToken>& allSourcesForNM,
+                               xercesc::DOMElement * parentNode
+                               );
 
     // Spacer dictionaries
         void printAllSpacers(void);

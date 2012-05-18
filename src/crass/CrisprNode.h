@@ -137,7 +137,9 @@ class CrisprNode
         void printEdges(std::ostream &dataOut, StringCheck * ST, std::string label, bool showDetached, bool printBackEdges, bool longDesc);    
         std::vector<std::string> getReadHeaders(StringCheck * ST);
         std::string sayEdgeTypeLikeAHuman(EDGE_TYPE type);
-    
+    std::vector<StringToken>::iterator beginHeaders(void) {return mReadHeaders.begin();}
+    std::vector<StringToken>::iterator endHeaders(void) {return mReadHeaders.end();}
+
     private:
     
         void setAttach(bool attachState);                               // set the attach state of the node
