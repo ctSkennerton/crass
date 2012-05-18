@@ -56,8 +56,8 @@
 #include "LoggerSimp.h"
 #include "WorkHorse.h"
 #include "Rainbow.h"
-#include "StlExt.h"
-#include "Exception.h"
+#include <libcrispr/StlExt.h>
+#include <libcrispr/Exception.h>
 #include "SeqUtils.h"
 #ifdef PERFORM_CRASS_ASSEMBLY
     #include "AssemblyWrapper.h"

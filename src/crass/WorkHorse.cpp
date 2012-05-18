@@ -56,10 +56,10 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "SmithWaterman.h"
-#include "StlExt.h"
+#include <libcrispr/StlExt.h>
 #include "StringCheck.h"
 #include "config.h"
-#include "Exception.h"
+#include <libcrispr/Exception.h>
 
 bool sortDirectRepeatByLength( const std::string &a, const std::string &b)
 {

@@ -5,7 +5,7 @@
 # the previous manual Makefile
 bin_PROGRAMS = crass
 
-INCLUDES = -I$(top_srcdir)/src/libcrispr
+INCLUDES = -I$(top_srcdir)/src/
 crass_LDADD = $(top_builddir)/src/libcrispr/libcrispr.la
 
 crass_CXXFLAGS = @XERCES_CPPFLAGS@ -Werror -pedantic -Wall

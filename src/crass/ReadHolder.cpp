@@ -45,7 +45,7 @@
 #include "SeqUtils.h"
 #include "SmithWaterman.h"
 #include "LoggerSimp.h"
-#include "Exception.h"
+#include <libcrispr/Exception.h>
 
 
 

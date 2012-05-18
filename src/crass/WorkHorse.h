@@ -50,7 +50,7 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 #include "StringCheck.h"
-#include "Xml.h"
+#include <libcrispr/Xml.h>
 #if SEARCH_SINGLETON
 #include "SearchChecker.h"
 #endif

@@ -57,9 +57,9 @@
 #include "PatternMatcher.h"
 #include "SeqUtils.h"
 #include "kseq.h"
-#include "StlExt.h"
+#include <libcrispr/StlExt.h>
 #include "config.h"
-#include "Exception.h"
+#include <libcrispr/Exception.h>
 
 /* 
  declare the type of file handler and the read() function
