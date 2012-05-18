@@ -97,7 +97,7 @@ void  usage(void);
 
 void  versionInfo(void);
 
-void  recursiveMkdir(std::string dir);
+//void  recursiveMkdir(std::string dir);
 
 int   processOptions(int argc, char *argv[], options *opts);
 

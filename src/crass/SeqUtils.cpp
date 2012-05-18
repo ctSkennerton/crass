@@ -123,15 +123,17 @@ gzFile getFileHandle(const char * inputFile)
     return fp;
 }
 
+#define OUT_FILE_PERMISSION_MASK (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)
+
 void RecursiveMkdir(std::string dir) 
 {
     std::string tmp;
     size_t pos = 0;
     while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
         tmp = dir.substr(0,pos);
-        mkdir(tmp.c_str(), S_IRWXU | S_IRWXG);
+        mkdir(tmp.c_str(), OUT_FILE_PERMISSION_MASK);
     }
-    mkdir(dir.c_str(), S_IRWXU | S_IRWXG);
+    mkdir(dir.c_str(), OUT_FILE_PERMISSION_MASK);
 }
 
 

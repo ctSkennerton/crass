@@ -116,14 +116,20 @@ bool SpacerInstance::isViable(void)
 	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
 	
 	// zero rank spacers are viable by default
-	if(getSpacerRank() < 2)
+    std::cout<<"-----------------------------------------"<<std::endl;
+    std::cout<<"Testing Viability: "<<SI_SpacerSeqID<<std::endl;
+    printContents();
+
+	if(getSpacerRank() < 2) {
+    
 		return true;
+    }
 			
 	bool has_forward = false;
 	bool has_reverse = false;
 	while(edge_iter != SI_SpacerEdges.end())
 	{
-		if((*edge_iter)->d == REVERSE)
+        if((*edge_iter)->d == REVERSE)
 			has_reverse = true;
 		else
 			has_forward = true;
@@ -169,6 +175,9 @@ bool SpacerInstance::detachSpecificSpacer(SpacerInstance * target)
 	//-----
 	// remove this spacer from the graph
 	//
+    std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<std::endl;
+    std::cout<<"Detatching from: "<<target->getID()<<std::endl;
+    printContents();
 	if(0 == getSpacerRank())
 	{
 		logError("Trying to remove edge from zero rank spacer");
@@ -209,7 +218,7 @@ void SpacerInstance::printContents(void)
 	//
 	
 	std::cout << "-------------------------------\n" << this << std::endl;
-	std::cout << "ST: " << SI_SpacerSeqID << " LEADER: " << SI_LeadingNode << " LAST: " << SI_LastNode << std::endl;
+	std::cout << "ST: " << SI_SpacerSeqID << " LEADER: " << SI_LeadingNode->getID() << " LAST: " << SI_LastNode->getID() << std::endl;
 	std::cout << "IC: " << SI_InstanceCount << " ATT? " << SI_Attached << " CID: " << SI_ContigID << std::endl;
 	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
 	while(edge_iter != SI_SpacerEdges.end())

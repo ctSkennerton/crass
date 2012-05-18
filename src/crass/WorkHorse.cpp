@@ -263,11 +263,11 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     }
 	
     // print the reads to a file if requested
-	if(dumpReads(false))
-	{
-        logError("FATAL ERROR: dumpReads failed");
-        return 9;
-	}
+//	if(dumpReads(false))
+//	{
+//        logError("FATAL ERROR: dumpReads failed");
+//        return 9;
+//	}
 	
 #if DEBUG
 	if (!mOpts->noDebugGraph) 
@@ -2110,6 +2110,7 @@ int WorkHorse::cleanSpacerGraphs(void)
 	// clean the spacer graphs
 	//
     // go through the DR2GID_map and make all reads in each group into nodes
+    renderSpacerGraphs("Spacer_Preclean_");
     DR_ListIterator dr_iter = mDRs.begin();
     while(dr_iter != mDRs.end())
     {
@@ -2175,27 +2176,27 @@ int WorkHorse::splitIntoContigs(void)
 //**************************************
 
 
-int WorkHorse::dumpReads( bool split)
-{
-    //-----
-    // Print the reads from one cluster to a file...
-    //
-	logInfo("Dumping reads", 1);
-    DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
-    while (drg_iter != mDR2GIDMap.end()) 
-    {
-        // make sure that our cluster is real
-        if (drg_iter->second != NULL) 
-        {
-            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
-            {
-                (mDRs[mTrueDRs[drg_iter->first]])->dumpReads((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str(), false, split);
-            }
-        }
-        drg_iter++;
-    }
-	return 0;
-}
+//int WorkHorse::dumpReads( bool split)
+//{
+//    //-----
+//    // Print the reads from one cluster to a file...
+//    //
+//	logInfo("Dumping reads", 1);
+//    DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+//    while (drg_iter != mDR2GIDMap.end()) 
+//    {
+//        // make sure that our cluster is real
+//        if (drg_iter->second != NULL) 
+//        {
+//            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
+//            {
+//                (mDRs[mTrueDRs[drg_iter->first]])->dumpReads((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str(), false, split);
+//            }
+//        }
+//        drg_iter++;
+//    }
+//	return 0;
+//}
 
 int WorkHorse::renderDebugGraphs(void)
 {
@@ -2296,16 +2297,28 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
         {            
             if(NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
+                NodeManager * current_manager = mDRs[mTrueDRs[drg_iter->first]];
+                
                 std::ofstream graph_file;
 
                 
                 std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
                 std::string graph_file_name = graph_file_prefix + "_spacers.gv";
                 
-                // check to see if there is anything to print - if so then make the key
-                if ( mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file_name, mTrueDRs[drg_iter->first], mOpts->longDescription, mOpts->showSingles))
+                // check to see if there is anything to print
+                if ( current_manager->printSpacerGraph(graph_file_name, 
+                                                       mTrueDRs[drg_iter->first], 
+                                                       mOpts->longDescription, 
+                                                       mOpts->showSingles))
                 {
-                    mDRs[mTrueDRs[drg_iter->first]]->printSpacerKey(key_file, 10, namePrefix + to_string(drg_iter->first));
+                    // add our group to the key
+                    current_manager->printSpacerKey(key_file, 
+                                                    10, 
+                                                    namePrefix + to_string(drg_iter->first));
+                    
+                    // output the reads
+                    std::string read_file_name = mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa";
+                    current_manager->dumpReads(read_file_name, false, false);
                 }
                 else 
                 {
@@ -2499,7 +2512,8 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
         
         std::string file_name;
         char * buf = NULL;
-        std::string absolute_dir = getcwd(buf, 4096);
+        buf = getcwd(buf, 4096);
+        std::string absolute_dir = buf;
         absolute_dir += "/";
         delete buf;
         // add in files if they exist

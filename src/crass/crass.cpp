@@ -58,6 +58,7 @@
 #include "Rainbow.h"
 #include "StlExt.h"
 #include "Exception.h"
+#include "SeqUtils.h"
 #ifdef PERFORM_CRASS_ASSEMBLY
     #include "AssemblyWrapper.h"
 #endif
@@ -194,16 +195,16 @@ void versionInfo(void)
 
 //make a new directory
 // Stoled from SaSSY
-void recursiveMkdir(std::string dir) 
-{
-    std::string tmp;
-    size_t pos = 0;
-    while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
-        tmp = dir.substr(0,pos);
-        mkdir(tmp.c_str(), S_IRWXU);
-    }
-    mkdir(dir.c_str(), S_IRWXU);
-}
+//void recursiveMkdir(std::string dir) 
+//{
+//    std::string tmp;
+//    size_t pos = 0;
+//    while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
+//        tmp = dir.substr(0,pos);
+//        mkdir(tmp.c_str(), S_IRWXU);
+//    }
+//    mkdir(dir.c_str(), S_IRWXU);
+//}
 
 int processOptions(int argc, char *argv[], options *opts) 
 {
@@ -341,7 +342,7 @@ int processOptions(int argc, char *argv[], options *opts)
                 struct stat file_stats;
                 if (0 != stat(opts->output_fastq.c_str(),&file_stats)) 
                 {
-                    recursiveMkdir(opts->output_fastq);
+                    RecursiveMkdir(opts->output_fastq);
                 }
                 // check that the directory is writable
                 else if(access(optarg, W_OK))

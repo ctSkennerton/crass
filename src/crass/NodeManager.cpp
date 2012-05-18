@@ -253,6 +253,9 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         
         // add them to the pile
         NM_Nodes[st1] = first_kmer_node;
+#ifdef DEBUG
+        logInfo("creating node "<<st1<<" with string: "<<first_kmer, 10);
+#endif
     }
     else
     {
@@ -268,12 +271,16 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         second_kmer_node = new CrisprNode(st2);
         second_kmer_node->setForward(false);
         NM_Nodes[st2] = second_kmer_node;
+#ifdef DEBUG
+        logInfo("creating node "<<st2<<" with string: "<<second_kmer, 10);
+#endif
     }
     else
     {
         second_kmer_node = NM_Nodes[st2];
         second_kmer_node->incrementCount();
     }
+
     // add in the read headers for the two CrisprNodes
     first_kmer_node->addReadHeader(headerSt);
     second_kmer_node->addReadHeader(headerSt);
@@ -300,6 +307,8 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         debug_iter->second.addNode(st2);
     }
 #endif
+    
+
     // now it's time to add the spacer
     SpacerInstance * curr_spacer;
     
@@ -320,6 +329,9 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         if (debug_iter != debugger->end()) {
             debug_iter->second.addSpacer(workingString);
         }
+#endif
+#ifdef DEBUG
+        logInfo("Creating spacer: "<<sp_str_token<<" with string: "<<workingString<<" From nodes: "<<st1<<", "<<st2 , 10);
 #endif
 
         // make the inner edge
@@ -1142,7 +1154,8 @@ int NodeManager::cleanSpacerGraph(void)
             {
                 if(sp_iter->second->isFur())
                 {
-                    //std::cout << "a: " << sp_iter->second << std::endl;
+                    std::cout << "a: " << (sp_iter->second) <<" round: "<<round<< std::endl;
+                    (sp_iter->second)->printContents();
                     sp_iter->second->detachFromSpacerGraph();
                     cleaned_some = true;
                 }
@@ -1154,11 +1167,14 @@ int NodeManager::cleanSpacerGraph(void)
         sp_iter = NM_Spacers.begin();
         while(sp_iter != NM_Spacers.end())
         {
+            std::cout<<"Testing Attached: "<<(*sp_iter->second).getID()<<std::endl;
             if((sp_iter->second)->isAttached())
             {
                 if(!sp_iter->second->isViable())
                 {
-                    //std::cout << "b: " << sp_iter->second << std::endl;
+                    std::cout << "b: " << sp_iter->second <<" round: "<<round<< std::endl;
+                    (sp_iter->second)->printContents();
+
                     sp_iter->second->detachFromSpacerGraph();
                     cleaned_some = true;
                 }
