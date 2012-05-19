@@ -1,15 +1,10 @@
-
-
-
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
 # the previous manual Makefile
 bin_PROGRAMS = crass
 
-INCLUDES = -I$(top_srcdir)/src/
-crass_LDADD = $(top_builddir)/src/libcrispr/libcrispr.la
 
-crass_CXXFLAGS = @XERCES_CPPFLAGS@ -Werror -pedantic -Wall
-crass_LDFLAGS = @zlib_flags@
+crass_CXXFLAGS = @LIBCRISPR_CPPFLAGS@ -Werror -pedantic -Wall
+crass_LDFLAGS = @LIBCRISPR_LIBS@ @zlib_flags@
 
 
 crass_SOURCES =\

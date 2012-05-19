@@ -88,11 +88,11 @@ fi
 AC_PROG_CXX
 AC_PROG_CC
 
-AX_LIB_XERCES
-if test $HAVE_XERCES = no; then
-AC_MSG_ERROR([Cannot find Xerces-c])
+AX_LIBCRISPR
+if test $HAVE_LIBCRISPR = no; then
+AC_MSG_ERROR([Cannot find licrispr])
 else
-AM_CONDITIONAL([XERCES_FOUND], [test $HAVE_XERCES = yes])
+AM_CONDITIONAL([LIBCRISPR_FOUND], [test $HAVE_LIBCRISPR = yes])
 fi
 
 PERFORM_CRASS_ASSEMBLY=no 
@@ -202,4 +202,4 @@ if test $PERFORM_CRASS_ASSEMBLY = yes; then
     fi 
 fi
 
-AC_OUTPUT(Makefile src/Makefile src/libcrispr/Makefile src/crass/Makefile man/Makefile doc/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/crass/Makefile man/Makefile doc/Makefile)

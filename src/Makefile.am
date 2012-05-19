@@ -1,2 +1,2 @@
-SUBDIRS = libcrispr crass
+SUBDIRS = crass
 
