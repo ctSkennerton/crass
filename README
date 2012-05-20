@@ -1,7 +1,7 @@
 ==============================================================================
 ==============================================================================
 
-    crass -- CRisprASSembler -- version 0 subversion 2 revision 12 (0.2.12)
+    crass -- CRisprASSembler -- version 0 subversion 2 revision 13 (0.2.13)
 
 ==============================================================================
 
@@ -50,10 +50,10 @@ http://sassy.mikeimelfort.com
 INSTALLATION
 Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) 
 and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
-It successfully compiles with gcc 4.2, gcc 4.6 and gcc 4.7 other versions of gcc have not been tested.  
-Crass requires that the Xerces-c XML library  and Zlib are installed for compilation.  Xerces-c is 
-available freely at http://xerces.apache.org/ and Zlib at www.zlib.net. Optionally you can also install 
-the Graphviz package (www.graphviz.org) for rendering graphs.  
+It successfully compiles with gcc 4.2, gcc 4.4 and gcc 4.5 other versions of gcc have not been tested.  
+Crass uses libcrispr (https://github.com/ctSkennerton/libcrispr) which requires the Xerces-c XML library
+ and Zlib are installed for compilation.  Xerces-c is available freely at http://xerces.apache.org/ 
+and Zlib at www.zlib.net. Optionally you can also install the Graphviz package (www.graphviz.org) for rendering graphs.  
 
 With all this in mind to perform the installation:
 
@@ -64,16 +64,17 @@ $ tar -xf crass.tar.gz
 $ cd crass
 
 then on most Unix systems:
-
+$ ./autogen.sh
 $ ./configure
 $ make
 $ make install
 
 NON-STANDARD INSTALLATIONS
-Crass and Crisprtools can access the graphviz libraies and executables if desired. Use the 
+Crass can access the graphviz libraies and executables if desired. Use the 
 --enable-rendering during configure to access this feature.
 
-Use the --with-xerces configure option to change the Xerces install prefix. Configure will look for 
+If libcrispr or Xerces are installed in non-standard loacations use the --with-libcrispr=[PREFIX]
+and  --with-xerces=[PREFIX] configure option to change the location prefix. Configure will look for 
 $prefix/lib/ and $prefix/include directories for the library objects and header files.  Note that the 
 below options for changing LDFLAGS and CPPFLAGS will not work for Xerces as it is a C++ library and not a 
 C library and therefore different code is used to check for it.   

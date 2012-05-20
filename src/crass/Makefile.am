@@ -4,7 +4,7 @@ bin_PROGRAMS = crass
 
 
 crass_CXXFLAGS = @LIBCRISPR_CPPFLAGS@ -Werror -pedantic -Wall
-crass_LDFLAGS = @LIBCRISPR_LIBS@ @zlib_flags@
+crass_LDFLAGS = @LIBCRISPR_LDFLAGS@ @LIBCRISPR_LIBS@ @zlib_flags@
 
 
 crass_SOURCES =\

@@ -1161,8 +1161,8 @@ int NodeManager::cleanSpacerGraph(void)
             {
                 if(sp_iter->second->isFur())
                 {
-                    std::cout << "a: " << (sp_iter->second) <<" round: "<<round<< std::endl;
-                    (sp_iter->second)->printContents();
+                    //std::cout << "a: " << (sp_iter->second) <<" round: "<<round<< std::endl;
+                    //(sp_iter->second)->printContents();
                     sp_iter->second->detachFromSpacerGraph();
                     cleaned_some = true;
                 }
@@ -1174,13 +1174,13 @@ int NodeManager::cleanSpacerGraph(void)
         sp_iter = NM_Spacers.begin();
         while(sp_iter != NM_Spacers.end())
         {
-            std::cout<<"Testing Attached: "<<(*sp_iter->second).getID()<<std::endl;
+            //std::cout<<"Testing Attached: "<<(*sp_iter->second).getID()<<std::endl;
             if((sp_iter->second)->isAttached())
             {
                 if(!sp_iter->second->isViable())
                 {
-                    std::cout << "b: " << sp_iter->second <<" round: "<<round<< std::endl;
-                    (sp_iter->second)->printContents();
+                    //std::cout << "b: " << sp_iter->second <<" round: "<<round<< std::endl;
+                    //(sp_iter->second)->printContents();
 
                     sp_iter->second->detachFromSpacerGraph();
                     cleaned_some = true;
@@ -1190,9 +1190,9 @@ int NodeManager::cleanSpacerGraph(void)
         }
         
         // remove bubbles
-        std::cout << "rembubs" << std::endl;
+        //std::cout << "rembubs" << std::endl;
         removeSpacerBubbles();
-        std::cout << "rembubs-over" << std::endl;
+        //std::cout << "rembubs-over" << std::endl;
     }
     return 0;
 }

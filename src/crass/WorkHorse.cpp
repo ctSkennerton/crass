@@ -2110,7 +2110,9 @@ int WorkHorse::cleanSpacerGraphs(void)
 	// clean the spacer graphs
 	//
     // go through the DR2GID_map and make all reads in each group into nodes
+#ifdef DEBUG
     renderSpacerGraphs("Spacer_Preclean_");
+#endif
     DR_ListIterator dr_iter = mDRs.begin();
     while(dr_iter != mDRs.end())
     {
@@ -2421,6 +2423,7 @@ bool WorkHorse::printXML(std::string namePrefix)
     }
     // go through the node managers and print the group info 
     // print all the inside information
+    int final_out_number = 0;
     DR_Cluster_MapIterator drg_iter =  mDR2GIDMap.begin();
     while (drg_iter != mDR2GIDMap.end()) 
     {
@@ -2432,7 +2435,7 @@ bool WorkHorse::printXML(std::string namePrefix)
                 if(NULL != mDRs[mTrueDRs[drg_iter->first]])
                 {
                     std::string gid_as_string = "G" + to_string(drg_iter->first);
-                    std::cout<<gid_as_string<<std::endl;
+                    final_out_number++;
                     xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, 
                                                                          mTrueDRs[drg_iter->first], 
                                                                          root_element);
@@ -2459,6 +2462,7 @@ bool WorkHorse::printXML(std::string namePrefix)
         }
         drg_iter++;
     }
+    std::cout<<"["<<PACKAGE_NAME<<"_graphBuilder]: "<<final_out_number<<" CRISPRs found!"<<std::endl;
     xml_doc->printDOMToFile(namePrefix);
 
     delete xml_doc;

@@ -116,9 +116,6 @@ bool SpacerInstance::isViable(void)
 	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
 	
 	// zero rank spacers are viable by default
-    std::cout<<"-----------------------------------------"<<std::endl;
-    std::cout<<"Testing Viability: "<<SI_SpacerSeqID<<std::endl;
-    printContents();
 
 	if(getSpacerRank() < 2) {
     
@@ -187,9 +184,6 @@ bool SpacerInstance::detachSpecificSpacer(SpacerInstance * target)
 	//-----
 	// remove this spacer from the graph
 	//
-    std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<std::endl;
-    std::cout<<"Detatching from: "<<target->getID()<<std::endl;
-    printContents();
 	if(0 == getSpacerRank())
 	{
 		logError("Trying to remove edge from zero rank spacer");
