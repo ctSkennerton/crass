@@ -1075,7 +1075,19 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         int num_compared = 0;
         
         // now go through the spacers and check for similarities
-        std::vector<std::string> spacer_vec = tmp_holder->getAllSpacerStrings();
+        std::vector<std::string> spacer_vec; //= tmp_holder->getAllSpacerStrings();
+        
+        //get all the spacer strings
+        std::string working_string;
+        if(tmp_holder->getFirstSpacer(&working_string)) {
+            //std::cout<<working_string<<std::endl;
+            spacer_vec.push_back(working_string);
+            while(tmp_holder->getNextSpacer(&working_string)) {
+                spacer_vec.push_back(working_string);
+                //std::cout<<working_string<<std::endl;
+            }
+        }
+        
         std::vector<std::string>::iterator spacer_iter = spacer_vec.begin();
         std::vector<std::string>::iterator spacer_last = spacer_vec.end();
 

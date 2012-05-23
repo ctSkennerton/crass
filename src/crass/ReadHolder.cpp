@@ -52,7 +52,6 @@
 // the input must be an even number which will be the start of the repeat
 unsigned int ReadHolder::getRepeatAt(unsigned int i)
 {
-#ifdef DEBUG
     if (i % 2 != 0) 
     {
         std::stringstream ss;
@@ -71,12 +70,10 @@ unsigned int ReadHolder::getRepeatAt(unsigned int i)
 		                        __PRETTY_FUNCTION__,
 		                        ss);
     }
-#endif
     return RH_StartStops[i];
 }
 std::string ReadHolder::repeatStringAt(unsigned int i)
 {
-#ifdef DEBUG
 	if (i % 2 != 0) 
     {
         std::stringstream ss;
@@ -95,13 +92,11 @@ std::string ReadHolder::repeatStringAt(unsigned int i)
 		                        __PRETTY_FUNCTION__,
 		                        ss);
     }
-#endif
     return RH_Seq.substr(RH_StartStops[i], RH_StartStops[i + 1] - RH_StartStops[i] + 1);
 }
 
 std::string ReadHolder::spacerStringAt(unsigned int i)
 {
-#ifdef DEBUG
     if (i % 2 != 0) 
     {
         std::stringstream ss;
@@ -114,16 +109,35 @@ std::string ReadHolder::spacerStringAt(unsigned int i)
     if (i > RH_StartStops.size()) 
     {
         std::stringstream ss;
-		ss<<"Index is greater than the length of the Vector: "<<i;
+		ss<<"Index is greater than the length of the Vector: "<<i<<" >= "<<RH_StartStops.size();
 		throw crispr::exception(__FILE__,
 		                        __LINE__,
 		                        __PRETTY_FUNCTION__,
 		                        ss);
     }
-#endif
-    unsigned int curr_spacer_start_index = RH_StartStops[i + 1] + 1;
-    unsigned int curr_spacer_end_index = RH_StartStops[i + 2] - 1;
-    return RH_Seq.substr(curr_spacer_start_index, (curr_spacer_end_index - curr_spacer_start_index));
+    std::string tmp_seq;
+    unsigned int curr_spacer_start_index = 0;
+    unsigned int curr_spacer_end_index = 0;
+    try {
+        curr_spacer_start_index = RH_StartStops.at(i + 1) + 1;
+        curr_spacer_end_index = RH_StartStops.at(i + 2) - 1;
+        tmp_seq = RH_Seq.substr(curr_spacer_start_index, (curr_spacer_end_index - curr_spacer_start_index));
+    } catch (std::out_of_range& e) {
+        std::cerr<<"Vector size: "<<RH_StartStops.size()<<" Start index: "<<i+1<<" End Index: "<<i+2<<" Base Index: "<<i<<std::endl;
+        throw crispr::substring_exception(e.what(), 
+                                            RH_Seq.c_str(), 
+                                            curr_spacer_start_index,
+                                            (curr_spacer_end_index - curr_spacer_start_index), 
+                                            __FILE__,
+                                            __LINE__,
+                                            __PRETTY_FUNCTION__);
+    } catch (std::exception& e) {
+        throw crispr::exception(__FILE__,
+                                __LINE__,
+                                __PRETTY_FUNCTION__,
+                                e.what());
+    }
+    return tmp_seq;
 }
 
 unsigned int ReadHolder::getAverageSpacerLength()
@@ -180,9 +194,18 @@ std::vector<std::string> ReadHolder::getAllSpacerStrings(void)
 {
     std::vector<std::string> spacer_vec;
     unsigned int final_index = (getStartStopListSize()/2) + 1;
-    for (unsigned int i = 0; i <= final_index; i+=2)
-    {
-        spacer_vec.push_back(spacerStringAt(i));
+    try {
+        for (unsigned int i = 0; i <= final_index; i+=2)
+        {
+            spacer_vec.push_back(spacerStringAt(i));
+        }
+    } catch (crispr::exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        std::cerr<<"Calculated final index: "<<final_index<<" : "<<getStartStopListSize()<< " : "<<RH_StartStops.size()<<std::endl;
+        throw crispr::exception(__FILE__,
+                                __LINE__,
+                                __PRETTY_FUNCTION__,
+                                "");
     }
     return spacer_vec;
 }
