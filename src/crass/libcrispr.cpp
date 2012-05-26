@@ -901,7 +901,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
 #endif
             // look at the character just past the end of the last repeat
             // make sure our indicies make some sense!
-            if((tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength()) >= (unsigned int)tmp_holder->getSeqLength())
+            if((tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength()) >= static_cast<unsigned int>(tmp_holder->getSeqLength()))
             {    
                 k = DR_index_end;
             }
@@ -946,7 +946,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
     // again, not too far
     unsigned int left_extension_length = 0;
     int test_for_negative = shortest_repeat_spacing - tmp_holder->getRepeatLength();// - minSpacerLength;
-    unsigned int max_left_extension_length = (test_for_negative >= 0)? (unsigned int) test_for_negative : 0;
+    unsigned int max_left_extension_length = (test_for_negative >= 0)? static_cast<unsigned int>(test_for_negative) : 0;
 
 #ifdef DEBUG
     logInfo("max left extension length: "<<max_left_extension_length, 9);
@@ -959,7 +959,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
         logInfo("removing start partial: "<<max_left_extension_length<<" > "<<first_repeat_start_index, 9);
 #endif
         DR_index_start+=2;
-        cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * (num_repeats - 1));
+        cut_off = static_cast<int>(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * (num_repeats - 1));
         if (2 > cut_off) 
         {
             cut_off = 2;
@@ -1013,7 +1013,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
 #endif
     while (repeat_iter < tmp_holder->end()) 
     {
-        if(*repeat_iter < (unsigned int)left_extension_length)
+        if(*repeat_iter < static_cast<unsigned int>(left_extension_length))
         {
             *repeat_iter = 0;
             *(repeat_iter + 1) += right_extension_length;
@@ -1029,7 +1029,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
         repeat_iter += 2;
     }
     
-    return (unsigned int)tmp_holder->getRepeatLength();
+    return static_cast<unsigned int>(tmp_holder->getRepeatLength());
     
 }
 
@@ -1037,15 +1037,15 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
 //need at least two elements
 bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerLength)
 {
-    try {
-        if (tmp_holder->numRepeats() < 2) 
-        {
-            logError("The vector holding the repeat indexes has less than 2 repeats!");
-            throw "The vector holding the repeat indexes has less than 2 repeats!";
-        }
-    } catch (char * c) {
-        std::cerr<<c<<std::endl;
+
+    if (tmp_holder->numRepeats() < 2) 
+    {
+        throw crispr::exception(__FILE__,
+                                __LINE__,
+                                __PRETTY_FUNCTION__,
+                                "The vector holding the repeat indexes has less than 2 repeats!");
     }
+
     
     std::string repeat = tmp_holder->repeatStringAt(0);
     
@@ -1075,46 +1075,45 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         int num_compared = 0;
         
         // now go through the spacers and check for similarities
-        std::vector<std::string> spacer_vec; //= tmp_holder->getAllSpacerStrings();
+        std::vector<std::string> spacer_vec;
         
         //get all the spacer strings
-        std::string working_string;
-        if(tmp_holder->getFirstSpacer(&working_string)) {
-            //std::cout<<working_string<<std::endl;
-            spacer_vec.push_back(working_string);
-            while(tmp_holder->getNextSpacer(&working_string)) {
-                spacer_vec.push_back(working_string);
-                //std::cout<<working_string<<std::endl;
-            }
-        }
+
+        tmp_holder->getAllSpacerStrings(spacer_vec);
         
         std::vector<std::string>::iterator spacer_iter = spacer_vec.begin();
         std::vector<std::string>::iterator spacer_last = spacer_vec.end();
 
+
         spacer_last--;
         while (spacer_iter != spacer_last) 
         {
+
             num_compared++;
             try {
             	ave_repeat_to_spacer_difference += PatternMatcher::getStringSimilarity(repeat, *spacer_iter);
             } catch (std::exception& e) {
-            	std::cerr << e.what()<<std::endl;
-            	std::cerr<< repeat <<" : "<< *spacer_iter<<std::endl;
-            	return false;
+                std::cerr<<"Failed to compare similarity between: "<<repeat<<" : "<<*spacer_iter<<std::endl;
+                throw crispr::exception(__FILE__,
+                                        __LINE__,
+                                        __PRETTY_FUNCTION__,
+                                        e.what());
             }
             float ss_diff = 0;
             try {
             	ss_diff += PatternMatcher::getStringSimilarity(*spacer_iter, *(spacer_iter + 1));
 			} catch (std::exception& e) {
-				std::cerr << e.what()<<std::endl;
-				std::cerr<< repeat <<" : "<< *spacer_iter<<std::endl;
-				return false;
+                std::cerr<<"Failed to compare similarity between: "<<*spacer_iter<<" : "<<*(spacer_iter+1)<<std::endl;
+                throw crispr::exception(__FILE__,
+                                        __LINE__,
+                                        __PRETTY_FUNCTION__,
+                                        e.what());
 			}
             ave_spacer_to_spacer_difference += ss_diff;
 
             //MI std::cout << ss_diff << " : " << *spacer_iter << " : " << *(spacer_iter + 1) << std::endl;
-            ave_spacer_to_spacer_len_difference += ((float)(spacer_iter->size()) - (float)((spacer_iter + 1)->size()));
-            ave_repeat_to_spacer_len_difference +=  ((float)(repeat.size()) - (float)(spacer_iter->size()));
+            ave_spacer_to_spacer_len_difference += (static_cast<float>(spacer_iter->size()) - static_cast<float>((spacer_iter + 1)->size()));
+            ave_repeat_to_spacer_len_difference +=  (static_cast<float>(repeat.size()) - static_cast<float>(spacer_iter->size()));
             spacer_iter++;
         }
 
@@ -1123,13 +1122,13 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         spacer_last = spacer_vec.end();
         while (spacer_iter != spacer_last) 
         {
-            if((int)(spacer_iter->length()) < min_spacer_length)
+            if(static_cast<int>(spacer_iter->length()) < min_spacer_length)
             {
-                min_spacer_length = (int)(spacer_iter->length()); 
+                min_spacer_length = static_cast<int>(spacer_iter->length()); 
             }
-            if((int)(spacer_iter->length()) > max_spacer_length)
+            if(static_cast<int>(spacer_iter->length()) > max_spacer_length)
             {
-                max_spacer_length = (int)(spacer_iter->length()); 
+                max_spacer_length = static_cast<int>(spacer_iter->length()); 
             }
             spacer_iter++;
         }
@@ -1163,7 +1162,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
 #ifdef DEBUG
             logInfo("\tPassed test 4a. Min spacer length within range: "<<min_spacer_length<<" > "<<minSpacerLength, 8);
 #endif
-            if (min_spacer_length > maxSpacerLength) 
+            if (max_spacer_length > maxSpacerLength) 
             {
 #ifdef DEBUG
                 logInfo("\tFailed test 4b. Max spacer length out of range: "<<max_spacer_length<<" > "<<maxSpacerLength, 8);
@@ -1235,7 +1234,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
             /*
              * MAX AND MIN SPACER LENGTHS
              */
-            if ((int)spacer.length() < minSpacerLength) 
+            if (static_cast<int>(spacer.length()) < minSpacerLength) 
             {
 #ifdef DEBUG
                 logInfo("\tFailed test 4a. Min spacer length out of range: "<<spacer.length()<<" < "<<minSpacerLength, 8);
@@ -1245,7 +1244,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
 #ifdef DEBUG
             logInfo("\tPassed test 4a. Min spacer length within range: "<<spacer.length()<<" > "<<minSpacerLength, 8);
 #endif
-            if ((int)spacer.length() > maxSpacerLength) 
+            if (static_cast<int>(spacer.length()) > maxSpacerLength) 
             {
 #ifdef DEBUG
                 logInfo("\tFailed test 4b. Max spacer length out of range: "<<spacer.length()<<" > "<<maxSpacerLength, 8);
@@ -1270,7 +1269,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         /*
          * REPEAT AND SPACER LENGTH SIMILARITIES
          */
-        if (abs((int)spacer.length() - (int)repeat.length()) > CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF) 
+        if (abs(static_cast<int>(spacer.length()) - static_cast<int>(repeat.length())) > CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF) 
         {
 #ifdef DEBUG
             logInfo("\tFailed test 6. Repeat to spacer length differ too much: "<<abs((int)spacer.length() - (int)repeat.length())<<" > "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
@@ -1293,9 +1292,9 @@ bool isRepeatLowComplexity(std::string& repeat)
     int t_count = 0;
     int n_count = 0;
     
-    int curr_repeat_length = (int)repeat.length();
+    int curr_repeat_length = static_cast<int>(repeat.length());
     
-    int cut_off = (int)(curr_repeat_length * CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD);
+    int cut_off = static_cast<int>(curr_repeat_length * CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD);
     
     std::string::iterator dr_iter = repeat.begin();
     //int i = dr_match.DR_StartPos;
@@ -1360,7 +1359,7 @@ bool drHasHighlyAbundantKmers(std::string& directRepeat)
         //std::cout << "{" << iter->first << ", " << iter->second << ", " << (float(iter->second)/float(total_count)) << "}, ";
     }
     //std::cout << std::endl;
-    if ((float)max_count/(float)total_count > CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF) {
+    if ((static_cast<float>(max_count)/static_cast<float>(total_count)) > CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF) {
         return true;
     } else {
         return false;

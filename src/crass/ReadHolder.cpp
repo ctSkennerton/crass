@@ -123,7 +123,7 @@ std::string ReadHolder::spacerStringAt(unsigned int i)
         curr_spacer_end_index = RH_StartStops.at(i + 2) - 1;
         tmp_seq = RH_Seq.substr(curr_spacer_start_index, (curr_spacer_end_index - curr_spacer_start_index));
     } catch (std::out_of_range& e) {
-        std::cerr<<"Vector size: "<<RH_StartStops.size()<<" Start index: "<<i+1<<" End Index: "<<i+2<<" Base Index: "<<i<<std::endl;
+
         throw crispr::substring_exception(e.what(), 
                                             RH_Seq.c_str(), 
                                             curr_spacer_start_index,
@@ -190,36 +190,49 @@ unsigned int ReadHolder::getAverageSpacerLength()
     return 0;
 }
 
-std::vector<std::string> ReadHolder::getAllSpacerStrings(void)
+void ReadHolder::getAllSpacerStrings(std::vector<std::string>& spacers)
 {
-    std::vector<std::string> spacer_vec;
-    unsigned int final_index = (getStartStopListSize()/2) + 1;
-    try {
-        for (unsigned int i = 0; i <= final_index; i+=2)
+    // get the first spacer, but only include it if a DR lies before it
+    std::string tmp_string;
+    if(getFirstSpacer(&tmp_string))
+    {		
+        // check to make sure that the read doesn't start on a spacer
+        if(*(RH_StartStops.begin()) == 0)
         {
-            spacer_vec.push_back(spacerStringAt(i));
+            // starts on a DR
+            spacers.push_back(tmp_string);
         }
-    } catch (crispr::exception& e) {
-        std::cerr<<e.what()<<std::endl;
-        std::cerr<<"Calculated final index: "<<final_index<<" : "<<getStartStopListSize()<< " : "<<RH_StartStops.size()<<std::endl;
+        
+        // get all the middle spacers
+        while(getNextSpacer(&tmp_string))
+        {
+            spacers.push_back(tmp_string);
+        }
+        // check to make sure that the read doesn't end on a spacer
+        if(RH_StartStops.back() != (RH_Seq.length() - 1))
+        {
+            // ends on a Spacer
+            spacers.pop_back();
+        }
+    }
+    else
+    {
         throw crispr::exception(__FILE__,
                                 __LINE__,
                                 __PRETTY_FUNCTION__,
-                                "");
+                                "No Spacers!");
     }
-    return spacer_vec;
 }
 
-std::vector<std::string> ReadHolder::getAllRepeatStrings(void)
+void ReadHolder::getAllRepeatStrings(std::vector<std::string>& repeats)
 {
-    std::vector<std::string> repeat_vec;
+
     unsigned int final_index = getStartStopListSize() - 2;
     for (unsigned int i = 0; i < final_index; i+=2)
     {
         
-        repeat_vec.push_back(repeatStringAt(i));
+        repeats.push_back(repeatStringAt(i));
     }
-    return repeat_vec;
 }
 
 int ReadHolder::averageRepeatLength()
