@@ -767,16 +767,18 @@ void findSingletonsMultiVector(const char *inputFastq,
                     addReadHolder(mReads, mStringCheck, tmp_holder);
                     found = true;
                 }
-                else
+                else {
                     delete tmp_holder;
+                }
             }
             else
             {
                 delete tmp_holder;
             }
             
-            if(found)
+            if(found) {
                 break;
+            }
             
             pats_iter++;
             wm_iter++;
