@@ -67,6 +67,9 @@ typedef std::vector<StringToken>::iterator DR_ClusterIterator;
 typedef std::map<int, DR_Cluster *>::iterator DR_Cluster_MapIterator;
 typedef std::map<int, DR_Cluster *> DR_Cluster_Map;
 
+typedef std::map<int, std::map<std::string, int> * > GroupKmerMap;
+
+typedef std::vector<std::string> Vecstr;
 
 bool sortLengthAssending( const std::string &a, const std::string &b);
 bool sortLengthDecending( const std::string &a, const std::string &b);
@@ -86,7 +89,7 @@ class WorkHorse {
         ~WorkHorse();
         
         // do all the work!
-        int doWork(std::vector<std::string> seqFiles);
+        int doWork(Vecstr seqFiles);
 
         //**************************************
         // file IO
@@ -104,29 +107,29 @@ class WorkHorse {
         //**************************************
         // functions used to cluster DRs into groups and identify the "true" DR
         //**************************************
-        int parseSeqFiles(std::vector<std::string> seqFiles);	// parse the raw read files
+        int parseSeqFiles(Vecstr seqFiles);	// parse the raw read files
         
         int buildGraph(void);									// build the basic graph structue
         
         int cleanGraph(void);									// clean the graph structue
 
-        void removeRedundantRepeats(std::vector<std::string>& repeatVector);
+        void removeRedundantRepeats(Vecstr& repeatVector);
         
-        std::vector<std::string> * createNonRedundantSet(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, 
+        Vecstr * createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, 
                                                          int& nextFreeGID);
 
         int removeLowConfidenceNodeManagers(void);
         
-        int findConsensusDRs(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, 
+        int findConsensusDRs(GroupKmerMap& groupKmerCountsMap, 
                              int& nextFreeGID);
     
         bool clusterDRReads(StringToken DRToken, 
                 int * nextFreeGID, 
                 std::map<std::string, int> * k2GIDMap, 
-                std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
+                GroupKmerMap * groupKmerCountsMap);  // cut kmers and hash
         
         bool findMasterDR(int GID, 
-                std::vector<std::string> * nTopKmers, 
+                Vecstr * nTopKmers, 
                 StringToken * masterDRToken, 
                 std::string * masterDRSequence);
         
@@ -137,7 +140,7 @@ class WorkHorse {
                 std::map<StringToken, int> * DR_offset_map, 
                 int * dr_zone_start, 
                 int * dr_zone_end, 
-                std::vector<std::string> * nTopKmers, 
+                Vecstr * nTopKmers, 
                 int ** coverage_array, 
                 int * kmer_positions_DR, 
                 bool * kmer_rcs_DR, 
@@ -159,7 +162,7 @@ class WorkHorse {
         
         bool parseGroupedDRs(int numMers4Mode, 
                 int GID, 
-                std::vector<std::string> * nTopKmers, 
+                Vecstr * nTopKmers, 
                 int * nextFreeGID);
         
         int numberOfReadsInGroup(DR_Cluster * currentGroup);
@@ -169,12 +172,12 @@ class WorkHorse {
                 const std::string kmer, 
                 const std::string * DR);
         
-        int getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, 
+        int getNMostAbundantKmers(Vecstr& mostAbundantKmers, 
                 int num2Get, 
                 std::map<std::string, int> * kmer_CountMap);
 
         int getNMostAbundantKmers(int maxAmount, 
-                std::vector<std::string>& mostAbundantKmers, 
+                Vecstr& mostAbundantKmers, 
                 int num2Get, 
                 std::map<std::string, int> * kmer_CountMap);
 

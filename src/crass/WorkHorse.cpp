@@ -172,7 +172,7 @@ int WorkHorse::numOfReads(void)
 }
 
 // do all the work!
-int WorkHorse::doWork(std::vector<std::string> seqFiles)
+int WorkHorse::doWork(Vecstr seqFiles)
 {
     //-----
     // wrapper for the various processes needed to assemble crisprs
@@ -211,7 +211,7 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
                 }
             }
             debug_out<<"\t";
-            std::vector<std::string>::iterator sp_iter = debug_iter->second.beginSp();
+            Vecstr::iterator sp_iter = debug_iter->second.beginSp();
             if(sp_iter != debug_iter->second.endSp()) {
                 debug_out<<*sp_iter;
                 for ( ; sp_iter != debug_iter->second.endSp(); sp_iter++) {
@@ -314,12 +314,12 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
 	return 0;
 }
 
-int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
+int WorkHorse::parseSeqFiles(Vecstr seqFiles)
 {
 	//-----
 	// Load data from files and search for DRs
 	//
-    std::vector<std::string>::iterator seq_iter = seqFiles.begin();
+    Vecstr::iterator seq_iter = seqFiles.begin();
     
     // direct repeat sequence and unique ID
     lookupTable patterns_lookup;
@@ -330,7 +330,13 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     {
         logInfo("Parsing file: " << *seq_iter, 1);
         try {
-            int max_len = decideWhichSearch(seq_iter->c_str(), *mOpts, &mReads, &mStringCheck, patterns_lookup, reads_found);
+            int max_len = decideWhichSearch(seq_iter->c_str(), 
+                                            *mOpts, 
+                                            &mReads, 
+                                            &mStringCheck, 
+                                            patterns_lookup, 
+                                            reads_found);
+            
             mMaxReadLength = (max_len > mMaxReadLength) ? max_len : mMaxReadLength;
             logInfo("Finished file: " << *seq_iter, 1);
 
@@ -348,9 +354,9 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
         
         seq_iter++;
     }
-    std::map<int, std::map<std::string, int> * > group_kmer_counts_map;
+    GroupKmerMap group_kmer_counts_map;
     int next_free_GID = 1;
-    std::vector<std::string> * non_redundant_set = createNonRedundantSet(group_kmer_counts_map, next_free_GID);
+    Vecstr * non_redundant_set = createNonRedundantSet(group_kmer_counts_map, next_free_GID);
 
     if (non_redundant_set->size() > 0) 
     {
@@ -522,7 +528,7 @@ int WorkHorse::removeLowConfidenceNodeManagers(void)
 //**************************************
 // Functions used to cluster DRs into groups and identify the "true" DR
 //**************************************
-int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, int& nextFreeGID)
+int WorkHorse::findConsensusDRs(GroupKmerMap& groupKmerCountsMap, int& nextFreeGID)
 {
     //-----
     // Cluster potential DRs and work out their true sequences
@@ -532,7 +538,7 @@ int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& gr
     logInfo("Reducing list of potential DRs (2): Cluster refinement and true DR finding", 1);
     
     // go through all the counts for each group
-    std::map<int, std::map<std::string, int> * >::iterator group_count_iter = groupKmerCountsMap.begin();
+    GroupKmerMap::iterator group_count_iter = groupKmerCountsMap.begin();
     while(group_count_iter != groupKmerCountsMap.end())
     {
         if(NULL != mDR2GIDMap[group_count_iter->first])
@@ -540,7 +546,7 @@ int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& gr
             std::cout<<numberOfReadsInGroup(mDR2GIDMap[group_count_iter->first])<<std::endl;
             // it's real, so parse this group
             // get the N top kmers
-            std::vector<std::string> n_top_kmers;
+            Vecstr n_top_kmers;
             int num_mers_found = getNMostAbundantKmers((int)(mDR2GIDMap[group_count_iter->first])->size(), 
                                                        n_top_kmers, 
                                                        CRASS_DEF_NUM_KMERS_4_MODE, 
@@ -579,19 +585,19 @@ int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& gr
     
     return 0;
 }
-void WorkHorse::removeRedundantRepeats(std::vector<std::string>& repeatVector)
+void WorkHorse::removeRedundantRepeats(Vecstr& repeatVector)
 {
     // given a vector of repeat sequences, will order the vector based on repeat
     // length and then remove longer repeats if there is a shorter one that is
     // a perfect substring
     std::sort(repeatVector.begin(), repeatVector.end(), sortLengthAssending);
-    std::vector<std::string>::iterator iter;
+    Vecstr::iterator iter;
 
     // go though all of the patterns and determine which are substrings
     // clear the string if it is
     for (iter = repeatVector.begin(); iter != repeatVector.end(); iter++) {
         if (!iter->empty()) {
-            std::vector<std::string>::iterator iter2;
+            Vecstr::iterator iter2;
             for (iter2 = iter+1; iter2 != repeatVector.end(); iter2++) {
                 if (!iter->empty()) {
                     //pass both itererators into the comparison function
@@ -606,13 +612,13 @@ void WorkHorse::removeRedundantRepeats(std::vector<std::string>& repeatVector)
     // ok so now partition the vector so that all the empties are at one end
     // will return an iterator postion to the first position where the string
     // is empty
-    std::vector<std::string>::iterator empty_iter = std::partition(repeatVector.begin(), repeatVector.end(), isNotEmpty);
+    Vecstr::iterator empty_iter = std::partition(repeatVector.begin(), repeatVector.end(), isNotEmpty);
     // remove all the empties from the list
     repeatVector.erase(empty_iter, repeatVector.end());
 }
 
 
-std::vector<std::string> * WorkHorse::createNonRedundantSet(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, int& nextFreeGID)
+Vecstr * WorkHorse::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, int& nextFreeGID)
 {
     // cluster the direct repeats then remove the redundant ones
     // creates a vector in dynamic memory, so don't forget to delete 
@@ -633,7 +639,7 @@ std::vector<std::string> * WorkHorse::createNonRedundantSet(std::map<int, std::m
     std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: "<<mReads.size()<<" variants mapped to "<<mDR2GIDMap.size()<<" clusters"<<std::endl;
     std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: creating non-redundant set"<<std::endl;
 
-    std::vector<std::string> * non_redundant_repeats = new std::vector<std::string>();
+    Vecstr * non_redundant_repeats = new Vecstr();
 
     DR_Cluster_MapIterator dcg_iter = mDR2GIDMap.begin();
     while(dcg_iter != mDR2GIDMap.end())
@@ -644,18 +650,19 @@ std::vector<std::string> * WorkHorse::createNonRedundantSet(std::map<int, std::m
             logInfo("-------------", 4);
             logInfo("Group: " << dcg_iter->first, 4);
             
-            std::vector<std::string> clustered_repeats;
+            Vecstr clustered_repeats;
             while(dc_iter != (dcg_iter->second)->end())
             {
-                clustered_repeats.push_back(mStringCheck.getString(*dc_iter));
-                logInfo(mStringCheck.getString(*dc_iter), 4);
+                std::string tmp = mStringCheck.getString(*dc_iter);
+                clustered_repeats.push_back(tmp);
+                logInfo(tmp, 4);
                 dc_iter++;
             }
             logInfo("-------------", 4);
             
             removeRedundantRepeats(clustered_repeats);
-            std::vector<std::string>::iterator cr_iter;
-            std::vector<std::string> tmp_vec;
+            Vecstr::iterator cr_iter;
+            Vecstr tmp_vec;
             for (cr_iter = clustered_repeats.begin(); cr_iter != clustered_repeats.end(); ++cr_iter) {
                 tmp_vec.push_back(reverseComplement(*cr_iter));
             }
@@ -665,14 +672,14 @@ std::vector<std::string> * WorkHorse::createNonRedundantSet(std::map<int, std::m
         }
         dcg_iter++;
     }
-    std::vector<std::string>::iterator nr_iter;
+    Vecstr::iterator nr_iter;
     for (nr_iter = non_redundant_repeats->begin(); nr_iter != non_redundant_repeats->end(); ++nr_iter) {
         std::cout<<*nr_iter<<std::endl;
     }
     return non_redundant_repeats;
 }
 
-bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence)
+bool WorkHorse::findMasterDR(int GID, Vecstr * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence)
 {
 	//-----
 	// Identify a master DR
@@ -696,7 +703,7 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, Stri
     {
         std::string tmp_DR = mStringCheck.getString(*dr_iter);
         bool got_all_mode_mers = true;
-        std::vector<std::string>::iterator n_top_iter = (*nTopKmers).begin();
+        Vecstr::iterator n_top_iter = (*nTopKmers).begin();
         while(n_top_iter != (*nTopKmers).end())
         {
             if(!isKmerPresent(&disp_rc, &disp_pos, *n_top_iter, &tmp_DR))
@@ -740,7 +747,7 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, Stri
     return false;
 }
 
-bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
+bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, Vecstr * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY)
 {
 	//-----
 	// Use the data structures initialised in parseGroupedDRs
@@ -1295,7 +1302,7 @@ std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> 
 	return true_DR;
 }
 
-bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID) 
+bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, Vecstr * nTopKmers, int * nextFreeGID) 
 {
 	
     //-----
@@ -1880,7 +1887,7 @@ bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std:
     return false;
 }
 
-int WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
+int WorkHorse::getNMostAbundantKmers(Vecstr& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
 {
 	//-----
 	// True to it's name get MOST abundant kmers.
@@ -1888,7 +1895,7 @@ int WorkHorse::getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers
 	return getNMostAbundantKmers(1000000, mostAbundantKmers, num2Get, kmer_CountMap);
 }
 
-int WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
+int WorkHorse::getNMostAbundantKmers(int maxAmount, Vecstr& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
 {
 	//-----
 	// get the most abundant kmers under a certain amount.
@@ -1937,7 +1944,7 @@ int WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mo
 bool WorkHorse::clusterDRReads(StringToken DRToken, 
                                int * nextFreeGID, 
                                std::map<std::string, int> * k2GIDMap, 
-                               std::map<int, std::map<std::string, int> * > * groupKmerCountsMap)
+                               GroupKmerMap * groupKmerCountsMap)
 {
     //-----
     // hash a DR!
@@ -2068,7 +2075,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken,
     //
     // Now the fun stuff begins:
     //
-    std::vector<std::string> homeless_kmers;
+    Vecstr homeless_kmers;
     std::map<int, int> group_count;
     std::map<std::string, int> local_kmer_CountMap;
     
@@ -2143,7 +2150,7 @@ bool WorkHorse::clusterDRReads(StringToken DRToken,
     mDR2GIDMap[group]->push_back(DRToken);
     
     // we need to assign all homeless kmers to the group!
-    std::vector<std::string>::iterator homeless_iter = homeless_kmers.begin();
+    Vecstr::iterator homeless_iter = homeless_kmers.begin();
     while(homeless_iter != homeless_kmers.end())
     {
         (*k2GIDMap)[*homeless_iter] = group;
