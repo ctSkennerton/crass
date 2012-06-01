@@ -129,7 +129,7 @@ public:
         inline void setAttached(bool attached) { SI_Attached = attached; }
         inline bool isFlanker(void){return SI_isFlanker;}
         inline void setFlanker(bool f){SI_isFlanker = f;}
-        
+        inline int isCap(void) {return (getSpacerRank() == 1);}
         //
         // contig functions
         //
@@ -150,9 +150,14 @@ public:
         //
         inline void addEdge(spacerEdgeStruct * s) { SI_SpacerEdges.push_back(s); }
         void clearEdge(void);
-        SpacerEdgeVector_Iterator begin(void) {return SI_SpacerEdges.begin();}
-        SpacerEdgeVector_Iterator end(void) {return SI_SpacerEdges.end();}
-        inline SpacerEdgeVector * getEdges(void) {return &SI_SpacerEdges;}
+        
+    SpacerEdgeVector_Iterator begin(void) {return SI_SpacerEdges.begin();}
+    
+    SpacerEdgeVector_Iterator end(void) {return SI_SpacerEdges.end();}
+    
+    SpacerEdgeVector_Iterator find(SpacerInstance *);
+    
+    inline SpacerEdgeVector * getEdges(void) {return &SI_SpacerEdges;}
         
         //
         // File /IO

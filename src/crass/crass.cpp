@@ -56,7 +56,9 @@
 #include "LoggerSimp.h"
 #include "WorkHorse.h"
 #include "Rainbow.h"
-#include "StlExt.h"
+#include <libcrispr/StlExt.h>
+#include <libcrispr/Exception.h>
+#include "SeqUtils.h"
 #ifdef PERFORM_CRASS_ASSEMBLY
     #include "AssemblyWrapper.h"
 #endif
@@ -95,6 +97,12 @@ void usage(void)
 #endif
     std::cout<<"VERBOSE_LOGGER =";
 #ifdef SUPER_LOGGING
+    std::cout<<" 1"<<std::endl;
+#else
+    std::cout<<" 0"<<std::endl;
+#endif
+    std::cout<<"Search Debugger = ";
+#ifdef SEARCH_SINGLETON
     std::cout<<" 1"<<std::endl;
 #else
     std::cout<<" 0"<<std::endl;
@@ -169,6 +177,9 @@ void usage(void)
 #ifdef RENDERING
     std::cout<<"--noRendering                 Stops rendering of .gv files even if the RENDERING preprocessor macro is set [Default: false]"<<std::endl;
 #endif
+#ifdef SEARCH_SINGLETON
+    std::cout<<"--searchChecker       <FILE>  A file containing read headers that should be tracked through "<<PACKAGE_NAME<<std::endl;
+#endif
 }
 
 void versionInfo(void) 
@@ -184,16 +195,16 @@ void versionInfo(void)
 
 //make a new directory
 // Stoled from SaSSY
-void recursiveMkdir(std::string dir) 
-{
-    std::string tmp;
-    size_t pos = 0;
-    while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
-        tmp = dir.substr(0,pos);
-        mkdir(tmp.c_str(), S_IRWXU);
-    }
-    mkdir(dir.c_str(), S_IRWXU);
-}
+//void recursiveMkdir(std::string dir) 
+//{
+//    std::string tmp;
+//    size_t pos = 0;
+//    while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
+//        tmp = dir.substr(0,pos);
+//        mkdir(tmp.c_str(), S_IRWXU);
+//    }
+//    mkdir(dir.c_str(), S_IRWXU);
+//}
 
 int processOptions(int argc, char *argv[], options *opts) 
 {
@@ -331,7 +342,7 @@ int processOptions(int argc, char *argv[], options *opts)
                 struct stat file_stats;
                 if (0 != stat(opts->output_fastq.c_str(),&file_stats)) 
                 {
-                    recursiveMkdir(opts->output_fastq);
+                    RecursiveMkdir(opts->output_fastq);
                 }
                 // check that the directory is writable
                 else if(access(optarg, W_OK))
@@ -394,6 +405,9 @@ int processOptions(int argc, char *argv[], options *opts)
 #endif  
 #ifdef DEBUG
                 else if (strcmp( "noDebugGraph", long_options[index].name ) == 0 ) opts->noDebugGraph = true;
+#endif
+#ifdef SEARCH_SINGLETON
+                else if (strcmp("searchChecker", long_options[index].name) == 0) opts->searchChecker = optarg;
 #endif
                 break;
             default: 
@@ -488,15 +502,18 @@ int main(int argc, char *argv[])
     opts.longDescription       = CRASS_DEF_SPACER_LONG_DESC;             // print a long description for the final spacer graph
     opts.showSingles           = CRASS_DEF_SPACER_SHOW_SINGLES;          // print singletons when making the spacer graph
     opts.cNodeKmerLength       = CRASS_DEF_NODE_KMER_SIZE;               // length of the kmers making up a crisprnode
-    #ifdef DEBUG
+#ifdef DEBUG
     opts.noDebugGraph          = false;                                  // Even if DEBUG preprocessor macro is set do not produce debug graph files
-    #endif
-    #ifdef RENDERING
+#endif
+#ifdef SEARCH_SINGLETON
+    opts.searchChecker        = "";                                     // Name of file containing 
+#endif
+#ifdef RENDERING
     opts.layoutAlgorithm       = DEFAULT_RENDERING_ALGORITHM;            // the graphviz layout algorithm to use
     opts.noRendering           = false;                                  // Even if RENDERING preprocessor macro is set do not produce any rendered images
-    #else
+#else
     opts.layoutAlgorithm       = "unset";
-    #endif
+#endif
     opts.covCutoff             = CRASS_DEF_COVCUTOFF;
 
     int opt_idx = processOptions(argc, argv, &opts);
@@ -554,9 +571,28 @@ int main(int argc, char *argv[])
         cmd_line += argv[i];
         cmd_line += ' ';
     }
-    
     WorkHorse * mHorse = new WorkHorse(&opts, timestamp,cmd_line);
+#if SEARCH_SINGLETON
+    try {
+        debugger->headerFile(opts.searchChecker);
+        debugger->processHeaderFile();
+/*        
+        SearchCheckerList::iterator debug_iter;
+        for (debug_iter  = debugger->begin(); debug_iter != debugger->end(); debug_iter++) {
+            std::cout<<debug_iter->first<<std::endl;
+        }
+ */
+    } catch (crispr::exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    }
+    
+#endif
+    
     int error_code = mHorse->doWork(seq_files);
+#ifdef SEARCH_SINGLETON
+    delete debugger;
+#endif
     delete mHorse;
     return error_code;
 }

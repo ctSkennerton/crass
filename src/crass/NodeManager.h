@@ -58,9 +58,12 @@
 #include "ReadHolder.h"
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
-#include "Xml.h"
+#include <libcrispr/Xml.h>
 #include "StatsManager.h"
 
+#ifdef SEARCH_SINGLETON
+#include "SearchChecker.h"
+#endif
 
 // typedefs
 typedef std::map<StringToken, CrisprNode *> NodeList;
@@ -132,10 +135,16 @@ class NodeManager {
 		void findCapNodes(NodeVector * capNodes);                               // go through all the node and get a list of pointers to the nodes that have only one edge
 		void findAllNodes(NodeVector * allNodes);
 		void findAllNodes(NodeVector * capNodes, NodeVector * otherNodes);
-		int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
-        EDGE_TYPE getOppositeEdgeType(EDGE_TYPE currentEdgeType);
-        int getSpacerCount( bool showDetached);
-        inline bool haveAnyFlankers(void){return (0 != NM_FlankerNodes.size());}
+		
+    int findCapsAt(NodeVector * capNodes, bool searchForward, bool isInner, bool doStrict, CrisprNode * queryNode);
+        
+    EDGE_TYPE getOppositeEdgeType(EDGE_TYPE currentEdgeType);
+        
+    int getSpacerCountAndStats( bool showDetached=false, bool excludeFlankers=true);
+        
+    inline bool haveAnyFlankers(void){return (0 != NM_FlankerNodes.size());}
+    
+    inline void clearStats(void) {NM_SpacerLenStat.clear();}
 
     // Walking
         bool getSpacerEdgeFromCap(WalkingManager * walkElem, SpacerInstance * nextSpacer);
@@ -162,40 +171,114 @@ class NodeManager {
 
     // Making purdy colours
         void setDebugColourLimits(void);
+    
         void setSpacerColourLimits(void);
 
     // Printing / IO
-        void printDebugGraph(std::ostream &dataOut, std::string title, bool showDetached, bool printBackEdges, bool longDesc);         // Print a graphviz style graph of the DRs and spacers
-		void printDebugNodeAttributes(std::ostream& dataOut, CrisprNode * currCrisprNode, std::string colourCode, bool longDesc); 
-        bool printSpacerGraph(std::string& outFileName, std::string title, bool longDesc, bool showSingles);         // Print a graphviz style graph of the FULL spacers
-        bool printSpacerGraph(void);         // Print a graphviz style graph of the FULL spacers
-        std::string getSpacerGraphLabel(SpacerInstance * spacer, bool longDesc);
-
+    // Print a graphviz style graph of the DRs and spacers
+        void printDebugGraph(std::ostream &dataOut, 
+                             std::string title, 
+                             bool showDetached, 
+                             bool printBackEdges, 
+                             bool longDesc);  
     
-        void printSpacerKey(std::ostream &dataOut, int numSteps, std::string groupNumber);         													// make a key for the spacer graph 	
-        void dumpReads(std::string readsFileName, bool showDetached, bool split);												// dump reads to this file
+		void printDebugNodeAttributes(std::ostream& dataOut, 
+                                      CrisprNode * currCrisprNode, 
+                                      std::string colourCode, 
+                                      bool longDesc); 
+    
+    // Print a graphviz style graph of the FULL spacers
+        bool printSpacerGraph(std::string& outFileName, 
+                              std::string title, 
+                              bool longDesc, 
+                              bool showSingles);         
+    // Print a graphviz style graph of the FULL spacers    
+    bool printSpacerGraph(void); 
+    
+        std::string getSpacerGraphLabel(SpacerInstance * spacer, 
+                                        bool longDesc);
+
+    // make a key for the spacer graph 	
+
+        void printSpacerKey(std::ostream &dataOut, 
+                            int numSteps, 
+                            std::string groupNumber); 
+    
+
+        void dumpReads(std::string readsFileName, 
+                       bool showDetached, 
+                       bool split);												
         
     // XML
-        void printXML(std::ofstream * XMLFile, int GID, bool showDetached);						// print this node managers portion of the XML file 
-        void addSpacersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
-        void addFlankersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
-        void printAssemblyToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached);
-
+    // print this node managers portion of the XML file 
+        void printXML(std::ofstream * XMLFile, 
+                      int GID, 
+                      bool showDetached
+                      );
+	
+    void addSpacersToDOM(crispr::xml::writer * xmlDoc, 
+                         xercesc::DOMElement * parentNode, 
+                         bool showDetached, 
+                         std::set<StringToken>&  allSourcesForNM
+                         );
+    
+    void addFlankersToDOM(crispr::xml::writer * xmlDoc, 
+                          xercesc::DOMElement * parentNode, 
+                          bool showDetached,
+                          std::set<StringToken>& allSourcesForNM
+                          );
+    
+    void printAssemblyToDOM(crispr::xml::writer * xmlDoc, 
+                            xercesc::DOMElement * parentNode, 
+                            bool showDetached
+                            );
+    
+    void getHeadersForSpacers(SpacerInstance * SI, 
+                              std::set<StringToken>& nrTokens
+                              );
+    
+    void appendSourcesForSpacer(xercesc::DOMElement * spacerNode, 
+                                std::set<StringToken>& nrTokens,
+                                crispr::xml::writer * xmlDoc
+                                );
+    
+    void generateAllsourceTags(crispr::xml::writer * xmlDoc, 
+                               std::set<StringToken>& allSourcesForNM,
+                               xercesc::DOMElement * parentNode
+                               );
 
     // Spacer dictionaries
         void printAllSpacers(void);
     
     // Flankers
         void generateFlankers(bool showDetached=false);
-
+    
+    // Stats
+        inline size_t meanSpacerLength(void) { return NM_SpacerLenStat.mean();}
+        
+    inline double stdevSpacerLength(void) { return NM_SpacerLenStat.standardDeviation();}
     private:
 		
 	// functions
 		bool splitReadHolder(ReadHolder * RH);
-        void addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
-        void addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
-        void addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt);
+
+		void addCrisprNodes(CrisprNode ** prevNode, 
+                            std::string& workingString, 
+                            StringToken headerSt,
+                            ReadHolder * RH);
+    
+        void addSecondCrisprNode(CrisprNode ** prevNode, 
+                                 std::string& workingString, 
+                                 StringToken headerSt,
+                                 ReadHolder * RH);
+    
+        void addFirstCrisprNode(CrisprNode ** prevNode, 
+                                std::string& workingString, 
+                                StringToken headerSt,
+                                ReadHolder * RH);
+    
         void setContigIDForSpacers(SpacerInstanceVector * currentContigNodes);
+    
         void setUpperAndLowerCoverage(void);
      
     // members

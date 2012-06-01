@@ -50,7 +50,10 @@
 #include "NodeManager.h"
 #include "ReadHolder.h"
 #include "StringCheck.h"
-#include "Xml.h"
+#include <libcrispr/Xml.h>
+#if SEARCH_SINGLETON
+#include "SearchChecker.h"
+#endif
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
@@ -72,7 +75,7 @@ bool isNotEmpty(const std::string& a);
 
 class WorkHorse {
     public:
-    WorkHorse (const options * opts, std::string timestamp, std::string commandLine) 
+    WorkHorse (options * opts, std::string timestamp, std::string commandLine) 
         { 
             mOpts = opts; 
             mMaxReadLength = 0;
@@ -102,26 +105,89 @@ class WorkHorse {
         // functions used to cluster DRs into groups and identify the "true" DR
         //**************************************
         int parseSeqFiles(std::vector<std::string> seqFiles);	// parse the raw read files
-        int buildGraph(void);									// build the basic graph structue
-        int cleanGraph(void);									// clean the graph structue
-        int removeLowSpacerNodeManagers(void);
-    // cluster potential DRs and make node managers
-        int findConsensusDRs(std::map<int, std::map<std::string, int> * >& group_kmer_counts_map, int& nextFreeGID);                         			
-        bool clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
-    void removeRedundantRepeats(std::vector<std::string>& repeatVector);
-    std::vector<std::string> * createNonRedundantSet(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, int& nextFreeGID);
-    
-    bool findMasterDR(int GID, std::vector<std::string> * nTopKmers, StringToken * masterDRToken, std::string * masterDRSequence);
         
+        int buildGraph(void);									// build the basic graph structue
+        
+        int cleanGraph(void);									// clean the graph structue
+
+        void removeRedundantRepeats(std::vector<std::string>& repeatVector);
+        
+        std::vector<std::string> * createNonRedundantSet(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, 
+                                                         int& nextFreeGID);
+
+        int removeLowConfidenceNodeManagers(void);
+        
+        int findConsensusDRs(std::map<int, std::map<std::string, int> * >& groupKmerCountsMap, 
+                             int& nextFreeGID);
     
-        bool populateCoverageArray(int numMers4Mode, int GID, std::string master_DR_sequence, StringToken master_DR_token, std::map<StringToken, int> * DR_offset_map, int * dr_zone_start, int * dr_zone_end, std::vector<std::string> * nTopKmers, int ** coverage_array, int * kmer_positions_DR, bool * kmer_rcs_DR, int * kmer_positions_DR_master, bool * kmer_rcs_DR_master, int * kmer_positions_ARRAY);
-        std::string calculateDRConsensus(int GID, std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, int * nextFreeGID);
-        bool parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::string> * nTopKmers, int * nextFreeGID);
+        bool clusterDRReads(StringToken DRToken, 
+                int * nextFreeGID, 
+                std::map<std::string, int> * k2GIDMap, 
+                std::map<int, std::map<std::string, int> * > * groupKmerCountsMap);  // cut kmers and hash
+        
+        bool findMasterDR(int GID, 
+                std::vector<std::string> * nTopKmers, 
+                StringToken * masterDRToken, 
+                std::string * masterDRSequence);
+        
+        bool populateCoverageArray(int numMers4Mode, 
+                int GID, 
+                std::string master_DR_sequence, 
+                StringToken master_DR_token, 
+                std::map<StringToken, int> * DR_offset_map, 
+                int * dr_zone_start, 
+                int * dr_zone_end, 
+                std::vector<std::string> * nTopKmers, 
+                int ** coverage_array, 
+                int * kmer_positions_DR, 
+                bool * kmer_rcs_DR, 
+                int * kmer_positions_DR_master, 
+                bool * kmer_rcs_DR_master, 
+                int * kmer_positions_ARRAY);
+        
+        std::string calculateDRConsensus(int GID, 
+                std::map<StringToken, int> * DR_offset_map, 
+                int * collapsed_pos, 
+                std::map<char, int> * collapsed_options, 
+                std::map<int, bool> * refined_DR_ends, 
+                int * dr_zone_start, 
+                int * dr_zone_end, 
+                int ** coverage_array, 
+                char * consensus_array, 
+                float * conservation_array, 
+                int * nextFreeGID);
+        
+        bool parseGroupedDRs(int numMers4Mode, 
+                int GID, 
+                std::vector<std::string> * nTopKmers, 
+                int * nextFreeGID);
+        
         int numberOfReadsInGroup(DR_Cluster * currentGroup);
-        bool isKmerPresent(bool * didRevComp, int * startPosition, const std::string kmer, const std::string * DR);
-        int getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
-        int getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap);
+        
+        bool isKmerPresent(bool * didRevComp, 
+                int * startPosition, 
+                const std::string kmer, 
+                const std::string * DR);
+        
+        int getNMostAbundantKmers(std::vector<std::string>& mostAbundantKmers, 
+                int num2Get, 
+                std::map<std::string, int> * kmer_CountMap);
+
+        int getNMostAbundantKmers(int maxAmount, 
+                std::vector<std::string>& mostAbundantKmers, 
+                int num2Get, 
+                std::map<std::string, int> * kmer_CountMap);
+
         int getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR);
+        
+        void removeDRAndCleanMemory(int ** coverageArray, 
+                char * consensusArray, 
+                float * conservationArray, 
+                int GID);
+        
+        void cleanGroup(int GID);
+        
+        void cleanArrays(int ** coverageArray, char * consensusArray, float * conservationArray);
         //**************************************
         // spacer graphs
         //**************************************
@@ -136,23 +202,32 @@ class WorkHorse {
         //**************************************
         // file IO
         //**************************************
-        int dumpReads(DR_Cluster_Map * DR2GID_map, bool split);		// dump the reads for this group to file
+        int dumpReads( bool split);		// dump the reads for this group to file
         //int dumpSpacers(void);										// Dump the spacers for this group to file
+        
         int renderDebugGraphs(void);							// render debug graphs
+        
         int renderDebugGraphs(std::string namePrefix);
+        
         int renderSpacerGraphs(void);							// render debug graphs
+        
         int renderSpacerGraphs(std::string namePrefix);
+        
         bool checkFileOrError(const char * fileName);
     
         bool printXML(void) { return printXML(mOpts->output_fastq + "crass"); } // print all the assembly gossip to XML
+        
         bool printXML(std::string namePrefix);
-        bool addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
-        bool addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
+
+        bool addDataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
+        
+        bool addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
+
         
     // members
         DR_List mDRs;                               // list of nodemanagers, cannonical DRs, one nodemanager per direct repeat
         ReadMap mReads;                             // reads containing possible double DRs
-        const options * mOpts;                      // search options
+        options * mOpts;                      // search options
         std::string mOutFileDir;                    // where to spew text to
         int mMaxReadLength;                       // the average seen read length
         StringCheck mStringCheck;                   // Place to swap strings for tokens

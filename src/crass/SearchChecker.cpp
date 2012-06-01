@@ -1,8 +1,8 @@
 /*
- *  Utils.h is part of the crisprtools project
+ *  SearchChecker.cpp is part of the CRisprASSembler project
  *  
- *  Created by Connor Skennerton on 3/12/11.
- *  Copyright 2011 Connor Skennerton. All rights reserved. 
+ *  Created by Connor Skennerton.
+ *  Copyright 2011, 2012 Connor Skennerton & Michael Imelfort. All rights reserved. 
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,13 +32,34 @@
  *                               A
  */
 
-#ifndef crisprtools_Utils_h
-#define crisprtools_Utils_h
-#include <set>
-#include <string>
+#include <iostream>
+#include <fstream>
+#include "SearchChecker.h"
+#include <libcrispr/Exception.h>
 
-void recursiveMkdir(std::string dir);
-bool fileOrString(const char * str);
-void parseFileForGroups(std::set<std::string>& groups, const char * filePath);
-void generateGroupsFromString(std::string str, std::set<std::string>& groups);
-#endif
+SearchChecker * SearchChecker::SC_instance = NULL;
+
+
+SearchChecker * SearchChecker::instance()
+{
+    if (!SC_instance)
+        SC_instance = new SearchChecker;
+        return SC_instance;
+}
+
+void SearchChecker::processHeaderFile() {
+    std::fstream in;
+    in.open(SC_FileName.c_str());
+    if (in.good()) {
+        std::string line;
+        while (in >> line) {
+            SearchData s;
+            SC_Data[line] = s; 
+        }
+    } else {
+        throw crispr::runtime_exception(__FILE__, 
+                                        __LINE__,
+                                        __PRETTY_FUNCTION__,
+                                        "could not open header file");
+    }
+}

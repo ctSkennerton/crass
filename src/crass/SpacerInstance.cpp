@@ -116,14 +116,17 @@ bool SpacerInstance::isViable(void)
 	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
 	
 	// zero rank spacers are viable by default
-	if(getSpacerRank() < 2)
+
+	if(getSpacerRank() < 2) {
+    
 		return true;
+    }
 			
 	bool has_forward = false;
 	bool has_reverse = false;
 	while(edge_iter != SI_SpacerEdges.end())
 	{
-		if((*edge_iter)->d == REVERSE)
+        if((*edge_iter)->d == REVERSE)
 			has_reverse = true;
 		else
 			has_forward = true;
@@ -132,6 +135,18 @@ bool SpacerInstance::isViable(void)
 		edge_iter++;
 	}
 	return false;
+}
+
+SpacerEdgeVector_Iterator SpacerInstance::find(SpacerInstance * si)
+{
+    // check to see if the spacer instance in in the edges
+    SpacerEdgeVector_Iterator iter;
+    for (iter = SI_SpacerEdges.begin(); iter != SI_SpacerEdges.end(); ++iter) {
+        if ((*iter)->edge == si) {
+            return iter;
+        }
+    }
+    return SI_SpacerEdges.end();
 }
 
 void SpacerInstance::detachFromSpacerGraph(void)
@@ -209,7 +224,7 @@ void SpacerInstance::printContents(void)
 	//
 	
 	std::cout << "-------------------------------\n" << this << std::endl;
-	std::cout << "ST: " << SI_SpacerSeqID << " LEADER: " << SI_LeadingNode << " LAST: " << SI_LastNode << std::endl;
+	std::cout << "ST: " << SI_SpacerSeqID << " LEADER: " << SI_LeadingNode->getID() << " LAST: " << SI_LastNode->getID() << std::endl;
 	std::cout << "IC: " << SI_InstanceCount << " ATT? " << SI_Attached << " CID: " << SI_ContigID << std::endl;
 	SpacerEdgeVector_Iterator edge_iter = SI_SpacerEdges.begin();
 	while(edge_iter != SI_SpacerEdges.end())

@@ -1,978 +1,2461 @@
-Fri Apr 6 19:03:20 2012 +1000    ctSkennerton
-    Merge branch 'per_read_len_check' The search functions now decide on a per read bases which function to use Conflicts: 	src/crass/libcrispr.cpp
+commit 9742fe48279a1d2b81c3755fd2e65a8f1ca7af79
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon May 7 17:24:39 2012 +1000
 
-Fri Apr 6 18:59:44 2012 +1000    ctSkennerton
+    fixed a bug in ReadHolder::encode() where the output string was getting corrupted causing SeqUtils#reverseComplement() to fail.  Resolves issue #51
+
+commit 5f3360363436414dfbe0ddc1f50268defa53b547
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed May 2 22:08:23 2012 +1000
+
+    added in alot of exception handling for trying to track down some bugs when using --removeHomopolymers option
+
+commit cbd13220406f826d0b8deab00ce594cafef55464
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 30 20:32:00 2012 +1000
+
+    Fixed a bug in NodeManager::splitIntoContigs() that was causing the
+    first cross node to be assigned the same contig ID as the last cap node
+    contig
+
+commit 80eeb68a5364795a81263b6d89064d8d2c50baf3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 30 20:29:59 2012 +1000
+
+    Properly initialized the total read count in
+    StatTool::calculateAgregateSTats()
+
+commit d1b76bac28ea3bec12ab60e26dd990ecc9b704a2
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Mon Apr 30 16:50:58 2012 +1000
+
+    Changed default color scheme
+
+commit bea2b63b275212426c32a474375bd7ff08e987f5
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Mon Apr 30 15:42:25 2012 +1000
+
+    Fixed a bug which let similar spacers get through. Should reduce the number of spacers and DRs quite a bitsy...
+
+commit 422fb6b4eb09e3d652a40c0f84d4a7336ae8a9cf
+Merge: 2e8fb47 ddea4e0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 22:15:45 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+commit 2e8fb47b4feeba4c657ed27d3b1eb174748c8c07
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 22:14:44 2012 +1000
+
+    some small updates to the documentation
+
+commit ddea4e0c4873d4e1434d12214d779284e356bf17
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 16:25:34 2012 +1000
+
+    updated version to 0.2.8
+
+commit 63a79ee4a7aa6b70976ac17edd1042dc9c4e97f6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 16:22:34 2012 +1000
+
+    Added in an extra test in NodeManager::genreateFlankers whereby a spacer instance must be a cap node in the graph for it to be considered
+
+commit eb28dcd06e1bb6b793aa563123bcc51dcf45356e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 15:42:53 2012 +1000
+
+    updated version to 0.2.7
+
+commit 846ac751c33d7ddbbda64ca1c008190d9144572a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 00:56:41 2012 +1000
+
+    Fixed a bug in WorkHorse::removeLowConfidenceNodeManagers that was causing some node managers to not get deleted when they should have been
+
+commit c53120dc833a0d60fe2f59c59fec5af658848239
+Merge: faa8884 dc89c00
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 00:25:30 2012 +1000
+
+    Merge branch 'spacer_length_investigation' of github.com:ctSkennerton/crass into spacer_length_investigation
+
+commit dc89c00ad419dd65fe4ed845bfe9116dd9ee40c3
+Merge: 75d7db2 3c7002f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 29 00:11:27 2012 +1000
+
+    Merge branch 'master' into spacer_length_investigation
+
+commit a09473ccb96f4107e09d79a1e882525761022426
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 27 23:02:06 2012 +1000
+
+    added in some updated information about crisprtools in the man page
+
+commit faa88846cde01e0177141f5a419f62f96fd6149a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Apr 26 15:46:08 2012 +1000
+
+    Fixed a compiler bug and upped the version number
+
+commit 3c7002fa8bdc2b026c8f17fc1000d1d56be5c1f2
+Merge: dfad298 631f487
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Apr 26 15:39:17 2012 +1000
+
+    Merge branch 'search_singleton'
+
+commit dfad298e532e33eab982ceaaefa63a01917186f3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Apr 26 15:30:07 2012 +1000
+
+    fixed a typo that was preventing crisprtools extract from extracting flankers
+
+commit 631f48723ff1dc38169b8bd268844983d9a7e96d
+Merge: a11e6a9 6d7387f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 25 15:20:53 2012 +1000
+
+    Merge branch 'search_singleton' of github.com:ctSkennerton/crass into search_singleton
+
+commit a11e6a9f67d75fb59270fdf13b248c503fb5eeb3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 25 15:20:03 2012 +1000
+
+    fixed up some #ifdef statement positioning so that code doesn't get accidentally compiled
+
+commit 6d7387ff62d745598195ac954d01d60d1db5bf41
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 25 15:17:34 2012 +1000
+
+    added in a report format as basic output for the debugger
+
+commit 9718ec98a3d3f5b714851cbf4cdeb6a136edc83f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 25 13:29:46 2012 +1000
+
+    Added in a help msg for search debugger
+
+commit f37a787c6b4a899c914ef4db0e31949362d898b3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 25 12:50:36 2012 +1000
+
+    The singleton debugger is now linked into NodeManager, WorkHorse and libcrispr so that when crass is compiled with SEARCH_SINGLETON particular reads can be tracked
+
+commit 04bf829ebd8390eee26f5c28794c483107888baf
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 25 10:30:37 2012 +1000
+
+    Changed the search debugger into a singleton
+
+commit cd99f35b6af823b6dd07b59f851c7fe03a22c1aa
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Apr 24 23:08:35 2012 +1000
+
+    added in a new class just for debugging and begun linking it in with the rest of the code
+
+commit d18ea74d867653881ae92d1ea1c4e567fd935dad
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Apr 24 01:14:34 2012 +1000
+
+    Changed the way in which streams are set so that the default output is to std::cout
+
+commit 8b7acd69686a9560910f4e78803a71c92b15a84d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 21:58:52 2012 +1000
+
+    added in extra tests when parsing input files so that non-xml files will not cause segmentation faults. such issues are now properly caught. resolves issue #47
+
+commit 278048ae10d9333b984316e8bbb5ce39e9f154f0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 21:32:27 2012 +1000
+
+    SanitiseTool::processOptions will now throw an error if no option is given.  A new shortcut option has been added for sanitising all features.  Fixes issue #46
+
+commit 75d7db2c491447be1c35bae008c199f4568ebbb3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 21:01:58 2012 +1000
+
+    Fixed a test in WorkHorse::removeLowConfidenceNodeManagers
+
+commit d74693080582f531adae0977e8e6e464ea079506
+Merge: 6dbf4b6 8c6ac3e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 20:54:04 2012 +1000
+
+    Merge branch 'master' into spacer_length_investigation
+    
+    Conflicts:
+
+commit 8c6ac3ed73d24e25b60818512318ae5370a6ef88
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Mon Apr 23 16:21:21 2012 +1000
+
+    Finsihing off connors work on the kmer abundance stuff. Should be more accurate fdor finding true DRs now
+
+commit 60793b21eb6f7aaf3c74ef7ef2e14bf7fd1d1036
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 00:14:25 2012 +1000
+
+    cleaned up the source code a bit by removing commented code and linking in the new tests in libcrispr#drHasHighlyAbundantKmers
+
+commit 2a8d21a3dcf44014691fa072098a0ceb685cf7ca
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 00:10:55 2012 +1000
+
+    added in a function: drHasHighlyAbundantKmers which tests for what it's name suggests
+
+commit a4570ac667626257642ad18eed46083025e8a73b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 22 00:52:15 2012 +1000
+
+    Added in three new cleaning functions WorkHorse::removeDRAndCleanMemory, WorkHorse::cleanGroup & WorkHorse::cleanArrays to more cleanly handle group deletion during WorkHorse::parseGroupedDrs
+
+commit 8590aab179e9ecaff326244784a2791a9cf86ab0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 22 00:23:53 2012 +1000
+
+    Updated crisprtools version number
+
+commit 8ff6e835ec32b79327617b88ced08e961e9a0b22
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Apr 21 12:18:12 2012 +1000
+
+    moved generateGroupsFromString into the Utils files and removed associated member functions in each tool so that they call the same code
+
+commit d3d9dd593309a6d55f23151ebc52bacdfb3c8b81
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 13 16:37:11 2012 +1000
+
+    transferred StlExt.h into libcrispr and made associated changes to the make files
+
+commit 6eb888f89513c5e673f26706c29000a83b435a5a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 20 14:55:37 2012 +1000
+
+    moved StlExt.h into libcrispr
+
+commit 6dbf4b6b0f4fedc678c0d96fed597e726eec2812
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 20 14:50:30 2012 +1000
+
+    added in an extra test after graph building so that node managers with a large standard deviation in lengths get removed
+
+commit 560fac8b734771da8bff108ddf3aec30365a1c02
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 20 14:47:43 2012 +1000
+
+    added in CRASS_DEF_STDEV_SPACER_LENGTH to control the cutoff  for node managers to get removed if their spacers differ too much in size
+
+commit b86e2d14352c9424f8f807be2324199511521079
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 20 14:45:54 2012 +1000
+
+    added in NodeManager::meanSpacerLength and NodeManager::stdevSpacerLength getter methods
+
+commit f125c4ad322e985bcf4d1406e7b1b64f6dc73212
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 18 16:23:09 2012 +1000
+
+    call to get opt long implemented properly in StatTool::processOptions. resolves issue #38
+
+commit 0d8043f701a2abc54a5ca9272516c0b39ce43f0b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 18 16:17:28 2012 +1000
+
+    Initialized StatManager::SM_ReadCount properly in constructor.  resolve issue #43
+
+commit c2e8174e12b77fc1580fc79b52dedd1bbbe598d9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 13 17:21:25 2012 +1000
+
+    removed a while loop out of NodeManager::generateFlankers as it should be combined with NodeManager::getSpacerCount.  Changed name to NodeManager::getSpacerCountAndStats to better reflect it's new function
+
+commit e0cb212d819f464662058c6305e89cafa5fd6ce6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 13 16:37:11 2012 +1000
+
+    transferred StlExt.h into libcrispr and made associated changes to the make files
+
+commit e033792206cda22e8d2400af22ba6138ef3baeae
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 13 15:53:05 2012 +1000
+
+    Removed a statement in PatternMatcher::getStringSimilarity that was causing comparisons between spacer similarities to continually fail.
+
+commit dcf4989f08f7fb4eaa31b13e25111556ce1fbed9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Apr 12 19:37:52 2012 +1000
+
+    removed a reference to total_base in libcrispr.cpp as it is no longer needed
+
+commit ab57af14f49d351f98ed583ddffaa5ce5f73b81f
+Merge: b3c8b9c 930de2c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Apr 12 19:29:40 2012 +1000
+
+    Merge branch 'mMaxReadLength' of github.com:ctSkennerton/crass into mMaxReadLength
+
+commit 930de2c9da8ef2337915eeeb0f6b996646e482c4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Apr 12 19:27:13 2012 +1000
+
+    change WorkHorse mAveReadLength to mMaxReadLength
+
+commit b3c8b9c829e680661d4a3a257bcfb93e9c960936
+Merge: 0f2ab98 52e8755
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 11 19:52:08 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+commit 52e875535bbca93908edaec73bcd079c3b64fe4a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 11 18:40:52 2012 +1000
+
+    update the copyright for the version info
+
+commit 0f2ab98cc11623a19253983fa6c32da1318b60e2
+Merge: 124487e 4070bb5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Apr 10 15:51:59 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+commit 4070bb5b3060bb0550649efd576c87ecfdbf177f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 8 14:52:28 2012 +1000
+
+    fixed a bug in the graph printing in NodeManager::printSpacerGraph that was causing the .gv files to be corrupted
+
+commit 8f62885900c5484529344dcd081a9a781c704e25
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 6 19:07:17 2012 +1000
+
+    updated version to 0.2.4 - faster singleton finder and better length checking for reads
+
+commit 0bc787f16f9ab1df2cbbde99ccd23d8c095d83bb
+Merge: ded7580 70a3643
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 6 19:03:20 2012 +1000
+
+    Merge branch 'per_read_len_check'
+    The search functions now decide on a per read bases which function to use
+    Conflicts:
+    	src/crass/libcrispr.cpp
+
+commit 70a3643f211632453e21603f742dd153f0be07d0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 6 18:59:44 2012 +1000
+
     fixed up an increment to the log_counter in libcrispr.cpp#decideWhichSearch
 
-Fri Apr 6 18:39:31 2012 +1000    ctSkennerton
+commit 376c5770f6b31357ef4e133427ddabeefb9c9b8f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 6 18:39:31 2012 +1000
+
     oops, pass a read holder not a kseq_t. fix compiler error
 
-Fri Apr 6 18:18:52 2012 +1000    ctSkennerton
+commit 85a9c0e6ba4fb962df7dd9ebb59c4acfbae37431
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 6 18:18:52 2012 +1000
+
     changed the search functions so that they pass each read to either long read search or short read search
 
-Fri Apr 6 18:03:46 2012 +1000    ctSkennerton
+commit b575b83230737df695d04896ffd57a7e241bb1ab
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 6 18:03:46 2012 +1000
+
     changed around the ordering of struct declarations so that they are alphabetical
 
-Fri Apr 6 17:58:26 2012 +1000    ctSkennerton
+commit 3464eb03cbf7bc15e82839b266add5cb9eb6c4a8
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Apr 6 17:58:26 2012 +1000
+
     added in a help message for creating a header prefix
 
-Wed Apr 4 23:16:56 2012 +1000    ctSkennerton
+commit 124487e75818f3bd203406f34359bd100a510f37
+Merge: 7a16399 ded7580
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 4 23:29:21 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Wed Apr 4 23:16:26 2012 +1000    ctSkennerton
+commit ded75808b3bc203c22ec014a44f8a41fa4163379
+Merge: 403baa4 7be45d1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 4 23:16:56 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+commit 403baa45af69004d2a3b6eaf6f9e4aebc51d684f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 4 23:16:26 2012 +1000
+
     added an option to crisprtools rm to remove associated files
 
-Sun Apr 1 00:04:40 2012 +1000    ctSkennerton
-    Merge branch 'master' of github.com:ctSkennerton/crass into experimental
+commit 7a16399fc64ffafc6150b6358e6d6b0cd11c0ee6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Apr 3 21:34:06 2012 +1000
 
-Sun Apr 1 00:02:08 2012 +1000    ctSkennerton
-    changed the cutoff to 5000 to better reflect the point of performance degradation
-
-Sat Mar 31 23:47:51 2012 +1000    ctSkennerton
-    Fixed a bug in WorkHorse::removeLowSpacerNodeManagers where a test for NULL was wrongly encapculated in a #define DEBUG black
-
-Fri Mar 30 22:51:10 2012 +1000    ctSkennerton
-    fixed some print statements
-
-Fri Mar 30 22:31:34 2012 +1000    ctSkennerton
-    Merge branch 'experimental' of github.com:ctSkennerton/crass into experimental
-
-Fri Mar 30 22:27:54 2012 +1000    ctSkennerton
-    clean up formatting in crass.cpp
-
-Fri Mar 30 22:27:25 2012 +1000    ctSkennerton
-    Changed NodeManager::printSpacerGraph so that it checks that there is at least one spacer to be printed before creating the graphviz file.  Hopefully resolved issue #33
-
-Fri Mar 30 22:24:24 2012 +1000    ctSkennerton
-    Added in a specific no_file_exception class in crispr::exception
-
-Fri Mar 30 22:23:34 2012 +1000    ctSkennerton
-    Fixed a bug in WorkHorse::isKmerPresent which was due to a variable being overwritten.  Resolves issue #41 and issue #42
-
-Thu Mar 29 15:24:30 2012 +1000    ctSkennerton
-    Merge branch 'experimental' of github.com:ctSkennerton/crass into experimental
-
-Thu Mar 29 15:15:27 2012 +1000    ctSkennerton
     merge conflicts
 
-Thu Mar 29 14:44:37 2012 +1000    minillinim
+commit 73bf3b00ebfcd921376526b83faed0c72ac00c4f
+Merge: 8c98055 7be45d1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 1 00:20:43 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+    
+    Conflicts:
+    	src/crass/libcrispr.cpp
+
+commit 7be45d1bb26e57993dedcf7d54d20eaf470a1a3a
+Merge: b124bee 82a55a1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 1 00:04:40 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass into experimental
+    
+    Conflicts:
+    	src/crass/libcrispr.cpp
+
+commit b124bee263ffcad118733938853ea728dcc3358d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Apr 1 00:02:08 2012 +1000
+
+    changed the cutoff to 5000 to better reflect the point of performance degradation
+
+commit e95a9deeb3240b2558936af0dce10e6bc581877f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Mar 31 23:47:51 2012 +1000
+
+    Fixed a bug in WorkHorse::removeLowSpacerNodeManagers where a test for NULL was wrongly encapculated in a #define DEBUG black
+
+commit 82a55a1d31c1bf67775683bcaaf947340ce7d403
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 30 22:51:10 2012 +1000
+
+    fixed some print statements
+
+commit e0d8cd3309d761d73820f0198a12ed808381caf0
+Merge: ce64137 1576530
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 30 22:31:34 2012 +1000
+
+    Merge branch 'experimental' of github.com:ctSkennerton/crass into experimental
+
+commit 157653021bb8792513aaadb60db858c1e2863ca8
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 30 22:27:54 2012 +1000
+
+    clean up formatting in crass.cpp
+
+commit 75d616777458346892d4c52edb508fa728c01ab2
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 30 22:27:25 2012 +1000
+
+    Changed NodeManager::printSpacerGraph so that it checks that there is at least one spacer to be printed before creating the graphviz file.  Hopefully resolved issue #33
+
+commit cb4122ea0ec656cdf8251f6e43f481075b932aa4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 30 22:24:24 2012 +1000
+
+    Added in a specific no_file_exception class in crispr::exception
+
+commit b76356a5a9ebbe16fd9683ed6745695d5d431c15
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 30 22:23:34 2012 +1000
+
+    Fixed a bug in WorkHorse::isKmerPresent which was due to a variable being overwritten.  Resolves issue #41 and issue #42
+
+commit 868b850f6fc0d99a579c896bb022be247ce6262a
+Merge: 0c28fd0 773d310
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Mar 29 15:24:30 2012 +1000
+
+    Merge branch 'experimental' of github.com:ctSkennerton/crass into experimental
+
+commit ce64137843c6a6aeed6062308692a7e77b941589
+Merge: 8307896 773d310
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Mar 29 15:15:27 2012 +1000
+
+    merge conflicts
+
+commit 773d310d6f3995a1ea48341ccf1e53ffa7235bcd
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Thu Mar 29 14:44:37 2012 +1000
+
     Fixed bug where when less than CRASS_DEF_NUM_KMERS_4_MODE were found, Crass would DIIIEEEEE!!!!!!!
 
-Thu Mar 29 11:00:25 2012 +1000    ctSkennerton
+commit 83078969d4d6dbb6038b203958644203c1e831e0
+Merge: 847a7a0 46316ea
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Mar 29 11:00:25 2012 +1000
+
     Merge branch 'experimental' of github.com:ctSkennerton/crass into experimental
 
-Thu Mar 29 10:43:53 2012 +1000    minillinim
-    Merge branch 'experimental' of github.com:ctSkennerton/crass into experimental
+commit 46316ea04217cd6a68e22bd816c1c694f719d888
+Merge: 6a311d1 733c80b
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Thu Mar 29 10:43:53 2012 +1000
 
-Thu Mar 29 10:32:21 2012 +1000    minillinim
+    Merge branch 'experimental' of github.com:ctSkennerton/crass into experimental
+    
+    Conflicts:
+    	src/crass/WuManber.cpp
+    	src/crass/libcrispr.cpp
+
+commit 6a311d1af7c06708d88582076f067b9aade46a12
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Thu Mar 29 10:32:21 2012 +1000
+
     Fised my stupid stupid bug
 
-Mon Mar 26 23:04:57 2012 +1000    ctSkennerton
+commit 0c28fd02caeafda886f70a4d38881d8b933e4c05
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Mar 26 23:04:57 2012 +1000
+
     Removed some unused functions
 
-Sun Mar 25 09:43:48 2012 +1000    ctSkennerton
+commit 847a7a0ef8ba242077823dd0823e73fe4e116535
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Mar 25 09:43:48 2012 +1000
+
     added a little more verbosity to timer
 
-Sat Mar 24 00:11:34 2012 +1000    ctSkennerton
+commit 8c98055a970401b54b545b144a1c19419226f405
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Mar 24 00:13:25 2012 +1000
+
+    Revert "added in a timer for the logging"
+    
+    This reverts commit 733c80bf54486334c62d1a50012b5430a505d047.
+
+commit 733c80bf54486334c62d1a50012b5430a505d047
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Mar 24 00:11:34 2012 +1000
+
     added in a timer for the logging
 
-Fri Mar 23 23:31:13 2012 +1000    ctSkennerton
+commit d86c554b00f322eb8374d4ea52647e33f10cc245
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 23 23:31:13 2012 +1000
+
     finished off the iterative singleton_finder.  Now to test for speed improvements
 
-Fri Mar 23 16:44:41 2012 +1000    minillinim
+commit 1536368404fe99b3a79dbe17f2bfabdd6addb53c
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Fri Mar 23 16:44:41 2012 +1000
+
     iterative singleton finder
 
-Wed Mar 21 11:17:55 2012 +1000    ctSkennerton
+commit 12e3c47e8bfa8bbb765fee6a90efb4b9e28cbb93
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Mar 21 11:17:55 2012 +1000
+
     added some info to the crisprtools man page, fixed some build issues and cleaned up some help messages
 
-Wed Mar 21 11:16:51 2012 +1000    ctSkennerton
+commit a507761535102b1e1941c32ef796f0ff891fbccf
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Mar 21 11:16:51 2012 +1000
+
     added in ability to get number of reads from crisprtools stat
 
-Mon Mar 19 19:58:15 2012 +1000    ctSkennerton
+commit e119bdc4eeea12f3ed4ab004a4d5d3174a7c8c71
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Mar 19 19:58:15 2012 +1000
+
     Updated changelog and version numbering
 
-Mon Mar 19 19:53:04 2012 +1000    ctSkennerton
+commit b4dfa3e512201d6b15f4a52fcda30b4d82f64668
+Merge: cc78689 fcb72c9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Mar 19 19:53:04 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Mon Mar 19 19:52:41 2012 +1000    ctSkennerton
+commit cc78689b0e8c52a6dc147e314a03bf9bbb07762a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Mar 19 19:52:41 2012 +1000
+
     XML file no longer prints the time stamp
 
-Mon Mar 19 13:15:36 2012 +1000    minillinim
+commit fcb72c904119dd2d2d950cbd86273dc144c20d3b
+Merge: 3155c95 7766fd7
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Mon Mar 19 13:15:36 2012 +1000
+
     Merge remote branch 'origin/master'
 
-Mon Mar 19 13:09:23 2012 +1000    minillinim
-    Fixed two bugs in the clustering code which made identical DRs be in different groups, Also changed the NmostAbundant code to include only UNIQUE kmers.
+commit 3155c9577af0aa10469a5d6c1e2f22181e9c864d
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Mon Mar 19 13:09:23 2012 +1000
 
-Mon Mar 19 13:08:16 2012 +1000    minillinim
+    Fixed two bugs in the clustering code which made identical DRs be in different groups,
+    Also changed the NmostAbundant code to include only UNIQUE kmers.
+
+commit d5f6a2b8bf5039992e919614792a46e1d1f7b598
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Mon Mar 19 13:08:16 2012 +1000
+
     Changed the term kmer_size to kmer_clust_size to better reflect it's usage in the code
 
-Mon Mar 19 13:07:18 2012 +1000    minillinim
-    Changed the cluster size and kmer lengths for DR variant clustering Changed the name kmer_size to kmer_clustsize to reflect better its useage in the code
+commit 896cc47b0e918d699a5f43280f0ae310a06ff858
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Mon Mar 19 13:07:18 2012 +1000
 
-Mon Mar 12 13:01:18 2012 +1000    ctSkennerton
+    Changed the cluster size and kmer lengths for DR variant clustering
+    Changed the name kmer_size to kmer_clustsize to reflect better its useage in the code
+
+commit 7766fd7f6676b4e3f8fcbaec9537a335f82d84c2
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Mar 12 13:01:18 2012 +1000
+
     added in a new option to allow a custom prefix to the fasta header
 
-Mon Mar 12 12:59:43 2012 +1000    ctSkennerton
+commit dff3166a7e9b2053337821d2292505287f35e78b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Mar 12 12:59:43 2012 +1000
+
     added in a simple batch script
 
-Sun Mar 11 23:02:26 2012 +1000    ctSkennerton
+commit 8ed9de721bb8048aa82d58a76f6fa54c4e132124
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Mar 11 23:02:26 2012 +1000
+
     solved issue #36.  Added in a test during option processing to check if the output directory is writable
 
-Sun Mar 11 22:26:27 2012 +1000    ctSkennerton
+commit 5060ff636631f7aaeddb72170d46fcbc8d0f3cad
+Merge: 43b064a 1a8ecc4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Mar 11 22:26:27 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Sun Mar 11 22:26:08 2012 +1000    ctSkennerton
+commit 43b064a7b10ff9391ce34279f30ea0470ba23f4d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Mar 11 22:26:08 2012 +1000
+
     upped the version number of crisprtools
 
-Sun Mar 11 22:25:24 2012 +1000    ctSkennerton
+commit 4d9f9f1933e7ec27fe8f1ef13759b09a0d8d8cd2
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Mar 11 22:25:24 2012 +1000
+
     added in a tool so that crisper files can be filtered based on the number of spacers repeats and flankers
 
-Sun Mar 11 22:22:42 2012 +1000    ctSkennerton
+commit 433515e563c22d22c709c6d4d10970fb47c58b6b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Mar 11 22:22:42 2012 +1000
+
     fixed a bug where the spacer count wasn't being incremented if there was not coverage
 
-Thu Mar 8 20:56:10 2012 +1000    ctSkennerton
+commit e4cde8d69010cfef390d05a8e63a0d2ef9cfc161
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Mar 8 20:56:10 2012 +1000
+
     make files with group read and write
 
-Tue Mar 6 16:53:16 2012 +1000    minillinim
+commit 1a8ecc40162733586a4674d83d792f9716da7f0f
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Tue Mar 6 16:53:16 2012 +1000
+
     yay for no more bugs!
 
-Fri Mar 2 15:34:18 2012 +1000    ctSkennerton
+commit 4801bebc8c8c7a64faa305f2c5332bd32fcc4857
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 2 15:34:18 2012 +1000
+
     properly initalised a variable now
 
-Fri Mar 2 14:12:53 2012 +1000    ctSkennerton
+commit 2a37b515befdd966efa473157b843963fa63874a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 2 14:12:53 2012 +1000
+
     fixed a bug in libcrispr.cpp caused by bad casting
 
-Fri Mar 2 12:00:26 2012 +1000    ctSkennerton
-    Merge branch 'master' of github.com:ctSkennerton/crass
+commit 7112a0040faf4e448ada769d5107c5cef30f4ef7
+Merge: 27f8b1d 13ddb2b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 2 12:00:26 2012 +1000
 
-Fri Mar 2 11:57:36 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+    
+    Conflicts:
+    	src/crass/WorkHorse.cpp
+    Fixed conficts
+
+commit 27f8b1d37db4c2f6ae0e749ac886b730a2d956dc
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 2 11:57:36 2012 +1000
+
     added in some exception handling to Workhorse
 
-Fri Mar 2 11:55:59 2012 +1000    ctSkennerton
+commit c06d0a8ede9c972cbb200a3cbea09474b976e188
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 2 11:55:59 2012 +1000
+
     added a defult case to smith waterman case statement
 
-Fri Mar 2 00:46:34 2012 +1000    ctSkennerton
+commit 13ddb2b34f36f377db1a71319374ab151fd92e10
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 2 00:46:34 2012 +1000
+
     update the version number to 0.2.2
 
-Fri Mar 2 00:43:50 2012 +1000    ctSkennerton
+commit d32c749c7ec64cca8f4c1cf98f950506b4296638
+Merge: d43bee1 190215f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 2 00:43:50 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Fri Mar 2 00:43:34 2012 +1000    ctSkennerton
+commit d43bee1209be989d54d6695c32f82a01af899996
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Mar 2 00:43:34 2012 +1000
+
     removed an unused function
 
-Thu Mar 1 16:04:41 2012 +1000    minillinim
+commit 190215fe4e60206bfd850ad10d93bf9cc2607113
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Thu Mar 1 16:04:41 2012 +1000
+
     The bug fixing marches onwards!
 
-Wed Feb 29 12:36:27 2012 +1000    ctSkennerton
+commit aecb4e5970bb1ddfb68d2d308414626fe670abaf
+Merge: d0ac966 1d54ab8
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Feb 29 12:36:27 2012 +1000
+
     merge origin:master
 
-Wed Feb 29 12:34:26 2012 +1000    ctSkennerton
+commit d0ac96679ddf32e259aa1aaff94bc08b0aa56ed9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Feb 29 12:34:26 2012 +1000
+
     Extract tool now uses a bit set rather than individual bool members
 
-Wed Feb 29 12:31:43 2012 +1000    ctSkennerton
+commit c36b74e629011f7a4b5163f6138220daad02da4c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Feb 29 12:31:43 2012 +1000
+
     changed over an exception type
 
-Wed Feb 29 11:11:38 2012 +1000    minillinim
+commit 1d54ab8cf14f69d56fa19d5001792365e9830111
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Feb 29 11:11:38 2012 +1000
+
     Fixed two bugs.
+    
+    1. non initialisation of DR_offset when rC'ing DR
+    2. Fixed mem problem when DR lay towards very end of long (sanger) type read
 
-Wed Feb 29 11:10:40 2012 +1000    minillinim
-    Made the graph cleaning code slighly less dumb. Add iteration between bubble removal and DEP removal
+commit 2e011ae9a94d51db2dfe4672363a63d1f9c44ac6
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Feb 29 11:10:40 2012 +1000
 
-Mon Feb 27 16:53:18 2012 +1000    ctSkennerton
+    Made the graph cleaning code slighly less dumb.
+    Add iteration between bubble removal and DEP removal
+
+commit 0482c11b033a013dea148418c54eba0f60a1f448
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Feb 27 16:53:18 2012 +1000
+
     resolve issue #28 - xml now prints full path names
 
-Thu Feb 23 16:21:22 2012 +1000    ctSkennerton
+commit 5ba85d7813242bcd0575c8f868b8be62df4ba5ce
+Merge: 1cd106d f441c5f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Feb 23 16:21:22 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Thu Feb 23 16:21:11 2012 +1000    ctSkennerton
+commit 1cd106d3cd736a3eac7d1aaabe2713cfbe182e94
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Feb 23 16:21:11 2012 +1000
+
     added in some option sanity checks
 
-Thu Feb 23 15:54:46 2012 +1000    minillinim
+commit 5d80ca0f50a61c7570c5d7bd8163fb6beb80c26e
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Thu Feb 23 15:54:46 2012 +1000
+
     removed dud exception
 
-Thu Feb 23 15:53:23 2012 +1000    minillinim
+commit f441c5f2dffb02aae0dd2e16a3846c40101a053e
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Thu Feb 23 15:53:23 2012 +1000
+
     Neated the code very very slightly
 
-Thu Feb 23 15:41:03 2012 +1000    minillinim
+commit 54eae1cb432e2b998e9f40a167e9e1fe05afb76b
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Thu Feb 23 15:41:03 2012 +1000
+
     Fixed a bug which caused a number of weird-ass errors. Neatened some stuff up while I was at it
 
-Tue Feb 21 10:37:22 2012 +1000    minillinim
+commit 10c6b941fd7b3611c4d8a26ab4b1c2fc6b84cb51
+Merge: 7d7d94a 3185677
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Tue Feb 21 10:37:22 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Sun Feb 19 21:50:53 2012 +1000    ctSkennerton
-    Merge branch 'master' of github.com:ctSkennerton/crass
+commit 31856774d0fff6b2cf5efc2782e3f47bcdf2b09b
+Merge: 801c3b5 5d2b86f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Feb 19 21:50:53 2012 +1000
 
-Sun Feb 19 21:49:24 2012 +1000    ctSkennerton
+    Merge branch 'master' of github.com:ctSkennerton/crass
+    
+    Conflicts:
+    	src/libcrispr/Exception.h
+
+commit 801c3b5aa41c7b9d4d665dde533118ca509270db
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Feb 19 21:49:24 2012 +1000
+
     removed a macro that wasn't getting used anyway
 
-Sun Feb 19 21:47:24 2012 +1000    ctSkennerton
+commit 3bf4271e5270703c6d68c6bfcaf560ac8e665a24
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Feb 19 21:47:24 2012 +1000
+
     The collapsed_pos pointer was getting modified not the value.  Was causing some of the memory corruption in issue #35.  Still seg faulting on JCVI_SMPL_1103283000005.fa
 
-Wed Feb 15 15:54:24 2012 +1000    minillinim
+commit 7d7d94a8de6db4f9a94469d31cdbb1fe967d43a2
+Merge: 2de929a 5d2b86f
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Feb 15 15:54:24 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Wed Feb 15 15:54:04 2012 +1000    minillinim
+commit 2de929acfc076ca682aa8cc49d8f6257a1293cf3
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Feb 15 15:54:04 2012 +1000
+
     Removed stupid error message
 
-Wed Feb 15 15:50:45 2012 +1000    ctSkennerton
+commit 5d2b86fa3d02126d290e9e16494feb9174f1ffdc
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Feb 15 15:50:45 2012 +1000
+
     fixed a few include statements
 
-Wed Feb 15 14:02:36 2012 +1000    ctSkennerton
+commit 9973ef3e54f407cd271374caa3afd2468b82def0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Feb 15 14:02:36 2012 +1000
+
     merged crass::exception into crispr::exception
 
-Wed Feb 15 13:38:00 2012 +1000    ctSkennerton
-    removed a couple of unused parameters and chaged a function name accordingly
+commit 8f464cf2452f0406f65290437bd415c0b1535614
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Feb 15 13:38:00 2012 +1000
 
-Wed Feb 15 13:25:36 2012 +1000    ctSkennerton
+    removed a couple of unused parameters and chaged a function name
+    accordingly
+
+commit 61103bf0c2f78f6e10694069c72b37252e066e3c
+Merge: e094407 7966f8d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Feb 15 13:25:36 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Wed Feb 15 13:24:59 2012 +1000    ctSkennerton
+commit 7966f8de408f8a728d3a2ca461e681f88f1c95e4
+Merge: ac7d978 02be811
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Feb 15 13:24:59 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Wed Feb 15 13:24:53 2012 +1000    ctSkennerton
+commit e094407294111fb2fce1ed115e0e2fc8504238a9
+Merge: 44913ef 02be811
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Feb 15 13:24:53 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Wed Feb 15 12:54:02 2012 +1000    minillinim
+commit 02be8115798e5188eedf10c2b6ef3a393b8cce15
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Feb 15 12:54:02 2012 +1000
+
     Fixed an infinite loop bug with regards to refined ends...
 
-Wed Feb 15 10:44:39 2012 +1000    minillinim
+commit 1b46ed8406648320f173f939406835c0c4c62b82
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Feb 15 10:44:39 2012 +1000
+
     Added the variable: CRASS_DEF_MIN_CONS_ARRAY_LEN
 
-Wed Feb 15 10:40:57 2012 +1000    minillinim
+commit 662b899e2678dedf602157a4f8afca4d22e171cb
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Feb 15 10:40:57 2012 +1000
+
     Made print contents a little bit purdier
 
-Wed Feb 15 10:40:14 2012 +1000    minillinim
+commit 4cbdf4c2d9c0a77ee6502facda56783fcc83f555
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Feb 15 10:40:14 2012 +1000
+
     Reafctored some of the stupidly large function which does most of the work of refining DRs
 
-Fri Feb 10 22:40:35 2012 +1000    ctSkennerton
+commit ac7d9789c78c1e2fed0898f2e90304d9b55c6ca5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Feb 10 22:40:35 2012 +1000
+
     added some exception handling to smith-waterman
 
-Fri Feb 10 13:09:01 2012 +1000    ctSkennerton
-    Merge branch 'exception'
+commit 44913efea3d39a264f28a042c29701ee2e5a28c2
+Merge: 5ae600c 1030506
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Feb 10 13:09:01 2012 +1000
 
-Fri Feb 10 12:52:46 2012 +1000    ctSkennerton
+    Merge branch 'exception'
+    
+    Conflicts:
+    	src/crass/ReadHolder.cpp
+    	src/crass/libcrispr.cpp
+
+commit 103050641ce57a72a1d335ef84ab2715d2b7106f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Feb 10 12:52:46 2012 +1000
+
     solved the endless loop problem. A counter wasn't getting updated cause it was in the wrong scope after a try ... catch block was put in
 
-Fri Feb 10 11:33:41 2012 +1000    ctSkennerton
+commit 5ae600cf5aae7af0d6c31d39b7cdb7eb1670a7a4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Feb 10 11:33:41 2012 +1000
+
     now seems to work on crazy
 
-Fri Feb 10 10:09:18 2012 +1000    ctSkennerton
+commit 1d1b73f357fd50c728072586816a364293b479b5
+Merge: 9ca000d d754b73
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Feb 10 10:09:18 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Fri Feb 10 10:08:23 2012 +1000    ctSkennerton
+commit 9ca000dae57f7314a6d2a1558d9902ab4b743d03
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Feb 10 10:08:23 2012 +1000
+
     fixed a bug where a graphviz file would be produced but without any spacers
 
-Thu Feb 9 12:39:43 2012 +1000    ctSkennerton
+commit 130662b51e13b44f79c36087570fe5f535b5c537
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Feb 9 12:39:43 2012 +1000
+
     fixed a bug in ReadHolder#getNextSpacer
 
-Tue Feb 7 23:29:27 2012 +1000    ctSkennerton
+commit 6ca9765f46b0b608c64c696170cf7e47cabc847d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Feb 7 23:29:27 2012 +1000
+
     removed internal changes to cflags.  Now can only be set on the command line - which is GNU coding standards
 
-Tue Feb 7 23:14:18 2012 +1000    ctSkennerton
+commit 5b455c52890d404a219d870bbd6ed0a560ef7aaf
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Feb 7 23:14:18 2012 +1000
+
     added in makefile for documentation
 
-Tue Feb 7 16:27:12 2012 +1000    ctSkennerton
+commit d754b733cb2214d5dfb23732897efc560d2ef5a0
+Merge: 48ce632 682e55e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Feb 7 16:27:12 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Tue Feb 7 16:27:05 2012 +1000    ctSkennerton
+commit 48ce6320a85571e2163f9d3652fe490647f09748
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Feb 7 16:27:05 2012 +1000
+
     bleg
 
-Tue Feb 7 15:50:39 2012 +1000    ctSkennerton
+commit 682e55ec36300aaa65c46c165615e31ef8d43c33
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Feb 7 15:50:39 2012 +1000
+
     added in some exception handling to catch substring errors
 
-Tue Feb 7 15:25:37 2012 +1000    ctSkennerton
+commit 161ec031de03e3fe9f5cfbc5eeca2900e5004c54
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Feb 7 15:25:37 2012 +1000
+
     added in an exception handling class
 
-Tue Feb 7 14:36:47 2012 +1000    ctSkennerton
+commit d8a3ecb9d1fad1a1ff1fc44970c7d1778ac777ae
+Merge: 997678c c1f7cef
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Feb 7 14:36:47 2012 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Tue Feb 7 14:36:31 2012 +1000    ctSkennerton
+commit 997678c212eb98efb4fafe021dbc0147edd93a5d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Feb 7 14:36:31 2012 +1000
+
     Documentation updates
 
-Tue Feb 7 14:29:43 2012 +1000    ctSkennerton
+commit c1f7cef1da143cb7948320f55a3d029cb450ef91
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Feb 7 14:29:43 2012 +1000
+
     Added some exception handling to some functions
 
-Sun Feb 5 22:17:28 2012 +1000    ctSkennerton
+commit fb8221b728eb4db32e74fbb593b2171c30c108c3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Feb 5 22:17:28 2012 +1000
+
     made tabular output implicit, no longer have need for the -t option
 
-Thu Feb 2 22:53:22 2012 +1000    ctSkennerton
+commit cb2cd35e47faaba412ba4d3c856299704023f2d3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Feb 2 22:53:22 2012 +1000
+
     add in some documentation for crisprtools
 
-Thu Feb 2 15:06:52 2012 +1000    ctSkennerton
+commit 773a94c15637fc8dee8c1e563dba29e791cdad6d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Feb 2 15:06:52 2012 +1000
+
     added some exception handling to libcrispr to catch errors more cleanly
 
-Tue Jan 31 22:20:42 2012 +1000    ctSkennerton
+commit 8f8389f043c32d3fdb60e732bc75e65fa547c289
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 31 22:20:42 2012 +1000
+
     spacer coverage now back in the xml - didn't realise it had gone AWOL
 
-Tue Jan 31 16:41:34 2012 +1000    ctSkennerton
+commit 3f032eea3f01a48ac860408686a312f78a046a0f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 31 16:41:34 2012 +1000
+
     fixed a memory leak
 
-Tue Jan 31 15:39:23 2012 +1000    ctSkennerton
+commit b6b911a3a634da84b05ce16a7b4533fcd79a1c49
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 31 15:39:23 2012 +1000
+
     Updated the build settings to allow for non-standard install locations of Xerces
 
-Mon Jan 30 02:46:17 2012 +1000    ctSkennerton
+commit 36e388ffa381acf9e6a5d992cd046f760d0a80a3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jan 30 02:46:17 2012 +1000
+
     changed the reverse complement code to a faster algorithm
 
-Sun Jan 29 23:51:42 2012 +1000    ctSkennerton
+commit 3f608768f48d7b5f58c94745476408dc0f929a51
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 29 23:51:42 2012 +1000
+
     update version to crass0.2.1 crisprtools0.1.1
 
-Sun Jan 29 23:44:43 2012 +1000    ctSkennerton
+commit 0c511b6a50be17840f0d6dcb19d663075bd67599
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 29 23:44:43 2012 +1000
+
     added an extra check for low complexity when a true DR is found - removes a few DR's where individual variants fall under the threshold but the consensus does not
 
-Sun Jan 29 23:07:41 2012 +1000    ctSkennerton
+commit 13e13052f8da957843a94675822f1ad58eb87661
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 29 23:07:41 2012 +1000
+
     a few misc print statement updates
 
-Sun Jan 29 22:51:34 2012 +1000    ctSkennerton
+commit c4ee8845a9cc38963597e763f0d33b6c3e6642c5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 29 22:51:34 2012 +1000
+
     little update to the help msg
 
-Sun Jan 29 22:50:49 2012 +1000    ctSkennerton
+commit 17806749ad4b6f89a433305f569df478683f09e1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 29 22:50:49 2012 +1000
+
     fixed required_argument to no_arguement problem with processing --help option. added basic progressive parser
 
-Sun Jan 29 22:48:20 2012 +1000    ctSkennerton
+commit eeacab12c50a1638b646b17fb86cc979ea5d8810
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 29 22:48:20 2012 +1000
+
     added in some sanity checks for the options, fixed a help msg and added a basic progressive parser
 
-Sat Jan 28 21:46:52 2012 +1000    ctSkennerton
+commit d95fe80efe8c38a11d41a853dc4a9ba1cde7e98a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jan 28 21:46:52 2012 +1000
+
     added a couple of print statements to the clustering and graph generation functions
 
-Sat Jan 28 21:45:40 2012 +1000    ctSkennerton
+commit f31acf6782fa41f87de8e2619816d25b24cd2620
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jan 28 21:45:40 2012 +1000
+
     removed a rouge print statement from NodeManager#getSpacerCount
 
-Sat Jan 28 21:44:14 2012 +1000    ctSkennerton
+commit 604b2ea82da0bd6ef289a9cbb73a59056af7ae2e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jan 28 21:44:14 2012 +1000
+
     added in some comands for making the documentation
 
-Sat Jan 28 21:42:40 2012 +1000    ctSkennerton
+commit cde3bf39303ff255db8157f80b2ba060004b8a15
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jan 28 21:42:40 2012 +1000
+
     added in some more output options
 
-Fri Jan 27 23:13:28 2012 +1000    ctSkennerton
-    fixed some file names in the git index that was causing some strange differences
+commit 846e13f4c3cd201ec80ff1732ef8bbe566a30445
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jan 27 23:13:28 2012 +1000
 
-Fri Jan 27 23:04:48 2012 +1000    ctSkennerton
+    fixed some file names in the git index that was causing some strange
+    differences
+
+commit c54fa855426153585a770f10c0d9dd1c4fc5e596
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jan 27 23:04:48 2012 +1000
+
     Modified #include statements to fix some strange bugs... got no idea how it was compiling before
 
-Wed Jan 25 21:45:37 2012 +1000    ctSkennerton
+commit 622eac4d14617d7d65b953fbd84eb23a88677135
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Jan 25 21:45:37 2012 +1000
+
     Made heaps of changes to the build system to get the CFLAGS and LDFLAGS right... might still be a few bugs but it's better.  Also bumped the versioning up to reflect all these changes to the project
 
-Tue Jan 24 17:46:16 2012 +1000    ctSkennerton
+commit ca2af96682ec29acab4cf8059844939fff699c26
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 24 17:46:16 2012 +1000
+
     updated directory structure to include crisprtools
 
-Sun Jan 22 15:26:13 2012 +1000    ctSkennerton
+commit 8d8d668b6fefc00baf44b8bc3c9f4a84ef4b8736
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 22 15:26:13 2012 +1000
+
     quick change to a logging statement
 
-Sun Jan 22 15:23:32 2012 +1000    ctSkennerton
+commit c4f0029469661e5acbae6650871eee0015fdfa68
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 22 15:23:32 2012 +1000
+
     fixed some implicit type conversions
 
-Wed Jan 18 16:35:29 2012 +1000    ctSkennerton
+commit 444b33be5033f7926174a94e6c9402acea831c5c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Jan 18 16:35:29 2012 +1000
+
     update version to 0.1.5 to reflect bug fixes
 
-Wed Jan 18 16:32:31 2012 +1000    ctSkennerton
+commit 2be3cf3a9cfd824fd043c5ad182dc7170c8f3736
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Jan 18 16:32:31 2012 +1000
+
     resolve issue #29 make sure that the true direct repeat is in its laurenized form
 
-Wed Jan 18 14:06:49 2012 +1000    ctSkennerton
+commit 99a5fe03a935362a37b5cc5460249155846d9ab4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Jan 18 14:06:49 2012 +1000
+
     resolve issue #23 and removed a rouge print statement
 
-Wed Jan 18 10:24:17 2012 +1000    ctSkennerton
+commit 79b4bd2b070a32a3ba293aac6418b8baa8df54e7
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Jan 18 10:24:17 2012 +1000
+
     Increased the log level on a couple of statements so that some lower levels are not too verbose
 
-Tue Jan 10 02:13:43 2012 +1000    ctSkennerton
+commit 730c808284b449ba1f982dfa305135b4591e9893
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 10 02:13:43 2012 +1000
+
     flankers are now identified using variation in length. hopefully goes some way to fix issue #19 and issue #20.  bumped up version to 0.1.4
 
-Tue Jan 10 02:10:36 2012 +1000    ctSkennerton
+commit e23e2049487807b131b4c2692649b453928cac2e
+Merge: d892c5f 90e7700
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 10 02:10:36 2012 +1000
+
     Merge branch 'flanker'
 
-Tue Jan 10 01:44:56 2012 +1000    ctSkennerton
+commit 90e77002189bde0d935c6dc175a112c04250aaf6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 10 01:44:56 2012 +1000
+
     added in some logging statements and removed some debugging print statements
 
-Tue Jan 10 01:43:46 2012 +1000    ctSkennerton
+commit 42d8e3b698fc00a8f6a7fe3934b9f80c044fb088
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 10 01:43:46 2012 +1000
+
     added in the isFlanker member variable into the constructor to prevent uninitalized values being used
 
-Tue Jan 10 01:42:30 2012 +1000    ctSkennerton
+commit eba2e7e875c3ecbf3247ca892ab79ccc671dc479
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 10 01:42:30 2012 +1000
+
     fixed bugs in both mean and standard deviation code
 
-Tue Jan 10 00:10:45 2012 +1000    ctSkennerton
+commit d892c5f88dd2a145c63cf090848037087e5ab226
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jan 10 00:10:45 2012 +1000
+
     fixed a set fault where the walking element wasn't getting populated in getSpacerEdgeFromCross.  Also added the new logic into getSpacerEdgeFromCap just in case it gets a similar problem down the line
 
-Mon Jan 9 11:49:26 2012 +1000    ctSkennerton
+commit 0c502fb94025eaa6f9f48d3b18226ab20405dab9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jan 9 11:49:26 2012 +1000
+
     compiles and runs through but the main idea of using length to determine whether something is a flanker or not doesn't seem to work
 
-Mon Jan 9 09:10:37 2012 +1000    ctSkennerton
+commit 7c06eb60f5cc281eef38dcbd388ecae5a773abac
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jan 9 09:10:37 2012 +1000
+
     Added a new member for setting a flanker sequence
 
-Mon Jan 9 09:08:46 2012 +1000    ctSkennerton
+commit 511e5b6a5e0429494b193432df1e4de808c3b8f9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jan 9 09:08:46 2012 +1000
+
     Added in a template stats class
 
-Sun Jan 1 18:00:17 2012 +1000    ctSkennerton
+commit 7c7ef4adb4a5a6aec9368dd87ba66408b6b1a3a0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 1 18:00:17 2012 +1000
+
     removed automatically generated files (again)
 
-Sun Jan 1 17:52:26 2012 +1000    ctSkennerton
+commit b2dccee8c43f5de461cbb2e6d4bfb8a1a90c4efd
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 1 17:52:26 2012 +1000
+
     Updated to version 0.1.3
 
-Sun Jan 1 17:51:21 2012 +1000    ctSkennerton
+commit 1242c686e0410b0eb07ba13cc7971beb96d71c73
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 1 17:51:21 2012 +1000
+
     updated documentation to include new options
 
-Sun Jan 1 17:49:55 2012 +1000    ctSkennerton
+commit 411686ee276d42d8c08e99ac0dc0140584960c84
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 1 17:49:55 2012 +1000
+
     fixed issue #25 plus a number of other small memory fixes
 
-Sun Jan 1 17:40:28 2012 +1000    ctSkennerton
+commit a65ad746b91912a45225c9e7be28f9c5688b0db1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 1 17:40:28 2012 +1000
+
     quick patch to solve a seg fault where spacers have edges to themselves.  At the moment if such an issue arrises the edge is not made -- might not be the best solution however it will do for now
 
-Sun Jan 1 17:37:40 2012 +1000    ctSkennerton
+commit 4a61aeb31be89a7be7e0e182dde4edaa364bd4d4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 1 17:37:40 2012 +1000
+
     got through issue #16.  The crisper DTD is a bit more general
 
-Sun Jan 1 17:22:28 2012 +1000    ctSkennerton
+commit 73b05b956faef1d737cc0cdd17154c028cc90c87
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jan 1 17:22:28 2012 +1000
+
     added two extra options to control output if DEBUG or RENDERING symbols are set
 
-Mon Dec 19 00:40:53 2011 +1000    ctSkennerton
+commit 9c08e39cfe2d58fe263f5b6f262379befc1ee328
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Dec 19 00:40:53 2011 +1000
+
     a few documentation updates
 
-Mon Dec 19 00:13:15 2011 +1000    ctSkennerton
+commit 9755f1e54baedac65c06c9317d9319185e9174a9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Dec 19 00:13:15 2011 +1000
+
     removed some rouge print statements and incremented the version number
 
-Mon Dec 19 00:09:11 2011 +1000    ctSkennerton
+commit 031205a959458be5f346d88c46eeb0674edbb6ce
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Dec 19 00:09:11 2011 +1000
+
     contig numbering now makes sense for the new graph building
 
-Sat Dec 17 13:21:26 2011 +1000    ctSkennerton
+commit 38639f39f2850d08b74d2230673f043de5f31e28
+Merge: d946a06 fbb79f2
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Dec 17 13:21:26 2011 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Sat Dec 17 13:20:28 2011 +1000    ctSkennerton
+commit d946a069cab0d3ecbf7df027a92694b91e5c3bbb
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Dec 17 13:20:28 2011 +1000
+
     commit before merging
 
-Fri Dec 16 14:54:37 2011 +1000    Michael.Imelfort
+commit fbb79f2bacb5bb7e314da052aeca353b86130257
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Dec 16 14:54:37 2011 +1000
+
     removed some naggy print statements
 
-Fri Dec 16 14:48:33 2011 +1000    Michael.Imelfort
-    1. Spacer cleaning is done! 2. added more user opts
+commit a55c67252ea737dd22f2c5dd53ff6763f8c42769
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Dec 16 14:48:33 2011 +1000
 
-Wed Dec 14 16:14:44 2011 +1000    Michael.Imelfort
-    Fixed 7,000,000 memory leaks. 2 remain. Also started cutting out the spacer graph stuff into separate functions in preparation for sp graph cleaning...
+    1. Spacer cleaning is done!
+    2. added more user opts
 
-Wed Dec 14 11:16:50 2011 +1000    Michael.Imelfort
+commit e312e9f3c97a1fdce62462ad5255f3b398c1fc88
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Dec 14 16:14:44 2011 +1000
+
+    Fixed 7,000,000 memory leaks. 2 remain.
+    Also started cutting out the spacer graph stuff into separate functions
+    in preparation for sp graph cleaning...
+
+commit f99bba712a70dbce191be42d6a252a7faf72eab6
+Merge: 7e20adf 4508985
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Dec 14 11:16:50 2011 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Wed Dec 14 01:16:29 2011 +0000    minillinim
+commit 4508985833ad524e4abc579f02a3dbf0b0fac0cf
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Dec 14 01:16:29 2011 +0000
+
     Fixed a few bugs residing in the debugging options
 
-Wed Dec 14 01:13:42 2011 +0000    minillinim
+commit a6529933ef6fb48e0608b39ef89c97f4a3befcf6
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Dec 14 01:13:42 2011 +0000
+
     removed
 
-Wed Dec 14 01:13:12 2011 +0000    minillinim
+commit f0dc65c921e5aeb10a1ef9036c7b04dc99bc723b
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Wed Dec 14 01:13:12 2011 +0000
+
     Need to remove these guys from tree
 
-Mon Nov 28 16:34:42 2011 +1000    Michael.Imelfort
+commit 7e20adfe3e91231f8f336f7834c4989f6ad0ee8c
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Nov 28 16:34:42 2011 +1000
+
     removed files that are unneeded
 
-Mon Nov 28 16:32:56 2011 +1000    Michael.Imelfort
-    Merge branch 'master' of github.com:ctSkennerton/crass
+commit e7a598d2c7747475071a60f777686c8aa8c3283d
+Merge: e430c1f 821dde3
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Nov 28 16:32:56 2011 +1000
 
-Mon Nov 28 16:24:14 2011 +1000    Michael.Imelfort
+    Merge branch 'master' of github.com:ctSkennerton/crass
+    
+    Conflicts:
+    	config.guess
+    	resources/crass.dtd
+
+commit e430c1fcd9c0a212110205ca67cdc76679b0de81
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Nov 28 16:24:14 2011 +1000
+
     oi
 
-Mon Nov 28 16:23:34 2011 +1000    Michael.Imelfort
+commit 9afa81d72c51c473731a350d1a5dda860af36d76
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Nov 28 16:23:34 2011 +1000
+
     Fixed a dtd
 
-Mon Nov 28 16:22:26 2011 +1000    Michael.Imelfort
+commit 8c1bbe1b2e9aa50d102a354a808069e06c316626
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Nov 28 16:22:26 2011 +1000
+
     idkjkdswq
 
-Sat Nov 26 19:38:21 2011 +1000    ctSkennerton
+commit 821dde317e02a0244da133e984b0ad2f0bc22659
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Nov 26 19:38:21 2011 +1000
+
     update to 0.1.1 with latest changes
 
-Sat Nov 26 19:34:09 2011 +1000    ctSkennerton
+commit 393c4a4097a6079b4d1c3bb6110a7805698b6f22
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Nov 26 19:34:09 2011 +1000
+
     fix index file after merge
 
-Sat Nov 26 19:00:32 2011 +1000    ctSkennerton
+commit 1324ba372f7b21cf64c4720463934d09265b3a80
+Merge: e66a365 62d054c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Nov 26 19:00:32 2011 +1000
+
     Merge branch 'xml_writer'
 
-Sat Nov 26 18:59:40 2011 +1000    ctSkennerton
+commit 62d054cb8f9d0b29548aba93ca705c9fcdf2a32a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Nov 26 18:59:40 2011 +1000
+
     The .crispr file is now made internally with xerces by adding to the DOM tree.  The created xml file passes online validators!
 
-Fri Nov 25 00:32:38 2011 +1000    ctSkennerton
+commit 7ecdf955a35a9076593069fd173d42f541e60a95
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Nov 25 00:32:38 2011 +1000
+
     doc updates
 
-Tue Nov 22 16:12:31 2011 +1000    Michael.Imelfort
-    No NO!  B = 3!
+commit e66a3658b21a7eb395738f86d7dbf79f5c857dd2
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Nov 22 16:12:31 2011 +1000
 
-Tue Nov 22 15:32:36 2011 +1000    ctSkennerton
+    No NO!
+     B = 3!
+
+commit ab0c985f57ae8604cbdf13094c7e488ac17f2961
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Nov 22 15:32:36 2011 +1000
+
     most of the getter and setter methods are in place
 
-Sat Nov 19 19:14:36 2011 +1000    ctSkennerton
+commit 29ff281682c3470babe7f88a6512eea2adc11f35
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Nov 19 19:14:36 2011 +1000
+
     Fixed issue #22 and #9.  Finally prepared to call this the official version 0.1.0 after successful tests on metagenomic data
 
-Fri Nov 18 15:23:38 2011 +1000    ctSkennerton
+commit 15431cd3283bb9d5f9d601dcd4e16b71e15e6eea
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Nov 18 15:23:38 2011 +1000
+
     Massive commit.  Fixed issues #1 and #12
 
-Wed Nov 16 22:35:05 2011 +1000    ctSkennerton
+commit 2aa74c1a096bb2c74a9428af0d336d1d4a015d95
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 16 22:35:05 2011 +1000
+
     Fixed issue #1,  the call to XMLPlatformUtils::Terminate() cannot be surrounded by a try {...}catch(){...} block
 
-Wed Nov 16 19:51:51 2011 +1000    ctSkennerton
+commit d05efb79e9bb12936728b1bf63a83dc88f202443
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 16 19:51:51 2011 +1000
+
     Fix should resolve issue #13 and #15 although more testing will need to be done to figure out if crass is specific enough
 
-Mon Nov 14 21:31:42 2011 +1000    ctSkennerton
+commit 82017c9fb9dc0fe88e5dd6683df4817349b61191
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Nov 14 21:31:42 2011 +1000
+
     changed the version number to 0.0.10
 
-Mon Nov 14 21:29:12 2011 +1000    ctSkennerton
+commit 2814d67d377d4d89790f7b1bee341c9437e896f5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Nov 14 21:29:12 2011 +1000
+
     Resolved issue #14, changed a flow control in WorkHorse so that the iterator is not pointing to a NULL object
 
-Mon Nov 14 16:30:09 2011 +1000    ctSkennerton
+commit 7ec088a30929a38c54707f228b526a508aaaf412
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Nov 14 16:30:09 2011 +1000
+
     fixed a bug where the header files were not packaged up in 'make dist'
 
-Sun Nov 13 21:55:05 2011 +1000    ctSkennerton
+commit 839d292ad142dca5b132f6ca66eb5e1ca30fcbf0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Nov 13 21:55:05 2011 +1000
+
     Update to the man file and added a latex documentation file
 
-Sun Nov 13 03:37:49 2011 +1000    ctSkennerton
+commit 522007622fbcaa2d532eed314fff9f6a8a8e5fd3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Nov 13 03:37:49 2011 +1000
+
     New compile time option to disable assembly wrapper, which will also remove the dependancy for Xerces-c
 
-Wed Nov 9 23:28:05 2011 +1000    ctSkennerton
+commit e679df260460e8f32e47ed5d9f0b3645da3339b5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 9 23:28:05 2011 +1000
+
     Fixed a bug where the resources folder was not being included when the user types 'make dist'
 
-Wed Nov 9 14:32:33 2011 +1000    ctSkennerton
+commit f8df8ad7aab61d4bdb88c63bc307c1fa79f65ac9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 9 14:32:33 2011 +1000
+
     Added new test to remove reads that contain a small number of reads, which should help filter out some of the false positive groups
 
-Wed Nov 9 10:45:04 2011 +1000    ctSkennerton
+commit e30f3d3e82ca73ab53afe40d63ae9d671c4d1ae4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 9 10:45:04 2011 +1000
+
     Fixed an issue in bubble removal whereby nodes would pass a test if they contained two edges of the same type, even though they should have failed as they would lack the corresponding opposite edge type
 
-Wed Nov 9 10:13:51 2011 +1000    ctSkennerton
+commit 43cd477c19f737c31d6d3e48d98f957653a8f3e1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 9 10:13:51 2011 +1000
+
     Fixed issue #6, changed an else if to if statement in clearBubbles that seems to have resolved the issue
 
-Tue Nov 8 23:38:57 2011 +1000    ctSkennerton
+commit 59881fa6734c1fbe689c598fec0bdeab050c2b9c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Nov 8 23:38:57 2011 +1000
+
     oops, now outputs the correct linker flags
 
-Tue Nov 8 23:04:03 2011 +1000    ctSkennerton
+commit 1c3a07019f6bf830517d8975fb58d8c77b01d886
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Nov 8 23:04:03 2011 +1000
+
     updated the build so that Xerces-c is checked during configure
 
-Mon Nov 7 22:55:50 2011 +1000    ctSkennerton
+commit 4488b656dd085ce89e43ffb21813360ac0281e58
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Nov 7 22:55:50 2011 +1000
+
     Fixed issue #2, dynamic memory allocations are now properly freed in WuManber destructor
 
-Mon Nov 7 22:47:26 2011 +1000    ctSkennerton
+commit 9fa8a1f332fca28ce5f66286651566f7c414106c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Nov 7 22:47:26 2011 +1000
+
     Fixed issue #11.  The value of B is now set dynamically in WuManber
 
-Mon Nov 7 22:06:27 2011 +1000    ctSkennerton
+commit 6a41e28952b5ae129d747baa1e4cc1ea296b42d5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Nov 7 22:06:27 2011 +1000
+
     fixed issue 3, the output reads file now can produce fast format and is generally more faithful to the input format style
 
-Mon Nov 7 02:37:24 2011 +1000    ctSkennerton
+commit 3a52739a17aa88cc0f509995218be1ec3b9e8964
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Nov 7 02:37:24 2011 +1000
+
     fixed issue #8, errors thrown in AssemblyWrapper are now properly caught
 
-Sun Nov 6 23:14:13 2011 +1000    ctSkennerton
+commit ff4eab6ac0ec8db2f75923c22eb162814d465092
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Nov 6 23:14:13 2011 +1000
+
     fixed issue #7, CrassXML constructor and destructor now contain all the variables of the updated DTD
 
-Sat Nov 5 22:49:04 2011 +1000    ctSkennerton
+commit 9054f74bcec135799230dd382edb783a37821764
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Nov 5 22:49:04 2011 +1000
+
     basic assembly wrapper is complete for cap3 and velvet
 
-Fri Nov 4 10:52:09 2011 +1000    Michael.Imelfort
+commit 4e7b476c0ee7b3ab873de86ffecfd8e6eb2b0d7d
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Nov 4 10:52:09 2011 +1000
+
     XML is done!
 
-Fri Nov 4 10:26:52 2011 +1000    ctSkennerton
+commit b37794f5fd9889048c5332e871964f00f2d4ef92
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Nov 4 10:26:52 2011 +1000
+
     deleting some files to fix mike up
 
-Wed Nov 2 23:45:26 2011 +1000    ctSkennerton
+commit 4822b50d0164bc825c0172d32b292f679c55a3cc
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 2 23:45:26 2011 +1000
+
     removed some legacy files no longer being used
 
-Wed Nov 2 23:42:06 2011 +1000    ctSkennerton
+commit 3bc3da38e11d1bb8d49f73c6752b866393d6df08
+Merge: 1ad04ac 8ca7899
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 2 23:42:06 2011 +1000
+
     fixed conflicts with assemblyWrapper
 
-Wed Nov 2 17:00:12 2011 +1000    Michael.Imelfort
+commit 8ca78990e14211a23d7710e10404cf572af08ea1
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Nov 2 17:00:12 2011 +1000
+
     Working on the XML some more!
 
-Wed Nov 2 16:07:06 2011 +1000    ctSkennerton
+commit 1ad04aca38a705ad2311406e3759b8f7811b41c1
+Merge: d10ee01 0bc4ed9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 2 16:07:06 2011 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Wed Nov 2 15:34:37 2011 +1000    Michael.Imelfort
+commit 0bc4ed9f90a713bd2290c29182f0daeb192019c1
+Merge: a550af5 005c5ad
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Nov 2 15:34:37 2011 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass into merge2
 
-Wed Nov 2 15:30:38 2011 +1000    Michael.Imelfort
+commit a550af511e41169ef9d46bd696195f29317bf2ea
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Nov 2 15:30:38 2011 +1000
+
     A dtd for our XML output
 
-Wed Nov 2 15:30:22 2011 +1000    Michael.Imelfort
+commit e026965b179cd51e9b196352fc596c35af4e7305
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Nov 2 15:30:22 2011 +1000
+
     oops
 
-Wed Nov 2 15:29:55 2011 +1000    Michael.Imelfort
+commit 4d03ebe1bb3b59e8f515aeb212e7d5ea408874cf
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Nov 2 15:29:55 2011 +1000
+
     Modifications to make a parser
 
-Wed Nov 2 15:29:01 2011 +1000    Michael.Imelfort
+commit 39de2e59d0aa87309d523278e2f19b0a1b10e701
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Nov 2 15:29:01 2011 +1000
+
     XML parser
 
-Wed Nov 2 11:41:17 2011 +1000    ctSkennerton
+commit d10ee010c74e051b2c9dd53efb0251810869a484
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 2 11:41:17 2011 +1000
+
     fixed pedantic error with the assembly long options struct
 
-Wed Nov 2 11:18:26 2011 +1000    ctSkennerton
+commit 005c5ad4adfed622ba1af72a502d20827b36c142
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Nov 2 11:18:26 2011 +1000
+
     fix to segfault when there are not enough kmers in a DR
 
-Sun Oct 30 15:13:54 2011 +1000    ctSkennerton
+commit ab960e32e11d7fd6a8ffb604885584f22cbc8d0f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Oct 30 15:13:54 2011 +1000
+
     added in new user options and tweaked the way configure works
 
-Sat Oct 29 22:27:15 2011 +1000    ctSkennerton
+commit 508ffee1907b67c6f30f9b4a147c69d3957da538
+Merge: 78da060 dcaa25f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Oct 29 22:27:15 2011 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Sat Oct 29 22:26:09 2011 +1000    ctSkennerton
+commit 78da0608615d71f2da6f9c5d598be1ca6968dcd2
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Oct 29 22:26:09 2011 +1000
+
     changed the way that multiple files are parsed
 
-Sat Oct 29 21:09:42 2011 +1000    ctSkennerton
+commit dcaa25f97d33ffe33b6add5b4bc0cc97f1d78dd8
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Oct 29 21:09:42 2011 +1000
+
     fix #include bug
 
-Sat Oct 29 20:57:28 2011 +1000    ctSkennerton
+commit e24bca452b687d3d9c6ed49b7460ffef2b81fb19
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Oct 29 20:57:28 2011 +1000
+
     update the version number
 
-Sat Oct 29 20:42:10 2011 +1000    ctSkennerton
+commit 79525fef1aed83b7b6e7cb60898c957295a83cbc
+Merge: bd1554f 5c9f8d1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Oct 29 20:42:10 2011 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Fri Oct 28 16:44:28 2011 +1000    Michael.Imelfort
+commit 5c9f8d1e3bd54c8a95ba7d5f84dd7eb3dcd0e043
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Oct 28 16:44:28 2011 +1000
+
     Graph is done biatch!
 
-Thu Oct 27 23:34:24 2011 +1000    ctSkennerton
+commit bd1554fa51c3c9c6723c50748c941e9f6735de02
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Oct 27 23:34:24 2011 +1000
+
     basic assembly wrapper implemented
 
-Thu Oct 27 15:12:54 2011 +1000    Michael.Imelfort
+commit 3fc4951eed6d42f7529d2a4414b466541286b37a
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Thu Oct 27 15:12:54 2011 +1000
+
     Makes purdier graphs. Now to make contigs
 
-Wed Oct 26 09:19:13 2011 +1000    Michael.Imelfort
+commit e6a9a57cbff9778d52ef3b5954a2bea9c85a6190
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Oct 26 09:19:13 2011 +1000
+
     YAY!
 
-Tue Oct 25 20:37:15 2011 +1000    ctSkennerton
+commit 5cd836d8a27a9ecd9163abf8015bb996ac104e19
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 25 20:37:15 2011 +1000
+
     small code clean up in NodeManager
 
-Tue Oct 25 20:06:47 2011 +1000    ctSkennerton
+commit 1f33f1f7c93d3f19b383f6f62d760422e01b42e1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 25 20:06:47 2011 +1000
+
     basic bubble resolution in place but untested
 
-Tue Oct 25 16:53:19 2011 +1000    Michael.Imelfort
+commit 582ecf1f8963bea5e775eda7bb66f071b1dbe03f
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 25 16:53:19 2011 +1000
+
     compiles after merge
 
-Tue Oct 25 16:50:52 2011 +1000    Michael.Imelfort
+commit cb75cc65abd3ca89cbbb801feff9978604ebef42
+Merge: dcfa923 6aac9a8
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 25 16:50:52 2011 +1000
+
     Merge remote branch 'origin'
+    
+    Conflicts:
+    	man/Makefile
+    	src/Makefile
+    commit after merge
 
-Tue Oct 25 16:40:18 2011 +1000    Michael.Imelfort
+commit dcfa9232fd22d73784ffdbdb0b37a8276b278e0c
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 25 16:40:18 2011 +1000
+
     bleg
 
-Tue Oct 25 16:39:34 2011 +1000    Michael.Imelfort
+commit 44841269c5a65004b51ab90e5682593426f3fdd8
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 25 16:39:34 2011 +1000
+
     bleg
 
-Tue Oct 25 16:30:07 2011 +1000    Michael.Imelfort
+commit f4234e59d165842d77e5ab97543b2e0b2045b11d
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 25 16:30:07 2011 +1000
+
     bleg
 
-Tue Oct 25 16:25:06 2011 +1000    Michael.Imelfort
+commit c1a923f1f9e2f71256d5720114685f7420d34170
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 25 16:25:06 2011 +1000
+
     fork cleaning added
 
-Tue Oct 25 14:27:23 2011 +1000    ctSkennerton
-    added back in configure and makefiles for systems that don't have GNU autoconf
+commit 6aac9a8defe7f23d3275c6f514cd0b2c7fcb8f78
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 25 14:27:23 2011 +1000
 
-Tue Oct 25 13:25:57 2011 +1000    ctSkennerton
+    added back in configure and makefiles for systems that don't have GNU
+    autoconf
+
+commit 0e54acee99f3a9acd5d510f8e72612b620a00816
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 25 13:25:57 2011 +1000
+
     removed unused parameter to addReadHolder function
 
-Tue Oct 25 13:12:29 2011 +1000    ctSkennerton
+commit 4cb336a2307920ddab147f26c8ab95d3a7bbf0a5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 25 13:12:29 2011 +1000
+
     fixed a counter that wasn't being reset properly in long read search
 
-Tue Oct 25 12:38:57 2011 +1000    ctSkennerton
+commit b4d746c832cc45b1bafbc6a94569db1035b47207
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 25 12:38:57 2011 +1000
+
     updated some logic to deal with the split from short to long reads and with reads that are just too short
 
-Tue Oct 25 10:53:18 2011 +1000    ctSkennerton
+commit 445caa8669283c32dc6d3f29b4db7f94f1107f47
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 25 10:53:18 2011 +1000
+
     made a few changes to the build settings
 
-Tue Oct 25 09:12:57 2011 +1000    Michael.Imelfort
+commit 60acdbf49fad7b48a1aac534a0a67d3aced171b8
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 25 09:12:57 2011 +1000
+
     Commit for connor
 
-Mon Oct 17 16:46:39 2011 +1000    Michael.Imelfort
+commit 05f7acfa690c04cca4387cd1a93985ae3d2a19ac
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Oct 17 16:46:39 2011 +1000
+
     More bug fixes. Breaks DR into groups gooder now.
 
-Thu Oct 13 16:40:48 2011 +1000    Michael.Imelfort
+commit bd782309b6f69a0355aa22768d49465e8b3c138d
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Thu Oct 13 16:40:48 2011 +1000
+
     Still working on the recursive call. fixed a few more bugs
 
-Thu Oct 13 02:02:18 2011 +1000    Michael.Imelfort
-    Fixing bugs in DR start sites which is affecting the clustering of DRs gross
+commit 1263653f2097a7fd606eca3127a76522171a08cd
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Thu Oct 13 02:02:18 2011 +1000
 
-Tue Oct 11 14:24:56 2011 +1000    Michael.Imelfort
+    Fixing bugs in DR start sites which is affecting the clustering of DRs
+    gross
+
+commit 8fa34a37c1250a87ae3a2d07d784f9568b452202
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 11 14:24:56 2011 +1000
+
     removed #pragme marks
 
-Tue Oct 11 14:24:37 2011 +1000    Michael.Imelfort
+commit 8330427d45eff1133c57cb3f7b7364cdeacc8b06
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 11 14:24:37 2011 +1000
+
     removed #pragma marks
 
-Tue Oct 11 14:20:52 2011 +1000    Michael.Imelfort
+commit cd9b282b88f91c5b8cc9d78b6bb37198058be1f8
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Oct 11 14:20:52 2011 +1000
+
     Removed the guys who are autobuilt anyway
 
-Tue Oct 11 13:57:56 2011 +1000    ctSkennerton
+commit f860b63e475cb31ad6f3eac3ef250d98dac52898
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 11 13:57:56 2011 +1000
+
     over to you mike...
 
-Wed Sep 28 09:34:10 2011 +1000    ctSkennerton
+commit 8b0386769eb060f0e9add251ae1e74420fc6274b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Sep 28 09:34:10 2011 +1000
+
     fixed bug which caused edges not to be created properly
 
-Wed Sep 21 21:57:05 2011 +1000    ctSkennerton
+commit 857ca68c095a05df6839d6eabcbba4c03beab372
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Sep 21 21:57:05 2011 +1000
+
     more small fixes to partial DR matching
 
-Wed Sep 21 17:22:41 2011 +1000    ctSkennerton
+commit dcb0d98d7c12bd4fe4b574e34123e208d9768fc4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Sep 21 17:22:41 2011 +1000
+
     fixed a bug in smith waterman code which was causing extra nodes to be cut
 
-Mon Sep 19 15:09:51 2011 +1000    ctSkennerton
+commit ea08d62a09243141bc442e6638b4747dd6b30ecc
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Sep 19 15:09:51 2011 +1000
+
     fixed some bugs in the graph creation, now the graph looks MUCH cleaner
 
-Sat Sep 17 00:48:46 2011 +1000    ctSkennerton
+commit ec6a297f37f9022e3dc560e6390577795ce1d0d1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 17 00:48:46 2011 +1000
+
     walking works but cleaning doesn't
 
-Wed Sep 14 23:21:15 2011 +1000    ctSkennerton
+commit ba022a934ec31117c98380e213d46568844f8730
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Sep 14 23:21:15 2011 +1000
+
     improvements to long read search.  new sanity check after first iteration to make sure that there was something found.
 
-Tue Sep 13 20:00:58 2011 +1000    ctSkennerton
+commit 99db7967d9684f9f3365a6c0035773cbd744c38b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Sep 13 20:00:58 2011 +1000
+
     A raft of improvements!
 
-Mon Sep 12 22:40:18 2011 +1000    ctSkennerton
+commit df71380d47854f30631c7651db6fd3f58529286c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Sep 12 22:40:18 2011 +1000
+
     added some extra sanity checks to option processing and to long read search
 
-Mon Sep 12 11:08:52 2011 +1000    ctSkennerton
+commit 94a057d6e4fb34bee063fa7fff680114c9201a31
+Merge: 067bb93 b73975c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Sep 12 11:08:52 2011 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Mon Sep 12 11:07:39 2011 +1000    Michael.Imelfort
+commit b73975c04b1c236e2194f4bb2f032e8ca68760ef
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Sep 12 11:07:39 2011 +1000
+
     oops
 
-Mon Sep 12 11:01:37 2011 +1000    ctSkennerton
+commit 067bb93284b1bbff6e7928b88b945f15d71e2dd5
+Merge: 79d5c4a 3b48252
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Sep 12 11:01:37 2011 +1000
+
     resolved conflicts between versions
 
-Mon Sep 12 10:57:01 2011 +1000    ctSkennerton
+commit 79d5c4a173974cb0043517c25bcd58e4ef1e028f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Sep 12 10:57:01 2011 +1000
+
     some miscellaneous refactoring
 
-Mon Sep 12 10:40:23 2011 +1000    Michael.Imelfort
+commit 3b48252b3b817721f76d01a01c0b10f62770caaa
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Sep 12 10:40:23 2011 +1000
+
     Added this ps to mkae purdy arrows
 
-Mon Sep 12 10:38:39 2011 +1000    Michael.Imelfort
+commit bc1fb8c3c72c2cc4143a7aa8689b5333d0774164
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Sep 12 10:38:39 2011 +1000
+
     Added heat mappystuff
 
-Sun Sep 11 22:21:28 2011 +1000    ctSkennerton
+commit fb69d0f4352ab81f20c8e3ae5c93ec2792425234
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 11 22:21:28 2011 +1000
+
     fixed substr bug in scan right function
 
-Sun Sep 11 13:10:39 2011 +1000    ctSkennerton
+commit e113e835f4261c92f6f8f9d965dd8b2ecf13b0a5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 11 13:10:39 2011 +1000
+
     large code refactor, Crispr and ReadHolder classes are merged, many small bugs fixed
 
-Fri Sep 9 23:55:11 2011 +1000    Michael.Imelfort
+commit ae909c598db292fc83c3cd566e2054760824c3a7
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Sep 9 23:55:11 2011 +1000
+
     Added this guy to help colour graphviz plots
 
-Wed Sep 7 15:52:56 2011 +1000    ctSkennerton
+commit c1e257a8068c2a2393e3d266c02d031bd988ff0a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Sep 7 15:52:56 2011 +1000
+
     commit some graph updates
 
-Wed Sep 7 13:00:38 2011 +1000    ctSkennerton
+commit 49eff7c939a4ccd6c65f84e81c56661c677b258c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Sep 7 13:00:38 2011 +1000
+
     small code clean up
 
-Wed Sep 7 11:10:40 2011 +1000    ctSkennerton
+commit 610400822ab9ad1a3dd372c0e83d1b81d1805753
+Merge: 1213f45 db2c100
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Sep 7 11:10:40 2011 +1000
+
     Merge branch 'master' into Graph
 
-Wed Sep 7 11:09:00 2011 +1000    ctSkennerton
+commit 1213f456ba5d887b1382411f2e3f3f4e764dc5b6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Sep 7 11:09:00 2011 +1000
+
     very simple graph building now works
 
-Wed Sep 7 10:42:21 2011 +1000    Michael.Imelfort
+commit db2c1008b49f4ebc1a072360565108a7413e7c6b
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Sep 7 10:42:21 2011 +1000
+
     More bug fixes
 
-Tue Sep 6 16:29:39 2011 +1000    Michael.Imelfort
-    Fixed some stuff. Made the make process more paranoid.
+commit a77ef373cec3dc471a432084fa5b0ec3d7d50139
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Tue Sep 6 16:29:39 2011 +1000
 
-Wed Aug 31 09:01:58 2011 +1000    ctSkennerton
+    Fixed some stuff. Made the make process more paranoid.
+    
+    Still bugs to fix
+
+commit d7b4f00eb664bff1d71301f5408e7eb10bc5fad8
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Aug 31 09:01:58 2011 +1000
+
     tracking down bugs and logging sensible information
 
-Tue Aug 30 11:47:15 2011 +1000    ctSkennerton
+commit 4284de082a41f1ca96bd03771454f89df1aa7874
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Aug 30 11:47:15 2011 +1000
+
     changes to the way user input is taken plus some other misc changes.
 
-Mon Aug 29 17:13:08 2011 +1000    ctSkennerton
+commit 9e4804881ff2c537482b0bbf8436d8d4c4ed27d8
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 29 17:13:08 2011 +1000
+
     big fix with type conversion from int to float
 
-Mon Aug 29 17:04:03 2011 +1000    ctSkennerton
+commit e04db577bb39f59ead022e06b1f87ee74e03aff3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 29 17:04:03 2011 +1000
+
     added extra checking to low complexity repeat filtering to account for Ns
 
-Mon Aug 29 16:40:40 2011 +1000    ctSkennerton
+commit 2d0d9aa0c42eef1dbef6f407a5eb8deb3a4ae4b3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 29 16:40:40 2011 +1000
+
     bug fix in short read search
 
-Mon Aug 29 08:55:58 2011 +1000    ctSkennerton
+commit 033cf3ad2720cd800429ac795076cf55361feed1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 29 08:55:58 2011 +1000
+
     over to you mike...
 
-Sun Aug 28 21:46:04 2011 +1000    ctSkennerton
+commit f7e7d302b38b25ea9e2052f22d54b7533df11293
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Aug 28 21:46:04 2011 +1000
+
     removed some non essential autoconf cache stuff
 
-Sun Aug 28 12:32:00 2011 +1000    ctSkennerton
+commit 9dda865bdea14bb471c050b7f584af4b8595fbe8
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Aug 28 12:32:00 2011 +1000
+
     minor changes to help messages and usage
 
-Sat Aug 27 23:08:02 2011 +1000    ctSkennerton
+commit d1c054c35d6fbf32e71d7485d593bd518a722e2d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Aug 27 23:08:02 2011 +1000
+
     removing Genome.cpp since the files have been replaced
 
-Sat Aug 27 23:05:09 2011 +1000    ctSkennerton
+commit c681b59134f548000a20398ff0a10552bd7b60f6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Aug 27 23:05:09 2011 +1000
+
     removed some rouge code
 
-Sat Aug 27 22:59:18 2011 +1000    ctSkennerton
+commit 44e25ab95886c7beb35237c06c0fd817c8e3a7a1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Aug 27 22:59:18 2011 +1000
+
     can now remove homopolymers from reads using simple run length encoding algorithm.  very good for 454 or ion torrent data
 
-Sat Aug 27 11:10:37 2011 +1000    ctSkennerton
+commit 40f7a42ba0490a215cd607329eaddbe5c756d930
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Aug 27 11:10:37 2011 +1000
+
     updated changelog
 
-Sat Aug 27 10:58:29 2011 +1000    ctSkennerton
+commit 8642ce8592abce229d3705cd22ea5f8c9274b1f5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Aug 27 10:58:29 2011 +1000
+
     expanded the read holder class, new getters and setters and the members are now private
 
-Sun Aug 21 02:20:44 2011 +1000    ctSkennerton
+commit 1936ec5555782a1a7a92ef59cdb1eef578dcfd6a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Aug 21 02:20:44 2011 +1000
+
     more properly integrated in the Crispr class from CRT
 
-Sat Aug 20 18:55:44 2011 +1000    ctSkennerton
+commit 108ab8af995a6e9ae683436b71cde39052408843
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Aug 20 18:55:44 2011 +1000
+
     made a few small changes to configure
 
-Sat Aug 20 18:02:49 2011 +1000    ctSkennerton
+commit c502f49e5fd39f039c6a77350db1b078ee21f6c3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Aug 20 18:02:49 2011 +1000
+
     I do believe that the long read algorithm is now complete
 
-Fri Aug 19 20:29:37 2011 +1000    ctSkennerton
+commit 2422f3cc32ce59d12c75adfa5a44ebc449385c03
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Aug 19 20:29:37 2011 +1000
+
     cleaned up the source code a bit.  Variable names are now uniform across most of the code
 
-Fri Aug 19 17:28:47 2011 +1000    ctSkennerton
-    Merge branch 'master' of github.com:ctSkennerton/crass
+commit 0c8cf5b5d8891f982a57587c117cd22d6bc47ee7
+Merge: a6c1afc d29feae
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Aug 19 17:28:47 2011 +1000
 
-Fri Aug 19 15:57:02 2011 +1000    Michael.Imelfort
+    Merge branch 'master' of github.com:ctSkennerton/crass
+    
+    Conflicts:
+    	src/Genome.cpp
+    	src/Genome.h
+    	src/GenomeFinder.cpp
+    	src/crass.cpp
+    	src/crass_defines.h
+
+commit d29feaedd446faae771fcd45d7b2d587d88fa909
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Aug 19 15:57:02 2011 +1000
+
     for conz
 
-Thu Aug 18 23:07:04 2011 +1000    ctSkennerton
+commit a6c1afcd103b57d9b24c1d59c9d1db0d5e906009
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Aug 18 23:07:04 2011 +1000
+
     strange set fault error
 
-Thu Aug 18 22:32:31 2011 +1000    ctSkennerton
+commit ddaeddcfdd93baea14a222ab6625e8bad74054fc
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Aug 18 22:32:31 2011 +1000
+
     fixed memory leaks in the genome finder
 
-Thu Aug 18 19:55:30 2011 +1000    ctSkennerton
+commit 2a5cf7a5cb540cd7f81ca07956bb6a20807002c3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Aug 18 19:55:30 2011 +1000
+
     begun process of changing logging based on DUBUG preprocessor statement
 
-Thu Aug 18 19:25:03 2011 +1000    ctSkennerton
+commit 7dc50bc6ff0195b975a9d8eff8754be4c1c147a2
+Merge: e256c44 089f90d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Aug 18 19:25:03 2011 +1000
+
     Merge branch 'Genome'
+    
+    Conflicts:
+    	Makefile
+    	Makefile.in
+    	autom4te.cache/output.0
+    	autom4te.cache/output.1
+    	autom4te.cache/traces.0
+    	autom4te.cache/traces.1
+    	configure
+    	src/Makefile
+    	src/Makefile.in
+    merge Genome branch into Master
 
-Thu Aug 18 19:18:47 2011 +1000    ctSkennerton
+commit e256c44b7fbd58ce8bd06474538692a0d179578b
+Merge: 3656e81 f9061c6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Aug 18 19:18:47 2011 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
+    
+    Conflicts:
+    	Makefile
+    	config.status
+    	man/Makefile
+    	src/Makefile
+    	src/Makefile.am
+    	src/SmithWaterman.cpp
+    	src/WorkHorse.cpp
+    	src/crass.cpp
+    	src/libcrispr.cpp
+    merge local branch master with Mike's changes
 
-Thu Aug 18 16:44:18 2011 +1000    Michael.Imelfort
+commit f9061c6f7d16cf9298a2e836784b71da67d9538d
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Thu Aug 18 16:44:18 2011 +1000
+
     it works!
 
-Thu Aug 18 16:44:06 2011 +1000    Michael.Imelfort
+commit cfce59e09430aab1b1fc7b2488bd28cb5942d289
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Thu Aug 18 16:44:06 2011 +1000
+
     Tokenise the strings
 
-Wed Aug 10 20:40:29 2011 +1000    ctSkennerton
+commit 089f90daffc7ccfde02c4d8990ac61cc0c675ebd
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Aug 10 20:40:29 2011 +1000
+
     Updated README and man file to reflect recent changes
 
-Tue Aug 9 22:41:38 2011 +1000    ctSkennerton
+commit 9c6a9f6f048024c8d6c5eff6be64bac27be05a3b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Aug 9 22:41:38 2011 +1000
+
     quick bug fix
 
-Tue Aug 9 22:09:59 2011 +1000    ctSkennerton
-    porting CRT finished, basic subcommands implemented
+commit f887a262913ba0c14e1664fb7fd9df6bf7490f1d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Aug 9 22:09:59 2011 +1000
 
-Tue Aug 9 22:02:58 2011 +1000    ctSkennerton
+    porting CRT finished, basic subcommands implemented
+    
+    crass now uses the CRT algorithm for finding CRISPR elements in
+    genomes/contigs.  First step in making crass the one stop CRISPR shop is
+    complete!
+
+commit ccf512b133b7a23265213436189da73a513eb18a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Aug 9 22:02:58 2011 +1000
+
     genome finding works as well as CRT
 
-Sun Aug 7 21:51:24 2011 +1000    ctSkennerton
+commit 751cb4c206b6bdba18e68e659498016364c1cea5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Aug 7 21:51:24 2011 +1000
+
     minor refactoring of the genome finder
 
-Sun Aug 7 21:18:11 2011 +1000    ctSkennerton
+commit 272eb579032facaef5e7b326c8bad4d2ac0b55a5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Aug 7 21:18:11 2011 +1000
+
     big fix where the repeat length was not being updated and changed some string comparisons into enums
 
-Sun Aug 7 20:50:08 2011 +1000    ctSkennerton
+commit 3656e81c791a0d8a252a61bd519ce677197d9293
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Aug 7 20:50:08 2011 +1000
+
     porting CRT for use in genomes
 
-Mon Jul 18 15:52:29 2011 +1000    Michael.Imelfort
-    More work done on the groupings.
+commit 4789f1f5f45816df2e4f31c9558f6a57daed5aa3
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Mon Jul 18 15:52:29 2011 +1000
 
-Sat Jul 16 17:48:22 2011 +1000    ctSkennerton
+    More work done on the groupings.
+    
+    Just about ready to build me some graphs...
+
+commit ea2a216e966c346a80f7dd8221a3db0eab6f5073
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jul 16 17:48:22 2011 +1000
+
     some minor changes to workhorse and added some extra logic to libcrispr
 
-Fri Jul 15 18:39:01 2011 +1000    ctSkennerton
+commit 1d6e7b61b633b4571dbc73b1b6f4295b5b7ce532
+Merge: 6af2bb5 28d0bea
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jul 15 18:39:01 2011 +1000
+
     Merge branch 'hacked'
 
-Fri Jul 15 18:38:08 2011 +1000    ctSkennerton
+commit 28d0bea89e90c26fbba47702767af586fb308137
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jul 15 18:38:08 2011 +1000
+
     final commit befor merge
 
-Fri Jul 15 16:16:52 2011 +1000    Michael.Imelfort
+commit 6af2bb51840a50f864b1a7c19983a3ade50e3ddc
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Jul 15 16:16:52 2011 +1000
+
     more on the score. Still looking better than connor whilst doit it.
 
-Tue Jul 12 22:18:47 2011 +1000    ctSkennerton
+commit 794867c79805dbb4dce838a4dc0a845209c2fdf0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jul 12 22:18:47 2011 +1000
+
     added in getopt long support and played with the man file
 
-Tue Jul 12 16:43:39 2011 +1000    ctSkennerton
+commit e78afa5fa96a1460f603d025536675400ba33b5b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jul 12 16:43:39 2011 +1000
+
     removed the smith-waterman code -- moving to a new algorithm for obtaining the one true DR
 
-Sat Jul 9 16:24:19 2011 +1000    ctSkennerton
+commit 981c7686e336903b310d36f1e932908dcc5dba89
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jul 9 16:24:19 2011 +1000
+
     removed print statements and added file extensions to the output files
 
-Sat Jul 9 16:14:22 2011 +1000    ctSkennerton
+commit cc248ccb94f24a973e0cea843fb5089c18288816
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jul 9 16:14:22 2011 +1000
+
     dumps reads after clustering
 
-Fri Jul 8 21:50:42 2011 +1000    ctSkennerton
+commit 5f2aa5856ac6e5d593665609a7420cf1384f4eac
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jul 8 21:50:42 2011 +1000
+
     score doesn't work -- going back to experimental
 
-Fri Jul 8 14:46:27 2011 +1000    ctSkennerton
+commit 86671765cbc574f455d9af6d4a0074b18b3965ff
+Merge: 3529257 c39636c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jul 8 14:46:27 2011 +1000
+
     Merge branch 'master' of github.com:ctSkennerton/crass
 
-Fri Jul 8 14:41:33 2011 +1000    Michael.Imelfort
+commit c39636cffed5627599a244fd89ef092522154a59
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Jul 8 14:41:33 2011 +1000
+
     modified scoring again...
 
-Thu Jul 7 14:09:27 2011 +1000    ctSkennerton
-    Merge branch 'master' of github.com:ctSkennerton/crass
+commit 3529257fe190d671625806b984ee320d6569a93f
+Merge: 218bb01 32db4fc
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Jul 7 14:09:27 2011 +1000
 
-Thu Jul 7 14:03:17 2011 +1000    Michael.Imelfort
+    Merge branch 'master' of github.com:ctSkennerton/crass
+    
+    Conflicts:
+    	src/.deps/SmithWaterman.Po
+
+commit 32db4fc6987b321e165de389b0503f8d688489bf
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Thu Jul 7 14:03:17 2011 +1000
+
     more goodies added!
 
-Thu Jul 7 13:57:54 2011 +1000    ctSkennerton
+commit 218bb01a5cea284940beddd72969c07c25a787c0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Jul 7 13:57:54 2011 +1000
+
     double bleg
 
-Thu Jul 7 13:56:52 2011 +1000    ctSkennerton
+commit 848aa6c461c4bd2e72509f9c18b92f9713072bfc
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Jul 7 13:56:52 2011 +1000
+
     bleg
 
-Fri Jul 1 16:47:14 2011 +1000    Michael.Imelfort
+commit c9c01c5c66d2f3e5baba60fc4a382442ac5807d5
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Jul 1 16:47:14 2011 +1000
+
     added new scoring, fixed the smith waterman code. looked good doing it.
 
-Fri Jul 1 13:57:47 2011 +1000    Michael.Imelfort
-    Merge branch 'master' of https://github.com/ctSkennerton/crass
+commit f170b4d25c3313b4169372a24db57b8bf53239a9
+Merge: 70edcaf adeb70a
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Jul 1 13:57:47 2011 +1000
 
-Fri Jul 1 12:09:21 2011 +1000    Michael.Imelfort
+    Merge branch 'master' of https://github.com/ctSkennerton/crass
+    
+    Conflicts:
+    	config.log
+    	src/.deps/WorkHorse.Po
+    	src/.deps/crass.Po
+
+commit 70edcaf45986242fbd9c59eef587780c73b90a40
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Fri Jul 1 12:09:21 2011 +1000
+
     oi
 
-Fri Jul 1 12:04:21 2011 +1000    ctSkennerton
+commit adeb70a6c88cbfcf2c055d6b2bdfcff76692bdf1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jul 1 12:04:21 2011 +1000
+
     over to you mike!! NOW
 
-Fri Jul 1 12:03:38 2011 +1000    ctSkennerton
+commit 2940e3f67a32f3c8d354d1086e58ab391956a27f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jul 1 12:03:38 2011 +1000
+
     over to you mike
 
-Wed Jun 29 16:14:34 2011 +1000    ctSkennerton
+commit 791f9249634b03582231237b64a52d32d325a328
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Jun 29 16:14:34 2011 +1000
+
     added new logic to multipattern matcher and workhorse to deal with partial direct repeats
 
-Tue Jun 28 14:59:24 2011 +1000    ctSkennerton
+commit 122885e5ad85a77f473495a396b1be15911d7c21
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jun 28 14:59:24 2011 +1000
+
     added in simple partial pattern finding for multimatcher
 
-Mon Jun 27 15:53:05 2011 +1000    ctSkennerton
+commit d7225ec5b338f863cfb816c3a706ac726530c532
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jun 27 15:53:05 2011 +1000
+
     fixed type mismatch bug in multipattern matcher
 
-Mon Jun 27 11:51:54 2011 +1000    ctSkennerton
+commit fb83a29235f55f4aec68c3e73d221aff3fc4733e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jun 27 11:51:54 2011 +1000
+
     removed a double up bug in the multimatcher
 
-Sun Jun 26 19:57:32 2011 +1000    ctSkennerton
+commit ba5e5180db09a2060908e80707998ea6b786ae99
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 26 19:57:32 2011 +1000
+
     squashing bugs...
 
-Sun Jun 26 18:53:16 2011 +1000    ctSkennerton
+commit db734bdcd1e3450437083c5b73751bbe1ed7e3a7
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 26 18:53:16 2011 +1000
+
     now run through with bitap algorithm
 
-Sun Jun 26 18:30:59 2011 +1000    ctSkennerton
+commit 91eaa5cd501dea0c4be15e5ca183f0003e17e0ea
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 26 18:30:59 2011 +1000
+
     bug fixes!
 
-Sun Jun 26 13:30:44 2011 +1000    ctSkennerton
+commit 3f32de19320a5ce40f50c9b54dec2ba95b04378f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 26 13:30:44 2011 +1000
+
     finnished updating the boyer moore search function
 
-Sun Jun 26 12:49:29 2011 +1000    ctSkennerton
+commit eca380affa536bf7611942e960a8007b9f4b3c7d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 26 12:49:29 2011 +1000
+
     adding in new logic for long reads
 
-Sat Jun 25 10:56:44 2011 +1000    ctSkennerton
+commit b7386b11f05ce8b8be6472a996ac36e04137e91f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jun 25 10:56:44 2011 +1000
+
     bleg
 
-Sat Jun 25 10:56:05 2011 +1000    ctSkennerton
+commit 2e6bb9e4faae41a030e0da2d7e4d5bff480ef262
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jun 25 10:56:05 2011 +1000
+
     clustering and canonical DR finding code added
 
-Wed Jun 22 16:47:40 2011 +1000    Michael.Imelfort
+commit f3dc676709d31bf6620efa938ccf864f4c9998bd
+Author: Michael.Imelfort <mike@mikeimelfort.com>
+Date:   Wed Jun 22 16:47:40 2011 +1000
+
     Yo conz, made a clustering algo fo yo!
 
-Wed Jun 22 12:58:03 2011 +1000    ctSkennerton
+commit 22ccd5060d37c3075ffe82aeb1c4f6d98f32cae3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Jun 22 12:58:03 2011 +1000
+
     yo mike!
 
-Tue Jun 21 12:57:08 2011 +1000    ctSkennerton
+commit bfad9aae2b06b30962348b51723fa496fdfd6157
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Jun 21 12:57:08 2011 +1000
+
     plugged into assembly objects.  Now puts reads into their DRlowlexi form!
 
-Sun Jun 19 22:53:06 2011 +1000    ctSkennerton
+commit 0b8ccc1a82fcd6e7fe76203d3ac0ba827f61d46f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 19 22:53:06 2011 +1000
+
     misc updates to readme
 
-Sun Jun 19 22:32:45 2011 +1000    ctSkennerton
+commit 33878506e9e49772dc858a164455e201c671c2bf
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 19 22:32:45 2011 +1000
+
     updated the copyright
 
-Sun Jun 19 22:12:09 2011 +1000    ctSkennerton
+commit ed0ceb4c50f1cf004f1aecfe49dadeb65a2da5a5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 19 22:12:09 2011 +1000
+
     test new repo
 
-Fri Jun 17 18:01:24 2011 +1000    ctSkennerton
+commit d8445d34874c68fa31079f1b4abed34a0d04ee1a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jun 17 18:01:24 2011 +1000
+
     add in the source files!!
 
-Fri Jun 17 17:15:30 2011 +1000    ctSkennerton
-    initial commit
+commit 232b742523cc225ea32152364d58cafcf36478e4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jun 17 17:15:30 2011 +1000
 
+    initial commit

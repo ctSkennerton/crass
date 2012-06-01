@@ -56,8 +56,9 @@
 #include "StringCheck.h"
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
-#include "StlExt.h"
-#include "Exception.h"
+#include <libcrispr/StlExt.h>
+#include <libcrispr/Exception.h>
+
 
 
 SpacerInstance * WalkingManager::shift(SpacerInstance * newNode)
@@ -144,8 +145,15 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 	CrisprNode * prev_node = NULL;
 	
 	// add the header of this read to our stringcheck
+
 	StringToken header_st = NM_StringCheck.addString(RH->getHeader());
-	
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(RH->getHeader());
+    if ( debug_iter != debugger->end()) {
+        // an interesting read
+        debug_iter->second.nmtoken(header_st);
+    }
+#endif
 	//MI std::cout << std::endl << "----------------------------------\n" << RH->getHeader() << std::endl; 
 	//MI std::cout << RH->splitApartSimple() << std::endl;
 	
@@ -157,13 +165,13 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 			if (RH->startStopsAt(0) == 0) 
 			{
 				//MI std::cout << "both" << std::endl;
-				addCrisprNodes(&prev_node, working_str, header_st);
+				addCrisprNodes(&prev_node, working_str, header_st, RH);
 			} 
 			else 
 			{
 				//MI std::cout << "sec" << std::endl;
 				// we only want to add the second kmer, since it is anchored by the direct repeat
-				addSecondCrisprNode(&prev_node, working_str, header_st);
+				addSecondCrisprNode(&prev_node, working_str, header_st, RH);
 			}
 			
 			// get all the spacers in the middle
@@ -175,7 +183,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 				while (RH->getNextSpacer(&working_str)) 
 				{		
 					//MI std::cout << "SP: " << working_str << std::endl;
-					addCrisprNodes(&prev_node, working_str, header_st);
+					addCrisprNodes(&prev_node, working_str, header_st, RH);
 				}
 			} 
 			else 
@@ -188,7 +196,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 					//std::cout<<RH->getLastSpacerPos()<<" : "<<(int)RH->getStartStopListSize() - 1<<" : "<<working_str<<std::endl;
 					RH->getNextSpacer(&working_str);
 					//MI std::cout << "SP: " << working_str << std::endl;
-					addCrisprNodes(&prev_node, working_str, header_st);
+					addCrisprNodes(&prev_node, working_str, header_st, RH);
 				} 
 				
 				// get our last spacer
@@ -196,7 +204,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 				{
 					//std::cout<<working_str<<std::endl;
 					//MI std::cout << "last SP: " << working_str << std::endl;
-					addFirstCrisprNode(&prev_node, working_str, header_st);
+					addFirstCrisprNode(&prev_node, working_str, header_st, RH);
 				} 
 			}
 		} catch (crispr::substring_exception& e) {
@@ -217,7 +225,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 //----
 // Private function called from splitReadHolder to cut the kmers and make the nodes
 //
-void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
+void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, ReadHolder * RH)
 {
     //-----
     // Given a spacer string, cut kmers from each end and make crispr nodes
@@ -245,6 +253,9 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         
         // add them to the pile
         NM_Nodes[st1] = first_kmer_node;
+#ifdef DEBUG
+        logInfo("creating node "<<st1<<" with string: "<<first_kmer, 10);
+#endif
     }
     else
     {
@@ -260,16 +271,21 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         second_kmer_node = new CrisprNode(st2);
         second_kmer_node->setForward(false);
         NM_Nodes[st2] = second_kmer_node;
+#ifdef DEBUG
+        logInfo("creating node "<<st2<<" with string: "<<second_kmer, 10);
+#endif
     }
     else
     {
         second_kmer_node = NM_Nodes[st2];
         second_kmer_node->incrementCount();
     }
-    
+
     // add in the read headers for the two CrisprNodes
     first_kmer_node->addReadHeader(headerSt);
     second_kmer_node->addReadHeader(headerSt);
+    first_kmer_node->addReadHolder(RH);
+    second_kmer_node->addReadHolder(RH);
     
     // the first kmers pair is the previous node which lay before it therefore bool is true
     // make sure prevNode is not NULL
@@ -283,6 +299,16 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
         }
     }
     
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(NM_StringCheck.getString(headerSt));
+    if (debug_iter != debugger->end()) {
+        // interesting read
+        debug_iter->second.addNode(st1);       
+        debug_iter->second.addNode(st2);
+    }
+#endif
+    
+
     // now it's time to add the spacer
     SpacerInstance * curr_spacer;
     
@@ -299,7 +325,15 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     	}
         curr_spacer = new SpacerInstance(sp_str_token, first_kmer_node, second_kmer_node);
         NM_Spacers[this_sp_key] = curr_spacer;
-        
+#ifdef SEARCH_SINGLETON
+        if (debug_iter != debugger->end()) {
+            debug_iter->second.addSpacer(workingString);
+        }
+#endif
+#ifdef DEBUG
+        logInfo("Creating spacer: "<<sp_str_token<<" with string: "<<workingString<<" From nodes: "<<st1<<", "<<st2 , 10);
+#endif
+
         // make the inner edge
         first_kmer_node->addEdge(second_kmer_node, CN_EDGE_FORWARD);
         second_kmer_node->addEdge(first_kmer_node, CN_EDGE_BACKWARD);
@@ -313,7 +347,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     *prevNode = second_kmer_node;
 }
 
-void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
+void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, ReadHolder * RH)
 {
     if ((int)workingString.length() < NM_Opts->cNodeKmerLength)
         return;
@@ -341,9 +375,16 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
         second_kmer_node = NM_Nodes[st2];
         (NM_Nodes[st2])->incrementCount();
     }
-    
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(NM_StringCheck.getString(headerSt));
+    if (debug_iter != debugger->end()) {
+        // interesting read
+        debug_iter->second.addNode(st2);
+    }
+#endif
     // add in the read headers for the this CrisprNode
     second_kmer_node->addReadHeader(headerSt);
+    second_kmer_node->addReadHolder(RH);
     
     // add this guy in as the previous node for the next iteration
     *prevNode = second_kmer_node;
@@ -351,7 +392,7 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
     // there is no one yet to make an edge
 }
 
-void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt)
+void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, ReadHolder * RH)
 {
     if ((int)workingString.length() < NM_Opts->cNodeKmerLength)
         return;
@@ -378,9 +419,16 @@ void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workin
         first_kmer_node = NM_Nodes[st1];
         (NM_Nodes[st1])->incrementCount();
     }
-    
+#ifdef SEARCH_SINGLETON
+    SearchCheckerList::iterator debug_iter = debugger->find(NM_StringCheck.getString(headerSt));
+    if (debug_iter != debugger->end()) {
+        // interesting read
+        debug_iter->second.addNode(st1);       
+    }
+#endif
     // add in the read headers for the this CrisprNode
     first_kmer_node->addReadHeader(headerSt);
+    first_kmer_node->addReadHolder(RH);
     
     // check to see if we already have it here
     if(NULL != *prevNode)
@@ -824,73 +872,80 @@ bool NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
     std::map<int, int> bubble_map;
     
     // now go through each of the edges and make a hashed key for the edge 
-    edgeListIterator curr_edges_iter = curr_edges->begin();
-    while(curr_edges_iter != curr_edges->end())
-    {
-        if ((curr_edges_iter->first)->isAttached()) 
+    edgeListIterator curr_edges_iter; //= curr_edges->begin();
+    for (curr_edges_iter = curr_edges->begin(); curr_edges_iter != curr_edges->end(); ++curr_edges_iter) {
+        
+        if ( !(curr_edges_iter->first)->isAttached()) 
         {
-            // we want to go through all the edges of the nodes above (2nd degree separation)
-            // and since we used the forward edges to get here we now want the opposite (Jummping_F)
-            edgeList * edges_of_curr_edge = (curr_edges_iter->first)->getEdges(getOppositeEdgeType(currentEdgeType));
-            
-            edgeListIterator edges_of_curr_edge_iter = edges_of_curr_edge->begin();
-            while (edges_of_curr_edge_iter != edges_of_curr_edge->end()) 
+            continue;
+        }
+        // we want to go through all the edges of the nodes above (2nd degree separation)
+        // and since we used the forward edges to get here we now want the opposite (Jummping_F)
+        edgeList * edges_of_curr_edge = (curr_edges_iter->first)->getEdges(getOppositeEdgeType(currentEdgeType));
+        
+        edgeListIterator edges_of_curr_edge_iter; //= edges_of_curr_edge->begin();
+        for (edges_of_curr_edge_iter = edges_of_curr_edge->begin(); edges_of_curr_edge_iter != edges_of_curr_edge->end(); ++edges_of_curr_edge_iter) 
+        {
+            // make sue that this guy is attached
+            if (! (edges_of_curr_edge_iter->first)->isAttached()) 
             {
-                // make sue that this guy is attached
-                if ((edges_of_curr_edge_iter->first)->isAttached()) 
+                continue;
+            }
+            // so now we're at the second degree of separation for our edges
+            // again make a key but check to see if the key exists in the hash
+            
+            int new_key = makeKey(rootNode->getID(), (edges_of_curr_edge_iter->first)->getID());
+            if (bubble_map.find(new_key) == bubble_map.end()) 
+            {
+                // first time we've seen him
+                bubble_map[new_key] = (curr_edges_iter->first)->getID();
+            } 
+            else 
+            {
+                // aha! he is pointing back onto the same guy as someone else.  We have a bubble!
+                //get the CrisprNode of the first guy
+                
+                CrisprNode * first_node = NM_Nodes[bubble_map[new_key]];
+#ifdef DEBUG
+                logInfo("Bubble found conecting "<<rootNode->getID()<<" : "<<first_node->getID()<<" : "<<(edges_of_curr_edge_iter->first)->getID()<< " : "<<(curr_edges_iter->first)->getID(), 8);
+#endif
+                //perform a coverage test on the nodes that end up here and kill the one with the least coverage
+                
+                // TODO: this is a pretty dumb test, since the coverage between the two nodes could be very similar
+                // for example one has a coverage of 20 and the other a coverage of 18.  The node with 18 will get
+                // removed but should it have been?  The way to fix this would be to create some infastructure in
+                // NodeManager to calculate the average and stdev of the coverage and then remove a node only if
+                // it is below 1 stdev of the average, else it could be a biological thing that this bubble exists.
+                
+                if (first_node->getDiscountedCoverage() > (curr_edges_iter->first)->getDiscountedCoverage()) 
                 {
-                    // so now we're at the second degree of separation for our edges
-                    // again make a key but check to see if the key exists in the hash
+#ifdef DEBUG
+                    //logInfo("Node "<<first_node->getID()<<" has higher discounted coverage ("<<first_node->getDiscountedCoverage()<<") than Node "<<(curr_edges_iter->first)->getID()<<" ("<<(curr_edges_iter->first)->getDiscountedCoverage()<<")", 8);
+#endif
                     
-                    int new_key = makeKey(rootNode->getID(), (edges_of_curr_edge_iter->first)->getID());
-                    if (bubble_map.find(new_key) == bubble_map.end()) 
-                    {
-                        // first time we've seen him
-                        bubble_map[new_key] = (curr_edges_iter->first)->getID();
-                    } 
-                    else 
-                    {
-                        // aha! he is pointing back onto the same guy as someone else.  We have a bubble!
-                        //get the CrisprNode of the first guy
-                        
-                        CrisprNode * first_node = NM_Nodes[bubble_map[new_key]];
+                    // the first guy has greater coverage so detach our current node
+                    (curr_edges_iter->first)->detachNode();
+                    some_detached = true;
 #ifdef DEBUG
-                        logInfo("Bubble found conecting "<<rootNode->getID()<<" : "<<first_node->getID()<<" : "<<(edges_of_curr_edge_iter->first)->getID(), 8);
+                    logInfo("Detaching "<<(curr_edges_iter->first)->getID()<<" as it has lower coverage", 8);
 #endif
-                        //perform a coverage test on the nodes that end up here and kill the one with the least coverage
-                        
-                        // TODO: this is a pretty dumb test, since the coverage between the two nodes could be very similar
-                        // for example one has a coverage of 20 and the other a coverage of 18.  The node with 18 will get
-                        // removed but should it have been?  The way to fix this would be to create some infastructure in
-                        // NodeManager to calculate the average and stdev of the coverage and then remove a node only if
-                        // it is below 1 stdev of the average, else it could be a biological thing that this bubble exists.
-                        
-                        if (first_node->getCoverage() > (curr_edges_iter->first)->getCoverage()) 
-                        {
-                            // the first guy has greater coverage so detach our current node
-                            (curr_edges_iter->first)->detachNode();
-                            some_detached = true;
+                } 
+                else 
+                {
 #ifdef DEBUG
-                            logInfo("Detaching "<<(curr_edges_iter->first)->getID()<<" as it has lower coverage", 8);
+                    //logInfo("Node "<<first_node->getID()<<" has lower discounted coverage ("<<first_node->getDiscountedCoverage()<<") than Node "<<(curr_edges_iter->first)->getID()<<" ("<<(curr_edges_iter->first)->getDiscountedCoverage()<<")", 8);
 #endif
-                        } 
-                        else 
-                        {
-                            // the first guy was lower so kill him
-                            first_node->detachNode();
-                            some_detached = true;
+                    // the first guy was lower so kill him
+                    first_node->detachNode();
+                    some_detached = true;
 #ifdef DEBUG
-                            logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 8);
+                    logInfo("Detaching "<<first_node->getID()<<" as it has lower coverage", 8);
 #endif
-                            // replace the existing key (to check for triple bubbles)
-                            bubble_map[new_key] = (curr_edges_iter->first)->getID();
-                        }
-                    }
+                    // replace the existing key (to check for triple bubbles)
+                    bubble_map[new_key] = (curr_edges_iter->first)->getID();
                 }
-                edges_of_curr_edge_iter++;
             }
         }
-        curr_edges_iter++;
     }
     return some_detached;
 }
@@ -917,17 +972,23 @@ EDGE_TYPE NodeManager::getOppositeEdgeType(EDGE_TYPE currentEdgeType)
     }
 }
 
-int NodeManager::getSpacerCount(bool showDetached)
+int NodeManager::getSpacerCountAndStats(bool showDetached, bool excludeFlankers)
 {
     int number_of_spacers = 0;
-    SpacerListIterator sp_iter = NM_Spacers.begin();
-    while (sp_iter != NM_Spacers.end()) 
+    SpacerListIterator sp_iter; NM_Spacers.begin();
+    for (sp_iter = NM_Spacers.begin(); sp_iter != NM_Spacers.end(); ++sp_iter) 
     {
-        if (showDetached || (sp_iter->second)->isAttached()) 
+        SpacerInstance * current_spacer = sp_iter->second;
+        if (showDetached || current_spacer->isAttached()) 
         {
+            if (excludeFlankers & current_spacer->isFlanker()) {
+                continue;
+            }
+            // add in some stats for the spacers
+            std::string spacer = NM_StringCheck.getString((sp_iter->second)->getID());
+            NM_SpacerLenStat.add(spacer.length());
             number_of_spacers++;
         }
-        ++sp_iter;
     }
     return number_of_spacers;
 }
@@ -1100,7 +1161,8 @@ int NodeManager::cleanSpacerGraph(void)
             {
                 if(sp_iter->second->isFur())
                 {
-                    //std::cout << "a: " << sp_iter->second << std::endl;
+                    //std::cout << "a: " << (sp_iter->second) <<" round: "<<round<< std::endl;
+                    //(sp_iter->second)->printContents();
                     sp_iter->second->detachFromSpacerGraph();
                     cleaned_some = true;
                 }
@@ -1112,11 +1174,14 @@ int NodeManager::cleanSpacerGraph(void)
         sp_iter = NM_Spacers.begin();
         while(sp_iter != NM_Spacers.end())
         {
+            //std::cout<<"Testing Attached: "<<(*sp_iter->second).getID()<<std::endl;
             if((sp_iter->second)->isAttached())
             {
                 if(!sp_iter->second->isViable())
                 {
-                    //std::cout << "b: " << sp_iter->second << std::endl;
+                    //std::cout << "b: " << sp_iter->second <<" round: "<<round<< std::endl;
+                    //(sp_iter->second)->printContents();
+
                     sp_iter->second->detachFromSpacerGraph();
                     cleaned_some = true;
                 }
@@ -1125,7 +1190,9 @@ int NodeManager::cleanSpacerGraph(void)
         }
         
         // remove bubbles
+        //std::cout << "rembubs" << std::endl;
         removeSpacerBubbles();
+        //std::cout << "rembubs-over" << std::endl;
     }
     return 0;
 }
@@ -1136,80 +1203,95 @@ void NodeManager::removeSpacerBubbles(void)
     // remove bubbles from the spacer graph
     //
     std::map<SpacerKey, SpacerInstance *> bubble_map;
+    
     SpacerInstanceVector detach_list;
-    SpacerListIterator sp_iter = NM_Spacers.begin();
-    while(sp_iter != NM_Spacers.end())
+    SpacerListIterator sp_iter;
+    
+    for(sp_iter = NM_Spacers.begin(); sp_iter != NM_Spacers.end(); sp_iter++)
     {
-        if((sp_iter->second)->isAttached())
+        SpacerInstance * current_spacer = (sp_iter->second);
+        if( !current_spacer->isAttached())
         {
-            // we only car about rank 2 or over nodes
-            if(2 <= (sp_iter->second)->getSpacerRank())
+            continue;
+        }
+        // we only car about rank 2 or over nodes
+        if(2 > current_spacer->getSpacerRank())
+        {
+            continue;
+        }
+        // first make a list of the forward and backward spacers
+        SpacerEdgeVector_Iterator edge_iter = current_spacer->begin();
+        SpacerInstanceVector f_spacers, r_spacers;
+        while(edge_iter != current_spacer->end())
+        {
+            if((*edge_iter)->d == REVERSE)
+                r_spacers.push_back((*edge_iter)->edge);
+            else
+                f_spacers.push_back((*edge_iter)->edge);
+            edge_iter++;
+        }
+        
+        // now make a list of spacer keys 
+        SpacerInstanceVector_Iterator r_edge_iter; // = r_spacers.begin();
+        for(r_edge_iter = r_spacers.begin(); r_edge_iter != r_spacers.end(); r_edge_iter++)
+        {
+            SpacerInstance * curent_reverse_spacer = *r_edge_iter;
+            
+            SpacerInstanceVector_Iterator f_edge_iter; //=  f_spacers.begin();
+            for(f_edge_iter =  f_spacers.begin(); f_edge_iter != f_spacers.end(); f_edge_iter++)
             {
-                // first make a list of the forward and backward spacers
-                SpacerEdgeVector_Iterator edge_iter = (sp_iter->second)->begin();
-                SpacerInstanceVector f_spacers, r_spacers;
-                while(edge_iter != (sp_iter->second)->end())
-                {
-                    if((*edge_iter)->d == REVERSE)
-                        r_spacers.push_back((*edge_iter)->edge);
-                    else
-                        f_spacers.push_back((*edge_iter)->edge);
-                    edge_iter++;
-                }
+                SpacerInstance * curent_forward_spacer = *f_edge_iter;
+
+                // make a key
+                SpacerKey tmp_key = makeSpacerKey(curent_reverse_spacer->getID(), curent_forward_spacer->getID());
                 
-                // now make a list of spacer keys 
-                SpacerInstanceVector_Iterator r_edge_iter = r_spacers.begin();
-                while(r_edge_iter != r_spacers.end())
+                // check if we've seen this key before
+                std::map<SpacerKey, SpacerInstance *>::iterator bm_iter = bubble_map.find(tmp_key);
+                if(bm_iter == bubble_map.end())
                 {
-                    SpacerInstanceVector_Iterator f_edge_iter =  f_spacers.begin();
-                    while(f_edge_iter != f_spacers.end())
+                    // first time
+                    bubble_map[tmp_key] = sp_iter->second;
+                }
+                else
+                {
+                    // bubble! -- perhaps, settle down son. We need to R-E-S-P-E-C-T directionality.                    
+                    if (curent_reverse_spacer->find(current_spacer) != curent_reverse_spacer->end()) {
+                        if (curent_reverse_spacer->find(bubble_map[tmp_key]) != curent_reverse_spacer->end()) {
+                            continue;
+                        }
+                    }
+                    
+                    std::cout<<"Coverage test: "<<bubble_map[tmp_key]->getID()<<" : "<<current_spacer->getID()<<std::endl;
+                    // -- check the coverages!
+                    if(bubble_map[tmp_key]->getCount() < current_spacer->getCount())
                     {
-                        // make a key
-                        SpacerKey tmp_key = makeSpacerKey((*r_edge_iter)->getID(), (*f_edge_iter)->getID());
-                        // check if we've seen this key before
-                        std::map<SpacerKey, SpacerInstance *>::iterator bm_iter = bubble_map.find(tmp_key);
-                        if(bm_iter == bubble_map.end())
+                        // stored guy has lower coverage!
+                        detach_list.push_back(bubble_map[tmp_key]);
+                        bubble_map[tmp_key] = sp_iter->second;
+                    }
+                    else if(current_spacer->getCount() < bubble_map[tmp_key]->getCount())
+                    {
+                        // new guy has lower coverage!
+                        detach_list.push_back(sp_iter->second);
+                    }
+                    else
+                    {
+                        // coverages are equal, kill the one with the lower rank
+                        if(bubble_map[tmp_key]->getSpacerRank() < current_spacer->getSpacerRank())
                         {
-                            // first time
+                            // stored guy has lower coverage!
+                            detach_list.push_back(bubble_map[tmp_key]);
                             bubble_map[tmp_key] = sp_iter->second;
                         }
                         else
                         {
-                            // bubble! -- check the coverages!
-                            if(bubble_map[tmp_key]->getCount() < (sp_iter->second)->getCount())
-                            {
-                                // stored guy has lower coverage!
-                                detach_list.push_back(bubble_map[tmp_key]);
-                                bubble_map[tmp_key] = sp_iter->second;
-                            }
-                            else if((sp_iter->second)->getCount() < bubble_map[tmp_key]->getCount())
-                            {
-                                // new guy has lower coverage!
-                                detach_list.push_back(sp_iter->second);
-                            }
-                            else
-                            {
-                                // coverages are equal, kill the one with the lower rank
-                                if(bubble_map[tmp_key]->getSpacerRank() < (sp_iter->second)->getSpacerRank())
-                                {
-                                    // stored guy has lower coverage!
-                                    detach_list.push_back(bubble_map[tmp_key]);
-                                    bubble_map[tmp_key] = sp_iter->second;
-                                }
-                                else
-                                {
-                                    // new guy has lower or equal coverage!
-                                    detach_list.push_back(sp_iter->second);
-                                }
-                            }
+                            // new guy has lower or equal coverage!
+                            detach_list.push_back(sp_iter->second);
                         }
-                        f_edge_iter++;
                     }
-                    r_edge_iter++;
                 }
             }
         }
-        sp_iter++;
     }
             
     // detach all on the detach list!
@@ -1276,6 +1358,7 @@ int NodeManager::splitIntoContigs(void)
         } 
         cap_node_iter++;
     }
+    NM_NextContigID++;
     walkFromCross(&cross_nodes);
 
     delete walk_elem;
@@ -1362,7 +1445,7 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
     //-----
     // dump reads to this file
     //
-    std::map<std::string, int> read_2_contig_map; 
+    std::set<std::string> reads_set; 
     std::ofstream reads_file;
     reads_file.open(readsFileName.c_str());
     if (reads_file.good()) 
@@ -1371,7 +1454,6 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
         while(spacer_iter != NM_Spacers.end())
         {
             SpacerInstance * SI = spacer_iter->second;
-            int CID = SI->getContigID();
             
             // get the crisprnodes for these guys
             CrisprNode * Cleader = SI->getLeader();
@@ -1383,7 +1465,7 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
                 std::vector<std::string>::iterator h_iter = headers.begin();
                 while(h_iter != headers.end())
                 {
-                    read_2_contig_map[*h_iter] = CID;
+                    reads_set.insert(*h_iter);
                     h_iter++;
                 }
                 
@@ -1391,7 +1473,7 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
                 h_iter = headers.begin();
                 while(h_iter != headers.end())
                 {
-                    read_2_contig_map[*h_iter] = CID;
+                    reads_set.insert(*h_iter);
                     h_iter++;
                 }
             }
@@ -1403,50 +1485,9 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
         while (read_iter != NM_ReadList.end()) 
         {
             std::string header = (*read_iter)->getHeader();
-            if(read_2_contig_map.find(header) != read_2_contig_map.end())
+            if(reads_set.find(header) != reads_set.end())
             {
-                if ((*read_iter)->getIsFasta()) 
-                {
-                    reads_file<<">"<<header<<"_C"<<read_2_contig_map[header];
-                    if (((*read_iter)->getComment()).length() > 0) 
-                    {
-                        reads_file<<' '<<(*read_iter)->getComment();
-                    }
-                    reads_file<<std::endl;
-                    if(split)
-                    {
-                        reads_file<<(*read_iter)->splitApart()<<std::endl;
-                    }
-                    else
-                    {
-                        reads_file<<(*read_iter)->getSeq()<<std::endl;
-                    }
-                } 
-                else 
-                {
-                    reads_file<<"@"<<header<<"_C"<<read_2_contig_map[header];
-                    if (((*read_iter)->getComment()).length() > 0) 
-                    {
-                        reads_file<<' '<<(*read_iter)->getComment();
-                    }
-                    reads_file<<std::endl;
-                    if(split)
-                    {
-                        reads_file<<(*read_iter)->splitApart()<<std::endl;
-                    }
-                    else
-                    {
-                        reads_file<<(*read_iter)->getSeq()<<std::endl;
-                    }
-                    reads_file<<'+'<<header<<"_C"<<read_2_contig_map[header];
-                    if (((*read_iter)->getComment()).length() > 0) 
-                    {
-                        reads_file<<' '<<(*read_iter)->getComment();
-                    }
-                    reads_file<<std::endl<<(*read_iter)->getQual()<<std::endl;
-                }
-                
-                
+                reads_file <<*(*read_iter)<<std::endl;
             }
             read_iter++;
         }
@@ -1454,8 +1495,12 @@ void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool s
     }
 }
 
+
 // Spacer dictionaries
-void NodeManager::addSpacersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
+void NodeManager::addSpacersToDOM(crispr::xml::writer * xmlDoc, 
+                                  xercesc::DOMElement * parentNode, 
+                                  bool showDetached, 
+                                  std::set<StringToken>& allSources)
 {
     SpacerListIterator spacer_iter = NM_Spacers.begin();
     while(spacer_iter != NM_Spacers.end())
@@ -1463,30 +1508,51 @@ void NodeManager::addSpacersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * pa
         SpacerInstance * SI = spacer_iter->second;
         if((showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached())) && !(SI->isFlanker()))
         {
+            std::set<StringToken> nr_tokens;
+            getHeadersForSpacers(SI, nr_tokens);
+            
+            // generate the spacer tag
             std::string spacer = NM_StringCheck.getString(SI->getID());
             std::string spid = "SP" + to_string(SI->getID());
             std::string cov = to_string(SI->getCount());
-            xmlDoc->addSpacer(spacer, spid, parentNode, cov);
+            xercesc::DOMElement * spacer_node = xmlDoc->addSpacer(spacer, spid, parentNode, cov);
+            appendSourcesForSpacer(spacer_node, 
+                                   nr_tokens, 
+                                   xmlDoc);
+            allSources.insert(nr_tokens.begin(), nr_tokens.end());
+
         }
         spacer_iter++;
     }
 }
 
-void NodeManager::addFlankersToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
+void NodeManager::addFlankersToDOM(crispr::xml::writer * xmlDoc, 
+                                   xercesc::DOMElement * parentNode, 
+                                   bool showDetached, 
+                                   std::set<StringToken>& allSources)
 {
     SpacerInstanceVector_Iterator iter;
     for (iter = NM_FlankerNodes.begin(); iter != NM_FlankerNodes.end(); iter++) {
         SpacerInstance * SI = *iter;
         if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
         {
+            std::set<StringToken> nr_tokens;
+            getHeadersForSpacers(SI, nr_tokens);
+            
             std::string spacer = NM_StringCheck.getString(SI->getID());
             std::string flid = "FL" + to_string(SI->getID());
-            xmlDoc->addFlanker(spacer, flid, parentNode);
+            xercesc::DOMElement * spacer_node = xmlDoc->addFlanker(spacer, flid, parentNode);
+            // add in all the source tags for this spacer
+            appendSourcesForSpacer(spacer_node, 
+                                   nr_tokens, 
+                                   xmlDoc);
+            allSources.insert(nr_tokens.begin(), nr_tokens.end());
+
         }
     }
 }
 
-void NodeManager::printAssemblyToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
+void NodeManager::printAssemblyToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * parentNode, bool showDetached)
 {
     
     int current_contig_num = 0;
@@ -1635,6 +1701,52 @@ void NodeManager::printAssemblyToDOM(crispr::XML * xmlDoc, xercesc::DOMElement *
 
 }
 
+void NodeManager::getHeadersForSpacers(SpacerInstance * SI, std::set<StringToken>& nrTokens)
+{
+    // go through all the string tokens for both the leader and last nodes
+    // for all the CrisprNodes in the Spacers
+    CrisprNode * first_node = SI->getLeader();
+    CrisprNode * second_node = SI->getLast();
+    std::vector<StringToken>::iterator header_iter;
+    for (header_iter = first_node->beginHeaders(); header_iter != first_node->endHeaders(); header_iter++) {
+        nrTokens.insert(*header_iter);
+    }
+    for (header_iter = second_node->beginHeaders(); header_iter != second_node->endHeaders(); header_iter++) {
+        nrTokens.insert(*header_iter);
+    }
+}
+
+void NodeManager::appendSourcesForSpacer(xercesc::DOMElement * spacerNode, 
+                            std::set<StringToken>& nrTokens,
+                            crispr::xml::writer * xmlDoc)
+{
+    // add in all the source tags for this spacer
+    std::set<StringToken>::iterator nr_iter;
+    for (nr_iter = nrTokens.begin(); nr_iter != nrTokens.end(); nr_iter++) {
+        std::string s = NM_StringCheck.getString(*nr_iter);
+        std::string sid = "SO";
+        sid += to_string(*nr_iter);
+        // add the source to both the current spacer
+        // and to the total sources list
+        //xmlDoc->addSource(s, sid, allSources);
+        xmlDoc->addSpacerSource(sid, spacerNode);
+    }
+}
+
+void NodeManager::generateAllsourceTags(crispr::xml::writer * xmlDoc, 
+                           std::set<StringToken>& allSourcesForNM,
+                           xercesc::DOMElement * parentNode
+                           )
+{
+    // add in all the source tags for this spacer
+    std::set<StringToken>::iterator nr_iter;
+    for (nr_iter = allSourcesForNM.begin(); nr_iter != allSourcesForNM.end(); nr_iter++) {
+        std::string s = NM_StringCheck.getString(*nr_iter);
+        std::string sid = "SO";
+        sid += to_string(*nr_iter);
+        xmlDoc->addSource(s, sid, parentNode);
+    }
+}
 // Making purdy colours
 void NodeManager::setDebugColourLimits(void)
 {
@@ -1903,18 +2015,9 @@ void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, std::strin
 
 void NodeManager::generateFlankers(bool showDetached)
 {
-    // First populate the stats manager with the remaining spacers
-    SpacerListIterator spacer_iter = NM_Spacers.begin();
-    while(spacer_iter != NM_Spacers.end())
-    {
-        SpacerInstance * SI = spacer_iter->second;
-        if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
-        {
-            std::string spacer = NM_StringCheck.getString(SI->getID());
-            NM_SpacerLenStat.add(spacer.length());
-        }
-        spacer_iter++;
-    }
+    // generate statistics about length of spacers
+    getSpacerCountAndStats();
+    
     
     // do some maths
     double stdev = NM_SpacerLenStat.standardDeviation();
@@ -1927,18 +2030,23 @@ void NodeManager::generateFlankers(bool showDetached)
     {
         logInfo("Ave SP Length: "<<mean<<" Deviation: "<<stdev<<" UB: "<<upper_bound<<" LB: "<<lower_bound, 3);
         // call a spacer a 'flanker' if it's length is more than 1 standard deviation from the mean length
-        spacer_iter = NM_Spacers.begin();
+        // and it is a cap node
+
+        SpacerListIterator spacer_iter = NM_Spacers.begin();
+        //spacer_iter = NM_Spacers.begin();
         while(spacer_iter != NM_Spacers.end())
         {
             SpacerInstance * SI = spacer_iter->second;
  
             if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
             {
-                int spacer_length = (int)(NM_StringCheck.getString(SI->getID())).length();
-                if (spacer_length > upper_bound || spacer_length < lower_bound) {
-                    SI->setFlanker(true);
-                    NM_FlankerNodes.push_back(SI);
-                }
+                /*if(SI->isCap()) {*/
+                    int spacer_length = (int)(NM_StringCheck.getString(SI->getID())).length();
+                    if (spacer_length > upper_bound || spacer_length < lower_bound) {
+                        SI->setFlanker(true);
+                        NM_FlankerNodes.push_back(SI);
+                   }
+                /* }*/
             }
             spacer_iter++;
         }
@@ -1947,4 +2055,7 @@ void NodeManager::generateFlankers(bool showDetached)
     {
         logInfo("not enough length variation to detect flankers", 3);
     }
+    
+    // do this here so that any subsuquent calls don't include the flanking sequences
+    clearStats();
 }

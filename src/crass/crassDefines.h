@@ -49,19 +49,25 @@
 // --------------------------------------------------------------------
 #define isNotDecimal(number) (number > 1.0 || number < 0.0)
 // --------------------------------------------------------------------
+ // SEARCH ALGORITHM PARAMETERS
+// --------------------------------------------------------------------
+#define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH         6
+#define CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH         9
+#define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH     8
+#define CRASS_DEF_SCAN_LENGTH                      30
+#define CRASS_DEF_SCAN_CONFIDENCE                  (0.70)
+#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           (0.5)
+// --------------------------------------------------------------------
  // STRING LENGTH / MISMATCH / CLUSTER SIZE PARAMETERS
 // --------------------------------------------------------------------
 #define CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW       30                  // Maximum number of cluster reps we will all vs all sw for
 #define CRASS_DEF_MIN_SW_ALIGNMENT_RATIO        (0.85)              // SW alignments need to be this percentage of the original query to be considered real
 #define CRASS_DEF_SW_SEARCH_EXT                 8
-#define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD     (0.75)
 #define CRASS_DEF_KMER_SIZE                     11					// length of the kmers used when clustering DR groups
 #define CRASS_DEF_K_CLUST_MIN                   6					// number of shared kmers needed to group DR variants together
 #define CRASS_DEF_READ_COUNTER_LOGGER           100000
 #define CRASS_DEF_MAX_READS_FOR_DECISION        1000
-// --------------------------------------------------------------------
-// HARD CODED PARAMS FOR FINDING TRUE DRs
-// --------------------------------------------------------------------
+  // HARD CODED PARAMS FOR FINDING TRUE DRs
 #define CRASS_DEF_MIN_CONS_ARRAY_LEN            1200                // minimum size of the consensus array
 #define CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER      4                   // find the cons array length by multiplying read length by this guy
 #define CRASS_DEF_CONS_ARRAY_START              (0.5)               // how far into the cons array to start placing reads 
@@ -77,18 +83,14 @@
 #define CRASS_DEF_MIN_PARTIAL_LENGTH            (4)                 // The mininum length allowed for a partial direct repeat at the beginning or end of a read 
 #define CRASS_DEF_MAX_SING_PATTERNS				(5000)				// the maximum number of patterns we'll search for in a single hit
 // --------------------------------------------------------------------
-// GENOME ALGORITHM DEFINES
+ // HARD CODED PARAMS FOR DR FILTERING
 // --------------------------------------------------------------------
+#define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD        (0.75)
 #define CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY  (0.82)
 #define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF     12
 #define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF     30
-#define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH         6
-#define CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH         9
-#define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH     8
-#define CRASS_DEF_SCAN_LENGTH                      30
-#define CRASS_DEF_SCAN_CONFIDENCE                  (0.70)
-#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           (0.5)
 #define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          3
+#define CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF	       (0.2)			// DRs should NOT have kmers more abundant than this percentage!
 // --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------
@@ -102,13 +104,15 @@
 // --------------------------------------------------------------------
 #define CRASS_DEF_CRISPR_HEADER                 "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<crass_assem version=\"1.0\">\n"
 #define CRASS_DEF_ROOT_ELEMENT                  "crispr"
-#define CRASS_DEF_XML_VERSION                   "1.0"
+#define CRASS_DEF_XML_VERSION                   "1.1"
 #define CRASS_DEF_CRISPR_FOOTER                 "</crass_assem>\n"
 // --------------------------------------------------------------------
 // GRAPH BUILDING
 // --------------------------------------------------------------------
 #define CRASS_DEF_NODE_KMER_SIZE                7                   // size of the kmer that defines a crispr node
 #define CRASS_DEF_MAX_CLEANING                  2                   // the maximum length that a branch can be before it's cleaned
+#define CRASS_DEF_STDEV_SPACER_LENGTH           6.0                 // the maximum standard deviation allowed in the length of spacers 
+                                                                    // after the true DR is found that is allowable before it is removed
 // --------------------------------------------------------------------
  // USER OPTION STRUCTURE
 // --------------------------------------------------------------------
@@ -133,7 +137,7 @@
 #define CRASS_DEF_NO_SCALLING                   false               // perform scalling by default
 #define CRASS_DEF_HOMOPOLYMER_SCALLING          (0.70)              // the scalling for the spacers and direct repeats when remove homopolymers is set
 #define CRASS_DEF_NUM_OF_BINS                   -1                  // the number of bins to create
-#define CRASS_DEF_GRAPH_COLOUR                  RED_BLUE            // default colour scale for the graphs
+#define CRASS_DEF_GRAPH_COLOUR                  BLUE_RED            // default colour scale for the graphs
 #define CRASS_DEF_SPACER_LONG_DESC              false               // use a long desc of the spacer in the output graph
 #define CRASS_DEF_SPACER_SHOW_SINGLES           false                // do not show singles by default
 
@@ -158,10 +162,13 @@ typedef struct {
     bool                dontPerformScalling;                                // turn all scalling off for the user to define variables
     std::string         layoutAlgorithm;                                    // the graphviz layout algorithm to use 
     bool                longDescription;                                    // print a long description for the final spacer graph
-    bool                 showSingles;                                        // print singletons when making the spacer graph
+    bool                 showSingles;                                       // print singletons when making the spacer graph
     int                 cNodeKmerLength;                                    // length of the kmers making up a crisprnode
 #ifdef DEBUG
     bool                noDebugGraph;                                       // Even if DEBUG preprocessor macro is set do not produce debug graph files
+#endif
+#ifdef SEARCH_SINGLETON
+    std::string         searchChecker;                                     // A file containing headers to reads that need to be tracked through crass
 #endif
 #ifdef RENDERING
     bool                noRendering;                                        // Even if RENDERING preprocessor macro is set do not produce any rendered images

@@ -7,7 +7,7 @@
 // Implementation of WorkHorse functions
 // 
 // --------------------------------------------------------------------
-//  Copyright  2011 Michael Imelfort and Connor Skennerton
+//  Copyright  2011, 2012 Michael Imelfort and Connor Skennerton
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
@@ -56,10 +56,10 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "SmithWaterman.h"
-#include "StlExt.h"
+#include <libcrispr/StlExt.h>
 #include "StringCheck.h"
 #include "config.h"
-#include "Exception.h"
+#include <libcrispr/Exception.h>
 
 bool sortLengthDecending( const std::string& a, const std::string& b)
 {
@@ -178,6 +178,8 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
     // wrapper for the various processes needed to assemble crisprs
     //
     
+
+    
 	logInfo("Parsing reads in " << (seqFiles.size()) << " files", 1);
 	if(parseSeqFiles(seqFiles))
 	{
@@ -185,13 +187,44 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         return 2;
 	}
 	
+
     // build the spacer end graph
     if(buildGraph())
     {
         logError("FATAL ERROR: buildGraph failed");
         return 3;
     }
-
+#ifdef SEARCH_SINGLETON
+    std::ofstream debug_out;
+    std::stringstream debug_out_file_name;
+    debug_out_file_name << "crass.debug."<<mTimeStamp<<".report";
+    debug_out.open((debug_out_file_name.str()).c_str());
+    if(debug_out.good()) {
+        SearchCheckerList::iterator debug_iter;
+        for (debug_iter = debugger->begin(); debug_iter != debugger->end(); debug_iter++) {
+            debug_out<<debug_iter->first<<"\t"<<debug_iter->second.gid()<<"\t"<<debug_iter->second.truedr()<<"\t";
+            std::vector<StringToken>::iterator node_iter = debug_iter->second.begin();
+            if(node_iter != debug_iter->second.end()) {
+                debug_out <<*node_iter;
+                for ( ; node_iter != debug_iter->second.end(); node_iter++) {
+                    debug_out<<":"<<*node_iter;
+                }
+            }
+            debug_out<<"\t";
+            std::vector<std::string>::iterator sp_iter = debug_iter->second.beginSp();
+            if(sp_iter != debug_iter->second.endSp()) {
+                debug_out<<*sp_iter;
+                for ( ; sp_iter != debug_iter->second.endSp(); sp_iter++) {
+                    debug_out<<":"<<*sp_iter;
+                }
+            }
+            debug_out<<std::endl;
+        }
+    } else {
+        std::cerr<<"error printing debugging report"<<std::endl;
+        return 200;
+    }
+#endif
 	
 #if DEBUG
 	if (!mOpts->noDebugGraph) // this option will only exist if DEBUG is set anyway
@@ -233,33 +266,27 @@ int WorkHorse::doWork(std::vector<std::string> seqFiles)
         logError("FATAL ERROR: splitIntoContigs failed");
         return 6;
 	}
-    
-    //remove NodeManagers with low numbers of spacers
-    if (removeLowSpacerNodeManagers())
-    {
-        logError("FATAL ERROR: removeLowSpacerNodeManagers failed");
-        return 7;
-    }
-	
+    // call flanking regions
     if (generateFlankers()) {
         logError("FATAL ERROR: generateFlankers failed");
         return 70;
     }
     
-    // dump the spacers to file
-    // Not needed any more since we have the crispr file
-//	if(dumpSpacers())
-//	{
-//        logError("FATAL ERROR: dumpSpacers failed");
-//        return 8;
-//	}
-    
+    //remove NodeManagers with low numbers of spacers
+    // and where the standard deviation of the spacer length 
+    // is too high
+    if (removeLowConfidenceNodeManagers())
+    {
+        logError("FATAL ERROR: removeLowSpacerNodeManagers failed");
+        return 7;
+    }
+	
     // print the reads to a file if requested
-	if(dumpReads(&mDR2GIDMap, false))
-	{
-        logError("FATAL ERROR: dumpReads failed");
-        return 9;
-	}
+//	if(dumpReads(false))
+//	{
+//        logError("FATAL ERROR: dumpReads failed");
+//        return 9;
+//	}
 	
 #if DEBUG
 	if (!mOpts->noDebugGraph) 
@@ -349,8 +376,17 @@ int WorkHorse::parseSeqFiles(std::vector<std::string> seqFiles)
     std::cout<<numOfReads()<<std::endl;
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
-    
-    // trim and concatenate the direct repeats
+
+    if(mOpts->removeHomopolymers) {
+        // change back the sizes of the direct repeats to 
+        // counter the changes made by mOpts.removeHomopolymers
+        // this way the final DRs and spacer should fall 
+        // inside the correct lengths
+        mOpts->lowDRsize /= mOpts->averageDrScalling;
+        mOpts->highDRsize /= mOpts->averageDrScalling;
+        mOpts->lowSpacerSize /= mOpts->averageSpacerScalling;
+        mOpts->highSpacerSize /= mOpts->averageSpacerScalling;
+    }
     try {
         if (findConsensusDRs(group_kmer_counts_map, next_free_GID))
         {
@@ -394,6 +430,15 @@ int WorkHorse::buildGraph(void)
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
                 	//MI std::cout<<'.'<<std::flush;
+#ifdef SEARCH_SINGLETON
+                    SearchCheckerList::iterator debug_iter = debugger->find((*read_iter)->getHeader());
+                    if (debug_iter != debugger->end()) {
+                        //found one of our interesting reads
+                        // add in the true DR
+                        debug_iter->second.truedr(mTrueDRs[drg_iter->first]);
+                        debug_iter->second.gid(drg_iter->first);
+                    }
+#endif
                     mDRs[mTrueDRs[drg_iter->first]]->addReadHolder(*read_iter);
                     read_iter++;
                 }
@@ -443,7 +488,7 @@ int WorkHorse::cleanGraph(void)
 	return 0;
 }
 
-int WorkHorse::removeLowSpacerNodeManagers(void)
+int WorkHorse::removeLowConfidenceNodeManagers(void)
 {
     logInfo("Removing CRISPRs with low numbers of spacers", 1);
 	int counter = 0;
@@ -454,14 +499,18 @@ int WorkHorse::removeLowSpacerNodeManagers(void)
 		{            
             if (NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
-                if((mDRs[mTrueDRs[drg_iter->first]])->getSpacerCount(false) < mOpts->covCutoff) 
+                NodeManager * current_manager = mDRs[mTrueDRs[drg_iter->first]];
+                if( current_manager->getSpacerCountAndStats(false) < mOpts->covCutoff) 
                 {
                     logInfo("Deleting NodeManager "<<drg_iter->first<<" as it contained less than "<<mOpts->covCutoff<<" attached spacers",5);
                     delete mDRs[mTrueDRs[drg_iter->first]];
-                    mDRs[mTrueDRs[drg_iter->first]] = NULL;
-                } else {
-                    counter++;
+                     mDRs[mTrueDRs[drg_iter->first]] = NULL;
+                } else if (current_manager->stdevSpacerLength() > CRASS_DEF_STDEV_SPACER_LENGTH) {
+                    logInfo("Deleting NodeManager "<<drg_iter->first<<" as the stdev ("<<current_manager->stdevSpacerLength()<<") of the spacer lengths was greater than "<<CRASS_DEF_STDEV_SPACER_LENGTH, 4);
+                    delete mDRs[mTrueDRs[drg_iter->first]];
+                     mDRs[mTrueDRs[drg_iter->first]] = NULL;
                 }
+                counter++;
             }
 		}
 		drg_iter++;
@@ -479,6 +528,7 @@ int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& gr
     // Cluster potential DRs and work out their true sequences
     // make the node managers while we're at it!
     //
+
     logInfo("Reducing list of potential DRs (2): Cluster refinement and true DR finding", 1);
     
     // go through all the counts for each group
@@ -491,7 +541,10 @@ int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& gr
             // it's real, so parse this group
             // get the N top kmers
             std::vector<std::string> n_top_kmers;
-            int num_mers_found = getNMostAbundantKmers((int)(mDR2GIDMap[group_count_iter->first])->size(), n_top_kmers, CRASS_DEF_NUM_KMERS_4_MODE, group_count_iter->second);
+            int num_mers_found = getNMostAbundantKmers((int)(mDR2GIDMap[group_count_iter->first])->size(), 
+                                                       n_top_kmers, 
+                                                       CRASS_DEF_NUM_KMERS_4_MODE, 
+                                                       group_count_iter->second);
             if (0 != num_mers_found) 
             {
                 // a return value of false indicates that this function has deleted clustered_DRs
@@ -508,8 +561,9 @@ int WorkHorse::findConsensusDRs(std::map<int, std::map<std::string, int> * >& gr
                 }
                 if(NULL != mDR2GIDMap[group_count_iter->first])
                 {
-                	delete mDR2GIDMap[group_count_iter->first];
-                	mDR2GIDMap[group_count_iter->first] = NULL;
+                	cleanGroup(group_count_iter->first);
+//                    delete mDR2GIDMap[group_count_iter->first];
+//                	mDR2GIDMap[group_count_iter->first] = NULL;
                 }
             }
         }
@@ -678,8 +732,7 @@ bool WorkHorse::findMasterDR(int GID, std::vector<std::string> * nTopKmers, Stri
         logInfo("Could not identify a master DR", 4);
         if(NULL != mDR2GIDMap[GID])
         {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
+            cleanGroup(GID);
             mDR2GIDMap.erase(GID);
         }
     }
@@ -823,13 +876,20 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
                     if(num_agree < num_disagree)
                     {
                         // we need to reverse all the reads and the DR for these reads
+						try {
                         ReadListIterator read_iter = mReads[*dr_iter]->begin();
                         while (read_iter != mReads[*dr_iter]->end()) 
                         {
                             (*read_iter)->reverseComplementSeq();
                             read_iter++;
                         }
-                        
+						} catch(crispr::exception& e) {
+							std::cerr<<e.what()<<std::endl;
+							throw crispr::exception(__FILE__,
+							                        __LINE__,
+							                        __PRETTY_FUNCTION__,
+							                        "cannot reverse complement sequence");
+						}
                         // fix the places where the DR is stored
                         tmp_DR = reverseComplement(tmp_DR);
                         StringToken st = mStringCheck.addString(tmp_DR);
@@ -1249,6 +1309,7 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
     std::string master_DR_sequence = "**unset**";
     if(!findMasterDR(GID, nTopKmers, &master_DR_token, &master_DR_sequence)) { return false; }
     
+    
     // now we have the n most abundant kmers and one DR which contains them all
     // time to rock and rrrroll!
 
@@ -1355,106 +1416,39 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
     // check to make sure that the DR is not just some random long RE
     if((unsigned int)(true_DR.length()) > mOpts->highDRsize)
     {
-        // probably a dud. throw it out
-        // free the memory and clean up
-        if(NULL != mDR2GIDMap[GID])
-        {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
-        }
-
+        removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
         logInfo("Killed: {" << true_DR << "} cause' it was too long", 1);
-
-        //++++++++++++++++++++++++++++++++++++++++++++++++
-        // clean up the mess we made
-        
-        if(NULL != consensus_array)
-        	delete[] consensus_array;
-        if(NULL != conservation_array)
-        	delete[] conservation_array;
-        if(coverage_array != NULL)
-        {
-    		for(int i = 0; i < 4; i++)
-    		{
-    			if(NULL != coverage_array[i])
-    				delete[] coverage_array[i];
-    		}
-    		delete[] coverage_array;
-    		coverage_array = NULL;
-        }
         return false;
     }
     
-    if(((unsigned int)(true_DR.length()) < mOpts->lowDRsize) && (collapsed_options.size() == 0))
-    {
-        // probably a dud. throw it out
-        // free the memory and clean up
-        if(NULL != mDR2GIDMap[GID])
+    if (collapsed_options.size() == 0) {
+        if((unsigned int)(true_DR.length()) < mOpts->lowDRsize)
         {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
+            removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+            logInfo("Killed: {" << true_DR << "} cause' the consensus was too short... (" << true_DR.length() << " ," << collapsed_options.size() << ")", 1);
+            return false;
         }
-        
-        logInfo("Killed: {" << true_DR << "} cause' the consensus was too short... (" << true_DR.length() << " ," << collapsed_options.size() << ")", 1);
+        // QC the DR again for low complexity
+        if (isRepeatLowComplexity(true_DR)) 
+        {
+            removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+            logInfo("Killed: {" << true_DR << "} cause' the consensus was low complexity...", 1);
+            return false;
+        }
+        try {
+            if (drHasHighlyAbundantKmers(true_DR) ) {
+                removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+                logInfo("Killed: {" << true_DR << "} cause' the consensus contained highly abundant kmers...", 1);
+                return false;
+            }
+        } catch (crispr::exception& e) {
+            cleanArrays(coverage_array, consensus_array, conservation_array);
+            std::cerr<<e.what()<<std::endl;
+            throw crispr::runtime_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, true_DR.c_str());
+        }
+        // test our true DR for highly abundant kmers
 
-        //++++++++++++++++++++++++++++++++++++++++++++++++
-        // clean up the mess we made
         
-        if(NULL != consensus_array)
-        	delete[] consensus_array;
-        if(NULL != conservation_array)
-        	delete[] conservation_array;
-        if(coverage_array != NULL)
-        {
-    		for(int i = 0; i < 4; i++)
-    		{
-    			if(NULL != coverage_array[i])
-    				delete[] coverage_array[i];
-    		}
-    		delete[] coverage_array;
-    		coverage_array = NULL;
-        }
-        return false;
-    }
-    
-    
-    // QC the DR again for low complexity
-    if (isRepeatLowComplexity(true_DR) && collapsed_options.size() == 0) 
-    {
-        // probably a dud. throw it out
-        // free the memory and clean up
-        if(NULL != mDR2GIDMap[GID])
-        {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
-        }
-        
-        logInfo("Killed: {" << true_DR << "} cause' the consensus was low complexity...", 1);
-        
-        //++++++++++++++++++++++++++++++++++++++++++++++++
-        // clean up the mess we made
-        
-        if(NULL != consensus_array)
-        	delete[] consensus_array;
-        if(NULL != conservation_array)
-        	delete[] conservation_array;
-        if(coverage_array != NULL)
-        {
-    		for(int i = 0; i < 4; i++)
-    		{
-    			if(NULL != coverage_array[i])
-    				delete[] coverage_array[i];
-    		}
-    		delete[] coverage_array;
-    		coverage_array = NULL;
-        }
-        return false;
-    }
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++
-    // Update the refined starts and ends of the DR 
-    if(0 == collapsed_options.size())
-    {
         // update the DR start and ends
         int diffs = dr_zone_end - dr_zone_start + 1 - (int)true_DR.length();
         while(0 < diffs)
@@ -1516,31 +1510,12 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
             }
             logInfo(ss.str(), 3);
         }
-    }
-    
+    } 
+
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // clean up the mess we made
-    
-    if(NULL != consensus_array)
-    {
-        delete[] consensus_array;
-    }
-    if(NULL != conservation_array)
-    {
-        delete[] conservation_array;
-    }
-    if(coverage_array != NULL)
-    {
-		for(int i = 0; i < 4; i++)
-		{
-			if(NULL != coverage_array[i])
-            {
-                delete[] coverage_array[i];
-            }
-		}
-		delete[] coverage_array;
-		coverage_array = NULL;
-    }
+    cleanArrays(coverage_array, consensus_array, conservation_array);
+
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // possibly split the DR group
@@ -1724,11 +1699,7 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
         }
         
         // time to delete the old clustered DRs and the group from the DR2GID_map
-        if(NULL != mDR2GIDMap[GID])
-        {
-        	delete mDR2GIDMap[GID];
-        	mDR2GIDMap[GID] = NULL;
-        }
+        cleanGroup(GID);
         
         logInfo("Calling the parser recursively", 4);
         
@@ -1779,7 +1750,15 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
 						// reverse complement sequence if the true DR is not in its laurenized form
 						if (rev_comp) 
 						{
-							(*read_iter)->reverseComplementSeq();
+							try {
+								(*read_iter)->reverseComplementSeq();
+							} catch (crispr::exception& e) {
+								std::cerr<<e.what()<<std::endl;
+								throw crispr::exception(__FILE__,
+								                        __LINE__,
+								                        __PRETTY_FUNCTION__,
+								                        "Failed to reverse complement sequence");
+							}
 						}
 						read_iter++;
 					}
@@ -1789,6 +1768,44 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
         }
     }
     return true;
+}
+
+void WorkHorse::removeDRAndCleanMemory(int ** coverageArray, char * consensusArray, float * conservationArray, int GID)
+{
+    cleanGroup(GID);
+    cleanArrays(coverageArray, consensusArray, conservationArray);
+    
+}
+void WorkHorse::cleanGroup(int GID)
+{
+    if(NULL != mDR2GIDMap[GID])
+    {
+        delete mDR2GIDMap[GID];
+        mDR2GIDMap[GID] = NULL;
+    }
+}
+void WorkHorse::cleanArrays(int ** coverageArray, char * consensusArray, float * conservationArray)
+{
+    if(NULL != consensusArray)
+    {
+        delete[] consensusArray;
+    }
+    if(NULL != conservationArray)
+    {
+        delete[] conservationArray;
+    }
+    if(coverageArray != NULL)
+    {
+		for(int i = 0; i < 4; i++)
+		{
+			if(NULL != coverageArray[i])
+            {
+                delete[] coverageArray[i];
+            }
+		}
+		delete[] coverageArray;
+		coverageArray = NULL;
+    }
 }
 
 int WorkHorse::numberOfReadsInGroup(DR_Cluster * currentGroup)
@@ -1917,7 +1934,10 @@ int WorkHorse::getNMostAbundantKmers(int maxAmount, std::vector<std::string>& mo
     }
 }
 
-bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<std::string, int> * k2GIDMap, std::map<int, std::map<std::string, int> * > * groupKmerCountsMap)
+bool WorkHorse::clusterDRReads(StringToken DRToken, 
+                               int * nextFreeGID, 
+                               std::map<std::string, int> * k2GIDMap, 
+                               std::map<int, std::map<std::string, int> * > * groupKmerCountsMap)
 {
     //-----
     // hash a DR!
@@ -1972,18 +1992,35 @@ bool WorkHorse::clusterDRReads(StringToken DRToken, int * nextFreeGID, std::map<
     //
     
     // make a 2d array for the kmers!
-    char ** kmers = new char*[num_mers];
-    for(int i = 0; i < num_mers; i++)
-    {
-        kmers[i] = new char [CRASS_DEF_KMER_SIZE+1];
-    }
-    
-    int * kmer_offsets = new int[num_mers];              // use these offsets when we cut kmers, they are a component of the algorithm
-    for(int i = 0; i < num_mers; i++)
-    {
-        kmer_offsets[i] = i * -1; // Starts at [0, -1, -2, -3, -4, ...]
-    }
-    
+	char ** kmers = NULL;
+	int * kmer_offsets = NULL;
+	try {
+		kmers = new char*[num_mers];
+	} catch(std::exception& e) {
+		std::cerr<<"Attempting to alloc "<<num_mers<<std::endl;
+		throw crispr::exception(__FILE__, 
+		                        __LINE__, 
+		                        __PRETTY_FUNCTION__, 
+		                        e.what());
+	}
+	try {
+		for(int i = 0; i < num_mers; i++)
+		{
+			kmers[i] = new char [CRASS_DEF_KMER_SIZE+1];
+		}
+// use these offsets when we cut kmers, they are a component of the algorithm
+		kmer_offsets = new int[num_mers];              
+		for(int i = 0; i < num_mers; i++)
+		{
+			kmer_offsets[i] = i * -1; // Starts at [0, -1, -2, -3, -4, ...]
+		}
+	} catch(std::exception& e) {
+		std::cerr<<"Attempting to alloc "<<CRASS_DEF_KMER_SIZE+1<<std::endl;
+		throw crispr::exception(__FILE__, 
+		                        __LINE__, 
+		                        __PRETTY_FUNCTION__, 
+		                        e.what());
+	}
     int pos_counter = 0;
     
     // a slow-ish first part
@@ -2162,6 +2199,9 @@ int WorkHorse::cleanSpacerGraphs(void)
 	// clean the spacer graphs
 	//
     // go through the DR2GID_map and make all reads in each group into nodes
+#ifdef DEBUG
+    renderSpacerGraphs("Spacer_Preclean_");
+#endif
     DR_ListIterator dr_iter = mDRs.begin();
     while(dr_iter != mDRs.end())
     {
@@ -2227,63 +2267,26 @@ int WorkHorse::splitIntoContigs(void)
 //**************************************
 
 
-int WorkHorse::dumpReads(DR_Cluster_Map * DR2GID_map, bool split)
-{
-    //-----
-    // Print the reads from one cluster to a file...
-    //
-	logInfo("Dumping reads", 1);
-    DR_Cluster_MapIterator drg_iter = DR2GID_map->begin();
-    while (drg_iter != DR2GID_map->end()) 
-    {
-        // make sure that our cluster is real
-        if (drg_iter->second != NULL) 
-        {
-            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
-            {
-                (mDRs[mTrueDRs[drg_iter->first]])->dumpReads((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str(), false, split);
-            }
-        }
-        drg_iter++;
-    }
-	return 0;
-}
-
-//int WorkHorse::dumpSpacers(void)
+//int WorkHorse::dumpReads( bool split)
 //{
-//	//-----
-//	// Wrapper for graph cleaning
-//	//
-//	// create a spacer dictionary
-//	logInfo("Dumping spacers", 1);
-//	DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
-//	while(drg_iter != mDR2GIDMap.end())
-//	{
-//		if(NULL != drg_iter->second)
-//		{            
-//			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
-//            {
-//                (mDRs[mTrueDRs[drg_iter->first]])->dumpSpacerDict(mOpts->output_fastq + "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".spacers", false);
-//		    }
-//        }
-//		drg_iter++;
-//	}
-//	return 0;
-//}
-
-//void WorkHorse::writeLookupToFile(string &outFileName, lookupTable &outLookup)
-//{
-//    std::ofstream outLookupFile;
-//    outLookupFile.open(outFileName.c_str());
-//    
-//    lookupTable::iterator ter = outLookup.begin();
-//    while (ter != outLookup.end()) 
+//    //-----
+//    // Print the reads from one cluster to a file...
+//    //
+//	logInfo("Dumping reads", 1);
+//    DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
+//    while (drg_iter != mDR2GIDMap.end()) 
 //    {
-//        outLookupFile<<ter->first<<"\t"<<ter->second<<endl;
-//        
-//        ter++;
+//        // make sure that our cluster is real
+//        if (drg_iter->second != NULL) 
+//        {
+//            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
+//            {
+//                (mDRs[mTrueDRs[drg_iter->first]])->dumpReads((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str(), false, split);
+//            }
+//        }
+//        drg_iter++;
 //    }
-//    outLookupFile.close();
+//	return 0;
 //}
 
 int WorkHorse::renderDebugGraphs(void)
@@ -2301,7 +2304,10 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
 	// Print the debug graph
 	//
 	// go through the DR2GID_map and make all reads in each group into nodes
+#ifdef RENDERING
+    std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering Debugging graphs using Graphviz"<<std::endl;
     logInfo("Rendering debug graphs" , 1);
+#endif
     
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
     while(drg_iter != mDR2GIDMap.end())
@@ -2321,6 +2327,7 @@ int WorkHorse::renderDebugGraphs(std::string namePrefix)
                     if (!mOpts->noRendering) 
                     {
                         // create a command string and call neato to make the image file
+                        std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering group "<<drg_iter->first<<std::endl;
                         std::string cmd = "neato -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
                         if (system(cmd.c_str()))
                         {
@@ -2356,8 +2363,10 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
 	// Print the cleaned? spacer graph
 	//
 	// go through the DR2GID_map and make all reads in each group into nodes
+#ifdef RENDERING
+    std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering final spacer graphs using Graphviz"<<std::endl;
     logInfo("Rendering spacer graphs" , 1);
-    
+#endif
     // make a single file with all of the keys for the groups
     std::ofstream key_file;
     
@@ -2379,16 +2388,28 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
         {            
             if(NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
+                NodeManager * current_manager = mDRs[mTrueDRs[drg_iter->first]];
+                
                 std::ofstream graph_file;
 
                 
                 std::string graph_file_prefix = mOpts->output_fastq + namePrefix + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
                 std::string graph_file_name = graph_file_prefix + "_spacers.gv";
                 
-                // check to see if there is anything to print - if so then make the key
-                if ( mDRs[mTrueDRs[drg_iter->first]]->printSpacerGraph(graph_file_name, mTrueDRs[drg_iter->first], mOpts->longDescription, mOpts->showSingles))
+                // check to see if there is anything to print
+                if ( current_manager->printSpacerGraph(graph_file_name, 
+                                                       mTrueDRs[drg_iter->first], 
+                                                       mOpts->longDescription, 
+                                                       mOpts->showSingles))
                 {
-                    mDRs[mTrueDRs[drg_iter->first]]->printSpacerKey(key_file, 10, namePrefix + to_string(drg_iter->first));
+                    // add our group to the key
+                    current_manager->printSpacerKey(key_file, 
+                                                    10, 
+                                                    namePrefix + to_string(drg_iter->first));
+                    
+                    // output the reads
+                    std::string read_file_name = mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa";
+                    current_manager->dumpReads(read_file_name, false, false);
                 }
                 else 
                 {
@@ -2401,6 +2422,7 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
                 if (!mOpts->noRendering) 
                 {
                     // create a command string and call graphviz to make the image file
+                    std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering group "<<drg_iter->first<<std::endl;
                     std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
                     if(system(cmd.c_str()))
                     {
@@ -2473,24 +2495,39 @@ bool WorkHorse::printXML(std::string namePrefix)
 	namePrefix += CRASS_DEF_CRISPR_EXT;
 	logInfo("Writing XML output to \"" << namePrefix << "\"", 1);
 	
-    crispr::XML * xml_doc = new crispr::XML();
+
+    crispr::xml::writer * xml_doc = new crispr::xml::writer();
     int error_num;
-    xercesc::DOMElement * root_element = xml_doc->createDOMDocument(CRASS_DEF_ROOT_ELEMENT, CRASS_DEF_XML_VERSION, error_num);
+    xercesc::DOMElement * root_element = xml_doc->createDOMDocument(CRASS_DEF_ROOT_ELEMENT, 
+                                                                    CRASS_DEF_XML_VERSION, 
+                                                                    error_num);
     
-    if (root_element && !error_num) 
+    if (!root_element && error_num) 
     {
-        // go through the node managers and print the group info 
-        // print all the inside information
-        DR_Cluster_MapIterator drg_iter =  mDR2GIDMap.begin();
-        while (drg_iter != mDR2GIDMap.end()) 
+        delete xml_doc;
+        throw crispr::xml_exception(__FILE__,
+                                    __LINE__,
+                                    __PRETTY_FUNCTION__,
+                                    "Unable to create xml document");
+    }
+    // go through the node managers and print the group info 
+    // print all the inside information
+    int final_out_number = 0;
+    DR_Cluster_MapIterator drg_iter =  mDR2GIDMap.begin();
+    while (drg_iter != mDR2GIDMap.end()) 
+    {
+        // make sure that our cluster is real
+        if (drg_iter->second != NULL) 
         {
-            // make sure that our cluster is real
-            if (drg_iter->second != NULL) 
+            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
                 if(NULL != mDRs[mTrueDRs[drg_iter->first]])
                 {
                     std::string gid_as_string = "G" + to_string(drg_iter->first);
-                    xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, mTrueDRs[drg_iter->first], root_element);
+                    final_out_number++;
+                    xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, 
+                                                                         mTrueDRs[drg_iter->first], 
+                                                                         root_element);
                     
                     
                     /*
@@ -2511,19 +2548,17 @@ bool WorkHorse::printXML(std::string namePrefix)
                     
                 }
             }
-            drg_iter++;
         }
-        xml_doc->printDOMToFile(namePrefix);
-    } 
-    else
-    {
-        return 1;
+        drg_iter++;
     }
+    std::cout<<"["<<PACKAGE_NAME<<"_graphBuilder]: "<<final_out_number<<" CRISPRs found!"<<std::endl;
+    xml_doc->printDOMToFile(namePrefix);
+
     delete xml_doc;
 	return 0;
 }
 
-bool WorkHorse::addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
+bool WorkHorse::addDataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
 {
     try 
     {
@@ -2532,30 +2567,35 @@ bool WorkHorse::addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupEl
             xmlDoc->createFlankers(data_elem);
         }
         
+        xercesc::DOMElement * sources_tag = data_elem->getFirstElementChild();
+        std::set<StringToken> all_sources;
+        
         for (xercesc::DOMElement * currentElement = data_elem->getFirstElementChild(); currentElement != NULL; currentElement = currentElement->getNextElementSibling()) 
         {
-            if( xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->getDrs()))
+            if( xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->tag_Drs()))
             {
                 // TODO: current implementation in Crass only supports a single DR for a group
                 // in the future this will change, but for now ok to keep as a constant
                 std::string drid = "DR1";
                 xmlDoc->addDirectRepeat(drid, mTrueDRs[groupNumber], currentElement);
             }
-            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->getSpacers()))
+            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->tag_Spacers()))
             {
                 // print out all the spacers for this group
-                (mDRs[mTrueDRs[groupNumber]])->addSpacersToDOM(xmlDoc, currentElement, false);
+                (mDRs[mTrueDRs[groupNumber]])->addSpacersToDOM(xmlDoc, currentElement, false, all_sources);
                 
             }
-            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->getFlankers()))
+            else if (xercesc::XMLString::equals(currentElement->getTagName(), xmlDoc->tag_Flankers()))
             {
                 // should only get in here if there are flankers for the group
 
                 // print out all the flankers for this group
-                (mDRs[mTrueDRs[groupNumber]])->addFlankersToDOM(xmlDoc, currentElement, false);
+                (mDRs[mTrueDRs[groupNumber]])->addFlankersToDOM(xmlDoc, currentElement, false, all_sources);
 
             }
         }
+        (mDRs[mTrueDRs[groupNumber]])->generateAllsourceTags(xmlDoc, all_sources, sources_tag);
+        
     }
     catch( xercesc::XMLException& e )
     {
@@ -2568,20 +2608,25 @@ bool WorkHorse::addDataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupEl
     return 0;
 }
 
-bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
+bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
 {
     try{
         
         std::stringstream notes;
-        notes << PACKAGE_NAME <<" ("<<PACKAGE_VERSION<<") run on "<<mTimeStamp<<" with command: ";
-        notes <<mCommandLine;
-        xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(notes.str(), groupElement);
+        notes << "Run on "<< mTimeStamp;
+        xercesc::DOMElement * metadata_elem = xmlDoc->addMetaData(groupElement);
+        xercesc::DOMElement * prog_elem = xmlDoc->addProgram(metadata_elem);
+        xmlDoc->addProgName(PACKAGE_NAME, prog_elem);
+        xmlDoc->addProgVersion(PACKAGE_VERSION, prog_elem);
+        xmlDoc->addProgCommand(mCommandLine, prog_elem);
+        xmlDoc->addNotesToMetadata(notes.str(), metadata_elem);
         
         std::string file_name;
-        char * buf = NULL;
-        std::string absolute_dir = getcwd(buf, 4096);
+        char buf[4096];
+        if(getcwd(buf, 4096) == NULL)
+        	logError("Something went wrong getting the the CWD");
+        std::string absolute_dir = buf;
         absolute_dir += "/";
-        delete buf;
         // add in files if they exist
         if (!mOpts->logToScreen) 
         {
@@ -2593,7 +2638,10 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
             }
             else
             {
-                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,(absolute_dir + file_name).c_str());
+                throw crispr::no_file_exception(__FILE__, 
+                                                __LINE__, 
+                                                __PRETTY_FUNCTION__,
+                                                (absolute_dir + file_name).c_str());
             }
         }
         
@@ -2610,7 +2658,10 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
             } 
             else 
             {
-                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, (absolute_dir + file_name + file_sufix).c_str() );
+                throw crispr::no_file_exception(__FILE__, 
+                                                __LINE__, 
+                                                __PRETTY_FUNCTION__, 
+                                                (absolute_dir + file_name + file_sufix).c_str() );
             }
             
             // and now for the cleaned .gv
@@ -2621,7 +2672,10 @@ bool WorkHorse::addMetadataToDOM(crispr::XML * xmlDoc, xercesc::DOMElement * gro
             } 
             else 
             {
-                throw crispr::no_file_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, (absolute_dir + file_name + file_sufix).c_str() );                
+                throw crispr::no_file_exception(__FILE__, 
+                                                __LINE__, 
+                                                __PRETTY_FUNCTION__, 
+                                                (absolute_dir + file_name + file_sufix).c_str() );                
             }
         }
 
