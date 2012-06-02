@@ -2630,8 +2630,12 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         
         std::string file_name;
         char buf[4096];
-        if(getcwd(buf, 4096) == NULL)
-        	logError("Something went wrong getting the the CWD");
+        if(getcwd(buf, 4096) == NULL) {
+        	crispr::exception(__FILE__,
+                              __LINE__,
+                              __PRETTY_FUNCTION__,
+                              "Something went wrong getting the the CWD");
+        }
         std::string absolute_dir = buf;
         absolute_dir += "/";
         // add in files if they exist
@@ -2653,7 +2657,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         }
         
         
-    #ifdef DEBUG
+#ifdef DEBUG
         // check for debuging .gv files
         if (!mOpts->noDebugGraph) 
         {
@@ -2687,11 +2691,11 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         }
 
         
-    #endif // DEBUG
+#endif // DEBUG
         
-    #ifdef RENDERING
+#ifdef RENDERING
         // check for image files
-    #ifdef DEBUG
+#ifdef DEBUG
         if (!mOpts->noDebugGraph) 
         {
             file_name = mOpts->output_fastq + "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
@@ -2716,7 +2720,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
             }
         }
 
-    #endif // DEBUG
+#endif // DEBUG
         if (!mOpts->noRendering) 
         {
             file_name = mOpts->output_fastq + "Spacers_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
@@ -2731,7 +2735,23 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         } 
 
 
-    #endif // RENDERING
+#endif // RENDERING
+        
+        // add in the final Spacer graph
+        file_name = mOpts->output_fastq + "Spacers_"; 
+        std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_spacers.gv";
+        if (checkFileOrError((file_name + file_sufix).c_str())) 
+        {
+            xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
+        } 
+        else 
+        {
+            throw crispr::no_file_exception(__FILE__, 
+                                            __LINE__, 
+                                            __PRETTY_FUNCTION__, 
+                                            (absolute_dir + file_name + file_sufix).c_str() );
+        }
+
         
         // check the sequence file
         file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".fa";
