@@ -104,7 +104,7 @@ class CrisprNode
         inline bool isForward(void) { return mIsForward; }
         inline void setForward(bool forward) { mIsForward = forward; }
         inline int getCoverage() {return mCoverage;}
-        int getDiscountedCoverage(void);
+        void getDiscountedCoverage(void);
         inline void addReadHeader(StringToken readHeader) { mReadHeaders.push_back(readHeader); }
         inline void addReadHolder(ReadHolder * RH) { mReadHolders.push_back(RH); }
         inline std::vector<StringToken> * getReadHeaders(void) { return &mReadHeaders; }
