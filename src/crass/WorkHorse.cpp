@@ -1004,7 +1004,17 @@ int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveD
     return a_start_align;
 }
 
-std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> * DR_offset_map, int * collapsed_pos, std::map<char, int> * collapsed_options, std::map<int, bool> * refined_DR_ends, int * dr_zone_start, int * dr_zone_end, int ** coverage_array, char * consensus_array, float * conservation_array, int * nextFreeGID)
+std::string WorkHorse::calculateDRConsensus(int GID, 
+                                            std::map<StringToken, int> * DR_offset_map, 
+                                            int * collapsed_pos, 
+                                            std::map<char, int> * collapsed_options, 
+                                            std::map<int, bool> * refined_DR_ends, 
+                                            int * dr_zone_start, 
+                                            int * dr_zone_end, 
+                                            int ** coverage_array, 
+                                            char * consensus_array, 
+                                            float * conservation_array, 
+                                            int * nextFreeGID)
 {
 	//-----
 	// calculate the consensus sequence in the consensus array and the  
@@ -1053,15 +1063,16 @@ std::string WorkHorse::calculateDRConsensus(int GID, std::map<StringToken, int> 
 			conservation_array[j] = 0;
 		}
 	}
-    
-    // check to see that this DR is supported by a bare minimum of reads
-    if(num_GT_zero < CRASS_DEF_MIN_READ_DEPTH)
-    	logWarn("**WARNING: low confidence DR", 1);
-	
-	// trim these back a bit (if we trim too much we'll get it back right now anywho)
-	*dr_zone_start += CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
-	*dr_zone_end -= CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
 
+    // check to see that this DR is supported by a bare minimum of reads
+    if(num_GT_zero < CRASS_DEF_MIN_READ_DEPTH) {
+        logWarn("**WARNING: low confidence DR", 1);
+    } else {
+        // trim these back a bit (if we trim too much we'll get it back right now anywho)
+        // CTS: Not quite true, if it is low coverage then there will be no extension!
+        *dr_zone_start += CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
+        *dr_zone_end -= CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
+    }
 	// now use this information to find the true direct repeat
 	// first work to the left
 	while(*dr_zone_start > 0)
@@ -1347,9 +1358,10 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, std::vector<std::stri
             return false;
         }
         try {
-            if (drHasHighlyAbundantKmers(true_DR) ) {
+            float max_frequency;
+            if (drHasHighlyAbundantKmers(true_DR, max_frequency) ) {
                 removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
-                logInfo("Killed: {" << true_DR << "} cause' the consensus contained highly abundant kmers...", 1);
+                logInfo("Killed: {" << true_DR << "} cause' the consensus contained highly abundant kmers: "<<max_frequency<<" > "<< CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF, 1);
                 return false;
             }
         } catch (crispr::exception& e) {

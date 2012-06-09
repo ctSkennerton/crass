@@ -1512,9 +1512,6 @@ void NodeManager::addSpacersToDOM(crispr::xml::writer * xmlDoc,
         SpacerInstance * SI = spacer_iter->second;
         if((showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached())) && !(SI->isFlanker()))
         {
-#ifdef DEBUG
-            SI->printContents();
-#endif
             std::set<StringToken> nr_tokens;
             getHeadersForSpacers(SI, nr_tokens);
             

@@ -129,6 +129,8 @@ bool qcFoundRepeats(ReadHolder * tmp_holder,
 
 bool isRepeatLowComplexity(std::string& repeat);
 
+bool drHasHighlyAbundantKmers(std::string& directRepeat, float& max_count);
+
 bool drHasHighlyAbundantKmers(std::string& directRepeat);
 
 void addReadHolder(ReadMap * mReads, 

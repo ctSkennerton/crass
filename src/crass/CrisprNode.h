@@ -104,7 +104,7 @@ class CrisprNode
         inline bool isForward(void) { return mIsForward; }
         inline void setForward(bool forward) { mIsForward = forward; }
         inline int getCoverage() {return mCoverage;}
-        void getDiscountedCoverage(void);
+        int getDiscountedCoverage(void);
         inline void addReadHeader(StringToken readHeader) { mReadHeaders.push_back(readHeader); }
         inline void addReadHolder(ReadHolder * RH) { mReadHolders.push_back(RH); }
         inline std::vector<StringToken> * getReadHeaders(void) { return &mReadHeaders; }
@@ -144,7 +144,7 @@ class CrisprNode
     
         void setAttach(bool attachState);                               // set the attach state of the node
         void setEdgeAttachState(edgeList * currentList, bool attachState, EDGE_TYPE currentType);
-        int calculateReadCoverage(edgeList * currentList, std::map<StringToken, int>& countingMap);
+        void calculateReadCoverage(edgeList * currentList, std::map<StringToken, int>& countingMap);
     void printEdgesForList(edgeList * currentList,
                            std::ostream &dataOut, 
                            StringCheck * ST,

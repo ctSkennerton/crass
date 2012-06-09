@@ -1325,7 +1325,13 @@ bool isRepeatLowComplexity(std::string& repeat)
     return false;
 }
 
-bool drHasHighlyAbundantKmers(std::string& directRepeat)
+
+bool drHasHighlyAbundantKmers(std::string& directRepeat) {
+    float max;
+    return drHasHighlyAbundantKmers(directRepeat, max);
+}
+
+bool drHasHighlyAbundantKmers(std::string& directRepeat, float& maxFrequency)
 {
     // cut kmers from the direct repeat to test whether
     // a particular kmer is vastly over represented
@@ -1359,7 +1365,8 @@ bool drHasHighlyAbundantKmers(std::string& directRepeat)
         //std::cout << "{" << iter->first << ", " << iter->second << ", " << (float(iter->second)/float(total_count)) << "}, ";
     }
     //std::cout << std::endl;
-    if ((static_cast<float>(max_count)/static_cast<float>(total_count)) > CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF) {
+    maxFrequency = static_cast<float>(max_count)/static_cast<float>(total_count);
+    if (maxFrequency > CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF) {
         return true;
     } else {
         return false;

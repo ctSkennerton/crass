@@ -191,7 +191,7 @@ int CrisprNode::getDiscountedCoverage(void)
     std::map<StringToken, int>::iterator cm_last = counting_map.end();
     while(cm_iter != cm_last)
     {
-    	if(cm_iter->second/* == total_inners*/ > 1)
+    	if(cm_iter->second > 1)
     		ret_val++;
     	cm_iter++;
     }
