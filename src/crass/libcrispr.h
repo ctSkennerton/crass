@@ -68,6 +68,8 @@ typedef std::map<StringToken, ReadList *> ReadMap;
 typedef std::map<StringToken, ReadList *>::iterator ReadMapIterator;
 
 
+typedef std::vector<WuManber*> MultiSearchVector;
+typedef WuManber::DataFound multiSearchData;
 
 enum READ_TYPE {
     LONG_READ,

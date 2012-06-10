@@ -618,7 +618,7 @@ void findSingletons(const char *inputFastq,
     std::vector<std::vector<std::string> * > vec_vec_patterns;
     int cut_start = 0;
     int cut_length = CRASS_DEF_MAX_SING_PATTERNS;
-    int total_pattern_size = (int)nonRedundantPatterns->size();
+    int total_pattern_size = static_cast<int>(nonRedundantPatterns->size());
     std::vector<std::string>::iterator start_iter, end_iter;
     while(total_pattern_size > 0)
     {
@@ -681,14 +681,17 @@ void findSingletonsMultiVector(const char *inputFastq,
 
 
     // make a wumanber for each set of patterns
-    std::vector<WuManber*> wu_mans;
+    MultiSearchVector mult_search;
+
     std::vector<std::vector<std::string> *>::iterator pats_iter = patterns.begin();
     std::vector<std::vector<std::string> *>::iterator pats_last = patterns.end();
     while(pats_iter != pats_last)
     {
-        WuManber * search = new WuManber();
+
+        WuManber * search = new WuManber(); 
         search->Initialize(*(*pats_iter));
-        wu_mans.push_back(search);
+
+        mult_search.push_back(search);
         pats_iter++;
     }
     
@@ -703,8 +706,8 @@ void findSingletonsMultiVector(const char *inputFastq,
     static int read_counter = 0;
     int old_number = (int)mReads->size();
 
-    std::vector<WuManber*>::iterator wm_iter =  wu_mans.begin();
-    std::vector<WuManber*>::iterator wm_last =  wu_mans.end();
+    MultiSearchVector::iterator wm_iter =  mult_search.begin();
+    MultiSearchVector::iterator wm_last =  mult_search.end();
     time_t time_start, time_current;
     time(&time_start);
     while ( (l = kseq_read(seq)) >= 0 ) 
@@ -724,8 +727,8 @@ void findSingletonsMultiVector(const char *inputFastq,
             log_counter = 0;
         }
         // reset these mofos
-        wm_iter =  wu_mans.begin();
-        wm_last =  wu_mans.end();
+        wm_iter =  mult_search.begin();
+        wm_last =  mult_search.end();
         pats_iter = patterns.begin();
 
         while(wm_iter != wm_last)
@@ -747,23 +750,26 @@ void findSingletonsMultiVector(const char *inputFastq,
             std::string read = tmp_holder->getSeq();
             
             //initialize with an impossible number
-            int start_pos = -1;
-            std::string found_repeat = (*wm_iter)->Search(read.length(), read.c_str(), *(*pats_iter), start_pos);
-            
-            if (start_pos != -1)
+            multiSearchData search_data = (*wm_iter)->Search(read.length(), read.c_str(), *(*pats_iter));
+            //int start_pos = -1;
+            //std::string found_repeat = (*wm_iter)->Search(read.length(), read.c_str(), *(*pats_iter));
+
+            if (!search_data.sDataFound.empty())
             {
                 if (readsFound.find(tmp_holder->getHeader()) == readsFound.end())
                 {
-    #ifdef DEBUG
+
+#ifdef DEBUG
                     logInfo("new read recruited: "<<tmp_holder->getHeader(), 9);
                     logInfo(tmp_holder->getSeq(), 10);
-    #endif
-                    unsigned int DR_end = (unsigned int)start_pos + (unsigned int)found_repeat.length();
-                    if(DR_end >= (unsigned int)read.length())
+#endif
+
+                    unsigned int DR_end = static_cast<unsigned int>(search_data.iFoundPosition) + static_cast<unsigned int>(search_data.sDataFound.length()) - 1;
+                    if(DR_end >= static_cast<unsigned int>(read.length()))
                     {
-                        DR_end = (unsigned int)read.length() - 1;
+                        DR_end = static_cast<unsigned int>(read.length()) - 1;
                     }
-                    tmp_holder->startStopsAdd(start_pos, DR_end);
+                    tmp_holder->startStopsAdd(search_data.iFoundPosition, DR_end);
                     addReadHolder(mReads, mStringCheck, tmp_holder);
                     found = true;
                 }
@@ -791,8 +797,8 @@ void findSingletonsMultiVector(const char *inputFastq,
     kseq_destroy(seq); // destroy seq
 
     // clean up
-    wm_iter =  wu_mans.begin();
-    wm_last =  wu_mans.end();
+    wm_iter =  mult_search.begin();
+    wm_last =  mult_search.end();
     while(wm_iter != wm_last)
     {
         if(*wm_iter != NULL)
@@ -1392,21 +1398,19 @@ void addReadHolder(ReadMap * mReads,
 		                        "Cannot obtain read in lowlexi form"
 		                        );
 	}
-#ifdef DEBUG
-    logInfo("Direct repeat: "<<dr_lowlexi, 10);
-#endif
+
     StringToken st = mStringCheck->getToken(dr_lowlexi);
-    
     if(0 == st)
     {
         // new guy
         st = mStringCheck->addString(dr_lowlexi);
         (*mReads)[st] = new ReadList();
     }
-#ifdef DEBUG
-    logInfo("String Token: "<<st, 10);
-#endif
 
+#ifdef DEBUG
+    logInfo("Direct repeat: "<<dr_lowlexi<<" String Token: "<<st, 10);
+#endif
+    
 #ifdef SEARCH_SINGLETON
     SearchCheckerList::iterator debug_iter = debugger->find(tmpReadholder->getHeader());
     if (debug_iter != debugger->end()) {
