@@ -251,9 +251,9 @@ class ReadHolder
     
         unsigned int getAverageSpacerLength(void);
         
-        std::vector<std::string> getAllSpacerStrings(void);
+        void getAllSpacerStrings(std::vector<std::string>& spacers);
     
-        std::vector<std::string> getAllRepeatStrings(void);
+        void getAllRepeatStrings(std::vector<std::string>& repeats);
     
         int averageRepeatLength(void);
 

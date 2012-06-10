@@ -920,7 +920,7 @@ bool NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                 if (first_node->getDiscountedCoverage() > (curr_edges_iter->first)->getDiscountedCoverage()) 
                 {
 #ifdef DEBUG
-                    //logInfo("Node "<<first_node->getID()<<" has higher discounted coverage ("<<first_node->getDiscountedCoverage()<<") than Node "<<(curr_edges_iter->first)->getID()<<" ("<<(curr_edges_iter->first)->getDiscountedCoverage()<<")", 8);
+                    logInfo("Node "<<first_node->getID()<<" has higher discounted coverage ("<<first_node->getDiscountedCoverage()<<") than Node "<<(curr_edges_iter->first)->getID()<<" ("<<(curr_edges_iter->first)->getDiscountedCoverage()<<")", 8);
 #endif
                     
                     // the first guy has greater coverage so detach our current node
@@ -933,7 +933,7 @@ bool NodeManager::clearBubbles(CrisprNode * rootNode, EDGE_TYPE currentEdgeType)
                 else 
                 {
 #ifdef DEBUG
-                    //logInfo("Node "<<first_node->getID()<<" has lower discounted coverage ("<<first_node->getDiscountedCoverage()<<") than Node "<<(curr_edges_iter->first)->getID()<<" ("<<(curr_edges_iter->first)->getDiscountedCoverage()<<")", 8);
+                    logInfo("Node "<<first_node->getID()<<" has lower discounted coverage ("<<first_node->getDiscountedCoverage()<<") than Node "<<(curr_edges_iter->first)->getID()<<" ("<<(curr_edges_iter->first)->getDiscountedCoverage()<<")", 8);
 #endif
                     // the first guy was lower so kill him
                     first_node->detachNode();
@@ -1053,6 +1053,10 @@ int NodeManager::buildSpacerGraph(void)
             // mark this guy as attached
             (spacers_iter->second)->setAttached(true);
             
+#ifdef DEBUG
+            SpacerInstance * debug_spacer = (spacers_iter->second);
+            logInfo("Spacer "<<debug_spacer->getID()<<" composed of nodes "<<(debug_spacer->getLeader())->getID()<<" "<<(debug_spacer->getLast())->getID(), 8);
+#endif
             // now get all the jumping forward edges from this node
             edgeList * qel = rq_last_node->getEdges(CN_EDGE_JUMPING_F);
             edgeListIterator qel_iter = qel->begin();

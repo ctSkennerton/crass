@@ -51,10 +51,173 @@
 #include "config.h"
 #include "crassDefines.h"
 #include <libcrispr/StlExt.h>
-#include <libcrispr/Xml.h>
 #include "kseq.h"
 #include "SeqUtils.h"
 
+
+void CrisprParser::parseXMLFile(std::string XMLFile, 
+                                       std::string& wantedGroup, 
+                                       std::string&  directRepeat, 
+                                       std::set<std::string>& wantedContigs,
+                                       std::set<std::string>& wantedReads
+                                       )
+{    
+    try
+    {
+        
+        // no need to free this pointer - owned by the parent parser object
+        xercesc::DOMDocument * xmlDoc = setFileParser(XMLFile.c_str());
+        //xercesc::DOMDocument * xmlDoc = XR_FileParser->getDocument();
+        
+        // Get the top-level element: 
+        xercesc::DOMElement * elementRoot = xmlDoc->getDocumentElement();
+        if( !elementRoot ) throw crispr::xml_exception( __FILE__,
+                                                       __LINE__,
+                                                       __PRETTY_FUNCTION__,
+                                                       "empty XML document" 
+                                                       );
+        
+        
+        // find our wanted group
+        xercesc::DOMElement * wanted_group_element = getWantedGroupFromRoot(elementRoot, wantedGroup, directRepeat);
+        if (!wanted_group_element) 
+        {
+            throw crispr::xml_exception(__FILE__,
+                                        __LINE__,
+                                        __PRETTY_FUNCTION__,
+                                        "Could not find the input group."
+                                        );
+        }
+        // get the sources
+        // they should be the first child element of the data
+        XMLIDMap all_sources;
+        xercesc::DOMElement * sources_elem = wanted_group_element->getFirstElementChild()->getFirstElementChild();
+        getSourcesForGroup(all_sources, sources_elem);
+        
+        // a map of spacers to their corresponding list of sources
+        Spacer2SourceMap spacer_2_sources;
+        
+        // the spacers come after the DRs
+        mapSacersToSourceID(spacer_2_sources, (sources_elem->getNextElementSibling())->getNextElementSibling());
+        // get the assembly node
+        xercesc::DOMElement * assembly_element = parseGroupForAssembly(wanted_group_element);
+        if (assembly_element == NULL) {
+            throw crispr::xml_exception(__FILE__,
+                                        __LINE__,
+                                        __PRETTY_FUNCTION__,
+                                        "no assembly tag for group."
+                                        );
+        }
+        // get the contigs and spacers
+        parseAssemblyForContigIds(assembly_element, wantedReads, spacer_2_sources, all_sources, wantedContigs);
+        
+    }
+    catch( xercesc::XMLException& e )
+    {
+        char* message = xercesc::XMLString::transcode( e.getMessage() );
+        std::ostringstream errBuf;
+        errBuf << "Error parsing file: " << message << std::flush;
+        xercesc::XMLString::release( &message );
+    }
+}
+
+
+xercesc::DOMElement * CrisprParser::getWantedGroupFromRoot(xercesc::DOMElement * parentNode, 
+                                                                  std::string& wantedGroup, 
+                                                                  std::string&  directRepeat)
+{
+    for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); 
+         currentElement != NULL; 
+         currentElement = currentElement->getNextElementSibling())        
+    {
+        if (xercesc::XMLString::equals(currentElement->getTagName(), tag_Group()))
+        {
+            // new group
+            // test if it's one that we want
+            char * c_group_name = tc(currentElement->getAttribute(attr_Gid()));
+            std::string current_group_name = c_group_name;
+            xr(&c_group_name);
+            if (current_group_name == wantedGroup) 
+            {
+                // get the length of the direct repeat
+                char * c_dr = tc(currentElement->getAttribute(attr_Drseq()));
+                directRepeat = c_dr;
+                return currentElement;
+            }
+        }
+        
+    }
+    
+    // we should theoretically never get here but if the xml is bad then it might just happen
+    // or if the user has put in a group that doesn't exist by mistake
+    return NULL;
+}
+
+xercesc::DOMElement * CrisprParser::parseGroupForAssembly(xercesc::DOMElement* parentNode)
+{
+    for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); 
+         currentElement != NULL; 
+         currentElement = currentElement->getNextElementSibling())        
+    {
+        if( xercesc::XMLString::equals(currentElement->getTagName(), tag_Assembly()))
+        {
+            // assembly section
+            // the child nodes will be the contigs
+            return currentElement;
+        }       
+    }
+    // if there is no assembly for this group
+    return NULL;
+} 
+
+void CrisprParser::parseAssemblyForContigIds(xercesc::DOMElement* parentNode, 
+                                                    std::set<std::string>& wantedReads, 
+                                                    Spacer2SourceMap& spacersForAssembly,
+                                                    XMLIDMap& source2acc, 
+                                                    std::set<std::string>& wantedContigs)
+{
+    for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); 
+         currentElement != NULL; 
+         currentElement = currentElement->getNextElementSibling())        
+    {
+        if( xercesc::XMLString::equals(currentElement->getTagName(), tag_Contig()))
+        {
+            // check to see if the current contig is one that we want
+            char * c_current_contig = tc(currentElement->getAttribute(attr_Cid()));
+            std::string current_contig = c_current_contig;
+            std::set<std::string>::iterator contig_iter = wantedContigs.find(current_contig);
+            if( contig_iter != wantedContigs.end())
+            {
+                // get the spacers from the assembly
+                getSourceIdForAssembly(currentElement, wantedReads, spacersForAssembly, source2acc);
+            }
+            xr(&c_current_contig);
+        }
+        
+    }
+}
+
+void CrisprParser::getSourceIdForAssembly(xercesc::DOMElement* parentNode, 
+                                                 std::set<std::string>& wantedReads,
+                                                 Spacer2SourceMap& spacersForAssembly,
+                                                 XMLIDMap& source2acc)
+{
+    for (xercesc::DOMElement * currentElement = parentNode->getFirstElementChild(); 
+         currentElement != NULL; 
+         currentElement = currentElement->getNextElementSibling())        
+    {
+        if( xercesc::XMLString::equals(currentElement->getTagName(), tag_Cspacer()))
+        {
+            char * spid = tc(currentElement->getAttribute(attr_Spid()));
+            if (spacersForAssembly.find(spid) != spacersForAssembly.end()) {
+                IDVector::iterator iter; 
+                for(iter = spacersForAssembly[spid].begin(); iter != spacersForAssembly[spid].end(); iter++) {
+                    wantedReads.insert(source2acc[*iter]);
+                }
+            }
+        }
+    }
+}
 
 void assemblyVersionInfo(void) 
 {
@@ -537,7 +700,7 @@ int assemblyMain(int argc, char * argv[])
     std::set<std::string> spacers_for_assembly;
 
     //parse xml file
-    crispr::xml::reader xml_parser;  
+    CrisprParser xml_parser;  
     std::string direct_repeat;
     std::string group_as_string = "G" + to_string(opts.group);
     try {

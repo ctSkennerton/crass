@@ -51,30 +51,30 @@
 // --------------------------------------------------------------------
  // SEARCH ALGORITHM PARAMETERS
 // --------------------------------------------------------------------
-#define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH         6
-#define CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH         9
-#define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH     8
-#define CRASS_DEF_SCAN_LENGTH                      30
+#define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH         (6)
+#define CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH         (9)
+#define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH     (8)
+#define CRASS_DEF_SCAN_LENGTH                      (30)
 #define CRASS_DEF_SCAN_CONFIDENCE                  (0.70)
 #define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           (0.5)
 // --------------------------------------------------------------------
  // STRING LENGTH / MISMATCH / CLUSTER SIZE PARAMETERS
 // --------------------------------------------------------------------
-#define CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW       30                  // Maximum number of cluster reps we will all vs all sw for
+#define CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW       (30)                  // Maximum number of cluster reps we will all vs all sw for
 #define CRASS_DEF_MIN_SW_ALIGNMENT_RATIO        (0.85)              // SW alignments need to be this percentage of the original query to be considered real
-#define CRASS_DEF_SW_SEARCH_EXT                 8
-#define CRASS_DEF_KMER_SIZE                     11					// length of the kmers used when clustering DR groups
-#define CRASS_DEF_K_CLUST_MIN                   6					// number of shared kmers needed to group DR variants together
-#define CRASS_DEF_READ_COUNTER_LOGGER           100000
-#define CRASS_DEF_MAX_READS_FOR_DECISION        1000
+#define CRASS_DEF_SW_SEARCH_EXT                 (8)
+#define CRASS_DEF_KMER_SIZE                     (11)					// length of the kmers used when clustering DR groups
+#define CRASS_DEF_K_CLUST_MIN                   (6)					// number of shared kmers needed to group DR variants together
+#define CRASS_DEF_READ_COUNTER_LOGGER           (100000)
+#define CRASS_DEF_MAX_READS_FOR_DECISION        (1000)
   // HARD CODED PARAMS FOR FINDING TRUE DRs
-#define CRASS_DEF_MIN_CONS_ARRAY_LEN            1200                // minimum size of the consensus array
-#define CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER      4                   // find the cons array length by multiplying read length by this guy
+#define CRASS_DEF_MIN_CONS_ARRAY_LEN            (1200)                // minimum size of the consensus array
+#define CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER      (4)                   // find the cons array length by multiplying read length by this guy
 #define CRASS_DEF_CONS_ARRAY_START              (0.5)               // how far into the cons array to start placing reads 
 #define CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF       (0.85)              // amount that a DR must agrre with the existsing DR within a zone to be added
 #define CRASS_DEF_NUM_KMERS_4_MODE              (5)                 // find the top XX occuring in the DR
 #define CRASS_DEF_NUM_KMERS_4_MODE_HALF         (CRASS_DEF_NUM_KMERS_4_MODE - (CRASS_DEF_NUM_KMERS_4_MODE/2)) // Ceil of 50% of CRASS_DEF_NUM_KMERS_4_MODE
-#define CRASS_DEF_MIN_READ_DEPTH                2                   // read depth used for consensus building
+#define CRASS_DEF_MIN_READ_DEPTH                (2)                   // read depth used for consensus building
 #define CRASS_DEF_ZONE_EXT_CONS_CUT_OFF         (0.55)              // minimum identity to extend a DR from the "zone" outwards
 #define CRASS_DEF_COLLAPSED_CONS_CUT_OFF        (0.75)              // minimum identity to identify a potential collapsed cluster
 #define CRASS_DEF_COLLAPSED_THRESHOLD           (0.30)              // in the event that clustering has collapsed two DRs into one, this number is used to plait them apart
@@ -87,14 +87,14 @@
 // --------------------------------------------------------------------
 #define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD        (0.75)
 #define CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY  (0.82)
-#define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF     12
-#define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF     30
-#define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          3
-#define CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF	       (0.2)			// DRs should NOT have kmers more abundant than this percentage!
+#define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF     (12)
+#define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF     (30)
+#define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          (3)
+#define CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF	       (0.23)			// DRs should NOT have kmers more abundant than this percentage!
 // --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------
-#define CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH     1024
+#define CRASS_DEF_FASTQ_FILENAME_MAX_LENGTH     (1024)
 #define CRASS_DEF_DEF_KMER_LOOKUP_EXT           "crass_kmers.txt"
 #define CRASS_DEF_DEF_PATTERN_LOOKUP_EXT        "crass_direct_repeats.txt"
 #define CRASS_DEF_DEF_SPACER_LOOKUP_EXT         "crass_spacers.txt"
@@ -109,9 +109,9 @@
 // --------------------------------------------------------------------
 // GRAPH BUILDING
 // --------------------------------------------------------------------
-#define CRASS_DEF_NODE_KMER_SIZE                7                   // size of the kmer that defines a crispr node
-#define CRASS_DEF_MAX_CLEANING                  2                   // the maximum length that a branch can be before it's cleaned
-#define CRASS_DEF_STDEV_SPACER_LENGTH           6.0                 // the maximum standard deviation allowed in the length of spacers 
+#define CRASS_DEF_NODE_KMER_SIZE                (7)                   // size of the kmer that defines a crispr node
+#define CRASS_DEF_MAX_CLEANING                  (2)                   // the maximum length that a branch can be before it's cleaned
+#define CRASS_DEF_STDEV_SPACER_LENGTH           (6.0)                 // the maximum standard deviation allowed in the length of spacers 
                                                                     // after the true DR is found that is allowable before it is removed
 // --------------------------------------------------------------------
  // USER OPTION STRUCTURE
@@ -119,24 +119,24 @@
 #define CRASS_DEF_STATS_REPORT                  false               // should we create a stats report
 #define CRASS_DEF_STATS_REPORT_DELIM            "\t"                // delimiter string for stats report
 #define CRASS_DEF_OUTPUT_DIR                    "./"                // default output directory
-#define CRASS_DEF_MIN_DR_SIZE                   23                  // minimum direct repeat size
-#define CRASS_DEF_MAX_DR_SIZE                   45                  // maximum direct repeat size
-#define CRASS_DEF_MIN_SPACER_SIZE               26                  // minimum spacer size
-#define CRASS_DEF_MAX_SPACER_SIZE               50                  // maximum spacer size
-#define CRASS_DEF_NUM_DR_ERRORS                 0                   // maxiumum allowable errors in direct repeat
-#define CRASS_DEF_COVCUTOFF                     3                   // minimum number of attached spacers that a group needs to have
+#define CRASS_DEF_MIN_DR_SIZE                   (23)                  // minimum direct repeat size
+#define CRASS_DEF_MAX_DR_SIZE                   (45)                  // maximum direct repeat size
+#define CRASS_DEF_MIN_SPACER_SIZE               (26)                  // minimum spacer size
+#define CRASS_DEF_MAX_SPACER_SIZE               (50)                  // maximum spacer size
+#define CRASS_DEF_NUM_DR_ERRORS                 (0)                   // maxiumum allowable errors in direct repeat
+#define CRASS_DEF_COVCUTOFF                     (3)                   // minimum number of attached spacers that a group needs to have
 #ifdef DEBUG
-    #define CRASS_DEF_MAX_LOGGING               10
+    #define CRASS_DEF_MAX_LOGGING               (10)
 #else
-    #define CRASS_DEF_MAX_LOGGING               4
+    #define CRASS_DEF_MAX_LOGGING               (4)
 #endif
 
-#define CRASS_DEF_DEFAULT_LOGGING               1
+#define CRASS_DEF_DEFAULT_LOGGING               (1)
 #define CRASS_DEF_LOGTOSCREEN                   false               // should we log to screen or to file
 #define CRASS_DEF_REMOVE_HOMOPOLYMERS           false               // should we remove homopolymers
 #define CRASS_DEF_NO_SCALLING                   false               // perform scalling by default
 #define CRASS_DEF_HOMOPOLYMER_SCALLING          (0.70)              // the scalling for the spacers and direct repeats when remove homopolymers is set
-#define CRASS_DEF_NUM_OF_BINS                   -1                  // the number of bins to create
+#define CRASS_DEF_NUM_OF_BINS                   (-1)                  // the number of bins to create
 #define CRASS_DEF_GRAPH_COLOUR                  BLUE_RED            // default colour scale for the graphs
 #define CRASS_DEF_SPACER_LONG_DESC              false               // use a long desc of the spacer in the output graph
 #define CRASS_DEF_SPACER_SHOW_SINGLES           false                // do not show singles by default

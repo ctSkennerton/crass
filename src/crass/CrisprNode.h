@@ -144,7 +144,7 @@ class CrisprNode
     
         void setAttach(bool attachState);                               // set the attach state of the node
         void setEdgeAttachState(edgeList * currentList, bool attachState, EDGE_TYPE currentType);
-        int calculateReadCoverage(edgeList * currentList, std::map<StringToken, int>& countingMap);
+        void calculateReadCoverage(edgeList * currentList, std::map<StringToken, int>& countingMap);
     void printEdgesForList(edgeList * currentList,
                            std::ostream &dataOut, 
                            StringCheck * ST,

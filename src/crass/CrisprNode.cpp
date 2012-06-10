@@ -116,9 +116,8 @@ edgeList * CrisprNode::getEdges(EDGE_TYPE type)
     }
 }
 
-int CrisprNode::calculateReadCoverage(edgeList * currentList, std::map<StringToken, int>& countingMap)
+void CrisprNode::calculateReadCoverage(edgeList * currentList, std::map<StringToken, int>& countingMap)
 {
-    int total_inners = 0;
     edgeListIterator eli;
     for (eli = currentList->begin(); eli != currentList->end(); eli++)
     {
@@ -127,7 +126,6 @@ int CrisprNode::calculateReadCoverage(edgeList * currentList, std::map<StringTok
     	{
             continue;
         }
-        total_inners++;
 #ifdef DEBUG
         logInfo("Edge: "<<(eli->first)->getID(), 10);
 #endif
@@ -137,9 +135,6 @@ int CrisprNode::calculateReadCoverage(edgeList * currentList, std::map<StringTok
         std::vector<StringToken>::iterator inner_rh_last = inner_headers->end();
         while(inner_rh_iter != inner_rh_last)
         {
-#ifdef DEBUG
-            logInfo("\tHeader: "<<*inner_rh_iter, 10);
-#endif
             if(countingMap.find(*inner_rh_iter) != countingMap.end()) {
                 countingMap[*inner_rh_iter]++;
 #ifdef DEBUG
@@ -149,7 +144,6 @@ int CrisprNode::calculateReadCoverage(edgeList * currentList, std::map<StringTok
             inner_rh_iter++;
         }
     }
-    return total_inners;
 }
 
 
@@ -159,6 +153,10 @@ int CrisprNode::getDiscountedCoverage(void)
 	// Return a (possibly) lower version of the coverage
 	// used when removing bubbles
 	//
+    // We test whether the reads for the nodes forward or
+    // backward of the current node are shared
+    // This prevents the coverage from being exadgerated 
+    // if two different spacers share a kmer
 	std::map<StringToken, int> counting_map;
 	
 	// initialise the counting map to inlcude all the reads we care about
@@ -177,23 +175,23 @@ int CrisprNode::getDiscountedCoverage(void)
     logInfo("\tJBackward: "<<mJumpingBackwardEdges.size(), 10);
 #endif
 	// now update the counting map with reads found on the innner connecting nodes -> perhaps one of these lists is empty?
-	int total_inners = 0;
-	// first forward
-	total_inners += calculateReadCoverage(&mForwardEdges, counting_map);
-#ifdef DEBUG
-	logInfo("Node "<<mid<<": After forward inners: "<<total_inners, 10);
-#endif
-	// then backward
-	total_inners += calculateReadCoverage(&mBackwardEdges, counting_map);	
-#ifdef DEBUG
-	logInfo("Node "<<mid<<": After Backward inners: "<<total_inners, 10);
-#endif
+    if(mIsForward) {
+        // first forward
+         calculateReadCoverage(&mForwardEdges, counting_map);
+        // then backward
+         calculateReadCoverage(&mJumpingBackwardEdges, counting_map);	
+    } else {
+        // first forward
+         calculateReadCoverage(&mJumpingForwardEdges, counting_map);
+        // then backward
+         calculateReadCoverage(&mBackwardEdges, counting_map);	
+    }    
     int ret_val = 0;
     std::map<StringToken, int>::iterator cm_iter = counting_map.begin();
     std::map<StringToken, int>::iterator cm_last = counting_map.end();
     while(cm_iter != cm_last)
     {
-    	if(cm_iter->second == total_inners)
+    	if(cm_iter->second > 1)
     		ret_val++;
     	cm_iter++;
     }
