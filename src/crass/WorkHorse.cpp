@@ -74,9 +74,11 @@ bool sortLengthAssending( const std::string& a, const std::string& b)
 // a should be shorter than b if sorted correctly
 bool includeSubstring(const std::string& a, const std::string& b)
 {
-    if (b.find(a)) {
+    if (std::string::npos != b.find(a)) {
         return true;
-    } 
+    } else if(std::string::npos != b.find(reverseComplement(a))) {
+        return true;
+    }
     return false;
 }
 
@@ -379,7 +381,7 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
         }
     }
     delete non_redundant_set;
-    std::cout<<numOfReads()<<std::endl;
+    std::cout<<__FILE__<<": "<<__LINE__<<": Found Reads: "<<numOfReads()<<std::endl;
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
 
@@ -538,39 +540,46 @@ int WorkHorse::findConsensusDRs(GroupKmerMap& groupKmerCountsMap, int& nextFreeG
     logInfo("Reducing list of potential DRs (2): Cluster refinement and true DR finding", 1);
     
     // go through all the counts for each group
-    GroupKmerMap::iterator group_count_iter = groupKmerCountsMap.begin();
-    while(group_count_iter != groupKmerCountsMap.end())
+    GroupKmerMap::iterator group_count_iter; 
+    for(group_count_iter =  groupKmerCountsMap.begin(); 
+        group_count_iter != groupKmerCountsMap.end(); 
+        group_count_iter++)
     {
-        if(NULL != mDR2GIDMap[group_count_iter->first])
-        {            
-            std::cout<<numberOfReadsInGroup(mDR2GIDMap[group_count_iter->first])<<std::endl;
-            // it's real, so parse this group
-            // get the N top kmers
-            Vecstr n_top_kmers;
-            int num_mers_found = getNMostAbundantKmers((int)(mDR2GIDMap[group_count_iter->first])->size(), 
-                                                       n_top_kmers, 
-                                                       CRASS_DEF_NUM_KMERS_4_MODE, 
-                                                       group_count_iter->second);
-            if (0 != num_mers_found) 
+        if(NULL == mDR2GIDMap[group_count_iter->first])
+        {
+            continue;
+        }
+        std::cout<<__FILE__<<
+            ": "<<
+            __LINE__<<
+            ": Reads in group: "<<
+            numberOfReadsInGroup(mDR2GIDMap[group_count_iter->first])<<std::endl;
+        // it's real, so parse this group
+        // get the N top kmers
+        Vecstr n_top_kmers;
+        int num_mers_found = getNMostAbundantKmers(static_cast<int>((mDR2GIDMap[group_count_iter->first])->size()), 
+                                                   n_top_kmers, 
+                                                   CRASS_DEF_NUM_KMERS_4_MODE, 
+                                                   group_count_iter->second);
+        if (0 != num_mers_found) 
+        {
+            // a return value of false indicates that this function has deleted clustered_DRs
+            //std::cout << "found " << num_mers_found << " : " << CRASS_DEF_NUM_KMERS_4_MODE << std::endl; 
+            parseGroupedDRs(num_mers_found, group_count_iter->first, &n_top_kmers, &nextFreeGID);
+        }
+        else
+        {
+            // if there is less kill the group
+            if(NULL != group_count_iter->second)
             {
-                // a return value of false indicates that this function has deleted clustered_DRs
-            	//std::cout << "found " << num_mers_found << " : " << CRASS_DEF_NUM_KMERS_4_MODE << std::endl; 
-                parseGroupedDRs(num_mers_found, group_count_iter->first, &n_top_kmers, &nextFreeGID);
+                delete group_count_iter->second;
+                group_count_iter->second = NULL;
             }
-            else
+            if(NULL != mDR2GIDMap[group_count_iter->first])
             {
-                // if there is less kill the group
-                if(NULL != group_count_iter->second)
-                {
-                	delete group_count_iter->second;
-                	group_count_iter->second = NULL;
-                }
-                if(NULL != mDR2GIDMap[group_count_iter->first])
-                {
-                	cleanGroup(group_count_iter->first);
-//                    delete mDR2GIDMap[group_count_iter->first];
-//                	mDR2GIDMap[group_count_iter->first] = NULL;
-                }
+                cleanGroup(group_count_iter->first);
+                //                    delete mDR2GIDMap[group_count_iter->first];
+                //                	mDR2GIDMap[group_count_iter->first] = NULL;
             }
         }
         
@@ -580,7 +589,6 @@ int WorkHorse::findConsensusDRs(GroupKmerMap& groupKmerCountsMap, int& nextFreeG
             delete group_count_iter->second;
             group_count_iter->second = NULL;
         }
-        group_count_iter++;
     }
     
     return 0;
@@ -596,17 +604,20 @@ void WorkHorse::removeRedundantRepeats(Vecstr& repeatVector)
     // go though all of the patterns and determine which are substrings
     // clear the string if it is
     for (iter = repeatVector.begin(); iter != repeatVector.end(); iter++) {
-        if (!iter->empty()) {
-            Vecstr::iterator iter2;
-            for (iter2 = iter+1; iter2 != repeatVector.end(); iter2++) {
-                if (!iter->empty()) {
-                    //pass both itererators into the comparison function
-                    if (includeSubstring(*iter, *iter2)) {
-                        iter2->clear();
-                    }
-                }
+        if (iter->empty()) {
+            continue;
+        }
+        Vecstr::iterator iter2;
+        for (iter2 = iter+1; iter2 != repeatVector.end(); iter2++) {
+            if (iter2->empty()) {
+                continue;
+            }
+            //pass both itererators into the comparison function
+            if (includeSubstring(*iter, *iter2)) {
+                iter2->clear();
             }
         }
+
     }
 
     // ok so now partition the vector so that all the empties are at one end
@@ -672,10 +683,10 @@ Vecstr * WorkHorse::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, int&
         }
         dcg_iter++;
     }
-    Vecstr::iterator nr_iter;
+/*    Vecstr::iterator nr_iter;
     for (nr_iter = non_redundant_repeats->begin(); nr_iter != non_redundant_repeats->end(); ++nr_iter) {
         std::cout<<*nr_iter<<std::endl;
-    }
+    }*/
     return non_redundant_repeats;
 }
 
@@ -831,239 +842,235 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // now go thru all the other DRs in this group and add them into
     // the consensus array
-    DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
-    while (dr_iter != (mDR2GIDMap[GID])->end()) 
+    DR_ClusterIterator dr_iter;// = (mDR2GIDMap[GID])->begin();
+    for (dr_iter = (mDR2GIDMap[GID])->begin(); dr_iter != (mDR2GIDMap[GID])->end(); dr_iter++) 
     {
         // get the string for this mofo
         std::string tmp_DR = mStringCheck.getString(*dr_iter);
         
         // we've already done the master DR
-        if(master_DR_token != *dr_iter)
+        if(master_DR_token == *dr_iter)
         {
-
-            // set this guy to -1 for now
-            (*DR_offset_map)[*dr_iter] = -1;
-            
-            // this is a DR we have yet to add to the coverage array
-            // First we need to find the positions of the kmers in this DR
-
-            for(int i = 0; i < numMers4Mode; i++)
-            {
-                isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), (*nTopKmers)[i], &tmp_DR);
-                
-            }            
-            // we need to have at least half of the mode k-mers present to continue
-            // Where they are not found, the position gets set to -1
-            int num_neg1 = 0;
-            for(int i = 0; i < numMers4Mode; i++)
-            {
-                if(-1 == (kmer_positions_DR)[i])
-                    num_neg1++; 
-            }
-            int numMers4Mode_half = numMers4Mode / 2;
-            //std::cout<<numMers4Mode_half<<" : " <<numMers4Mode<< " : "<<num_neg1<<std::endl;
-            if(num_neg1 < numMers4Mode_half)
-            {
-                // all is good! ...so far
-                // now we can determine if the DR is the reverse complement...
-                int num_agree = 0;
-                int num_disagree = 0;
-                for(int i = 0; i < numMers4Mode; i++)
-                {
-                    if((kmer_rcs_DR_master)[i] == (kmer_rcs_DR)[i])
-                        num_agree++;
-                    else
-                        num_disagree++;
-                }
-                
-                // if they are equal, do nothing
-                // there's not too much we can do
-                if(num_agree != num_disagree)
-                {
-                    if(num_agree < num_disagree)
-                    {
-                        // we need to reverse all the reads and the DR for these reads
-						try {
-                        ReadListIterator read_iter = mReads[*dr_iter]->begin();
-                        while (read_iter != mReads[*dr_iter]->end()) 
-                        {
-                            (*read_iter)->reverseComplementSeq();
-                            read_iter++;
-                        }
-						} catch(crispr::exception& e) {
-							std::cerr<<e.what()<<std::endl;
-							throw crispr::exception(__FILE__,
-							                        __LINE__,
-							                        __PRETTY_FUNCTION__,
-							                        "cannot reverse complement sequence");
-						}
-                        // fix the places where the DR is stored
-                        tmp_DR = reverseComplement(tmp_DR);
-                        StringToken st = mStringCheck.addString(tmp_DR);
-                        mReads[st] = mReads[*dr_iter];
-                        mReads[*dr_iter] = NULL;
-                        *dr_iter = st;
-                        (*DR_offset_map)[*dr_iter] = -1;
-                    }
-                    
-                    // TODO: Maybe we should use the smith-waterman here
-                    // So now that all of the variants are in the same 
-                    // orientation, perform a pair-wise alignment against the 
-                    // master to get the offset in the array
-                    //std::string master_dr_seq = mStringCheck.getString(master_DR_token);
-                    //getOffsetAgainstMaster(master_dr_seq, tmp_DR);
-                    
-                    
-                    // find the position of the kmers in the direct repeat
-                    // store whether it was revcomp'd or not
-                    for(int i = 0; i < numMers4Mode; i++)
-                    {
-                        isKmerPresent(((kmer_rcs_DR) + i), ((kmer_positions_DR) + i), (*nTopKmers)[i], &tmp_DR);
-                    }
-                    
-                    // now it's time to try add this guy to the array...
-                    // we need to find a suitable kmer...
-                    int positioning_kmer_index = 0;
-                    bool found_kmer = false;
-                    // first find the first non -1 entry, there must be at least CRASS_DEF_NUM_KMERS_4_MODE_HALF
-                    while(positioning_kmer_index < numMers4Mode)
-                    {
-                        if(-1 != (kmer_positions_DR)[positioning_kmer_index])
-                            break;
-                        positioning_kmer_index++;
-                    }
-                    // start here, now we look to the differences between this kmer and the next kmer
-                    // and make sure that that difference is upheld in the master
-                    while(positioning_kmer_index < (numMers4Mode - 1))
-                    {
-                        if(((kmer_positions_DR)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index+1]) == ((kmer_positions_DR_master)[positioning_kmer_index] - (kmer_positions_DR_master)[positioning_kmer_index+1]))
-                        {
-                            found_kmer = true;
-                            break;
-                        }
-                        positioning_kmer_index++;
-                    }
-                    
-                    if(found_kmer)
-                    {
-
-                        // note the position of this DR in the array
-                        (*DR_offset_map)[*dr_iter] = ((kmer_positions_ARRAY)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index]);
-
-                        // We need to check that at least CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF percent of bases agree within the "Zone"
-                        int this_DR_start_index = 0;
-                        int zone_start_index = *dr_zone_start;
-                        int comparison_length = (int)tmp_DR.length();
-                        
-                        // we only need to compare "within" the zone
-                        if((*DR_offset_map)[*dr_iter] < *dr_zone_start)
-                        {
-                            this_DR_start_index = *dr_zone_start - (*DR_offset_map)[*dr_iter];
-                        }
-                        else if((*DR_offset_map)[*dr_iter] > *dr_zone_start)
-                        {
-                            zone_start_index = (*DR_offset_map)[*dr_iter];
-                        }
-                        
-                        // work out the comparison length
-                        int eff_zone_length = *dr_zone_end - zone_start_index;
-                        int eff_DR_length = (int)tmp_DR.length() - this_DR_start_index;
-                        if(eff_zone_length < eff_DR_length)
-                            comparison_length = eff_zone_length;
-                        else
-                            comparison_length = eff_DR_length;
-                        
-                        char cons_char = 'X';
-                        int comp_end = zone_start_index + comparison_length;
-                        double agress_with_zone = 0;
-                        double comp_len = 0;
-                        while(zone_start_index < comp_end)
-                        {
-                            // work out the consensus at this position
-                            int max_count = 0;
-                            for(int i = 0; i < 4; i++)
-                            {
-                                if(coverage_array[i][zone_start_index] > max_count)
-                                {
-                                    max_count = coverage_array[i][zone_start_index];
-                                    cons_char = alphabet[i];
-                                }
-                            }
-                            
-                            // see if this DR agress with it
-                            if(tmp_DR[this_DR_start_index] == cons_char)
-                                agress_with_zone++;
-                            comp_len++;
-                            zone_start_index++;
-                            this_DR_start_index++;
-                        }
-
-                        agress_with_zone /= comp_len;
-                        if(agress_with_zone >= CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF)
-                        {
-                            // we need to correct for the fact that we may not be using the 0th kmer
-                            int positional_offset = (kmer_positions_DR_master)[0] - (kmer_positions_DR_master)[positioning_kmer_index] + (kmer_positions_ARRAY)[positioning_kmer_index];
-                            ReadListIterator read_iter = mReads[*dr_iter]->begin();
-                            while (read_iter != mReads[*dr_iter]->end()) 
-                            {
-                                // don't care about partials
-                                int dr_start_index = 0;
-                                int dr_end_index = 1;
-                                while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(tmp_DR.length()) - 1))
-                                {
-                                    dr_start_index += 2;
-                                    dr_end_index += 2;
-                                }        
-                                do
-                                {
-									if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (((int)(tmp_DR.length())) - 1))
-									{
-										// we need to find the first kmer which matches the mode.
-										int this_read_start_pos = positional_offset - (*read_iter)->startStopsAt(dr_start_index) - (kmer_positions_DR)[0] ;
-										for(int i = 0; i < (int)(*read_iter)->getSeqLength(); i++)
-										{
-											int index = -1;
-											switch((*read_iter)->getSeqCharAt(i))
-											{
-												case 'A':
-													index = 0;
-													break;
-												case 'C':
-													index = 1;
-													break;
-												case 'G':
-													index = 2;
-													break;
-												case 'T':
-													index = 3;
-													break;
-											}
-											if(index >= 0)
-											{
-							                	if((i+this_read_start_pos) >= 0)
-							                	{
-							                		coverage_array[index][i+this_read_start_pos]++;
-							                	}
-											}
-										}
-									}
-                                    // go onto the next DR
-                                    dr_start_index += 2;
-                                    dr_end_index += 2;
-                                    
-                                    // check that this makes sense
-                                    if(dr_start_index >= (int)((*read_iter)->numRepeats()*2))
-                                    	break;
-                                    
-                                } while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (((int)(tmp_DR.length())) - 1));
-                                read_iter++;
-                            }
-                        }
-                    }
-                }
-            }
+            continue;
         }
-        dr_iter++;
+
+        // set this guy to -1 for now
+        (*DR_offset_map)[*dr_iter] = -1;
+
+        // this is a DR we have yet to add to the coverage array
+        // First we need to find the positions of the kmers in this DR
+
+        for(int i = 0; i < numMers4Mode; i++)
+        {
+            isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), (*nTopKmers)[i], &tmp_DR);
+
+        }            
+        // we need to have at least half of the mode k-mers present to continue
+        // Where they are not found, the position gets set to -1
+        int num_neg1 = 0;
+        for(int i = 0; i < numMers4Mode; i++)
+        {
+            if(-1 == (kmer_positions_DR)[i])
+                num_neg1++; 
+        }
+        int numMers4Mode_half = numMers4Mode / 2;
+        //std::cout<<numMers4Mode_half<<" : " <<numMers4Mode<< " : "<<num_neg1<<std::endl;
+        if(num_neg1 >= numMers4Mode_half)
+        {
+            continue;
+        }
+        // all is good! ...so far
+        // now we can determine if the DR is the reverse complement...
+        int num_agree = 0;
+        int num_disagree = 0;
+        for(int i = 0; i < numMers4Mode; i++)
+        {
+            if((kmer_rcs_DR_master)[i] == (kmer_rcs_DR)[i])
+                num_agree++;
+            else
+                num_disagree++;
+        }
+
+        // if they are equal, do nothing
+        // there's not too much we can do
+        if(num_agree == num_disagree)
+        {
+            continue;
+        }
+        if(num_agree < num_disagree)
+        {
+            // we need to reverse all the reads and the DR for these reads
+            try {
+                ReadListIterator read_iter = mReads[*dr_iter]->begin();
+                while (read_iter != mReads[*dr_iter]->end()) 
+                {
+                    (*read_iter)->reverseComplementSeq();
+                    read_iter++;
+                }
+            } catch(crispr::exception& e) {
+                std::cerr<<e.what()<<std::endl;
+                throw crispr::exception(__FILE__,
+                                        __LINE__,
+                                        __PRETTY_FUNCTION__,
+                                        "cannot reverse complement sequence");
+            }
+            // fix the places where the DR is stored
+            tmp_DR = reverseComplement(tmp_DR);
+            StringToken st = mStringCheck.addString(tmp_DR);
+            mReads[st] = mReads[*dr_iter];
+            mReads[*dr_iter] = NULL;
+            *dr_iter = st;
+            (*DR_offset_map)[*dr_iter] = -1;
+        }
+
+        // find the position of the kmers in the direct repeat
+        // store whether it was revcomp'd or not
+        for(int i = 0; i < numMers4Mode; i++)
+        {
+            isKmerPresent(((kmer_rcs_DR) + i), ((kmer_positions_DR) + i), (*nTopKmers)[i], &tmp_DR);
+        }
+
+        // now it's time to try add this guy to the array...
+        // we need to find a suitable kmer...
+        int positioning_kmer_index = 0;
+        bool found_kmer = false;
+        // first find the first non -1 entry, there must be at least CRASS_DEF_NUM_KMERS_4_MODE_HALF
+        while(positioning_kmer_index < numMers4Mode)
+        {
+            if(-1 != (kmer_positions_DR)[positioning_kmer_index])
+                break;
+            positioning_kmer_index++;
+        }
+        // start here, now we look to the differences between this kmer and the next kmer
+        // and make sure that that difference is upheld in the master
+        while(positioning_kmer_index < (numMers4Mode - 1))
+        {
+            if(((kmer_positions_DR)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index+1]) == ((kmer_positions_DR_master)[positioning_kmer_index] - (kmer_positions_DR_master)[positioning_kmer_index+1]))
+            {
+                found_kmer = true;
+                break;
+            }
+            positioning_kmer_index++;
+        }
+
+        if(!found_kmer)
+        {
+            continue;
+        }
+
+        // note the position of this DR in the array
+        (*DR_offset_map)[*dr_iter] = ((kmer_positions_ARRAY)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index]);
+
+        // We need to check that at least CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF percent of bases agree within the "Zone"
+        int this_DR_start_index = 0;
+        int zone_start_index = *dr_zone_start;
+        int comparison_length = (int)tmp_DR.length();
+
+        // we only need to compare "within" the zone
+        if((*DR_offset_map)[*dr_iter] < *dr_zone_start)
+        {
+            this_DR_start_index = *dr_zone_start - (*DR_offset_map)[*dr_iter];
+        }
+        else if((*DR_offset_map)[*dr_iter] > *dr_zone_start)
+        {
+            zone_start_index = (*DR_offset_map)[*dr_iter];
+        }
+
+        // work out the comparison length
+        int eff_zone_length = *dr_zone_end - zone_start_index;
+        int eff_DR_length = (int)tmp_DR.length() - this_DR_start_index;
+        if(eff_zone_length < eff_DR_length)
+            comparison_length = eff_zone_length;
+        else
+            comparison_length = eff_DR_length;
+
+        char cons_char = 'X';
+        int comp_end = zone_start_index + comparison_length;
+        double agress_with_zone = 0;
+        double comp_len = 0;
+        while(zone_start_index < comp_end)
+        {
+            // work out the consensus at this position
+            int max_count = 0;
+            for(int i = 0; i < 4; i++)
+            {
+                if(coverage_array[i][zone_start_index] > max_count)
+                {
+                    max_count = coverage_array[i][zone_start_index];
+                    cons_char = alphabet[i];
+                }
+            }
+
+            // see if this DR agress with it
+            if(tmp_DR[this_DR_start_index] == cons_char)
+                agress_with_zone++;
+            comp_len++;
+            zone_start_index++;
+            this_DR_start_index++;
+        }
+
+        agress_with_zone /= comp_len;
+        if(agress_with_zone < CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF)
+        {
+            continue;
+        }
+        // we need to correct for the fact that we may not be using the 0th kmer
+        int positional_offset = (kmer_positions_DR_master)[0] - (kmer_positions_DR_master)[positioning_kmer_index] + (kmer_positions_ARRAY)[positioning_kmer_index];
+        ReadListIterator read_iter = mReads[*dr_iter]->begin();
+        while (read_iter != mReads[*dr_iter]->end()) 
+        {
+            // don't care about partials
+            int dr_start_index = 0;
+            int dr_end_index = 1;
+            while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(tmp_DR.length()) - 1))
+            {
+                dr_start_index += 2;
+                dr_end_index += 2;
+            }        
+            do
+            {
+                if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (((int)(tmp_DR.length())) - 1))
+                {
+                    // we need to find the first kmer which matches the mode.
+                    int this_read_start_pos = positional_offset - (*read_iter)->startStopsAt(dr_start_index) - (kmer_positions_DR)[0] ;
+                    for(int i = 0; i < (int)(*read_iter)->getSeqLength(); i++)
+                    {
+                        int index = -1;
+                        switch((*read_iter)->getSeqCharAt(i))
+                        {
+                            case 'A':
+                                index = 0;
+                                break;
+                            case 'C':
+                                index = 1;
+                                break;
+                            case 'G':
+                                index = 2;
+                                break;
+                            case 'T':
+                                index = 3;
+                                break;
+                        }
+                        if(index >= 0)
+                        {
+                            if((i+this_read_start_pos) >= 0)
+                            {
+                                coverage_array[index][i+this_read_start_pos]++;
+                            }
+                        }
+                    }
+                }
+                // go onto the next DR
+                dr_start_index += 2;
+                dr_end_index += 2;
+
+                // check that this makes sense
+                if(dr_start_index >= (int)((*read_iter)->numRepeats()*2))
+                    break;
+
+            } while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (((int)(tmp_DR.length())) - 1));
+            read_iter++;
+        }
     }	
 
     // kill the unfounded ones
@@ -1963,7 +1970,6 @@ bool WorkHorse::clusterDRReads(StringToken DRToken,
     //
 
     std::string DR = mStringCheck.getString(DRToken);
-
     int str_len = (int)DR.length();
     int off = str_len - CRASS_DEF_KMER_SIZE;
     int num_mers = off + 1;
