@@ -48,6 +48,8 @@
 #include <stdlib.h>
 #include <exception>
 #include <ctime>
+#include <libcrispr/StlExt.h>
+#include <libcrispr/Exception.h>
 
 // local includes
 #include "libcrispr.h"
@@ -57,18 +59,11 @@
 #include "PatternMatcher.h"
 #include "SeqUtils.h"
 #include "kseq.h"
-#include <libcrispr/StlExt.h>
 #include "config.h"
-#include <libcrispr/Exception.h>
 
-/* 
- declare the type of file handler and the read() function
- as described here:
- http://lh3lh3.users.sourceforge.net/parsefastq.shtml
- 
- THIS JUST DEFINES A BUNCH OF **templated** structs
- 
- */
+#define longReadCut(d,s) ((4*d) + (3*s))
+#define shortReadCut(d,s) ((2*d) + s)
+
 int decideWhichSearch(const char *inputFastq, 
                       const options& opts, 
                       ReadMap * mReads, 
@@ -96,8 +91,8 @@ int decideWhichSearch(const char *inputFastq,
     time_t time_start, time_current;
     time(&time_start);
     
-    int long_read_cutoff = (4*opts.lowDRsize) + (2*opts.lowSpacerSize);
-    int short_read_cutoff = (2*opts.lowDRsize) + opts.lowSpacerSize;
+    int long_read_cutoff = longReadCut(opts.lowDRsize, opts.lowSpacerSize);
+    int short_read_cutoff = shortReadCut(opts.lowDRsize, opts.lowSpacerSize);
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
