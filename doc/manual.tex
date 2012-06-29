@@ -120,7 +120,7 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 \title{Crass:  The CRISPR assembler}
 \author{Connor Skennerton and Michael Imelfort}
-\date{18th November 2011} % Activate to display a given date or no date (if empty),
+%\date{} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
@@ -140,10 +140,10 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 Crass has been developed with the GNU build system for maximum compatibility across platforms.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
 \subsection{Prerequisites}
 \subsubsection{Computer Resources}
-Crass should run on Linux or MacOSX with 64-bit architectures with gcc installed (note that other compilers have not been tested).  Crass successfully compiles with gcc 4.2, gcc 4.6 and gcc 4.7 other versions of gcc have not been tested.  Crass itself is not a memory intensive program, requiring less than 50mb to run through 20 million Illumina reads, and requires a single processor.  
+Crass should run on Linux or MacOSX with 64-bit architectures with gcc installed (note that other compilers have not been tested).  Crass successfully compiles with gcc 4.2 and gcc 4.4 other versions of gcc have not been tested.    
 
 \subsubsection{Pre-installed Software and Libraries}
-Crass requires that the Xerces-c XML library  and Zlib are installed for compilation.  Xerces-c is available freely at \url{http://xerces.apache.org/} and Zlib at \url{www.zlib.net}, which is usually installed although may not be on a minimally built server.  All other programs and packages are optional.
+Crass requires that the Xerces-c XML library, Zlib and libcrispr are installed for compilation.  Xerces-c is available freely at \url{http://xerces.apache.org/} and Zlib at \url{www.zlib.net}, which is usually installed although may not be on a minimally built server. Libcripsr should be bundled with Crass, however it must be built separately. All other programs and packages are optional.
 \subsubsection{Optional Packages and Programs}
 There are a number of optional features of Crass that require additional software.  These programs are not required for compilation but add extra features that you might find useful.  It is possible to create image files of the graphs that are produced by Crass if the Graphviz package is installed \url{www.graphviz.org}.  By default Crass outputs a .gv file of Graphviz source code, so even if your running Crass on a server that doesn't have it installed you can download the .gv file to another computer for visualization.  Testing for the Graphviz package occurs during configuration and it should be noted that even if you have Graphviz you still need to opt-in to graph rendering (see  ~\nameref{sec:configure} for the correct options) as for large graphs this can take time.  If you enable rendering during the configuration process you will be presented with new user options based on what Graphviz executables were found (see~\nameref{sec:userflags}).
 
@@ -165,7 +165,8 @@ Crass supports a number of compile-time options as well as the common options:
    -{}-enable-verbose\_logging & This option is different from enable-debug as it changes what information is printed in the log statments.  enabling verbose logging will add the source file name, the function name and the line number for every log statement. \\ \\    
 -{}-enable-rendering &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\  \\
    -{}-disable-assembly & Disables the assembly wrapper even if the Xerces library and suitable genome assemblers can be found.  Disabling the assembly wrapper willl change which souce files are compiled and as a result reduce the size of the executable. \\ \\
--{}-with-xerces & Set the path where the Xerces header and library objcets can be found\\
+-{}-with-xerces & Set the path where the Xerces header and library objcets can be found\\ \\
+-{}-with-libcrispr & Set the path where libcrispr header and library objects can be found \\
 
     \hline
     \end{longtable}
@@ -217,7 +218,7 @@ Crass also contains a number of options for fine tunning various parts of the un
     Option & Definition \\  \hline\hline 
 -b -{}-numBins &  sets the number of colour bins used in the output spacer graph for visualising the coverage of spacers in a dataset.  By default the number of bins is equal to the range of the highest and lowest coverage for a CRISPR \\ \\
 -k -{}-kmerCount & Sets the number of kmers that need to be shared between putative direct repeats for them to be clustered together after the find stage.  Clustered direct repeats are eventually concatenated to form a 'true' direct repeat for a CRISPR; putative repeats that cannot be clustered are removed from consideration.  Change this variable if you feel that the clustering is too stringent and is breaking appart one CRISPR into multiple types.  The default number of kmers is 6, however the value should not be set below 6 as this would not be stringent enough; a higher value would split closely related direct repeats apart\\ \\
--K -{}-graphNodeLen & Crass makes a graph by cutting kmers on either side of the direct repeat and then joining these together.  The length of the kmer will dictate how connected the graph will be.  A smaller number will increase the chances of new conections being formed, however it also increases the chances of false positives.  The default value is 7.\\ \\
+-K -{}-graphNodeLen & Crass makes a graph by cutting kmers on either side of the direct repeat and then joining these together.  The length of the kmer will dictate how connected the graph will be.  A smaller number will increase the chances of new conections being formed, however it also increases the chances of false positives.  The default value is 9.\\ \\
 -n -{}-minNumRepeats & Changes the minimum number of repeated seed sequences needed in the long read search algorithm. The default is 3.\\ \\
 -{}-noScalling & This turns off the effects of (-x or -y) so that the bounds of the direct repeat and spacer (-d -D -s -S) given on the command line are interpreted literally when the -{}-removeHomopolymers option is set. \\ \\
 -{}-removeHomopolymers & This is an experimental feature of Crass where the search algorithms attempt to correct for homopolymer errors in reads.\\ \\ 
@@ -227,9 +228,10 @@ Crass also contains a number of options for fine tunning various parts of the un
 \hline
     \end{longtable}
 \subsubsection{Output From Crass}
-Once the CRISPR finder is done there will be a number of output output files.  For every CRISPR type that Crass finds it will produce a sequence file in either fasta or fastq (depending on the format of the input data) and a .gv Graphviz file containing the arrangment of spacers.  There will also be a .crispr file containing information about all the found CRISPRs in an XML format (see \nameref{sec:Fileformats} for information about the .crispr specification) and a log file (if you specified for one) that contains all the information about the run. Note that at this stage the CRISPR has not been assembled into contigs, however the reads have been ordered and the arragnement of spacers will be known.
+Once the CRISPR finder is done there will be a number of output files.  For every CRISPR type that Crass finds it will produce a sequence file in fasta format that contains reads with that CRISPR type;  and a .gv file containing Graphviz source code for the arrangment of spacers.  There will also be a .crispr file containing information about all the found CRISPRs in an XML format (see \nameref{sec:Fileformats} for information about the .crispr specification) and a log file (if you specified for one) that contains all the information about the run. Note that at this stage the CRISPR has not been assembled into contigs, however the reads have been ordered and the arragnement of spacers will be known.
+\subsubsection{Visualizing Graphs}
+The graph file (.gv) is important for you to visualise all of the spacer arrangments in your CRISPRs.  If your input was a metagenomic sample then it is likely that there will be multiple arrangments of spacers.  Each individual section will be numbered and this numbering is important to the Crass assembler.  The graph can be visualized using a number of programs, the ones that I use are Graphviz (\url{www.graphviz.org}) and Gephi (\url{www.gephi.org}).  Both of these programs can take a .gv file as input; Graphviz will produce a single static image whereas Gephi creates an interactive graph that can be manipulated.
 
-The graph file is important for you to visualise all of the spacer arrangments in your CRISPRs.  If your input was a metagenomic sample then it is likely that there will be multiple arrangments of spacers.  Each individual section will be numbered and this numbering is important to the Crass assembler.   
 \subsection{Assembling CRISPRs}
 CRISPRs from metagenomic data can/will have many spacer arrangements.  This makes them difficult for a regular genome assembler to resolve as they look for a single route through the graph.   The Crass assembler is a wrapper for other popular genome assemblers; currently there are wrappers for Velvet and Cap3.  I premise is that you, the user will look at the output from Crass to determine which of the paths to take through the spacer graph, which are listed as different 'contigs'. To perform the assembly you need to tell Crass the group number of the CRISPR from the finder stage (this will be in the file name), the .crispr file from Crass and the a comma separated list of the segments/contigs IDs for your group of interest.  The most minimal command is shown below: 
  \begin{lstlisting}
@@ -259,10 +261,8 @@ This represents all of the links between each spacer to all others.  Reading thi
 Crass has been designed primarily with use of Illumina data, however there is nothing stopping you from using it of data produced by other sequencing technologies such as 454, Sanger or Ion Torrent.  There are a few practical considerations when dealing with other data types.
 \subsection{Read Type and Quality}
  Crass relies on exact string searching algorithms to find direct repeats in reads, which means that reads that are low quality will not produce good results.  Crass does contain a number of heuestic algorithms which try to overcome certain types of sequencing errors such as mismatches, although homopolymers require special attention (see below).  Although Crass can read fastq files it currently does not utilise quality data.  This is partly due to the inacuracy of quality scores of Illumina data, which was the original data that Crass was developed to process. 
-\subsubsection{Illumina Quality Scores}
-The quality scores in Illumina fastq files are VERY misleading.  In general low quality does not equal bad bases that would mismatch to a reference if one existed.  Because of this trimming Illumina data is not recomended and since Illumina data is already at the lower end of read lengths that Crass can process, your probably better off sticking in the raw dataset.
 \subsubsection{Sanger Data}
-Crass does work for Sanger data and should give good results due to the long read length and high quality.  Unlinke Illumina data it is advised that you quality trim the data to at least Q20.  The reason is one primarily of speed of execution time as longer reads will take longer to process.
+Crass does work for Sanger data and should give good results due to the long read length and high quality.  It is advised that you quality trim the data to at least Q20.  The reason is one primarily of speed of execution time as longer reads will take longer to process.
 \subsubsection{Homopolymers}
 Due to the underlying algorithms used in Crass, homopolymers pose a real challenge when finding direct repeats.  To try and overcome this the -{}-removeHomopolymers option tells Crass to correct these types of errors using a run-length encoding algorithm.  Basically all homopolymers are removed from the read as a preprocessing step and the 'squeezed' read is then used for direct repeat finding.  This feature is EXPERIMENTAL and at this stage does not provide optimal results.  The main issue is the rate of false positive matches is drastically increased when correcting for homopolymers so it is up to you whether you want to shift through the dud matches at the end to get out the CRISPRs that you want.  
 \subsection{Bird's Nests - fixing overly connected graphs}
