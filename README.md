@@ -58,6 +58,7 @@ With all this in mind to perform the installation:
 
 download the source files from git.
 then on most Unix systems:
+
     $ tar -xf crass.tar.gz
     $ cd crass
     $ ./autogen.sh
