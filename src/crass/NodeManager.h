@@ -58,7 +58,7 @@
 #include "ReadHolder.h"
 #include "GraphDrawingDefines.h"
 #include "Rainbow.h"
-#include <libcrispr/Xml.h>
+#include <libcrispr/writer.h>
 #include "StatsManager.h"
 
 #ifdef SEARCH_SINGLETON

@@ -129,6 +129,7 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 \tableofcontents
 \section{Quick Start}
 \begin{lstlisting}
+	[$ ./autogen.sh]
 	$ ./configure
 	$ make
 	$ make install
@@ -150,11 +151,12 @@ There are a number of optional features of Crass that require additional softwar
 \subsection{Compiling}
 On a GNU system simply:
 \begin{lstlisting}
+	[$ ./autogen.sh]
 	$  ./configure
 	$  make
 	$  [sudo] make install
 \end{lstlisting}
-
+NOTE: running \lstinline$./autogen.sh$ may be necessary to generate the \lstinline$configure$ program
 \subsubsection{Configure/Compiling Options}
 \label{sec:configure}
 Crass supports a number of compile-time options as well as the common options:
