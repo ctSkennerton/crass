@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="785.354px" height="472.79px" viewBox="-84.554 183.261 785.354 472.79"
+	 enable-background="new -84.554 183.261 785.354 472.79" xml:space="preserve">
+<g>
+	<g id="graph1" transform="scale(1 1) rotate(0) translate(4 180)">
+		<title>g</title>
+		<polygon fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.25" points="-79.449,476.051 -79.449,244.801 696.8,244.801 
+			696.8,476.051 		"/>
+		<g id="node1">
+			<title>LD</title>
+			<ellipse fill="none" stroke="#010101" stroke-width="1.25" cx="-44.449" cy="359.802" rx="29.772" ry="29.772"/>
+			<text transform="matrix(1 0 0 1 -56.115 366.801)" fill="#010101" font-family="'ArialMT'" font-size="17.5">LD</text>
+		</g>
+		<g id="node3">
+			<title>n1</title>
+			<ellipse fill="#3C2415" stroke="#010101" stroke-width="1.25" cx="56.801" cy="274.802" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge2">
+			<title>LD-&gt;n1</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M-21.284,340.937c14.263-12.273,33.01-28.411,48.411-41.673"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="24.36,295.875 36.69,291.036 30.07,302.506 			"/>
+		</g>
+		<g id="node5">
+			<title>n2</title>
+			<ellipse fill="#00AEEF" stroke="#010101" stroke-width="1.25" cx="154.301" cy="329.802" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge4">
+			<title>LD-&gt;n2</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M-14.663,355.44c34.426-5.262,92.392-14.126,130.352-19.927"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="115.191,331.164 128.208,333.597 116.514,339.815 			"/>
+		</g>
+		<g id="node7">
+			<title>n4</title>
+			<ellipse fill="#EF4136" stroke="#010101" stroke-width="1.25" cx="154.301" cy="424.802" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge6">
+			<title>LD-&gt;n4</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M-15.911,368.84c34.632,11.47,94.473,31.289,132.857,44.004"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="118.579,408.777 129.073,416.861 115.83,417.081 			"/>
+		</g>
+		<g id="node9">
+			<title>n6</title>
+			<ellipse fill="#1C75BC" stroke="#010101" stroke-width="1.25" cx="56.801" cy="444.802" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge8">
+			<title>LD-&gt;n6</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M-21.284,378.667c14.263,12.272,33.01,28.41,48.411,41.672"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="30.07,417.097 36.69,428.567 24.36,423.728 			"/>
+		</g>
+		<g id="edge10">
+			<title>n1-&gt;n2</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M79.609,287.281c12.146,7.031,27.558,15.954,41.122,23.809"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="122.95,307.322 131.579,317.37 118.57,314.894 			"/>
+		</g>
+		<g id="node12">
+			<title>n3</title>
+			<ellipse fill="#C2B59B" stroke="#010101" stroke-width="1.25" cx="251.801" cy="363.552" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge12">
+			<title>n2-&gt;n3</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M179.034,338.145c10.848,3.854,23.963,8.513,35.984,12.783"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="216.695,346.881 227.009,355.188 213.764,355.127 			"/>
+		</g>
+		<g id="node17">
+			<title>n7</title>
+			<ellipse fill="#EC008C" stroke="#010101" stroke-width="1.25" cx="349.3" cy="302.302" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge18">
+			<title>n2-&gt;n7</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M179.93,326.321c32.942-4.712,91.979-13.145,130.597-18.662"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="310.264,303.281 323.26,305.841 311.503,311.941 			"/>
+		</g>
+		<g id="node14">
+			<title>n5</title>
+			<ellipse fill="#D7DF23" stroke="#010101" stroke-width="1.25" cx="349.3" cy="376.052" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge14">
+			<title>n4-&gt;n5</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M180.205,421.149c24.921-3.955,64.411-10.944,97.842-20.098
+				c11.575-3.167,23.979-7.331,35.077-11.354"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="311.757,385.539 324.995,385.281 314.806,393.74 			"/>
+		</g>
+		<g id="edge16">
+			<title>n6-&gt;n4</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M82.515,439.651c10.306-2.168,22.52-4.741,33.863-7.129"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="115.535,428.229 128.669,429.934 117.337,436.792 			"/>
+		</g>
+		<g id="edge20">
+			<title>n3-&gt;n5</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M277.517,366.771c10.114,1.331,22.066,2.903,33.233,4.373"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="311.512,366.829 323.335,372.8 310.372,375.508 			"/>
+		</g>
+		<g id="node20">
+			<title>n8</title>
+			<ellipse fill="#262262" stroke="#010101" stroke-width="1.25" cx="446.8" cy="376.052" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge22">
+			<title>n5-&gt;n8</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M375.509,376.051c9.928,0,21.562,0,32.471,0"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="408.255,371.676 420.755,376.051 408.255,380.426 			"/>
+		</g>
+		<g id="node22">
+			<title>n9</title>
+			<ellipse fill="#00A79D" stroke="#010101" stroke-width="1.25" cx="446.8" cy="302.302" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge26">
+			<title>n5-&gt;n9</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M370.233,360.771c13.118-10.186,30.611-23.766,45.437-35.271"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="413.333,321.771 425.889,317.562 418.697,328.684 			"/>
+		</g>
+		<g id="edge24">
+			<title>n7-&gt;n9</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M375.509,302.301c9.928,0,21.562,0,32.471,0"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="408.255,297.926 420.755,302.301 408.255,306.676 			"/>
+		</g>
+		<g id="node25">
+			<title>n10</title>
+			<ellipse fill="#FBB040" stroke="#010101" stroke-width="1.0222" cx="550.55" cy="369.802" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge28">
+			<title>n8-&gt;n10</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M473.074,374.507c9.854-0.608,27.476-1.494,38.62-2.183"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="511.695,367.958 524.438,371.554 512.234,376.692 			"/>
+		</g>
+		<g id="node27">
+			<title>n11</title>
+			<ellipse fill="#00A651" stroke="#010101" stroke-width="1.0305" cx="654.3" cy="369.802" rx="26.111" ry="26.111"/>
+		</g>
+		<g id="edge34">
+			<title>n8-&gt;n11</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M468.38,390.419c13.412,8.571,31.748,18.635,49.668,23.132
+				c28.021,7.035,37.109,7.539,65,0c14.036-3.792,28.147-10.942,40.279-18.374"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="620.986,391.48 633.853,388.355 625.741,398.823 			"/>
+		</g>
+		<g id="edge30">
+			<title>n9-&gt;n11</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M472.587,304.376c27.559,2.891,73.283,9.383,110.461,22.925
+				c13.212,4.817,26.834,11.819,38.776,18.765"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="624.257,342.419 632.699,352.622 619.736,349.909 			"/>
+		</g>
+		<g id="edge32">
+			<title>n10-&gt;n11</title>
+			<path fill="none" stroke="#010101" stroke-width="1.25" d="M576.659,369.801c10.109,0,27.413,0,38.27,0"/>
+			<polygon fill="#010101" stroke="#010101" stroke-width="1.25" points="615.253,365.426 627.753,369.801 615.253,374.176 			"/>
+		</g>
+	</g>
+</g>
+<g>
+	<polyline fill="none" stroke="#000000" stroke-width="5.1082" stroke-miterlimit="10" points="-49.774,268.407 42.037,268.407 
+		133.853,268.407 225.664,268.407 317.477,268.407 409.292,268.407 501.101,268.407 592.913,268.407 684.722,268.407 	"/>
+	<polyline fill="none" stroke="#000000" stroke-width="5.1082" stroke-miterlimit="10" points="-49.774,362.96 42.037,362.96 
+		133.853,362.96 225.664,362.96 317.477,362.96 409.292,362.96 501.101,362.96 592.913,362.96 684.722,362.96 	"/>
+	<polyline fill="none" stroke="#000000" stroke-width="5.1082" stroke-miterlimit="10" points="-49.774,331.445 42.037,331.445 
+		133.853,331.445 225.664,331.445 317.477,331.445 409.292,331.445 501.101,331.445 592.913,331.445 684.722,331.445 	"/>
+	<polyline fill="none" stroke="#000000" stroke-width="5.1082" stroke-miterlimit="10" points="-49.774,299.927 42.037,299.927 
+		133.853,299.927 225.664,299.927 317.477,299.927 409.292,299.927 501.101,299.927 592.913,299.927 684.722,299.927 	"/>
+	<g>
+		
+			<rect x="40.043" y="255.384" fill="#3C2415" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.973" height="27.5"/>
+		
+			<rect x="40.043" y="287.095" fill="#00AEEF" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.974" height="27.5"/>
+		
+			<rect x="40.043" y="318.61" fill="#EF4136" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.974" height="27.5"/>
+		
+			<rect x="40.043" y="350.128" fill="#1C75BC" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.974" height="27.5"/>
+	</g>
+	<g>
+		
+			<rect x="177.471" y="255.384" fill="#00AEEF" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.979" height="27.5"/>
+		
+			<rect x="177.471" y="287.095" fill="#C2B59B" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.979" height="27.5"/>
+		
+			<rect x="177.471" y="318.61" fill="#D7DF23" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.979" height="27.5"/>
+		
+			<rect x="177.471" y="350.128" fill="#EF4136" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.979" height="27.5"/>
+	</g>
+	<g>
+		
+			<rect x="314.9" y="255.384" fill="#EC008C" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.979" height="27.5"/>
+		
+			<rect x="314.9" y="287.095" fill="#D7DF23" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.979" height="27.5"/>
+		
+			<rect x="314.899" y="318.61" fill="#262262" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.979" height="27.5"/>
+		
+			<rect x="314.899" y="350.128" fill="#D7DF23" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.979" height="27.5"/>
+	</g>
+	<g>
+		
+			<rect x="452.334" y="255.384" fill="#00A79D" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.973" height="27.5"/>
+		
+			<rect x="452.334" y="287.095" fill="#00A79D" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.973" height="27.5"/>
+		
+			<rect x="452.33" y="318.61" fill="#FBB040" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.977" height="27.5"/>
+		
+			<rect x="452.33" y="350.13" fill="#262262" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.977" height="27.5"/>
+	</g>
+	<g>
+		
+			<rect x="589.76" y="255.384" fill="#00A651" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.974" height="27.5"/>
+		
+			<rect x="589.76" y="287.095" fill="#00A651" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.974" height="27.5"/>
+		
+			<rect x="589.759" y="318.61" fill="#00A651" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.975" height="27.5"/>
+		
+			<rect x="589.759" y="350.13" fill="#00A651" stroke="#000000" stroke-width="1.277" stroke-miterlimit="10" width="66.975" height="27.5"/>
+	</g>
+	<g>
+		<polygon fill="#FFFFFF" stroke="#000000" stroke-width="0.9004" stroke-miterlimit="10" points="-26.089,283.74 -59.371,283.74 
+			-59.371,256.24 -42.729,269.99 		"/>
+		<polygon fill="#FFFFFF" stroke="#000000" stroke-width="0.9004" stroke-miterlimit="10" points="-26.088,315.449 -59.371,315.449 
+			-59.371,287.948 -42.729,301.698 		"/>
+		<polygon fill="#FFFFFF" stroke="#000000" stroke-width="0.9004" stroke-miterlimit="10" points="-26.089,346.966 -59.371,346.966 
+			-59.371,319.465 -42.73,333.215 		"/>
+		<polygon fill="#FFFFFF" stroke="#000000" stroke-width="0.9004" stroke-miterlimit="10" points="-26.089,378.483 -59.371,378.483 
+			-59.371,350.983 -42.73,364.733 		"/>
+	</g>
+</g>
+<text transform="matrix(1 0 0 1 -74.4255 221.55)" font-family="'ArialMT'" font-size="45">A</text>
+<text transform="matrix(1 0 0 1 -74.4929 436.55)" font-family="'ArialMT'" font-size="45">B</text>
+</svg>

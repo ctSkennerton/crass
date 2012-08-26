@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <title>Crass: The CRISPR assembler</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+body {
+	padding-top: 60px;
+	padding-bottom: 40px;
+}
+</style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="google-code-prettify/prettify.css" type="text/css" rel="stylesheet" />
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+    </head>
+
+    <body onload="prettyPrint()">
+<div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+    <div class="container"> <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a> <a class="brand" href="index.html">Crass</a>
+          <div class="nav-collapse">
+        <ul class="nav">
+              <li><a href="assets/manual.pdf">Manual</a></li>
+              <li><a href="http://ecogenomic.org">Ecogenomic</a></li>
+            </ul>
+      </div>
+          <!--/.nav-collapse --> 
+        </div>
+  </div>
+    </div>
+<div class="container-fluid">
+      <div class="row-fluid">
+    <div class="span3">
+          <div class="well sidebar-nav">
+        <ul class="nav nav-list">
+              <li class="nav-header">Latest Release</li>
+              <li><a href="https://github.com/ctSkennerton/crass/tarball/master">Crass 0.2.16</a></li>
+              <!--<li>please cite: Skennerton, C. T., Imelfort, M. &amp; G. W. Tyson. (2012) "Identification and assembly of CRISPR loci using unassembled metagenomic sequencing reads" Genome Biology </li>-->
+              <li class="nav-header">Documentation</li>
+              <li class="active"><a href="Tutorial.html">Tutorial</a></li>
+              <li><a href="FAQ.html">Frequently Asked Questions</a></li>
+              <li><a href="assets/manual.pdf">Manual</a></li>
+              <li class="nav-header">Related Software</li>
+              <li><a href="https://github.com/ctSkennerton/crisprtools">crisprtools</a></li>
+              <li><a href="http://ctskennerton.github.com/libcrispr/">libcrispr</a></li>
+              <li class="nav-header">Resources</li>
+              <li><a href="assets/Crass-ISME14.pdf">ISME14 Poster</a></li>
+            </ul>
+      </div>
+          <!--/.well --> 
+        </div>
+    <!--/span-->
+    <div class="span9">
+          <div class="row-fluid">
+        <div class="span12">
+              <h2>Assembling CRISPRs with Crass</h2>
+              <p> This tutorial is designed to walk you through the various stages of running Crass and interprating its output.  We will not be covering topics such as installation, for that refer to the <a href="assets/manual.pdf">manual</a>. </p>
+              <h3>Getting some data</h3>
+              <p>Crass can take both fasta and fastq as input files and they can even be gzipped!  The only requirement is the  read length which must be between 76 and 2000 bp; this means that Crass can work with data from sanger, 454, Ion Torrent &amp; Illumina sequencing platforms.  For this tutorial we will use data from a Enhanced Biological Phosphorus Removal (EBPR) reactor community (but feel free to work through with your own metagenomes if you want).  The data archive can be found in NCBI's sequence read archive under the accession <a href="http://www.ncbi.nlm.nih.gov/sra?term=SRX117744">SRX117744</a></p>
+              <p>This will download an SRA archive that you will need to convert into a fastq file.  NCBI provides a <a href="http://www.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?cmd=show&f=software&m=software&s=software">toolkit</a> for this kind of conversion.  Use the <code>fastq-dump</code> tool to convert the SRA archive to fastq format.</p>
+              <p><code>$ fastq-dump -F SRX117744.sra</code></p>
+              <p> The above command should produce a file called <code>SRX117744.fastq</code>.  The <code>-F</code> option sets the output format to the original identifiers, rather than the SRA read identifier</p>
+              <h3>Running Crass</h3>
+              <p>Crass is very easy to run, the most basic command is:</p>
+              <p><code>$ crass SRX117744.fastq</code></p>
+              <p>This will run crass with the default settings on the fastq file created from the SRA archive.  This will output a whole heap of files to the current directory.  By default Crass will output two files for each CRISPR that it finds: a <code>.gv</code> (graphviz) file and a <code>.fa</code> (fasta) file.  The fasta file contains all of the reads that contained the CRISPR, or more specifically the direct repeat.  The graphviz file is a textual representation of the spacer arrangement and can be vizuallized in a number of programs.  I use either <a href="gephi.org">Gephi</a> or the <a href="graphviz.org">graphviz</a> software tools to create a graphical representation.There will also be two extra files, a log file that will give a little bit of information about the parameters and results.  If you look at this log file, you'll see that it doesn't give you that much information, but you can increase the logging verbosity.  The other file will be called <code>crass.crispr</code>. This is an xml file containing all of the information about the CRISPRs that were discovered during the run.  You can use the <a href="https://github.com/ctSkennerton/crisprtools">crisprtools</a> software package to manipulate and extract information from this file.</p>
+              <p>Crass can take any number of input files that you have, just be aware that they will all be procesed the same way, and assumed to be from the same source:</p>
+              <p><code>$ crass SRX117744.1.fastq SRX117744.2.fastq</code></p>
+              <p>You can also give Crass fasta files as well:</p>
+              <p><code>$ crass SRX117744.1.fasta SRX117744.2.fasta</code></p>
+              <h4>Controlling Crass output</h4>
+              <p>The default options set by Crass are pretty good but there are two things that I genreally do when using Crass: increase logging verbosity and controlling the output directory.</p>
+              <p><code>$ crass -o crass_out -l 4 SRX117744.fastq</code></p>
+              <p>The command above will output (<code>-o</code>) all the results to a folder called <code>crass_out</code> and increase the log level (<code>-l</code>) to 4.  You don't have to create the directory yourself, Crass will do that for you if it doesn't exist.  Now the results will be nicely tucked away in their own folder and and log file will contain some useful information about how Crass went about finding the CRISPRs</p>
+              <p>Crass contains a whole heap of options for controlling the way that it identifies and assembles CRISPR loci, please refer to the <a href="Manual.html">manual</a> for more information about what each one does.</p>
+              <h3>Understanding the results</h3>
+              <p>Crass outputs a graph of the spacer arrangement that it identifies.  The image below gives a nice primer on how this kind of output compares with a more traditional approach used in current literature.  Basically each spacer is a circle and the arrows between the circles tell you how the spacers sit one after another.  Therefore if you start at the leader sequence and follow the arrows to the end, you would have travelled through one of the strains that compose this CRISPR.</p>
+              <ul class="thumbnails">
+            <li class="span9">
+                  <div class="thumbnail">
+                <image src="assets/Alignment vs graph.svg" alt="">
+                <h6>Graphing CRISPRs</h6>
+                <p>Comparison between different visualization approaches used for CRISPRs. <b>(A)</b> A traditional alignment approach whereby each spacer is represented as a coloured rectangle; spacers that are common across multiple strains are aligned on top of each other. <b>(B)</b> The graph approach used in Crass; here each spacer is represented as a single circle, whether it was found in multiple strains or not.  The arrows from the leader sequence show which spacers are next to each other.</p>
+              </div>
+                </li>
+          </ul>
+              <p>Crass also outputs an xml file called <code>crass.crispr</code>.  This file contains all the information about the direct repeats, spacers and flanks found for each CRISPR as well as information to reconstruct the graph, should you loose that file.  Below is an example file containing a single CRISPR with a single spacer, just to give you an idea on the structure of <code>.crispr</code> files.  Luckily there is already software, called <a href="#">crisprtools</a>, available to manipulate the <code>.crispr</code> files. </p>
+              <pre class="prettyprint pre-scrollable">
+&lt;?xml version="1.0" encoding="ISO8859-1" standalone="no" ?&gt;
+&lt;crispr version="1.1"&gt;
+
+  &lt;group drseq="AGTTGGGATGTTTCCAATGTGACTAATATGAGAG" gid="G11"&gt;
+    &lt;data&gt;
+      &lt;sources&gt;
+        &lt;source accession="CAM_READ_0232711161" soid="SO2"/&gt;
+      &lt;/sources&gt;
+      &lt;drs&gt;
+        &lt;dr drid="DR1" seq="AGTTGGGATGTTTCCAATGTGACTAATATGAGAG"/&gt;
+      &lt;/drs&gt;
+      &lt;spacers&gt;
+        &lt;spacer cov="1" seq="GAATGTTTGGGCATAGTGAATTCAATCAAAATATTGGC" spid="SP12"&gt;
+          &lt;source soid="SO2"/&gt;
+        &lt;/spacer&gt;
+
+        &lt;/spacer&gt;
+      &lt;/spacers&gt;
+    &lt;/data&gt;
+    &lt;metadata&gt;
+      &lt;program&gt;
+        &lt;name&gt;crass&lt;/name&gt;
+        &lt;version&gt;0.2.13&lt;/version&gt;
+        &lt;command&gt;crass -o crass_0.2.13 -K 9 raw/combined.fa &lt;/command&gt;
+      &lt;/program&gt;
+      &lt;notes&gt;Run on 20_05_2012_165537&lt;/notes&gt;
+      &lt;file type="log" url="crass.20_05_2012_165537.log"/&gt;
+      &lt;file type="data" url="Spacers_11_AGTTGGGATGTTTCCAATGTGACTAATATGAGAG.gv"/&gt;
+      &lt;file type="sequence" url="Group_11_AGTTGGGATGTTTCCAATGTGACTAATATGAGAG.fa"/&gt;
+    &lt;/metadata&gt;
+    &lt;assembly&gt;
+      &lt;contig cid="C1"&gt;
+        &lt;cspacer spid="SP12"&gt;
+          &lt;bspacers&gt;
+            &lt;bs drconf="0" drid="DR1" spid="SP10"/&gt;
+          &lt;/bspacers&gt;
+          &lt;fspacers&gt;
+            &lt;fs drconf="0" drid="DR1" spid="SP15"/&gt;
+          &lt;/fspacers&gt;
+        &lt;/cspacer&gt;
+      &lt;/contig&gt;
+    &lt;/assembly&gt;
+  &lt;/group&gt;
+
+&lt;/crispr&gt;
+</pre>
+            </div>
+        <!--/span--> 
+        
+      </div>
+          <!--/row--> 
+        </div>
+    <!--/span--> 
+  </div>
+      <!--/row-->
+      <hr>
+      <footer>
+    <p>&copy; Connor Skennerton &amp; Michael Imelfort 2011, 2012</p>
+  </footer>
+    </div>
+<!-- /container --> 
+
+<!-- Le javascript
+    ================================================== --> 
+<!-- Placed at the end of the document so the pages load faster --> 
+<script type="text/javascript" src="google-code-prettify/prettify.js"></script> 
+<script src="js/jquery.js"></script> 
+<script src="js/bootstrap-transition.js"></script> 
+<script src="js/bootstrap-alert.js"></script> 
+<script src="js/bootstrap-modal.js"></script> 
+<script src="js/bootstrap-dropdown.js"></script> 
+<script src="js/bootstrap-scrollspy.js"></script> 
+<script src="js/bootstrap-tab.js"></script> 
+<script src="js/bootstrap-tooltip.js"></script> 
+<script src="js/bootstrap-popover.js"></script> 
+<script src="js/bootstrap-button.js"></script> 
+<script src="js/bootstrap-collapse.js"></script> 
+<script src="js/bootstrap-carousel.js"></script> 
+<script src="js/bootstrap-typeahead.js"></script>

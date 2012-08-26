@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Crass: The CRISPR assembler</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="index.html">Crass</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li><a href="assets/manual.pdf">Manual</a></li>
+              <li><a href="http://ecogenomic.org">Ecogenomic</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+
+      <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+              <li class="nav-header">Latest Release</li>
+              <li><a href="https://github.com/ctSkennerton/crass/tarball/master">Crass 0.2.16</a></li>
+              <!--<li>please cite: Skennerton, C. T., Imelfort, M. &amp; G. W. Tyson. (2012) "Identification and assembly of CRISPR loci using unassembled metagenomic sequencing reads" Genome Biology </li>-->
+              <li class="nav-header">Documentation</li>
+              <li><a href="Tutorial.html">Tutorial</a></li>
+              <li class="active"><a href="FAQ.html">Frequently Asked Questions</a></li>
+              <li><a href="assets/manual.pdf">Manual</a></li>
+              <li class="nav-header">Related Software</li>
+              <li><a href="https://github.com/ctSkennerton/crisprtools">crisprtools</a></li>
+              <li><a href="http://ctskennerton.github.com/libcrispr/">libcrispr</a></li>
+              <li class="nav-header">Resources</li>
+              <li><a href="assets/Crass-ISME14.pdf">ISME14 Poster</a></li>
+            </ul>
+          </div><!--/.well -->
+        </div><!--/span-->
+        <div class="span9">
+          
+          <div class="row-fluid">
+            <div class="span12">
+              <h3>What kinds of data does Crass work with?</h3>
+              <p>Crass was designed primarily for short read data like the kind produced from the Illumina sequencing platform.  However it has been tested on Sanger and Ion Torrent data as well.  The current constraints are that reads shorter than 76bp in length will not be used and reads longer than 2000bp cannot be used </p>
+              <h3>Can I run an entire sequenced genome through Crass?</h3>
+              <p>No, currently Crass will only work on the raw sequencing reads.  If you have access to the data you could always run Crass on the reads that went into making that genome of yours.  There are three programs that will identify CRISPRs in genome sequences: <a href="http://www.drive5.com/pilercr">PILER-CR</a>, <a href="http://www.room220.com/crt">CRT</a> &amp; <a href="http://crispr.u-psud.fr/">CRISPRFinder</a>; you might want to check them out.  In the future Crass will support full length genome sequences, however due to assumptions made in the algorithm it is not currently possible.</p>
+              <h3>How fast is Crass? </h3>
+              <p> Well that depends on how much data you have and how diverse that data is. The algorithm used in Crass scales linearly with the number of reads processed but exponentially with the number of CRISPR patterns in the dataset.  With a dataset with 100M reads and a medium level of CRISPR diversity, Crass will run overnight and be read in the morning.</p>
+              <h3> How do I interprate the output from Crass?</h3>
+              <p>Best read the <a href="Tutorial.html">tutorial</a></p>
+              <h3>Does Crass use paired-read information</h3>
+              <p> Currently no, but it is an area of improvement for the algorithm</p>
+              <h3>How do I cite Crass?</h3>
+              <p>Crass is currently pre-publication software.  To cite it please contact me directly</p>
+              <h3>I think I found a bug, what should I do?</h3>
+              <p>For starters, make sure that you are using the latest release of Crass (the most recent version number is found all over this website).  The next thing to do is to make sure that it is reproducable on the dataset that your using, so just run Crass again to find out (and make sure that you turn the logging up to the maximum level you can).  Assuming that you are on the latest version and you can reproduce the bug you should log the bug <a href="https://github.com/ctSkennerton/crass/issues">here</a>.  It's important that you give as much information about the error including pasting any text that was output to the terminal.  You should hang on to the log file cause I may ask for it when I'm debugging</p>
+            </div><!--/span-->
+
+          </div><!--/row-->
+        </div><!--/span-->
+      </div><!--/row-->
+      <hr>
+
+      <footer>
+        <p>&copy; Connor Skennerton &amp; Michael Imelfort 2011, 2012</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap-transition.js"></script>
+    <script src="js/bootstrap-alert.js"></script>
+    <script src="js/bootstrap-modal.js"></script>
+    <script src="js/bootstrap-dropdown.js"></script>
+    <script src="js/bootstrap-scrollspy.js"></script>
+    <script src="js/bootstrap-tab.js"></script>
+    <script src="js/bootstrap-tooltip.js"></script>
+    <script src="js/bootstrap-popover.js"></script>
+    <script src="js/bootstrap-button.js"></script>
+    <script src="js/bootstrap-collapse.js"></script>
+    <script src="js/bootstrap-carousel.js"></script>
+    <script src="js/bootstrap-typeahead.js"></script>
