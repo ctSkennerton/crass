@@ -17,6 +17,7 @@
 * Using paired read information in the search algorithms
 * Ability to run Crass on genomes or assembled contigs
     * Output a gff3 formatted file
+* Screen for known eukaryotic microsatellites for datasets that may be host contaminated
 ## Improvements
 * Use read information better when building the graph
 * Allow for multiple DR types to be in a single sequence. Very important if Crass is to work on genomes 
