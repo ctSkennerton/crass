@@ -1,4 +1,4 @@
-crass -- CRisprASSembler -- version 0 subversion 2 revision 16 (0.2.16)
+crass -- CRisprASSembler -- version 0 subversion 2 revision 17 (0.2.17)
 =======================================================================
 
 
@@ -30,19 +30,13 @@ at the following locations:
 
 [Boyer-Moore Search Algorithm](http://dev-faqs.blogspot.com/2010/05/boyer-moore-algorithm.html)
 
-[Wu-Manber Search Algorithm](
-http://www.oneunified.net/blog/2008/03/23/)
+[Wu-Manber Search Algorithm](http://www.oneunified.net/blog/2008/03/23/)
 
-[Levensthein String Comparison Algorithm](
-http://www.merriampark.com/ldcpp.htm)
+[Levensthein String Comparison Algorithm](http://www.merriampark.com/ldcpp.htm)
 
 [CRISPR Recognition Tool (CRT)](http://www.room220.com)
-Bland, C., Ramsey, T.L., Sabree, F., Lowe, M., Brown, K., Kyrpides, N.C., and Hugenholtz, P. (2007) 
-CRISPR Recognition Tool (CRT): a tool for automatic detection of clustered regularly interspaced palindromic repeats. 
-BMC Bioinformatics 8: 209.
 
-[SaSSY - Short read assembler](
-http://sassy.mikeimelfort.com)
+[SaSSY - Short read assembler](http://sassy.mikeimelfort.com)
 
 INSTALLATION
 ------------

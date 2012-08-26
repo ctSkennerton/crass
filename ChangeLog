@@ -1,8 +1,360 @@
+commit 65eba6408936915d145c438bde7c58dc66839e60
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 27 05:29:49 2012 +1000
+
+    removed old readme file and updated the libcrispr m4 macro to work with the new version
+
+commit 49ec04d6ad08b4b378910cffccd0ca39119c59ca
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Aug 24 06:51:06 2012 +1000
+
+    typo in readme
+
+commit 891e169bd6fc0f9b8db6f821e047ad9c3575e640
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Aug 24 06:49:31 2012 +1000
+
+    a few minor updates to the readme
+
+commit f312c690a86045d7923111347e3e425567c99e92
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Aug 24 06:24:26 2012 +1000
+
+    changed readme to markdown
+
+commit 72be231583deea365cfe437a1325946f1ca757fd
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Aug 24 06:04:12 2012 +1000
+
+    changed the naming scheme for lib crisp headers
+
+commit f9552635c6092baa2cfb743cfbdaec6896b1d9cb
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Aug 24 05:32:26 2012 +1000
+
+    small update to the manual
+
+commit d8afdbfbc6a7199c874dc1fb10d95823c568b4b0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Jun 29 22:08:19 2012 +1000
+
+    Updated the manual a bit
+
+commit 3c3de0a123064fed71d093c2ad6d8ec3e964ca42
+Author: Connor T. Skennerton <c.skennerton@gmail.com>
+Date:   Sat Jun 16 13:57:36 2012 +1000
+
+    Changed the default cutoff length for long reads in libcrispr#decideWhichSeach() to accomodate Illumina 150bp reads
+
+commit acff928c6c30a837a1ed4dcd170e14750c92df5d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jun 9 20:34:25 2012 +1000
+
+    Added in a couple of test files
+
+commit 9fc798ce44c812a03014a98bbe83e3282eef723d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jun 9 20:25:06 2012 +1000
+
+    Fixed a bug in WorkHorse::calculateDRConsensus() that was causing low coverage groups to have the DRs called incorrectly
+
+commit 2f75f832b7fe16d98b558cb50b4bd4e80add3013
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jun 9 20:21:30 2012 +1000
+
+    Changed CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF to 0.23 to better reflect real-world DR statistics
+
+commit dd11ce4f96e7e7f62bdc19f9c2e9af4f91be612d
+Merge: 0e48318 d2a369f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Jun 7 15:41:26 2012 +1000
+
+    Merge branch 'clean_fix_2'
+
+commit d2a369fd36a990b61cc923e9d312135ada39c382
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Jun 7 15:39:59 2012 +1000
+
+    Fixed a bug in CrisprNode::getDiscountedCoverage() that was causing the wrong node to be removed
+
+commit 0e48318d93d572e70266caf511e5c5c6df8f2dd8
+Merge: 4e44bfc fec1f39
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Jun 7 15:39:19 2012 +1000
+
+    Merge branch 'clean_fix_2'
+
+commit fec1f39487d70a892b82709a3c24a95020775eb5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jun 4 16:30:59 2012 +1000
+
+    moved code across from libcrispr into crass
+
+commit 4e44bfc4a5400418d29d9888b1ee3d56e236d948
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 26 11:10:51 2012 +1000
+
+    Fixed a bug where reads that began or ended in spacers were being hashly removed
+
+commit 97cd85876797e3abe866112b9d32e35e2366cd3f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed May 23 23:09:10 2012 +1000
+
+    updated version to v0.2.14
+
+commit 88b3b3d38f2a9cf10f615606740169c517dbc353
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed May 23 23:07:29 2012 +1000
+
+    Fixed a bug in libcrispr#qcFoundRepeats which was causing an exception to be thrown in rare circumstanses
+
+commit d4abf01f973da09cb7a69e3366fb23ff8f0a49b0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun May 20 22:03:44 2012 +1000
+
+    Removed references to the libcrispr submodule.  Should now be installed like any other library
+
+commit e46438f1fcd5baa95e2f165ad6e5da1969084d4d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun May 20 22:02:36 2012 +1000
+
+    removed debugging statments and updated the the version number to 0.2.13 in preperation for merge into master
+
+commit c5b0bc497a248b42e5b9994c75e68349f0cc3b07
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 19 17:15:09 2012 +1000
+
+    changed the build system for libcrispr
+
+commit df7e602c0033760d3c175c516f02143c5b6eff8f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 19 13:12:04 2012 +1000
+
+    removed some files that were move into another repo
+
+commit 44ec088af2cef6f730a98dca87750e271951287a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 19 01:25:33 2012 +1000
+
+    Switched to the new build system with libcrispr as a submodule
+
+commit 38500de3f7d74ab6af5a28f07e9d9837420e5131
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 19 01:18:54 2012 +1000
+
+    Changed a #include statement
+
+commit 04991e4357355a7488f76cbfd49a5377138a8675
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 19 00:51:01 2012 +1000
+
+    Added StringCheck back into repo
+
+commit 5cd8a0abc5bd3402349b9d40732f9dc764a54c66
+Merge: bb48d50 cac331b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 19 00:36:56 2012 +1000
+
+    Merge branch 'crispr_1_1' into spacer_cleaning_fix
+    
+    Conflicts:
+    	src/crass/Makefile.am
+    	src/crass/WorkHorse.cpp
+
+commit bb48d5032a46078fa0b2da286822f90efb51dae9
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri May 18 23:28:40 2012 +1000
+
+    Changed the include statements for libcrispr related files
+
+commit c4ef62b5a44599336fa5b3e0137c0e2fd0c90835
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri May 18 22:38:20 2012 +1000
+
+    Fixed a bug in CrisprNode::getDiscountedCoverage() which was causing the wrong node to be removed during cleaning
+
+commit 128de46bf298bc32b6e02fdc489e303d13642667
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri May 18 18:06:42 2012 +1000
+
+    added in kseq.cpp into the git repo
+
+commit de89ef06a8803b0f0b009d933830fc6b2f4b1ac2
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Fri May 18 16:46:12 2012 +1000
+
+    fixed the memory leak by de-macroin' the kseq.h 'quaqmire'
+
+commit 92fffa789a9bb863f254faac7ce3dc3a2a5e082c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri May 18 14:01:26 2012 +1000
+
+    Debugging the graphs
+
+commit 4c5b5fa4c0ef471ee48bd5fd3c9f901cf5b50f7c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu May 17 22:00:13 2012 +1000
+
+    Fixed an error in CrisprNode::setEdgeAttachState() introduced during refactoring
+
+commit a4fd10afb766d6bc373a76beaa07e96193835304
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu May 17 21:28:49 2012 +1000
+
+    minor code cleanup
+
+commit a260d916bafafaa0f325430de0b4b771a8411020
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu May 17 21:28:05 2012 +1000
+
+    Refactored CrisprNode::printEdges() and CrisprNode::setAttach()
+
+commit cac331b35827e64808a81e3cb2cf9a1c558b3f04
+Merge: 4153afd f0d0302
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu May 17 20:23:04 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass into crispr_1_1
+    
+    Conflicts:
+    	configure.ac
+    	man/crisprtools.1
+    	src/crass/NodeManager.h
+    	src/crass/WorkHorse.h
+    	src/crisprtools/StatTool.cpp
+    	src/libcrispr
+    	src/libcrispr/Exception.h
+
+commit f0d0302902f666cc9e2ff9290f699dba364f8728
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Thu May 17 16:57:29 2012 +1000
+
+    upped version to 0.2.12
+
+commit ea1cc658ac3da05f1ac6494762fe8bdcde07fce3
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Thu May 17 16:54:17 2012 +1000
+
+    Fixed a bug in bubble clear where the wrong guy was gettin' removed
+
+commit 38c9e3a9076e56906de185da6dea59a8f8ab1551
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun May 13 19:18:59 2012 +1000
+
+    fixed a print statement in libcrispr#findSingletonsMultiVector()
+
+commit f6b73406b421ebb65940f6c6815200ad58417d6e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun May 13 19:17:55 2012 +1000
+
+    small code clean up
+
+commit 37f865ec17f8c7a4c5655fad10cf9c62e1484cef
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun May 13 19:15:33 2012 +1000
+
+    Added in new test to WorkHorse::parseSeqFiles() that reverts the accepted DR and spacer length after the initial find if removeHomopolymers is in place. fixes #56
+
+commit f39f55f1e8de92511df7d7ef19cbef8438e61b2d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 12 18:31:35 2012 +1000
+
+    added in a new variable in libcrispr#shortReadSearch() and libcrispr#longReadSearch() that saves the encoded DR for libcrispr#findSingletons(). fixes #55
+
+commit 483f40ddb74e52506ca91d69305385631047956d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 12 17:52:37 2012 +1000
+
+    Added in a decode() call in libcrispr#shortReadSearch() so that the correct DR and read is being stored.  Resolved issue #54
+
+commit c541d373182b17e0bb7ec37787be5a1e8d88e38c
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Fri May 11 10:24:53 2012 +1000
+
+    oops
+
+commit 24ccbb52c7659f83bf5364c444c32cfb5877dfdb
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Fri May 11 10:22:44 2012 +1000
+
+    Added connors lovely changes to stats flanker calculations.
+
+commit b4145d13cce671e7db83bfdb480743e61c41003d
+Author: minillinim <mike@mikeimelfort.com>
+Date:   Fri May 11 10:22:22 2012 +1000
+
+    resolved an issue where the number of flanking sequences was inflating the standard deviation of the spacer length, causing groups to be unwittingly destroyed
+    (cherry picked from commit 627642d7856c742d3c093e587293001c8f615a07)
+    
+    Conflicts:
+    
+    	src/crass/NodeManager.h
+
+commit 4153afd3ad2af3c51e519d5c66e767f9b0bae5bb
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu May 10 21:28:39 2012 +1000
+
+    Change interface so that we now search of read identifiers rather than contains
+
+commit 2c90902299263ec0414dfe8e62a0bcda9ecb6a11
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu May 10 21:27:48 2012 +1000
+
+    Fixed an issue with NodeManager::dumpReads() where the memory address and not the value was being outputted
+
+commit ed13601a786f2a8079252d68a32bceaf9ba2489f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu May 10 21:23:44 2012 +1000
+
+    Forced the read output in ReadHolder::print() to be in fasta as there were problems with multiple file type getting concatenated together.  This will also resolve issue #31
+
+commit 98c547f89e389195f4fe8a9417c7d862cac27f96
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed May 9 23:15:10 2012 +1000
+
+    Some minor code cleanups
+
+commit 627642d7856c742d3c093e587293001c8f615a07
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed May 9 23:11:29 2012 +1000
+
+    resolved an issue where the number of flanking sequences was inflating the standard deviation of the spacer length, causing groups to be unwittingly destroyed
+
+commit ab896ac8581c87d5c34ce45ea71f5befc7136449
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon May 7 17:28:03 2012 +1000
+
+    updated version to 0.2.11
+
 commit 9742fe48279a1d2b81c3755fd2e65a8f1ca7af79
 Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Mon May 7 17:24:39 2012 +1000
 
     fixed a bug in ReadHolder::encode() where the output string was getting corrupted causing SeqUtils#reverseComplement() to fail.  Resolves issue #51
+
+commit 116722707154192b99374949ed7846d2acbc4d5d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 5 00:02:58 2012 +1000
+
+    updated the make files to remove references to crisprtools
+
+commit 49fe8eeeb0f35db507ff43ce18ab3a3f19f51724
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat May 5 00:00:34 2012 +1000
+
+    removed crisprtools out of the repository.  It is now in its own repo
+
+commit d8309e62e88fd889e7f7d81c440d53448e802b44
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri May 4 22:55:45 2012 +1000
+
+    changed libcrispr to be a submodule
+
+commit 647c0bba7bfb1bcb359535c6d585e4f6ddc4d4ad
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu May 3 21:10:35 2012 +1000
+
+    massive commit to update crass to support cirpsr 1.1 format
 
 commit 5f3360363436414dfbe0ddc1f50268defa53b547
 Author: ctSkennerton <c.skennerton@gmail.com>
