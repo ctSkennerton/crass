@@ -114,11 +114,56 @@ emph={CDATA,PCDATA,REQUIRED, IMPLIED},
  moredelim=*[s][\color{Black}]{(}{)},
 morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 }
+
+%\optionflag{g} = -g
+\newcommand{\optionflag}[1]{\texttt{-#1}}
+%\optionflagarg{a}{INT} = -a INT
+\newcommand{\optionflagarg}[2]{\optionflag{#1}\ \texttt{#2}}
+%\optionflagoptarg{a}{INT} = -a [INT]
+\newcommand{\optionflagoptarg}[2]{\optionflag{#1}\ \texttt{[#2]}}
+%\optionflagargnospace{a}{INT} = -aINT
+\newcommand{\optionflagargnospace}[2]{\optionflag{#1}\texttt{#2}}
+%\optionflagargnospace{a}{INT} = -a[INT]
+\newcommand{\optionflagoptargnospace}[2]{\optionflag{#1}\texttt{[#2]}}
+
+\newcommand{\longoptionflag}[1]{\texttt{--#1}}
+\newcommand{\longoptionflagarg}[2]{\longoptionflag{#1}\ \texttt{#2}}
+\newcommand{\longoptionflagoptarg}[2]{\longoptionflag{#1}\ \texttt{[#2]}}
+
+\newcommand{\longoptionflagargnospace}[2]{\longoptionflag{#1}\texttt{=#2}}
+
+\newcommand{\longoptionflagoptargnospace}[2]{\longoptionflag{#1}\texttt{[=#2]}}
+
+\newcommand{\combinedoptionflag}[2]{\optionflag{#1}\ \longoptionflag{#2}}
+\newcommand{
+	\combinedoptionflagarg}[3]{
+		\shortstack[l]{
+			\optionflagarg{#1}{#3} \\ \longoptionflagarg{#2}{#3}
+		}
+	}
+\newcommand{
+	\combinedoptionflagoptarg}[3]{
+		\shortstack[l]{
+			\optionflagoptarg{#1}{#3} \\ \longoptionflagoptarg{#2}{#3}
+		}
+	}
+\newcommand{
+	\combinedoptionflagargnospace}[3]{
+		\shortstack[l]{
+			\optionflagargnospace{#1}{#3} \\ \longoptionflagargnospace{#2}{#3}
+		}
+	}
+\newcommand{
+	\combinedoptionflagoptargnospace}[3]{
+		\shortstack[l]{
+			\optionflagoptargnospace{#1}{#3} \\ \longoptionflagoptargnospace{#2}{#3}
+		}
+	}
 %%% END Article customizations
 
 %%% The "real" document content comes below...
 
-\title{Crass:  The CRISPR assembler}
+\title{Crass:  The CRISPR assembler (v0.2.17)}
 \author{Connor Skennerton and Michael Imelfort}
 %\date{} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
@@ -144,9 +189,10 @@ Crass has been developed with the GNU build system for maximum compatibility acr
 Crass should run on Linux or MacOSX with 64-bit architectures with gcc installed (note that other compilers have not been tested).  Crass successfully compiles with gcc 4.2 and gcc 4.4 other versions of gcc have not been tested.    
 
 \subsubsection{Pre-installed Software and Libraries}
-Crass requires that the Xerces-c XML library, Zlib and libcrispr are installed for compilation.  Xerces-c is available freely at \url{http://xerces.apache.org/} and Zlib at \url{www.zlib.net}, which is usually installed although may not be on a minimally built server. Libcripsr should be bundled with Crass, however it must be built separately. All other programs and packages are optional.
+Crass requires that \href{http://ctskennerton.github.com/libcrispr}{libcrispr} and \href{www.zlib.net}{zlib} be installed for compilation.
+In turn, libcrispr requires that  \href{http://xerces.apache.org/}{Xerces-c} is also present on the system.  Therefore make sure that zlib and Xerces-c are installed, then install libcrispr and finally Crass on the system.
 \subsubsection{Optional Packages and Programs}
-There are a number of optional features of Crass that require additional software.  These programs are not required for compilation but add extra features that you might find useful.  It is possible to create image files of the graphs that are produced by Crass if the Graphviz package is installed \url{www.graphviz.org}.  By default Crass outputs a .gv file of Graphviz source code, so even if your running Crass on a server that doesn't have it installed you can download the .gv file to another computer for visualization.  Testing for the Graphviz package occurs during configuration and it should be noted that even if you have Graphviz you still need to opt-in to graph rendering (see  ~\nameref{sec:configure} for the correct options) as for large graphs this can take time.  If you enable rendering during the configuration process you will be presented with new user options based on what Graphviz executables were found (see~\nameref{sec:userflags}).
+There are a number of optional features of Crass that require additional software.  These programs are not required for compilation but add extra features that you might find useful.  It is possible to create image files of the graphs that are produced by Crass if the \href{www.graphviz.org}{Graphviz} package is installed.  By default Crass outputs a .gv file of Graphviz source code, so even if your running Crass on a server that doesn't have it installed you can download the .gv file to another computer for visualization.  Testing for the Graphviz package occurs during configuration and it should be noted that even if you have Graphviz you still need to opt-in to graph rendering (see  ~\nameref{sec:configure} for the correct options) as for large graphs this can take time.  If you enable rendering during the configuration process you will be presented with new user options based on what Graphviz executables were found (see~\nameref{sec:userflags}).
 
 \subsection{Compiling}
 On a GNU system simply:
@@ -164,11 +210,11 @@ Crass supports a number of compile-time options as well as the common options:
     \begin{longtable}{  l    p{10cm} }
     \hline
     Option & Definition \\  \hline\hline
-   -{}-enable-verbose\_logging & This option is different from enable-debug as it changes what information is printed in the log statments.  enabling verbose logging will add the source file name, the function name and the line number for every log statement. \\ \\    
--{}-enable-rendering &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\  \\
-   -{}-disable-assembly & Disables the assembly wrapper even if the Xerces library and suitable genome assemblers can be found.  Disabling the assembly wrapper willl change which souce files are compiled and as a result reduce the size of the executable. \\ \\
--{}-with-xerces & Set the path where the Xerces header and library objcets can be found\\ \\
--{}-with-libcrispr & Set the path where libcrispr header and library objects can be found \\
+   \longoptionflag{enable-verbose\_logging} & This option is different from enable-debug as it changes what information is printed in the log statments.  enabling verbose logging will add the source file name, the function name and the line number for every log statement. \\ \\    
+\longoptionflag{enable-rendering} &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\  \\
+   \longoptionflag{disable-assembly} & Disables the assembly wrapper even if the Xerces library and suitable genome assemblers can be found.  Disabling the assembly wrapper willl change which souce files are compiled and as a result reduce the size of the executable. \\ \\
+\longoptionflag{with-xerces} & Set the path where the Xerces header and library objcets can be found\\ \\
+\longoptionflag{with-libcrispr} & Set the path where libcrispr header and library objects can be found \\
 
     \hline
     \end{longtable}
@@ -194,23 +240,23 @@ Most of the basic options control the output style, for example the colours of t
     \begin{longtable}{  l   p{10cm} }
     \hline
     Option & Definition \\  \hline\hline
-    -a  -{}-layoutAlgorithm &   When enable-rendering is set and you have Graphviz installed this option will become available and allow you to change the Graphviz layout engine.  The full range of layout engines is: neato, dot, fdp, sfdp, twopi, circo \\ \\
--c -{}-graphColour & Changes the colour range for the output spacer graph.  There are four colour scales: red-blue, blue-red, green-red-blue, red-blue-green with the default being red-blue\\ \\
--d -{}-minDR & The lower bound considered acceptable for the size of a direct repeat.  The default is 23bp\\ \\
--D -{}-maxDR & The upper bound considered acceptable for the size of a direct repeat. The default is 47bp\\ \\
--f -{}-covCutoff & This variable sets the minimum number of spacers allowed for a putative CRISPR to be considered real and for the assembly to be attempted.  The default is 3  \\ \\
--G -{}-showSingletons & Set this flag if you would like to see unconnected singleton spacers in the final graph.\\ \\
--h -{}-help & Print the basic usage and version information. \\ \\
+    \combinedoptionflagarg{a}{layoutAlgorithm}{STRING} &   When enable-rendering is set and you have Graphviz installed this option will become available and allow you to change the Graphviz layout engine.  The full range of layout engines is: neato, dot, fdp, sfdp, twopi, circo \\ \\
+\combinedoptionflagarg{c}{graphColour}{STRING} & Changes the colour range for the output spacer graph.  There are four colour scales: red-blue, blue-red, green-red-blue, red-blue-green with the default being red-blue\\ \\
+\combinedoptionflagarg{d}{minDR}{INT} & The lower bound considered acceptable for the size of a direct repeat.  The default is 23bp\\ \\
+\combinedoptionflagarg{D}{maxDR}{INT} & The upper bound considered acceptable for the size of a direct repeat. The default is 47bp\\ \\
+\combinedoptionflagarg{f}{covCutoff}{INT} & This variable sets the minimum number of spacers allowed for a putative CRISPR to be considered real and for the assembly to be attempted.  The default is 3  \\ \\
+\combinedoptionflag{G}{showSingletons} & Set this flag if you would like to see unconnected singleton spacers in the final graph.\\ \\
+\combinedoptionflag{h}{help} & Print the basic usage and version information. \\ \\
 
--l -{}-logLevel & Sets the verbosity of the log file.  Under most circumstances the log level cannot go higher than 4, unless the enable-debug option is set during configuration, which will increase the maximum value to 10.  Note that above a level of 4 alot of the information will not be understandable to the user as most of these messages are specifically for us, the developers to track down bugs.  \\ \\
--L -{}-longDescription & This changes  the names of the nodes in the spacer graph to include the sequence of the spacer.  The default is to just use the spacer ID\\ \\
--{}-logToScreen & Does not produce a log file but instead prints the contents to screen.\\ \\
--{}-noDebugGraph & When the DEBUG preprocessor symbol is defined this option will become available.  When set it prevents the output of any of the debugging .gv files being produced \\ \\
--{}-noRendering & When the RENDERING preprocessor symbol is defined this option will become available.  When set it prevents the generation of rendered images from the intermeadiate debugging graphs (if DEBUG preprocessor symbol is set) and the final graphs.\\ \\
--o -{}-outDir & Sets the output directory for files produced by Crass.  The default is the current directory\\ \\
--s -{}-minSpacer & The lower bound considered acceptable for the size of a spacer sequence. Default is 26bp.\\ \\
--S -{}-maxSpacer & The upper bound considered acceptable for the size of a spacer sequence. Default is 50bp.\\ \\
--V -{}-version & Preints out program version information. \\
+\combinedoptionflagarg{l}{logLevel}{INT} & Sets the verbosity of the log file.  Under most circumstances the log level cannot go higher than 4, unless the enable-debug option is set during configuration, which will increase the maximum value to 10.  Note that above a level of 4 alot of the information will not be understandable to the user as most of these messages are specifically for us, the developers to track down bugs.  \\ \\
+\combinedoptionflag{L}{longDescription} & This changes  the names of the nodes in the spacer graph to include the sequence of the spacer.  The default is to just use the spacer ID\\ \\
+\longoptionflag{logToScreen} & Does not produce a log file but instead prints the contents to screen.\\ \\
+\longoptionflag{noDebugGraph} & When the DEBUG preprocessor symbol is defined this option will become available.  When set it prevents the output of any of the debugging .gv files being produced \\ \\
+\longoptionflag{noRendering} & When the RENDERING preprocessor symbol is defined this option will become available.  When set it prevents the generation of rendered images from the intermeadiate debugging graphs (if DEBUG preprocessor symbol is set) and the final graphs.\\ \\
+\combinedoptionflagarg{o}{outDir}{STRING} & Sets the output directory for files produced by Crass.  The default is the current directory\\ \\
+\combinedoptionflagarg{s}{minSpacer}{INT} & The lower bound considered acceptable for the size of a spacer sequence. Default is 26bp.\\ \\
+\combinedoptionflagarg{S}{maxSpacer}{INT} & The upper bound considered acceptable for the size of a spacer sequence. Default is 50bp.\\ \\
+\combinedoptionflag{V}{version} & Preints out program version information. \\
     \hline
  \end{longtable}
 \paragraph{Advanced Options}
@@ -218,15 +264,15 @@ Crass also contains a number of options for fine tunning various parts of the un
     \begin{longtable}{  l   p{10cm} }
     \hline
     Option & Definition \\  \hline\hline 
--b -{}-numBins &  sets the number of colour bins used in the output spacer graph for visualising the coverage of spacers in a dataset.  By default the number of bins is equal to the range of the highest and lowest coverage for a CRISPR \\ \\
--k -{}-kmerCount & Sets the number of kmers that need to be shared between putative direct repeats for them to be clustered together after the find stage.  Clustered direct repeats are eventually concatenated to form a 'true' direct repeat for a CRISPR; putative repeats that cannot be clustered are removed from consideration.  Change this variable if you feel that the clustering is too stringent and is breaking appart one CRISPR into multiple types.  The default number of kmers is 6, however the value should not be set below 6 as this would not be stringent enough; a higher value would split closely related direct repeats apart\\ \\
--K -{}-graphNodeLen & Crass makes a graph by cutting kmers on either side of the direct repeat and then joining these together.  The length of the kmer will dictate how connected the graph will be.  A smaller number will increase the chances of new conections being formed, however it also increases the chances of false positives.  The default value is 9.\\ \\
--n -{}-minNumRepeats & Changes the minimum number of repeated seed sequences needed in the long read search algorithm. The default is 3.\\ \\
--{}-noScalling & This turns off the effects of (-x or -y) so that the bounds of the direct repeat and spacer (-d -D -s -S) given on the command line are interpreted literally when the -{}-removeHomopolymers option is set. \\ \\
--{}-removeHomopolymers & This is an experimental feature of Crass where the search algorithms attempt to correct for homopolymer errors in reads.\\ \\ 
--w -{}-windowLength & When using the long read search algorithm, changes the window length for finding seed sequences; can be set between 6 - 9bp.  The default value is 8bp.\\ \\ 
--x -{}-spacerScalling & Overide the default scalling of the spacer bounds (-s -S) set by --removeHomopolymers.  The default is 0.7, i.e. the size of the spacer bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.   \\ \\
--y -{}-repeatScalling & Overide the default scalling of the direct repeat bounds (-d -D) set by --removeHomopolymers.  The default is 0.7, i.e. the size of the direct repeat bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.\\ 
+\combinedoptionflagarg{b}{numBins}{INT} &  sets the number of colour bins used in the output spacer graph for visualising the coverage of spacers in a dataset.  By default the number of bins is equal to the range of the highest and lowest coverage for a CRISPR \\ \\
+\combinedoptionflagarg{k}{kmerCount}{INT} & Sets the number of kmers that need to be shared between putative direct repeats for them to be clustered together after the find stage.  Clustered direct repeats are eventually concatenated to form a 'true' direct repeat for a CRISPR; putative repeats that cannot be clustered are removed from consideration.  Change this variable if you feel that the clustering is too stringent and is breaking appart one CRISPR into multiple types.  The default number of kmers is 6, however the value should not be set below 6 as this would not be stringent enough; a higher value would split closely related direct repeats apart\\ \\
+\combinedoptionflagarg{K}{graphNodeLen}{INT} & Crass makes a graph by cutting kmers on either side of the direct repeat and then joining these together.  The length of the kmer will dictate how connected the graph will be.  A smaller number will increase the chances of new conections being formed, however it also increases the chances of false positives.  The default value is 9.\\ \\
+\combinedoptionflagarg{n}{minNumRepeats}{INT} & Changes the minimum number of repeated seed sequences needed in the long read search algorithm. The default is 3.\\ \\
+\longoptionflag{noScalling} & This turns off the effects of (\optionflag{x} or \optionflag{y}) so that the bounds of the direct repeat and spacer (\optionflag{dDsS}) given on the command line are interpreted literally when the \longoptionflag{removeHomopolymers} option is set. \\ \\
+\longoptionflag{removeHomopolymers} & This is an experimental feature of Crass where the search algorithms attempt to correct for homopolymer errors in reads.\\ \\ 
+\combinedoptionflagarg{w}{windowLength}{INT} & When using the long read search algorithm, changes the window length for finding seed sequences; can be set between 6 - 9bp.  The default value is 8bp.\\ \\ 
+\combinedoptionflagarg{x}{spacerScalling}{DECIMAL} & Overide the default scalling of the spacer bounds (\optionflag{sS}) set by \longoptionflag{removeHomopolymers}.  The default is 0.7, i.e. the size of the spacer bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.   \\ \\
+\combinedoptionflagarg{y}{repeatScalling}{DECIMAL} & Overide the default scalling of the direct repeat bounds (\optionflag{dD}) set by \longoptionflag{removeHomopolymers}.  The default is 0.7, i.e. the size of the direct repeat bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.\\ 
 \hline
     \end{longtable}
 \subsubsection{Output From Crass}
