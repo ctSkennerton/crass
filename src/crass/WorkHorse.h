@@ -205,7 +205,10 @@ class WorkHorse {
         //**************************************
         // file IO
         //**************************************
-        int dumpReads( bool split);		// dump the reads for this group to file
+    inline void dumpReads( NodeManager * manager, std::string& fileName, bool showDetached=false, bool split=false)
+    {
+        manager->dumpReads(fileName, showDetached, split);
+    }
         //int dumpSpacers(void);										// Dump the spacers for this group to file
         
         int renderDebugGraphs(void);							// render debug graphs
@@ -218,9 +221,9 @@ class WorkHorse {
         
         bool checkFileOrError(const char * fileName);
     
-        bool printXML(void) { return printXML(mOpts->output_fastq + "crass"); } // print all the assembly gossip to XML
+        bool outputResults(void) { return outputResults(mOpts->output_fastq + "crass"); } // print all the assembly gossip to XML
         
-        bool printXML(std::string namePrefix);
+        bool outputResults(std::string namePrefix);
 
         bool addDataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber);
         

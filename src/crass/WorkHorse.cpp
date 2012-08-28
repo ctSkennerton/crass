@@ -304,13 +304,13 @@ int WorkHorse::doWork(Vecstr seqFiles)
 #endif
     
 	// print spacer graphs
-	if(renderSpacerGraphs())
-	{
-        logError("FATAL ERROR: renderSpacerGraphs failed");
-        return 11;
-	}
+//	if(renderSpacerGraphs())
+//	{
+//        logError("FATAL ERROR: renderSpacerGraphs failed");
+//        return 11;
+//	}
 	
-	printXML();
+	outputResults();
 	
     logInfo("all done!", 1);
 	return 0;
@@ -359,6 +359,7 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
     GroupKmerMap group_kmer_counts_map;
     int next_free_GID = 1;
     Vecstr * non_redundant_set = createNonRedundantSet(group_kmer_counts_map, next_free_GID);
+    logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
 
     if (non_redundant_set->size() > 0) 
     {
@@ -549,11 +550,7 @@ int WorkHorse::findConsensusDRs(GroupKmerMap& groupKmerCountsMap, int& nextFreeG
         {
             continue;
         }
-        std::cout<<__FILE__<<
-            ": "<<
-            __LINE__<<
-            ": Reads in group: "<<
-            numberOfReadsInGroup(mDR2GIDMap[group_count_iter->first])<<std::endl;
+        
         // it's real, so parse this group
         // get the N top kmers
         Vecstr n_top_kmers;
@@ -683,10 +680,12 @@ Vecstr * WorkHorse::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, int&
         }
         dcg_iter++;
     }
-/*    Vecstr::iterator nr_iter;
+    logInfo("non-redundant patterns:", 4);
+    Vecstr::iterator nr_iter;
     for (nr_iter = non_redundant_repeats->begin(); nr_iter != non_redundant_repeats->end(); ++nr_iter) {
-        std::cout<<*nr_iter<<std::endl;
-    }*/
+        logInfo(*nr_iter, 4);
+    }
+    logInfo("-------------", 4);
     return non_redundant_repeats;
 }
 
@@ -1071,7 +1070,12 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
             } while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (((int)(tmp_DR.length())) - 1));
             read_iter++;
         }
-    }	
+    }
+	
+    std::cout<<__FILE__<<
+    ": "<<
+    __LINE__<<
+    ": Reads: "<< numOfReads()<<std::endl;
 
     // kill the unfounded ones
     dr_iter = (mDR2GIDMap[GID])->begin();
@@ -1081,7 +1085,8 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
     	{
 			if((*DR_offset_map)[*dr_iter] == -1)
 			{
-				clearReadList(mReads[*dr_iter]);
+                std::cout<<"Removing DR: "<<*dr_iter<<' '<<mReads[*dr_iter]->size()<<std::endl;
+                clearReadList(mReads[*dr_iter]);
 				mReads[*dr_iter] = NULL;
 				dr_iter = (mDR2GIDMap[GID])->erase(dr_iter); 
 			}
@@ -1095,6 +1100,10 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
     		dr_iter++;
     	}
     }
+    std::cout<<__FILE__<<
+    ": "<<
+    __LINE__<<
+    ": Reads: "<< numOfReads()<<std::endl;
     return true;
 } 
 int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR)
@@ -2254,7 +2263,7 @@ int WorkHorse::generateFlankers(void)
 	{
 		if(NULL != drg_iter->second)
 		{            
-			if (NULL != mDRs[mTrueDRs[drg_iter->first]])
+            if (NULL != mDRs[mTrueDRs[drg_iter->first]])
             {
                 logInfo("Assigning flankers for NodeManager "<<drg_iter->first, 3);
                 (mDRs[mTrueDRs[drg_iter->first]])->generateFlankers();
@@ -2272,14 +2281,14 @@ int WorkHorse::splitIntoContigs(void)
 	//-----
 	// split all groups into contigs
 	//
-    // go through the DR2GID_map and make all reads in each group into nodes
     DR_ListIterator dr_iter = mDRs.begin();
     while(dr_iter != mDRs.end())
     {
         if(NULL != dr_iter->second)
         {
         	logInfo("Making spacer contigs for DR: " << dr_iter->first, 1);
-        	if((dr_iter->second)->splitIntoContigs())
+
+            if((dr_iter->second)->splitIntoContigs())
         		return 1;
         }
         dr_iter++;
@@ -2291,28 +2300,6 @@ int WorkHorse::splitIntoContigs(void)
 // file IO
 //**************************************
 
-
-//int WorkHorse::dumpReads( bool split)
-//{
-//    //-----
-//    // Print the reads from one cluster to a file...
-//    //
-//	logInfo("Dumping reads", 1);
-//    DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
-//    while (drg_iter != mDR2GIDMap.end()) 
-//    {
-//        // make sure that our cluster is real
-//        if (drg_iter->second != NULL) 
-//        {
-//            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
-//            {
-//                (mDRs[mTrueDRs[drg_iter->first]])->dumpReads((mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa").c_str(), false, split);
-//            }
-//        }
-//        drg_iter++;
-//    }
-//	return 0;
-//}
 
 int WorkHorse::renderDebugGraphs(void)
 {
@@ -2434,7 +2421,7 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
                     
                     // output the reads
                     std::string read_file_name = mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa";
-                    current_manager->dumpReads(read_file_name, false, false);
+                    this->dumpReads(current_manager, read_file_name);
                 }
                 else 
                 {
@@ -2514,9 +2501,35 @@ bool WorkHorse::checkFileOrError(const char * fileName)
     }
 }
 
-bool WorkHorse::printXML(std::string namePrefix)
+bool WorkHorse::outputResults(std::string namePrefix)
 {
-	// print all the assembly gossip to XML
+	
+    //-----
+	// Print the cleaned? spacer graph, reads and the XML
+	//
+
+#ifdef RENDERING
+    std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering final spacer graphs using Graphviz"<<std::endl;
+    logInfo("Rendering spacer graphs" , 1);
+#endif
+    // make a single file with all of the keys for the groups
+    std::ofstream key_file;
+    
+    std::stringstream key_file_name;
+    key_file_name << mOpts->output_fastq<<PACKAGE_NAME << "."<<mTimeStamp<<".keys.gv";
+    key_file.open(key_file_name.str().c_str());
+    
+    if (!key_file) 
+    {
+        logError("Cannot open the key file");
+        return 1;
+    }
+    
+    gvGraphHeader(key_file, "Keys");
+
+    
+    
+    // print all the assembly gossip to XML
 	namePrefix += CRASS_DEF_CRISPR_EXT;
 	logInfo("Writing XML output to \"" << namePrefix << "\"", 1);
 	
@@ -2539,47 +2552,96 @@ bool WorkHorse::printXML(std::string namePrefix)
     // print all the inside information
     int final_out_number = 0;
     DR_Cluster_MapIterator drg_iter =  mDR2GIDMap.begin();
-    while (drg_iter != mDR2GIDMap.end()) 
-    {
-        // make sure that our cluster is real
-        if (drg_iter->second != NULL) 
-        {
-            if(NULL != mDRs[mTrueDRs[drg_iter->first]])
-            {
-                if(NULL != mDRs[mTrueDRs[drg_iter->first]])
-                {
-                    std::string gid_as_string = "G" + to_string(drg_iter->first);
-                    final_out_number++;
-                    xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, 
-                                                                         mTrueDRs[drg_iter->first], 
-                                                                         root_element);
-                    
-                    
-                    /*
-                     * <data> section
-                     */
-                    addDataToDOM(xml_doc, group_elem, drg_iter->first);
+    for (drg_iter =  mDR2GIDMap.begin(); drg_iter != mDR2GIDMap.end(); drg_iter++) {
 
-                    /*
-                     * <metadata> section
-                     */
-                    addMetadataToDOM(xml_doc, group_elem, drg_iter->first);
-                    
-                    /*
-                     * <assembly> section
-                     */
-                    xercesc::DOMElement * assem_elem = xml_doc->addAssembly(group_elem);
-                    (mDRs[mTrueDRs[drg_iter->first]])->printAssemblyToDOM(xml_doc, assem_elem, false);
-                    
+        // make sure that our cluster is real
+        if (drg_iter->second == NULL) 
+        {
+            continue;
+        }
+        if(NULL == mDRs[mTrueDRs[drg_iter->first]])
+        {
+            continue;
+        }
+
+        NodeManager * current_manager = mDRs[mTrueDRs[drg_iter->first]];
+        
+        std::ofstream graph_file;        
+        
+        std::string graph_file_prefix = mOpts->output_fastq + "Spacers_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first];
+        std::string graph_file_name = graph_file_prefix + "_spacers.gv";
+        
+        // check to see if there is anything to print
+        if ( current_manager->printSpacerGraph(graph_file_name, 
+                                               mTrueDRs[drg_iter->first], 
+                                               mOpts->longDescription, 
+                                               mOpts->showSingles))
+        {
+            // add our group to the key
+            current_manager->printSpacerKey(key_file, 
+                                            10, 
+                                            namePrefix + to_string(drg_iter->first));
+            
+            // output the reads
+            std::string read_file_name = mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa";
+            this->dumpReads(current_manager, read_file_name, true);
+            std::cout<<__FILE__<<
+            ": "<<
+            __LINE__<<
+            ": Reads in group: "<<
+            numberOfReadsInGroup(drg_iter->second)<<' '<<numOfReads()<<std::endl;
+            
+            /* 
+             *   Output the xml data to crass.crispr
+             */
+            std::string gid_as_string = "G" + to_string(drg_iter->first);
+            final_out_number++;
+            xercesc::DOMElement * group_elem = xml_doc->addGroup(gid_as_string, 
+                                                                 mTrueDRs[drg_iter->first], 
+                                                                 root_element);
+            /*
+             * <data> section
+             */
+            this->addDataToDOM(xml_doc, group_elem, drg_iter->first);
+            
+            /*
+             * <metadata> section
+             */
+            this->addMetadataToDOM(xml_doc, group_elem, drg_iter->first);
+            
+            /*
+             * <assembly> section
+             */
+            xercesc::DOMElement * assem_elem = xml_doc->addAssembly(group_elem);
+            current_manager->printAssemblyToDOM(xml_doc, assem_elem, false);
+#if RENDERING
+            if (!mOpts->noRendering) 
+            {
+                // create a command string and call graphviz to make the image file
+                std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering group "<<drg_iter->first<<std::endl;
+                std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                if(system(cmd.c_str()))
+                {
+                    logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
+                    return 1;
                 }
             }
+#endif
         }
-        drg_iter++;
+        else 
+        {
+            // should delete this guy since there are no spacers
+            delete mDRs[mTrueDRs[drg_iter->first]];
+            mDRs[mTrueDRs[drg_iter->first]] = NULL;
+        }
     }
     std::cout<<"["<<PACKAGE_NAME<<"_graphBuilder]: "<<final_out_number<<" CRISPRs found!"<<std::endl;
     xml_doc->printDOMToFile(namePrefix);
 
     delete xml_doc;
+    
+    gvGraphFooter(key_file);
+    key_file.close();
 	return 0;
 }
 
