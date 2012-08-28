@@ -969,6 +969,10 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
         }
         dr_iter++;
     }	
+    std::cout<<__FILE__<<
+    ": "<<
+    __LINE__<<
+    ": Reads: "<< numOfReads()<<std::endl;
 
     // kill the unfounded ones
     dr_iter = (mDR2GIDMap[GID])->begin();
@@ -978,7 +982,9 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
     	{
 			if((*DR_offset_map)[*dr_iter] == -1)
 			{
-				clearReadList(mReads[*dr_iter]);
+                std::cout<<"Removing DR: "<<mStringCheck.getString(*dr_iter)<<' '<<mReads[*dr_iter]->size()<<std::endl;
+                
+                clearReadList(mReads[*dr_iter]);
 				mReads[*dr_iter] = NULL;
 				dr_iter = (mDR2GIDMap[GID])->erase(dr_iter); 
 			}
@@ -992,6 +998,11 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
     		dr_iter++;
     	}
     }
+    std::cout<<__FILE__<<
+    ": "<<
+    __LINE__<<
+    ": Reads: "<< numOfReads()<<std::endl;
+
     return true;
 } 
 int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR)
@@ -2332,7 +2343,7 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
                     
                     // output the reads
                     std::string read_file_name = mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa";
-                    current_manager->dumpReads(read_file_name, false, false);
+                    current_manager->dumpReads(read_file_name, false);
                 }
                 else 
                 {

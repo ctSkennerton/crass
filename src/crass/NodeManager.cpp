@@ -1444,7 +1444,7 @@ void NodeManager::setContigIDForSpacers(SpacerInstanceVector * currentContigNode
 
 // Printing / IO
 
-void NodeManager::dumpReads(std::string readsFileName, bool showDetached, bool split)
+void NodeManager::dumpReads(std::string readsFileName, bool showDetached)
 {
     //-----
     // dump reads to this file

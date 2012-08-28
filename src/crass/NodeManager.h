@@ -206,8 +206,7 @@ class NodeManager {
     
 
         void dumpReads(std::string readsFileName, 
-                       bool showDetached, 
-                       bool split);												
+                       bool showDetached);												
         
     // XML
     // print this node managers portion of the XML file 
