@@ -1,46 +1,42 @@
-# ===========================================================================
-#       http://www.gnu.org/software/autoconf-archive/ax_lib_xerces.html
-# ===========================================================================
-#
-# SYNOPSIS
-#
-#   AX_LIBCRISPR
-#
-# DESCRIPTION
-#
-#   This macro provides tests of availability for libcrispr. This macros 
-#   checks for libcrispr Parser headers and libraries and defines compilation flags
-#
-#   Macro supports following options and their values:
-#
-#   1) Single-option usage:
-#
-#     --with-libcrispr - yes, no or path to libcripsr installation prefix
-#
-#   2) Three-options usage (all options are required):
-#
-#     --with-libcripr=yes
-#     --with-libcrispr-inc - path to base directory with libcrispr headers
-#     --with-libcrispr-lib - linker flags for libcrispr
-#
-#   This macro calls:
-#
-#     AC_SUBST(LIBCRISPR_CPPFLAGS)
-#     AC_SUBST(LIBCRISPR_LDFLAGS)
-#     AC_SUBST([LIBCRISPR_LIBS])
-#
-#   And sets:
-#
-#     HAVE_LIBCRISPR
-#
-# LICENSE
-#
-#   Copyright (c) 2012 Connor Skennerton
-#
-#   Copying and distribution of this file, with or without modification, are
-#   permitted in any medium without royalty provided the copyright notice
-#   and this notice are preserved. This file is offered as-is, without any
-#   warranty.
+dnl SYNOPSIS
+dnl
+dnl   AX_LIBCRISPR
+dnl
+dnl DESCRIPTION
+dnl
+dnl   This macro provides tests of availability for libcrispr. This macros 
+dnl   checks for libcrispr Parser headers and libraries and defines compilation flags
+dnl
+dnl   Macro supports following options and their values:
+dnl
+dnl   1) Single-option usage:
+dnl
+dnl     --with-libcrispr - yes, no or path to libcripsr installation prefix
+dnl
+dnl   2) Three-options usage (all options are required):
+dnl
+dnl     --with-libcripr=yes
+dnl     --with-libcrispr-inc - path to base directory with libcrispr headers
+dnl     --with-libcrispr-lib - linker flags for libcrispr
+dnl
+dnl   This macro calls:
+dnl
+dnl     AC_SUBST(LIBCRISPR_CPPFLAGS)
+dnl     AC_SUBST(LIBCRISPR_LDFLAGS)
+dnl     AC_SUBST([LIBCRISPR_LIBS])
+dnl
+dnl   And sets:
+dnl
+dnl     HAVE_LIBCRISPR
+dnl
+dnl LICENSE
+dnl
+dnl   Copyright (c) 2012 Connor Skennerton
+dnl
+dnl   Copying and distribution of this file, with or without modification, are
+dnl   permitted in any medium without royalty provided the copyright notice
+dnl   and this notice are preserved. This file is offered as-is, without any
+dnl   warranty.
 
 
 AC_DEFUN([AX_LIBCRISPR],
@@ -146,7 +142,11 @@ AC_DEFUN([AX_LIBCRISPR],
             AC_LANG_PROGRAM(
                 [[
 @%:@include <libcrispr/Exception.h>
-@%:@include <libcrispr/Xml.h>
+@%:@include <libcrispr/base.h>
+@%:@include <libcrispr/writer.h>
+@%:@include <libcrispr/reader.h>
+@%:@include <libcrispr/parser.h>
+@%:@include <libcrispr/StlExt.h>
                 ]],
                 [[]]
             )],
@@ -173,8 +173,7 @@ AC_DEFUN([AX_LIBCRISPR],
             AC_LINK_IFELSE([
                 AC_LANG_PROGRAM(
                     [[
-@%:@include <libcrispr/Xml.h>
-@%:@include <libcrispr/Exception.h>
+@%:@include <libcrispr/base.h>
                     ]],
                     [[
 crispr::xml::base crispr_test;
