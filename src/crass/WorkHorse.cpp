@@ -1085,7 +1085,7 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
     	{
 			if((*DR_offset_map)[*dr_iter] == -1)
 			{
-                std::cout<<"Removing DR: "<<*dr_iter<<' '<<mReads[*dr_iter]->size()<<std::endl;
+                std::cout<<"Removing DR: "<<mStringCheck.getString(*dr_iter)<<' '<<mReads[*dr_iter]->size()<<std::endl;
                 clearReadList(mReads[*dr_iter]);
 				mReads[*dr_iter] = NULL;
 				dr_iter = (mDR2GIDMap[GID])->erase(dr_iter); 
