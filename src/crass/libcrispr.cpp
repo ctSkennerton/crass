@@ -61,8 +61,8 @@
 #include "kseq.h"
 #include "config.h"
 
-#define longReadCut(d,s) ((4*d) + (3*s))
-#define shortReadCut(d,s) ((2*d) + s)
+#define longReadCut(d,s) ((4 * d) + (3 * s))
+#define shortReadCut(d,s) ((2 * d) + s)
 
 int decideWhichSearch(const char *inputFastq, 
                       const options& opts, 
@@ -699,35 +699,31 @@ void findSingletonsMultiVector(const char *inputFastq,
     int l;
     int log_counter = 0;
     static int read_counter = 0;
-    int old_number = (int)mReads->size();
 
-    MultiSearchVector::iterator wm_iter =  mult_search.begin();
-    MultiSearchVector::iterator wm_last =  mult_search.end();
     time_t time_start, time_current;
     time(&time_start);
+    
+    MultiSearchVector::iterator wm_iter =  mult_search.begin();
+
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         // seq is a read what we love
         // search it for the patterns until found
-        bool found = false;
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             time(&time_current);
             double diff = difftime(time_current, time_start);
             time_start = time_current;
             std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
-            //std::cout.setf(std::ios::fixed);
-            //std::cout.precision(2);
+
             std::cout<<diff<<" sec"<<std::endl;
             log_counter = 0;
         }
-        // reset these mofos
-        wm_iter =  mult_search.begin();
-        wm_last =  mult_search.end();
-        pats_iter = patterns.begin();
-
-        while(wm_iter != wm_last)
-        {
+        
+        for ((wm_iter = mult_search.begin(), pats_iter = patterns.begin()); 
+             wm_iter != mult_search.end(); 
+             (pats_iter++, wm_iter++)) {
+            
             ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
             if (seq->comment.s) 
             {
@@ -743,11 +739,17 @@ void findSingletonsMultiVector(const char *inputFastq,
                 tmp_holder->encode();
             }
             std::string read = tmp_holder->getSeq();
-            
-            //initialize with an impossible number
+#if SEARCH_SINGLETON
+            SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
+            if (debug_iter != debugger->end()) {
+                changeLogLevel(10);
+                debug_iter->second.read(tmp_holder);
+                std::cout<<"Processing interesting read: "<<debug_iter->first<<std::endl;
+            } else {
+                changeLogLevel(opts.logLevel);
+            }
+#endif            
             multiSearchData search_data = (*wm_iter)->Search(read.length(), read.c_str(), *(*pats_iter));
-            //int start_pos = -1;
-            //std::string found_repeat = (*wm_iter)->Search(read.length(), read.c_str(), *(*pats_iter));
 
             if (!search_data.sDataFound.empty())
             {
@@ -766,7 +768,7 @@ void findSingletonsMultiVector(const char *inputFastq,
                     }
                     tmp_holder->startStopsAdd(search_data.iFoundPosition, DR_end);
                     addReadHolder(mReads, mStringCheck, tmp_holder);
-                    found = true;
+                    break;
                 }
                 else {
                     delete tmp_holder;
@@ -776,13 +778,6 @@ void findSingletonsMultiVector(const char *inputFastq,
             {
                 delete tmp_holder;
             }
-            
-            if(found) {
-                break;
-            }
-            
-            pats_iter++;
-            wm_iter++;
         }
         log_counter++;
         read_counter++;
@@ -793,8 +788,8 @@ void findSingletonsMultiVector(const char *inputFastq,
 
     // clean up
     wm_iter =  mult_search.begin();
-    wm_last =  mult_search.end();
-    while(wm_iter != wm_last)
+    //wm_last =  mult_search.end();
+    while(wm_iter != mult_search.end())
     {
         if(*wm_iter != NULL)
         {
@@ -808,7 +803,6 @@ void findSingletonsMultiVector(const char *inputFastq,
     time_start = time_current;
     std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
     std::cout<<diff<<" sec"<<std::endl;
-    logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
 }
 
 unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
