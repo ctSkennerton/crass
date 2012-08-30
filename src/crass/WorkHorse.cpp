@@ -876,6 +876,10 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
         //std::cout<<numMers4Mode_half<<" : " <<numMers4Mode<< " : "<<num_neg1<<std::endl;
         if(num_neg1 >= numMers4Mode_half)
         {
+            std::cout<<__FILE__<<
+            ": "<<
+            __LINE__<<
+            ": skipping DR: "<< tmp_DR<<std::endl;
             continue;
         }
         // all is good! ...so far
@@ -894,6 +898,10 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
         // there's not too much we can do
         if(num_agree == num_disagree)
         {
+            std::cout<<__FILE__<<
+            ": "<<
+            __LINE__<<
+            ": skipping DR: "<< tmp_DR<<std::endl;
             continue;
         }
         if(num_agree < num_disagree)
@@ -914,6 +922,7 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
                                         "cannot reverse complement sequence");
             }
             // fix the places where the DR is stored
+
             tmp_DR = reverseComplement(tmp_DR);
             StringToken st = mStringCheck.addString(tmp_DR);
             mReads[st] = mReads[*dr_iter];
@@ -954,6 +963,10 @@ bool WorkHorse::populateCoverageArray(int numMers4Mode, int GID, std::string mas
 
         if(!found_kmer)
         {
+            std::cout<<__FILE__<<
+            ": "<<
+            __LINE__<<
+            ": skipping DR: "<< tmp_DR<<std::endl;
             continue;
         }
 
