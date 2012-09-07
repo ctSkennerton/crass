@@ -2,7 +2,7 @@
  *  SeqUtils.cpp is part of the CRisprASSembler project
  *  
  *  Created by Connor Skennerton.
- *  Copyright 2011 Connor Skennerton & Michael Imelfort. All rights reserved. 
+ *  Copyright 2011, 2012 Connor Skennerton & Michael Imelfort. All rights reserved. 
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ std::string reverseComplement(std::string str)
 	int l = static_cast<int>(str.length());
     char * revcomp_str = new char[l+1];
     for (int i = 0; i <=l; i++) {
-		revcomp_str[i]=NULL;
+		revcomp_str[i]='\0';
     }
     int i, c0, c1;
     for (i = 0; i < l>>1; ++i) 
