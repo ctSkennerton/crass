@@ -43,7 +43,7 @@ INSTALLATION
 
 Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) 
 and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
-It successfully compiles with gcc 4.2 and gcc 4.4 other versions of gcc have not been tested.  
+It successfully compiles with gcc 4.2, gcc 4.4.5 and gcc 4.6.3 other versions of gcc have not been tested.  
 Crass uses [libcrispr](https://github.com/ctSkennerton/libcrispr) release 1:0:0 which requires [Xerces-c](http://xerces.apache.org/) XML library
 version 3.1.1 and [Zlib](www.zlib.net) are installed for compilation.  
 Optionally you can also install the [Graphviz package](www.graphviz.org) for rendering graphs.  
