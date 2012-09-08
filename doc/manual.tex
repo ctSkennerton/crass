@@ -165,7 +165,7 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 \title{Crass:  The CRISPR assembler (v0.2.17)}
 \author{Connor Skennerton and Michael Imelfort}
-%\date{} % Activate to display a given date or no date (if empty),
+\date{August 27th, 2012} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
@@ -276,12 +276,29 @@ Crass also contains a number of options for fine tunning various parts of the un
 \hline
     \end{longtable}
 \subsubsection{Output From Crass}
-Once the CRISPR finder is done there will be a number of output files.  For every CRISPR type that Crass finds it will produce a sequence file in fasta format that contains reads with that CRISPR type;  and a .gv file containing Graphviz source code for the arrangment of spacers.  There will also be a .crispr file containing information about all the found CRISPRs in an XML format (see \nameref{sec:Fileformats} for information about the .crispr specification) and a log file (if you specified for one) that contains all the information about the run. Note that at this stage the CRISPR has not been assembled into contigs, however the reads have been ordered and the arragnement of spacers will be known.
+Once the CRISPR finder is done there will be a number of output files.  
+For every CRISPR type that Crass finds it will produce a sequence file in fasta format that contains reads with that CRISPR type and a .gv file containing Graphviz source code for the arrangment of spacers.  
+There will also be a file called \texttt{crass.crispr} file containing information about all the found CRISPRs in an XML format (see \nameref{sec:Fileformats} for information about the .crispr specification) and a log file (if you specified for one) that contains all the information about the run. 
+Note that at this stage the CRISPR has not been assembled into contigs, however the reads have been ordered and the arragnement of spacers will be known.  
+You can obtain alot of information about the CRISPRs identified from the \texttt{crass.crispr} file by using a toolkit called \href{ctskennerton.github.com/crisprtools}{crisprtools} that has been developed for this purpose.  
+The two main tools that get used most often are \texttt{crisprtools stat} and \texttt{crisprtools extract}.  
+The \texttt{stat} command produces a tabular summary of all the CRISPRs that were identified returning stats such as the number of spacers and the number of reads that each CRISPR was found in.
+The other tool is \texttt{extract}, which can be used to get the DNA sequences of the direct repeats, spacers or flankers in fasta format from the crispr file.
+
+
 \subsubsection{Visualizing Graphs}
 The graph file (.gv) is important for you to visualise all of the spacer arrangments in your CRISPRs.  If your input was a metagenomic sample then it is likely that there will be multiple arrangments of spacers.  Each individual section will be numbered and this numbering is important to the Crass assembler.  The graph can be visualized using a number of programs, the ones that I use are Graphviz (\url{www.graphviz.org}) and Gephi (\url{www.gephi.org}).  Both of these programs can take a .gv file as input; Graphviz will produce a single static image whereas Gephi creates an interactive graph that can be manipulated.
 
 \subsection{Assembling CRISPRs}
-CRISPRs from metagenomic data can/will have many spacer arrangements.  This makes them difficult for a regular genome assembler to resolve as they look for a single route through the graph.   The Crass assembler is a wrapper for other popular genome assemblers; currently there are wrappers for Velvet and Cap3.  I premise is that you, the user will look at the output from Crass to determine which of the paths to take through the spacer graph, which are listed as different 'contigs'. To perform the assembly you need to tell Crass the group number of the CRISPR from the finder stage (this will be in the file name), the .crispr file from Crass and the a comma separated list of the segments/contigs IDs for your group of interest.  The most minimal command is shown below: 
+CRISPRs from metagenomic data can/will have many spacer arrangements.  
+This makes them difficult for a regular genome assembler to resolve as they look for a single route through the graph.   
+The Crass assembler is a wrapper for other popular genome assemblers; currently there are wrappers for Velvet and Cap3.  
+I premise is that you, the user will look at the output from Crass to determine which of the paths to take through the spacer graph, which are listed as different `contigs'. 
+To perform the assembly you need to tell Crass the group number of the CRISPR from the finder stage (this will be in the file name), the .crispr file from Crass and the a comma separated list of the segments/contigs IDs for your group of interest.  
+The segments are listed in the names of the spacers in the graph file.  
+For example a spacer with the name `sp\_445\_17\_C74' means this is spacer with id 445, in segment (contig) 17 with a coverage of 74.
+
+  The most minimal command for the assembler is shown below: 
  \begin{lstlisting}
 	$ ./crass assemble ASSEMBLER [options]
 \end{lstlisting}
@@ -290,7 +307,7 @@ CRISPRs from metagenomic data can/will have many spacer arrangements.  This make
 	$ ./crass assemble velvet -g 3 -x crass.crispr -s 1,2,5,6,10
 \end{lstlisting}
 
-This will extract all of the reads that contain spacers from those contigs and use them as input to velvet which will do the assembly in the backgroud.  This is a 'dumb' process in the sense that if you provide contig IDs for multiple pathways the assembler will still try and succeed but this will undoubtibly cause breaks. 
+This will extract all of the reads that contain spacers from those contigs and use them as input to velvet which will do the assembly in the backgroud.  This is a `dumb' process in the sense that if you provide contig IDs for multiple pathways the assembler will still try and succeed but this will undoubtibly cause breaks. 
 
 \section{The CRISPR File (.crispr)}
 \label{sec:Fileformats}
