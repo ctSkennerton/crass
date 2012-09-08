@@ -54,9 +54,13 @@ LoggerSimp* LoggerSimp::Inst(void) {
     }
     mInstance->setFileOpen(false);
     std::ofstream * fh = mInstance->getFhandle();
-    fh = NULL;
+    if (fh != NULL) {
+        fh = NULL;
+    }
     std::streambuf * buff = mInstance->getBuff();
-    buff = NULL;
+    if (buff != NULL) {
+        buff = NULL;
+    }
     return mInstance;
 }
 
