@@ -165,7 +165,7 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 \title{Crass:  The CRISPR assembler (v0.2.17)}
 \author{Connor Skennerton and Michael Imelfort}
-%\date{} % Activate to display a given date or no date (if empty),
+\date{27th August 2012} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
@@ -183,7 +183,7 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 	$ ./crass assemble [velvet|cap3]  [options]
 \end{lstlisting}
 \section{Installation}
-Crass has been developed with the GNU build system for maximum compatibility across platforms.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
+Crass has been developed with the GNU build system for ease of configuration on the system.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
 \subsection{Prerequisites}
 \subsubsection{Computer Resources}
 Crass should run on Linux or MacOSX with 64-bit architectures with gcc installed (note that other compilers have not been tested).  Crass successfully compiles with gcc 4.2 and gcc 4.4 other versions of gcc have not been tested.    
@@ -192,7 +192,9 @@ Crass should run on Linux or MacOSX with 64-bit architectures with gcc installed
 Crass requires that \href{http://ctskennerton.github.com/libcrispr}{libcrispr} and \href{www.zlib.net}{zlib} be installed for compilation.
 In turn, libcrispr requires that  \href{http://xerces.apache.org/}{Xerces-c} is also present on the system.  Therefore make sure that zlib and Xerces-c are installed, then install libcrispr and finally Crass on the system.
 \subsubsection{Optional Packages and Programs}
-There are a number of optional features of Crass that require additional software.  These programs are not required for compilation but add extra features that you might find useful.  It is possible to create image files of the graphs that are produced by Crass if the \href{www.graphviz.org}{Graphviz} package is installed.  By default Crass outputs a .gv file of Graphviz source code, so even if your running Crass on a server that doesn't have it installed you can download the .gv file to another computer for visualization.  Testing for the Graphviz package occurs during configuration and it should be noted that even if you have Graphviz you still need to opt-in to graph rendering (see  ~\nameref{sec:configure} for the correct options) as for large graphs this can take time.  If you enable rendering during the configuration process you will be presented with new user options based on what Graphviz executables were found (see~\nameref{sec:userflags}).
+There are a number of optional features of Crass that require additional software.  These programs are not required for compilation but add extra features that you might find useful.  It is possible to create image files of the graphs that are produced by Crass if the \href{www.graphviz.org}{Graphviz} package is installed.  By default Crass outputs a .gv file containing Graphviz source code, so even if your running Crass on a server that doesn't have it installed you can download the .gv file to another computer for visualization.  Testing for the Graphviz package occurs during configuration.  Even if you have Graphviz installed you still need to opt-in to graph rendering (see  ~\nameref{sec:configure} for the correct options) as rendering images for a large number of graphs can take alot of time.  If you enable rendering during the configuration process you can still set user options during run-time to prevent image rendering. (see~\nameref{sec:userflags}).
+
+Crass can also be run as a wrapper for some common assembly algorithms to assemble CRISPRs into contigs.  Currently there are two assembly wrappers, one for \texttt{velvet} and \texttt{cap3}. To activate this feature you must have the executables for either of these two programs in your \texttt{\$PATH} environment variable.  If at least one of them is in your \texttt{\$PATH} then the assembly wrapper will be compiled.  
 
 \subsection{Compiling}
 On a GNU system simply:

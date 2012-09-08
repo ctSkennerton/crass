@@ -129,24 +129,26 @@ class WorkHorse {
                 GroupKmerMap * groupKmerCountsMap);  // cut kmers and hash
         
         bool findMasterDR(int GID, 
-                Vecstr * nTopKmers, 
+                //Vecstr * nTopKmers, 
                 StringToken * masterDRToken, 
                 std::string * masterDRSequence);
         
-        bool populateCoverageArray(int numMers4Mode, 
+        bool populateCoverageArray(
+                                   //int numMers4Mode, 
                 int GID, 
                 std::string master_DR_sequence, 
                 StringToken master_DR_token, 
                 std::map<StringToken, int> * DR_offset_map, 
                 int * dr_zone_start, 
                 int * dr_zone_end, 
-                Vecstr * nTopKmers, 
-                int ** coverage_array, 
-                int * kmer_positions_DR, 
-                bool * kmer_rcs_DR, 
-                int * kmer_positions_DR_master, 
-                bool * kmer_rcs_DR_master, 
-                int * kmer_positions_ARRAY);
+                //Vecstr * nTopKmers, 
+                int ** coverage_array 
+                //int * kmer_positions_DR, 
+                //bool * kmer_rcs_DR, 
+                //int * kmer_positions_DR_master, 
+                //bool * kmer_rcs_DR_master, 
+                //int * kmer_positions_ARRAY
+                                   );
         
         std::string calculateDRConsensus(int GID, 
                 std::map<StringToken, int> * DR_offset_map, 
@@ -181,7 +183,7 @@ class WorkHorse {
                 int num2Get, 
                 std::map<std::string, int> * kmer_CountMap);
 
-        int getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR);
+        int getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR, bool& reversed);
         
         void removeDRAndCleanMemory(int ** coverageArray, 
                 char * consensusArray, 

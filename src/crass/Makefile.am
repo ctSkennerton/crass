@@ -26,7 +26,8 @@ kseq.cpp kseq.h\
 GraphDrawingDefines.h\
 crassDefines.h\
 StatsManager.h\
-SearchChecker.cpp SearchChecker.h
+SearchChecker.cpp SearchChecker.h\
+ksw.c ksw.h
 
 if ASSEMBLY_WRAPPER
 crass_SOURCES +=\
