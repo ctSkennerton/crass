@@ -1,4 +1,3 @@
-
 /*
  *  crass.cpp is part of the CRisprASSembler project
  *  
@@ -548,6 +547,7 @@ int main(int argc, char *argv[])
         logFileName = opts.output_fastq + PACKAGE_NAME +"."+timestamp+".log";
         
     }
+
     
     intialiseGlobalLogger(logFileName, opts.logLevel);
     

@@ -439,7 +439,10 @@ int WorkHorse::buildGraph(void)
                 ReadListIterator read_iter = mReads[*drc_iter]->begin();
                 while (read_iter != mReads[*drc_iter]->end()) 
                 {
-                	//MI std::cout<<'.'<<std::flush;
+                    if(*read_iter == NULL) {
+                        logError("Read is set to null");
+                    }
+                    //MI std::cout<<'.'<<std::flush;
 #ifdef SEARCH_SINGLETON
                     SearchCheckerList::iterator debug_iter = debugger->find((*read_iter)->getHeader());
                     if (debug_iter != debugger->end()) {
@@ -551,35 +554,8 @@ int WorkHorse::findConsensusDRs(GroupKmerMap& groupKmerCountsMap, int& nextFreeG
         {
             continue;
         }
-        
-        // it's real, so parse this group
-        // get the N top kmers
-        Vecstr n_top_kmers;
-        int num_mers_found = getNMostAbundantKmers(static_cast<int>((mDR2GIDMap[group_count_iter->first])->size()), 
-                                                   n_top_kmers, 
-                                                   CRASS_DEF_NUM_KMERS_4_MODE, 
-                                                   group_count_iter->second);
-        if (0 != num_mers_found) 
-        {
-            // a return value of false indicates that this function has deleted clustered_DRs
-            //std::cout << "found " << num_mers_found << " : " << CRASS_DEF_NUM_KMERS_4_MODE << std::endl; 
-            parseGroupedDRs(num_mers_found, group_count_iter->first, &n_top_kmers, &nextFreeGID);
-        }
-        else
-        {
-            // if there is less kill the group
-            if(NULL != group_count_iter->second)
-            {
-                delete group_count_iter->second;
-                group_count_iter->second = NULL;
-            }
-            if(NULL != mDR2GIDMap[group_count_iter->first])
-            {
-                cleanGroup(group_count_iter->first);
-                //                    delete mDR2GIDMap[group_count_iter->first];
-                //                	mDR2GIDMap[group_count_iter->first] = NULL;
-            }
-        }
+
+        parseGroupedDRs(group_count_iter->first, &nextFreeGID);
         
         // delete the kmer count lists cause we're finsihed with them now
         if(NULL != group_count_iter->second)
@@ -700,7 +676,6 @@ bool WorkHorse::findMasterDR(int GID, StringToken * masterDRToken, std::string *
 	//
 	//
     
-    
     // this new version of the function needs only to find the longest DR in the list
     // so that all of the other DRs can be aligned against it.
     
@@ -711,106 +686,32 @@ bool WorkHorse::findMasterDR(int GID, StringToken * masterDRToken, std::string *
     DR_ClusterIterator dr_iter;// = dr_cluster->begin();
     
     for (dr_iter = current_dr_cluster->begin(); dr_iter != current_dr_cluster->end(); ++dr_iter) {
-        
+
         std::string tmp_dr_seq = mStringCheck.getString(*dr_iter);
-    
         if (tmp_dr_seq.size() > current_longest_size) {
             *masterDRToken = *dr_iter;
             *masterDRSequence = tmp_dr_seq;
-        }
+            current_longest_size = tmp_dr_seq.size();
+        }   
     }
-    
     if(*masterDRToken == -1)
     {
-        // probably a dud. throw it out
-        // free the memory and clean up
         logError("Could not identify a master DR");
-//        if(NULL != mDR2GIDMap[GID])
-//        {
-//            cleanGroup(GID);
-//            mDR2GIDMap.erase(GID);
-//        }
     }
     logInfo("Identified: " << *masterDRSequence << " (" << *masterDRToken << ") as a master potential DR", 4);
 
 
     
     return true;
-    
-//    // to store our DR which has all XX kmers
-//	logInfo("Identifying a master DR", 1);
-//    int master_read_count = 0;
-//    
-//    // these are needed for the call to is kmer present but we don't actually need to values!
-//    bool disp_rc;
-//    int disp_pos;
-//    
-//    // go through the DRs in this cluster, we'd like to find one which has all kmers in it...
-//    // moreover, we need to get the one with all XX and the most reads
-//    DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
-//    while (dr_iter != (mDR2GIDMap[GID])->end()) 
-//    {
-//        std::string tmp_DR = mStringCheck.getString(*dr_iter);
-//        bool got_all_mode_mers = true;
-//        Vecstr::iterator n_top_iter = (*nTopKmers).begin();
-//        while(n_top_iter != (*nTopKmers).end())
-//        {
-//            if(!isKmerPresent(&disp_rc, &disp_pos, *n_top_iter, &tmp_DR))
-//            {
-//                got_all_mode_mers = false;
-//                break;
-//            }
-//            n_top_iter++;
-//        }
-//        
-//        // did this guy have all n?
-//        if(got_all_mode_mers)
-//        {
-//            int tmp_count = (int)(mReads[*dr_iter])->size();
-//            if(tmp_count > master_read_count)
-//            {
-//                master_read_count = tmp_count;
-//                *masterDRSequence = mStringCheck.getString(*dr_iter);
-//                *masterDRToken = *dr_iter;
-//                logInfo("Identified: " << *masterDRSequence << " (" << *masterDRToken << ") as a master potential DR", 4);
-//                return true;
-//            }
-//        }
-//        
-//        // otherwise keep searching
-//        dr_iter++;
-//    }
-//    
-//    if(*masterDRToken == -1)
-//    {
-//        // probably a dud. throw it out
-//        // free the memory and clean up
-//        logInfo("Could not identify a master DR", 4);
-//        if(NULL != mDR2GIDMap[GID])
-//        {
-//            cleanGroup(GID);
-//            mDR2GIDMap.erase(GID);
-//        }
-//    }
-//    
-//    return false;
 }
 
-bool WorkHorse::populateCoverageArray(//int numMers4Mode, 
-                                      int GID, 
+bool WorkHorse::populateCoverageArray(int GID, 
                                       std::string master_DR_sequence, 
                                       StringToken master_DR_token, 
                                       std::map<StringToken, int> * DR_offset_map, 
                                       int * dr_zone_start, 
                                       int * dr_zone_end, 
-                                      //Vecstr * nTopKmers, 
-                                      int ** coverage_array 
-                                      //int * kmer_positions_DR, 
-                                      //bool * kmer_rcs_DR, 
-                                      //int * kmer_positions_DR_master, 
-                                      //bool * kmer_rcs_DR_master, 
-                                      //int * kmer_positions_ARRAY
-                                      )
+                                      int ** coverage_array)
 {
 	//-----
 	// Use the data structures initialised in parseGroupedDRs
@@ -909,54 +810,6 @@ bool WorkHorse::populateCoverageArray(//int numMers4Mode,
         // set this guy to -1 for now
         (*DR_offset_map)[*dr_iter] = -1;
 
-        // this is a DR we have yet to add to the coverage array
-        // First we need to find the positions of the kmers in this DR
-//
-//        for(int i = 0; i < numMers4Mode; i++)
-//        {
-//            isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), (*nTopKmers)[i], &tmp_DR);
-//
-//        }            
-        // we need to have at least half of the mode k-mers present to continue
-        // Where they are not found, the position gets set to -1
-//        int num_neg1 = 0;
-//        for(int i = 0; i < numMers4Mode; i++)
-//        {
-//            if(-1 == (kmer_positions_DR)[i])
-//                num_neg1++; 
-//        }
-//        int numMers4Mode_half = numMers4Mode / 2;
-//        if(num_neg1 >= numMers4Mode_half)
-//        {
-//            std::cout<<__FILE__<<
-//            ": "<<
-//            __LINE__<<
-//            ": skipping DR: "<< tmp_DR<<" : "<<numMers4Mode_half<<" : " <<numMers4Mode<< " : "<<num_neg1<<std::endl;
-//
-//            continue;
-//        }
-        // all is good! ...so far
-        // now we can determine if the DR is the reverse complement...
-//        int num_agree = 0;
-//        int num_disagree = 0;
-//        for(int i = 0; i < numMers4Mode; i++)
-//        {
-//            if((kmer_rcs_DR_master)[i] == (kmer_rcs_DR)[i])
-//                num_agree++;
-//            else
-//                num_disagree++;
-//        }
-
-        // if they are equal, do nothing
-        // there's not too much we can do
-//        if(num_agree == num_disagree)
-//        {
-//            std::cout<<__FILE__<<
-//            ": "<<
-//            __LINE__<<
-//            ": skipping DR: "<< tmp_DR<<std::endl;
-//            continue;
-//        }
         bool is_Reversed = false;
         int offset = getOffsetAgainstMaster(master_DR_sequence, tmp_DR, is_Reversed);
         if(is_Reversed)
@@ -985,45 +838,6 @@ bool WorkHorse::populateCoverageArray(//int numMers4Mode,
             *dr_iter = st;
             (*DR_offset_map)[*dr_iter] = -1;
         }
-
-        // find the position of the kmers in the direct repeat
-        // store whether it was revcomp'd or not
-//        for(int i = 0; i < numMers4Mode; i++)
-//        {
-//            isKmerPresent(((kmer_rcs_DR) + i), ((kmer_positions_DR) + i), (*nTopKmers)[i], &tmp_DR);
-//        }
-
-        // now it's time to try add this guy to the array...
-        // we need to find a suitable kmer...
-//        int positioning_kmer_index = 0;
-//        bool found_kmer = false;
-//        // first find the first non -1 entry, there must be at least CRASS_DEF_NUM_KMERS_4_MODE_HALF
-//        while(positioning_kmer_index < numMers4Mode)
-//        {
-//            if(-1 != (kmer_positions_DR)[positioning_kmer_index])
-//                break;
-//            positioning_kmer_index++;
-//        }
-//        // start here, now we look to the differences between this kmer and the next kmer
-//        // and make sure that that difference is upheld in the master
-//        while(positioning_kmer_index < (numMers4Mode - 1))
-//        {
-//            if(((kmer_positions_DR)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index+1]) == ((kmer_positions_DR_master)[positioning_kmer_index] - (kmer_positions_DR_master)[positioning_kmer_index+1]))
-//            {
-//                found_kmer = true;
-//                break;
-//            }
-//            positioning_kmer_index++;
-//        }
-//
-//        if(!found_kmer)
-//        {
-//            std::cout<<__FILE__<<
-//            ": "<<
-//            __LINE__<<
-//            ": skipping DR: "<< tmp_DR<<std::endl;
-//            continue;
-//        }
 
         // note the position of this DR in the array
         (*DR_offset_map)[*dr_iter] = (*DR_offset_map)[master_DR_token] + offset;//((kmer_positions_ARRAY)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index]);
@@ -1140,11 +954,6 @@ bool WorkHorse::populateCoverageArray(//int numMers4Mode,
             read_iter++;
         }
     }
-	
-    std::cout<<__FILE__<<
-    ": "<<
-    __LINE__<<
-    ": Reads: "<< numOfReads()<<std::endl;
 
     // kill the unfounded ones
     dr_iter = (mDR2GIDMap[GID])->begin();
@@ -1154,7 +963,7 @@ bool WorkHorse::populateCoverageArray(//int numMers4Mode,
     	{
 			if((*DR_offset_map)[*dr_iter] == -1)
 			{
-                std::cout<<"Removing DR: "<<mStringCheck.getString(*dr_iter)<<' '<<mReads[*dr_iter]->size()<<std::endl;
+                //std::cout<<"Removing DR: "<<mStringCheck.getString(*dr_iter)<<' '<<mReads[*dr_iter]->size()<<std::endl;
                 clearReadList(mReads[*dr_iter]);
 				mReads[*dr_iter] = NULL;
 				dr_iter = (mDR2GIDMap[GID])->erase(dr_iter); 
@@ -1169,27 +978,80 @@ bool WorkHorse::populateCoverageArray(//int numMers4Mode,
     		dr_iter++;
     	}
     }
-    std::cout<<__FILE__<<
-    ": "<<
-    __LINE__<<
-    ": Reads: "<< numOfReads()<<std::endl;
     return true;
 } 
+
+unsigned char seq_nt4_table[256] = {
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
+};
+
 int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR, bool& reversed)
 {
     // call ksw
+
+    int slave_length = static_cast<int>(slaveDR.length());
+    int master_length = static_cast<int>(masterDR.length());
+
     // set up values for ksw
     // gap open, gap extension, min score, save start sites
 	int gapo = 5, gape = 2, minsc = 0, xtra = KSW_XSTART;
+    int sa = 1, sb = 3, i, j, k;
     int8_t mat[25];
     // query profile 
-    kswq_t *qry[2] = {0, 0};    
+    kswq_t *qry[2] = {0, 0};   
+
+    if (minsc > 0xffff) minsc = 0xffff;
+    if (minsc > 0) xtra |= KSW_XSUBO | minsc;
+    // initialize scoring matrix
+    for (i = k = 0; i < 4; ++i) {
+        for (j = 0; j < 4; ++j)
+            mat[k++] = i == j? sa : -sb;
+        mat[k++] = 0; // ambiguous base
+    }
+    for (j = 0; j < 5; ++j) mat[k++] = 0;
+
+
+    // convert the sequences
+    char * forward_seq = new char[slave_length+1];
+    char * reverse_seq = new char[slave_length+1];
+
+    for (i = 0; i < slave_length; ++i) 
+        forward_seq[i] = seq_nt4_table[(int)slaveDR[i]];
+    
+    for (i = 0, j = slave_length - 1; i < slave_length; ++i, --j)
+        reverse_seq[j] = forward_seq[i] == 4 ? 4 : 3 - forward_seq[i];
+
+    char * master_seq = new char[master_length+1];
+    for (i = 0; i < master_length; ++i) 
+        master_seq[i] = seq_nt4_table[(int)masterDR[i]];
+
+    // null terminate the sequences
+    forward_seq[slave_length] = '\0';
+    reverse_seq[slave_length] = '\0';
+    master_seq[master_length] = '\0';
+    // reverse the slave and re-compute the alignment
+    std::string rev_slave = reverseComplement(slaveDR);
     
     // alignment of slave against master
-    kswr_t forward_return = ksw_align( static_cast<int>(slaveDR.length()), 
-                                      (uint8_t*)slaveDR.c_str(), 
-                                      static_cast<int>(masterDR.length()), 
-                                      (uint8_t*)masterDR.c_str(), 
+    kswr_t forward_return = ksw_align( slave_length, 
+                                      (uint8_t*)forward_seq, 
+                                      master_length, 
+                                      (uint8_t*)master_seq, 
                                       5, 
                                       mat, 
                                       gapo, 
@@ -1197,12 +1059,11 @@ int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveD
                                       xtra, 
                                       &qry[0]);
     
-    // reverse the slave and re-compute the alignment
-    std::string rev_slave = reverseComplement(slaveDR);
-    kswr_t reverse_return = ksw_align(static_cast<int>(slaveDR.length()), 
-                                      (uint8_t*)rev_slave.c_str(), 
-                                      static_cast<int>(masterDR.length()), 
-                                      (uint8_t*)masterDR.c_str(), 
+
+    kswr_t reverse_return = ksw_align(slave_length, 
+                                      (uint8_t*)reverse_seq, 
+                                      master_length, 
+                                      (uint8_t*)master_seq, 
                                       5, 
                                       mat, 
                                       gapo, 
@@ -1210,11 +1071,15 @@ int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveD
                                       xtra, 
                                       &qry[1]);
     
+
     // free the query profile
     free(qry[0]); free(qry[1]);
-    
+    delete forward_seq; delete reverse_seq; delete master_seq;
+
     // figure out which alignment was better
     if (reverse_return.score == forward_return.score) {
+        //std::cout<<slaveDR<<" forward score: "<<forward_return.score<<" reverse score: "<<reverse_return.score<<std::endl;
+        //std::cout<<masterDR<<std::endl;
         throw crispr::exception(__FILE__,
                                 __LINE__,
                                 __PRETTY_FUNCTION__,
@@ -1222,8 +1087,10 @@ int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveD
     }
     if (reverse_return.score > forward_return.score && reverse_return.score >= minsc) {
         reversed = true;
+        //std::cout<<"R: "<< masterDR<<"\t"<< reverse_return.tb<<"\t"<< reverse_return.te+1<<"\t"<< rev_slave<<"\t"<< reverse_return.qb<<"\t"<< reverse_return.qe+1<<"\t"<< reverse_return.score<<"\t"<< reverse_return.score2<<"\t"<< reverse_return.te2<<"\t"<<reverse_return.tb - reverse_return.qb<<std::endl;
         return reverse_return.tb - reverse_return.qb;
     } else if (forward_return.score >= minsc) {
+        //std::cout<<"F: "<< masterDR<<"\t"<< forward_return.tb<<"\t"<< forward_return.te+1<<"\t"<< slaveDR<<"\t"<< forward_return.qb<<"\t"<< forward_return.qe+1<<"\t"<< forward_return.score<<"\t"<< forward_return.score2<<"\t"<< forward_return.te2<<"\t"<<forward_return.tb - forward_return.qb<<std::endl;
         return forward_return.tb - forward_return.qb;
     } else {
         throw crispr::exception(__FILE__,
@@ -1231,7 +1098,7 @@ int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveD
                                 __PRETTY_FUNCTION__,
                                 "Neither alignment has a good enough score");
     }
-    
+
     return 0;
 }
 
@@ -1294,24 +1161,38 @@ std::string WorkHorse::calculateDRConsensus(int GID,
 			conservation_array[j] = 0;
 		}
 	}
-
+    
+    // trim these back a bit (if we trim too much we'll get it back right now anywho)
+    // CTS: Not quite true, if it is low coverage then there will be no extension!
     // check to see that this DR is supported by a bare minimum of reads
     if(num_GT_zero < CRASS_DEF_MIN_READ_DEPTH) {
         logWarn("**WARNING: low confidence DR", 1);
     } else {
-        // trim these back a bit (if we trim too much we'll get it back right now anywho)
-        // CTS: Not quite true, if it is low coverage then there will be no extension!
-        *dr_zone_start += CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
-        *dr_zone_end -= CRASS_DEF_DR_ZONE_TRIM_AMOUNT;
+        // first work from the left and trim back
+	    while(*dr_zone_start > 0)
+	    {
+		    if(conservation_array[(*dr_zone_start) - 1] < CRASS_DEF_ZONE_EXT_CONS_CUT_OFF) 
+                (*dr_zone_start)++;
+             else 
+			    break;
+	    }
+
+	    // next work from the right
+	    while(*dr_zone_end < array_len - 1)
+	    {
+		    if(conservation_array[(*dr_zone_end) + 1] < CRASS_DEF_ZONE_EXT_CONS_CUT_OFF)
+			    (*dr_zone_end)--;
+		    else
+			    break;
+	    }
     }
-	// now use this information to find the true direct repeat
-	// first work to the left
+	//same as the loops above but this time extend outward
 	while(*dr_zone_start > 0)
 	{
-		if(conservation_array[(*dr_zone_start) - 1] >= CRASS_DEF_ZONE_EXT_CONS_CUT_OFF)
-			(*dr_zone_start)--;
-		else
-			break;
+		if(conservation_array[(*dr_zone_start) - 1] >= CRASS_DEF_ZONE_EXT_CONS_CUT_OFF) 
+            (*dr_zone_start)--;
+        else 
+			break;    
 	}
 
 	// next work to the right
@@ -1448,7 +1329,7 @@ std::string WorkHorse::calculateDRConsensus(int GID,
 	return true_DR;
 }
 
-bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, Vecstr * nTopKmers, int * nextFreeGID) 
+bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID) 
 {
 	
     //-----
@@ -1503,73 +1384,27 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, Vecstr * nTopKmers, i
         conservation_array[j] = 0;
     }
     
-    // first we need to place the master DR about 1/3 of the way down
-    // and then we need to know the positions of the kmers in the DR and in the 
-    // coverage array
-//    int kmer_positions_DR[CRASS_DEF_NUM_KMERS_4_MODE];
-//    bool kmer_rcs_DR[CRASS_DEF_NUM_KMERS_4_MODE];
-//    int kmer_positions_ARRAY[CRASS_DEF_NUM_KMERS_4_MODE];
-//    for(int i = 0; i < CRASS_DEF_NUM_KMERS_4_MODE; i++)
-//    {
-//        kmer_positions_DR[i] = -1;
-//        kmer_rcs_DR[i] = false;
-//        kmer_positions_ARRAY[i] = -1;
-//    }
-    
     // The offset of the start position of each potential DR 
     // when compared to the "true DR"
     // we use this structure when we detect overcollapsing
     std::map<StringToken, int> DR_offset_map;
-    
-    // we will compare the orientations and positions of all other guys to the master so we need a permanent store
-//    bool kmer_rcs_DR_master[CRASS_DEF_NUM_KMERS_4_MODE];
-//    int kmer_positions_DR_master[CRASS_DEF_NUM_KMERS_4_MODE];
-    
+
     // look for the start and end of the DR zone
     int dr_zone_start = -1;
     int dr_zone_end = -1;
 
-    // just the positions in the DR fangs...
-//    kmer_positions_ARRAY[0] = (int)(array_len*CRASS_DEF_CONS_ARRAY_START);
-//    isKmerPresent(kmer_rcs_DR, kmer_positions_DR, (*nTopKmers)[0], &master_DR_sequence);
-//    
-//    for(int i = 1; i < numMers4Mode; i++)
-//    {
-//    	//std::cout << "1" << (kmer_rcs_DR + i) << std::endl;
-//    	//std::cout << "2" << (kmer_positions_DR + i) << std::endl;
-//    	//std::cout << "3" << (*nTopKmers)[i] << std::endl;
-//    	//std::cout << "4" << &master_DR_sequence << std::endl;
-//        isKmerPresent((kmer_rcs_DR + i), (kmer_positions_DR + i), (*nTopKmers)[i], &master_DR_sequence);
-//        kmer_positions_ARRAY[i] = kmer_positions_DR[i] - kmer_positions_DR[0] + kmer_positions_ARRAY[0];
-//    }
-//    
-//    // store the first results away as the master results
-//    for(int i = 0; i < numMers4Mode; i++)
-//    {
-//        kmer_rcs_DR_master[i] = kmer_rcs_DR[i];
-//        kmer_positions_DR_master[i] = kmer_positions_DR[i];
-//    }
-//
     // note the position of the master DR in the array
     DR_offset_map[master_DR_token] = (int)(array_len*CRASS_DEF_CONS_ARRAY_START);//(kmer_positions_ARRAY[0] - kmer_positions_DR[0]);
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Set up the master DR's array and insert this guy into the main array
-    populateCoverageArray(
-                          //numMers4Mode, 
-                          GID, 
+    populateCoverageArray(GID, 
                           master_DR_sequence, 
                           master_DR_token, 
                           &DR_offset_map, 
                           &dr_zone_start, 
                           &dr_zone_end, 
-                          //nTopKmers, 
                           coverage_array 
-                          //kmer_positions_DR, 
-                          //kmer_rcs_DR, 
-                          //kmer_positions_DR_master, 
-                          //kmer_rcs_DR_master, 
-                          //kmer_positions_ARRAY
                           );
     
     //++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1579,7 +1414,17 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, Vecstr * nTopKmers, i
 	int collapsed_pos = -1;
 	std::map<char, int> collapsed_options;            // holds the chars we need to split on
 	std::map<int, bool> refined_DR_ends;              // so we can update DR ends based on consensus 
-    std::string true_DR = calculateDRConsensus(GID, &DR_offset_map, &collapsed_pos, &collapsed_options, &refined_DR_ends, &dr_zone_start, &dr_zone_end, coverage_array, consensus_array, conservation_array, nextFreeGID);
+    std::string true_DR = calculateDRConsensus(GID, 
+                                               &DR_offset_map, 
+                                               &collapsed_pos, 
+                                               &collapsed_options, 
+                                               &refined_DR_ends, 
+                                               &dr_zone_start, 
+                                               &dr_zone_end, 
+                                               coverage_array, 
+                                               consensus_array, 
+                                               conservation_array, 
+                                               nextFreeGID);
 
     // check to make sure that the DR is not just some random long RE
     if((unsigned int)(true_DR.length()) > mOpts->highDRsize)
@@ -1603,6 +1448,8 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, Vecstr * nTopKmers, i
             logInfo("Killed: {" << true_DR << "} cause' the consensus was low complexity...", 1);
             return false;
         }
+
+        // test our true DR for highly abundant kmers
         try {
             float max_frequency;
             if (drHasHighlyAbundantKmers(true_DR, max_frequency) ) {
@@ -1615,7 +1462,7 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, Vecstr * nTopKmers, i
             std::cerr<<e.what()<<std::endl;
             throw crispr::runtime_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, true_DR.c_str());
         }
-        // test our true DR for highly abundant kmers
+
 
         
         // update the DR start and ends
@@ -1876,7 +1723,7 @@ bool WorkHorse::parseGroupedDRs(int numMers4Mode, int GID, Vecstr * nTopKmers, i
         std::map<char, int>::iterator cc_iter = coll_char_to_GID_map.begin();
         while(cc_iter != coll_char_to_GID_map.end())
         {
-            parseGroupedDRs(numMers4Mode, cc_iter->second, nTopKmers, nextFreeGID);
+            parseGroupedDRs(cc_iter->second, nextFreeGID);
             cc_iter++;
         }
     }
@@ -2719,11 +2566,6 @@ bool WorkHorse::outputResults(std::string namePrefix)
             // output the reads
             std::string read_file_name = mOpts->output_fastq +  "Group_" + to_string(drg_iter->first) + "_" + mTrueDRs[drg_iter->first] + ".fa";
             this->dumpReads(current_manager, read_file_name, true);
-            std::cout<<__FILE__<<
-            ": "<<
-            __LINE__<<
-            ": Reads in group: "<<
-            numberOfReadsInGroup(drg_iter->second)<<' '<<numOfReads()<<std::endl;
             
             /* 
              *   Output the xml data to crass.crispr

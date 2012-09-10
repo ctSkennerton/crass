@@ -79,7 +79,6 @@
 #define CRASS_DEF_COLLAPSED_CONS_CUT_OFF        (0.75)              // minimum identity to identify a potential collapsed cluster
 #define CRASS_DEF_COLLAPSED_THRESHOLD           (0.30)              // in the event that clustering has collapsed two DRs into one, this number is used to plait them apart
 #define CRASS_DEF_PARTIAL_SIM_CUT_OFF           (0.85)              // The similarity needed to exted into partial matches
-#define CRASS_DEF_DR_ZONE_TRIM_AMOUNT           (3)                 // trim this many bases off the start and end of the DR
 #define CRASS_DEF_MIN_PARTIAL_LENGTH            (4)                 // The mininum length allowed for a partial direct repeat at the beginning or end of a read 
 #define CRASS_DEF_MAX_SING_PATTERNS				(5000)				// the maximum number of patterns we'll search for in a single hit
 // --------------------------------------------------------------------

@@ -162,10 +162,11 @@ class WorkHorse {
                 float * conservation_array, 
                 int * nextFreeGID);
         
-        bool parseGroupedDRs(int numMers4Mode, 
+        bool parseGroupedDRs(//int numMers4Mode, 
                 int GID, 
-                Vecstr * nTopKmers, 
-                int * nextFreeGID);
+                //Vecstr * nTopKmers, 
+                int * nextFreeGID
+                             );
         
         int numberOfReadsInGroup(DR_Cluster * currentGroup);
         
