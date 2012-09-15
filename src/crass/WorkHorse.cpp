@@ -811,7 +811,13 @@ bool WorkHorse::populateCoverageArray(int GID,
         (*DR_offset_map)[*dr_iter] = -1;
 
         bool is_Reversed = false;
-        int offset = getOffsetAgainstMaster(master_DR_sequence, tmp_DR, is_Reversed);
+        bool did_fail = false;
+        int offset = getOffsetAgainstMaster(master_DR_sequence, tmp_DR, is_Reversed, did_fail);
+        
+        if (did_fail) { 
+            continue; 
+        }
+
         if(is_Reversed)
         {
             // we need to reverse all the reads and the DR for these reads
@@ -1000,7 +1006,8 @@ unsigned char seq_nt4_table[256] = {
 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
 };
 
-int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR, bool& reversed)
+
+int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR, bool& reversed, bool& failed)
 {
     // call ksw
 
@@ -1074,17 +1081,116 @@ int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveD
 
     // free the query profile
     free(qry[0]); free(qry[1]);
-    delete forward_seq; delete reverse_seq; delete master_seq;
+    delete forward_seq; delete reverse_seq; 
 
     // figure out which alignment was better
     if (reverse_return.score == forward_return.score) {
-        //std::cout<<slaveDR<<" forward score: "<<forward_return.score<<" reverse score: "<<reverse_return.score<<std::endl;
-        //std::cout<<masterDR<<std::endl;
-        throw crispr::exception(__FILE__,
-                                __LINE__,
-                                __PRETTY_FUNCTION__,
-                                "FIXME: slave alignments are equal");
+        // get the string token for the slave
+        StringToken token = mStringCheck.getToken(slaveDR);
+
+        // go into the reads and get the sequence of the DR plus a few bases on either side
+        ReadListIterator read_iter = mReads[token]->begin();
+        while (read_iter != mReads[token]->end()) 
+        {
+            // don't care about partials
+            int dr_start_index = 0;
+            int dr_end_index = 1;
+
+            // Find the DR which is the right DR length.
+            // compensates for partial repeats
+            while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(slaveDR.length()) - 1))
+            {
+                dr_start_index += 2;
+                dr_end_index += 2;
+            }
+            // check that the DR does not lie too close to the end of the read so that we can extend
+            if((*read_iter)->startStopsAt(dr_start_index) - 2 < 0 || (*read_iter)->startStopsAt(dr_end_index) + 2 > (*read_iter)->getSeqLength()) {
+                // go to the next read
+                read_iter++;
+                continue;
+            } else {
+                // substring the read to get the new length
+                std::string tmp_dr = (*read_iter)->getSeq().substr((*read_iter)->startStopsAt(dr_start_index) - 2, slaveDR.length() + 4);
+
+                // run ksw again to determine if they are still equal
+                // convert the sequences
+                char * forward_seq = new char[tmp_dr.length()+1];
+                char * reverse_seq = new char[tmp_dr.length()+1];
+
+                for (i = 0; i < (int)tmp_dr.length(); ++i) 
+                    forward_seq[i] = seq_nt4_table[(int)tmp_dr[i]];
+
+                for (i = 0, j = (int)tmp_dr.length() - 1; i < (int)tmp_dr.length(); ++i, --j)
+                    reverse_seq[j] = forward_seq[i] == 4 ? 4 : 3 - forward_seq[i];
+
+                // null terminate the sequences
+                forward_seq[tmp_dr.length()] = '\0';
+                reverse_seq[tmp_dr.length()] = '\0';
+                
+                qry[0] = 0; qry[1] = 0;
+                // alignment of slave against master
+                forward_return = ksw_align( slave_length, 
+                        (uint8_t*)forward_seq, 
+                        master_length, 
+                        (uint8_t*)master_seq, 
+                        5, 
+                        mat, 
+                        gapo, 
+                        gape, 
+                        xtra, 
+                        &qry[0]);
+
+
+                reverse_return = ksw_align(slave_length, 
+                        (uint8_t*)reverse_seq, 
+                        master_length, 
+                        (uint8_t*)master_seq, 
+                        5, 
+                        mat, 
+                        gapo, 
+                        gape, 
+                        xtra, 
+                        &qry[1]);
+
+                free(qry[0]); free(qry[1]);
+                delete forward_seq; delete reverse_seq;
+                delete master_seq;
+                // if they are still equal call it a day and remove the variant
+                if (reverse_return.score == forward_return.score) {
+                    logWarn("@Alignment Warning: Extended Slave scores equal",4);
+                    logWarn("Cannot place slave: "<<slaveDR<<" ("<<token<<") in array", 4);
+                    logWarn("Original slave: "<<slaveDR, 4);
+                    logWarn("Extended Slave: "<<tmp_dr, 4);
+                    logWarn("Master: "<<masterDR, 4);
+                    logWarn("Extended slave score: "<<forward_return.score, 4);
+                    logWarn("******", 4);
+                    
+                    failed = true;
+                    return 0;
+                }
+                if (reverse_return.score > forward_return.score && reverse_return.score >= minsc) {
+                    reversed = true;
+                    //std::cout<<"R: "<< masterDR<<"\t"<< reverse_return.tb<<"\t"<< reverse_return.te+1<<"\t"<< rev_slave<<"\t"<< reverse_return.qb<<"\t"<< reverse_return.qe+1<<"\t"<< reverse_return.score<<"\t"<< reverse_return.score2<<"\t"<< reverse_return.te2<<"\t"<<reverse_return.tb - reverse_return.qb<<std::endl;
+                    return reverse_return.tb - reverse_return.qb;
+                } else if (forward_return.score >= minsc) {
+                    //std::cout<<"F: "<< masterDR<<"\t"<< forward_return.tb<<"\t"<< forward_return.te+1<<"\t"<< slaveDR<<"\t"<< forward_return.qb<<"\t"<< forward_return.qe+1<<"\t"<< forward_return.score<<"\t"<< forward_return.score2<<"\t"<< forward_return.te2<<"\t"<<forward_return.tb - forward_return.qb<<std::endl;
+                    return forward_return.tb - forward_return.qb;
+                } else {
+                    logWarn("@Alignment Warning: Extended Slave Score Failure",4);
+                    logWarn("Cannot place slave: "<<slaveDR<<" ("<<token<<") in array", 4);
+                    logWarn("Master: "<<masterDR, 4);
+                    logWarn("Forward score: "<<forward_return.score, 4);
+                    logWarn("Reverse score: "<<reverse_return.score, 4);
+                    logWarn("******", 4);
+                    failed = true;
+                    return 0;
+                }
+            }
+        }
     }
+
+    delete master_seq;
+
     if (reverse_return.score > forward_return.score && reverse_return.score >= minsc) {
         reversed = true;
         //std::cout<<"R: "<< masterDR<<"\t"<< reverse_return.tb<<"\t"<< reverse_return.te+1<<"\t"<< rev_slave<<"\t"<< reverse_return.qb<<"\t"<< reverse_return.qe+1<<"\t"<< reverse_return.score<<"\t"<< reverse_return.score2<<"\t"<< reverse_return.te2<<"\t"<<reverse_return.tb - reverse_return.qb<<std::endl;
@@ -1093,10 +1199,15 @@ int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveD
         //std::cout<<"F: "<< masterDR<<"\t"<< forward_return.tb<<"\t"<< forward_return.te+1<<"\t"<< slaveDR<<"\t"<< forward_return.qb<<"\t"<< forward_return.qe+1<<"\t"<< forward_return.score<<"\t"<< forward_return.score2<<"\t"<< forward_return.te2<<"\t"<<forward_return.tb - forward_return.qb<<std::endl;
         return forward_return.tb - forward_return.qb;
     } else {
-        throw crispr::exception(__FILE__,
-                                __LINE__,
-                                __PRETTY_FUNCTION__,
-                                "Neither alignment has a good enough score");
+        logWarn("@Alignment Warning: Slave Score Failure",4);
+        logWarn("Cannot place slave: "<<slaveDR<<" ("<<token<<") in array", 4);
+        logWarn("Master: "<<masterDR, 4);
+        logWarn("Forward score: "<<forward_return.score, 4);
+        logWarn("Reverse score: "<<reverse_return.score, 4);
+        logWarn("******", 4);
+
+        failed = true;
+        return 0;
     }
 
     return 0;

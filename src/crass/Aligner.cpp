@@ -32,5 +32,18 @@
  *                               A
  */
 #include <iostream>
+#include "Aligner.h"
 
+void Aligner::prepareSequenceForAlignment(std::string& sequence, uint8_t *transformedSequence) {
 
+    size_t seq_length = sequence.length();
+    int i, j;
+    for (i = 0; i < seq_length; ++i) 
+        transformedSequence[i] = Aligner::seq_nt4_table[(int)sequence[i]];
+    
+    // null terminate the sequences
+    transformedSequence[seq_length] = '\0';
+
+}
+
+void Aligner::prepareSlaveForAlignment(std::string& slaveDR)
