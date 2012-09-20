@@ -913,7 +913,8 @@ bool WorkHorse::populateCoverageArray(int GID,
             {
                 dr_start_index += 2;
                 dr_end_index += 2;
-            }        
+            } 
+            // go through every full length DR in the read and place in the array
             do
             {
                 if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (((int)(tmp_DR.length())) - 1))
@@ -1200,7 +1201,7 @@ int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveD
         return forward_return.tb - forward_return.qb;
     } else {
         logWarn("@Alignment Warning: Slave Score Failure",4);
-        logWarn("Cannot place slave: "<<slaveDR<<" ("<<token<<") in array", 4);
+        logWarn("Cannot place slave: "<<slaveDR<<" ("<<mStringCheck.getToken(slaveDR)<<") in array", 4);
         logWarn("Master: "<<masterDR, 4);
         logWarn("Forward score: "<<forward_return.score, 4);
         logWarn("Reverse score: "<<reverse_return.score, 4);

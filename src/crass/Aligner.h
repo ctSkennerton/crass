@@ -35,11 +35,28 @@
 #ifndef crass_Aligner_h
 #define crass_Aligner_h
 #include <vector>
+#include <bitset>
+#include <map>
+
 #include "ksw.h"
+#include "StringCheck.h"
+#include "Types.h"
+
+
+typedef std::bitset<2> AlignerFlag_t;
+
 
 class Aligner 
 {
-    static unsigned char seq_nt4_table[256] = {
+    // named accessors for the bitset flags
+    enum Flag_t {
+        reversed = 0,
+        failed = 1,
+        score_equal = 2
+    };
+    
+    
+    const unsigned char seq_nt4_table[256] = {
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -59,7 +76,8 @@ class Aligner
     };
 public:
     //int gapo = 5, gape = 2, minsc = 0, xtra = KSW_XSTART;
-    Aligner(int length, int gapo, int gape, int minsc, int xtra): 
+    Aligner(int length, ReadMap *wh_reads, StringCheck *wh_st, int gapo=5, int gape=2, int minsc=5, int xtra=KSW_XSTART): 
+        AL_length(length),
         AL_consensus(length,'N'), 
         AL_conservation(length, 0.0f), 
         AL_coverage(length*4, 0),
@@ -67,6 +85,10 @@ public:
         AL_gapExtension(gape), 
         AL_minAlignmentScore(minsc), 
         AL_xtra(xtra) {
+        
+            // assign workhorse variables
+            mReads = wh_reads;
+            mStringCheck = wh_st;
         
         // set up default parameters for ksw alignment
         int sa = 1, sb = 3, i, j, k;
@@ -83,7 +105,17 @@ public:
         }
         for (j = 0; j < 5; ++j) AL_scoringMatrix[k++] = 0;
     }
-    ~Aligner(){}
+    ~Aligner(){
+        if (AL_masterDR != NULL) {
+            delete AL_masterDR;
+            AL_masterDR = NULL;
+        } 
+    }
+    
+    inline void setMasterDR(std::string& master) {
+        AL_masterDRToken = mStringCheck->getToken(master);
+        prepareMasterForAlignment(master);
+    }
 
 private:
     // private methods
@@ -98,22 +130,41 @@ private:
                                   uint8_t *slaveTransformedReverse);
 
     // transform the master DR into the right form for ksw
-    inline void prepareMasterForAlignment(std::string& masterDR,
-                                          uint8_t *masterTransformed) {
-        return prepareSequenceForAlignment(masterDR, masterTransformed);
+    inline void prepareMasterForAlignment(std::string& masterDR) {
+        AL_masterDRLength = masterDR.length();
+        AL_masterDR = new uint8_t[AL_masterDRLength+1];
+        return prepareSequenceForAlignment(masterDR, AL_masterDR);
     };
     
     // call ksw alignment to determine the offset for this slave against the master
-    int getOffsetAgainstMaster(uint8_t *slaveDrForward, 
-                               uint8_t *slaveDrReverse, 
-                               uint8_t *masterDR, 
-                               bool& reversed);
+    int getOffsetAgainstMaster(std::string& slaveDR,
+                               AlignerFlag_t& flags);
+    
+    // add in all of the reads for this group to the coverage array
+    void generateCoverage();
+    
+    // inner loop for generateCoverage()
+    void placeReadsInCoverageArray(StringToken& currentDRToken);
+    
+    void extendSlaveDR(std::string& slaveDR, std::string& extendedSlaveDR);
 
 
+    
+    
+    
+    
+    //Members
+    
+    // length of the arrays
+    int AL_length;
+    
     // Vectors to hold the alignment data
     std::vector<char> AL_consensus;
     std::vector<float> AL_conservation;
     std::vector<int> AL_coverage;
+    
+    // Storage of all the offsets against the master
+    std::map<StringToken, int> AL_Offsets;
 
     // smith-waterman default parameters
     int AL_gapOpening;
@@ -121,8 +172,12 @@ private:
     int AL_minAlignmentScore;
     int AL_xtra;
     int8_t AL_scoringMatrix[25];
-    kswq_t *AL_masterDRProfile;
-    kswq_t *AL_slaveDRProfile;
+    uint8_t *AL_masterDR;
+    int AL_masterDRLength;
+    StringToken AL_masterDRToken;
+    ReadMap * mReads;
+    StringCheck * mStringCheck;
+    
 
     
 };

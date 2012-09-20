@@ -7,7 +7,7 @@
 // This class is responsible for "running" the algorithm
 // 
 // --------------------------------------------------------------------
-//  Copyright  2011 Michael Imelfort and Connor Skennerton
+//  Copyright  2011, 2012 Michael Imelfort and Connor Skennerton
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
@@ -54,22 +54,13 @@
 #if SEARCH_SINGLETON
 #include "SearchChecker.h"
 #endif
+#include "Types.h"
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
 typedef std::map<std::string, NodeManager *>::iterator DR_ListIterator;
 
-// for storing clusters of DRs
-// indexed using StringCheck type tokens
-typedef std::vector<StringToken> DR_Cluster; 
-typedef std::vector<StringToken>::iterator DR_ClusterIterator;
 
-typedef std::map<int, DR_Cluster *>::iterator DR_Cluster_MapIterator;
-typedef std::map<int, DR_Cluster *> DR_Cluster_Map;
-
-typedef std::map<int, std::map<std::string, int> * > GroupKmerMap;
-
-typedef std::vector<std::string> Vecstr;
 
 bool sortLengthAssending( const std::string &a, const std::string &b);
 bool sortLengthDecending( const std::string &a, const std::string &b);
@@ -98,6 +89,8 @@ class WorkHorse {
         //void write_direct_repeatID(direct_repeat &dr_match, kseq_t *seq);
         //void writeLookupToFile(string &outFileName, lookupTable &outLookup);
         int numOfReads(void);
+    
+    
         
     private:
         

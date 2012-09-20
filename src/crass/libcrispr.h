@@ -53,19 +53,13 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "StringCheck.h"
+#include "Types.h"
 #if SEARCH_SINGLETON
 #include "SearchChecker.h"
 #endif
 
 
-typedef std::map<std::string, bool> lookupTable;
 
-typedef std::vector<ReadHolder *> ReadList;
-typedef std::vector<ReadHolder *>::iterator ReadListIterator;
-
-// direct repeat as a string and a list of the read objects that contain that direct repeat
-typedef std::map<StringToken, ReadList *> ReadMap;
-typedef std::map<StringToken, ReadList *>::iterator ReadMapIterator;
 
 
 typedef std::vector<WuManber*> MultiSearchVector;
