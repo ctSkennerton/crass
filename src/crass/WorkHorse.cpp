@@ -724,7 +724,7 @@ bool WorkHorse::populateCoverageArray(int GID,
                    CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
 
 	// chars we luv!
-    char alphabet[4] = {'A', 'C', 'G', 'T'};
+    //char alphabet[4] = {'A', 'C', 'G', 'T'};
 
     // First we add the master DR into the arrays 
     ReadListIterator read_iter = mReads[master_DR_token]->begin();
@@ -847,7 +847,7 @@ bool WorkHorse::populateCoverageArray(int GID,
 
         // note the position of this DR in the array
         (*DR_offset_map)[*dr_iter] = (*DR_offset_map)[master_DR_token] + offset;//((kmer_positions_ARRAY)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index]);
-
+/*
         // We need to check that at least CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF percent of bases agree within the "Zone"
         int this_DR_start_index = 0;
         int zone_start_index = *dr_zone_start;
@@ -901,6 +901,7 @@ bool WorkHorse::populateCoverageArray(int GID,
         {
             continue;
         }
+ */
         // we need to correct for the fact that we may not be using the 0th kmer
         int positional_offset = (*DR_offset_map)[*dr_iter];//(kmer_positions_DR_master)[0] - (kmer_positions_DR_master)[positioning_kmer_index] + (kmer_positions_ARRAY)[positioning_kmer_index];
         ReadListIterator read_iter = mReads[*dr_iter]->begin();
