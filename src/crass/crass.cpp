@@ -113,7 +113,7 @@ void usage(void)
     std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_LOGGING<<"]"<<std::endl;
     std::cout<< "-o --outDir          <DIR>   Output directory [default: .]"<<std::endl;
     std::cout<< "-V --version                 Program and version information"<<std::endl;
-    std::cout<< "--logToScreen                Print the logging information to screen rather than a file"<<std::endl;
+    std::cout<< "-g --logToScreen             Print the logging information to screen rather than a file"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"CRISPR Identification Options:"<<std::endl;
     std::cout<< "-d --minDR           <INT>   Minimim length of the direct repeat"<<std::endl; 
@@ -130,9 +130,9 @@ void usage(void)
     std::cout<< "                             when the --removeHomopolymers option is set [Default: "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<"]"<<std::endl;
     std::cout<< "-y --repeatScalling  <REAL>  A decimal number that represents the reduction in size of the direct repeat"<<std::endl;
     std::cout<< "                             when the --removeHomopolymers option is set [Default: "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<"]"<<std::endl;
-    std::cout<< "--noScalling                 Use the given spacer and direct repeat ranges when --removeHomopolymers is set. "<<std::endl;
+    std::cout<< "-z --noScalling              Use the given spacer and direct repeat ranges when --removeHomopolymers is set. "<<std::endl;
     std::cout<< "                             The default is to scale the numbers by "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" or by values set using -x or -y"<<std::endl;
-    std::cout<< "--removeHomopolymers         Correct for homopolymer errors [default: no correction]"<<std::endl;
+    std::cout<< "-H --removeHomopolymers      Correct for homopolymer errors [default: no correction]"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"CRISPR Assembly Options:"<<std::endl;
     std::cout<< "-f --covCutoff       <INT>   Remove groups with less than x spacers [Default: "<<CRASS_DEF_COVCUTOFF<<"]"<<std::endl;
@@ -171,10 +171,10 @@ void usage(void)
     std::cout<<"-L --longDescription          Set if you want the spacer sequence printed along with the ID in the spacer graph. [Default: false]"<<std::endl;
     std::cout<<"-G --showSingltons            Set if you want to print singleton spacers in the spacer graph [Default: false]"<<std::endl;
 #ifdef DEBUG
-    std::cout<<"--noDebugGraph                Stops creation of debug .gv files even if the DEBUG preprocessor macro is set [Default: false]"<<std::endl;
+    std::cout<<"-e --noDebugGraph             Stops creation of debug .gv files even if the DEBUG preprocessor macro is set [Default: false]"<<std::endl;
 #endif
 #ifdef RENDERING
-    std::cout<<"--noRendering                 Stops rendering of .gv files even if the RENDERING preprocessor macro is set [Default: false]"<<std::endl;
+    std::cout<<"-r --noRendering              Stops rendering of .gv files even if the RENDERING preprocessor macro is set [Default: false]"<<std::endl;
 #endif
 #ifdef SEARCH_SINGLETON
     std::cout<<"--searchChecker       <FILE>  A file containing read headers that should be tracked through "<<PACKAGE_NAME<<std::endl;
@@ -210,7 +210,7 @@ int processOptions(int argc, char *argv[], options *opts)
     int c;
     int index;
     bool scalling = false;
-    while( (c = getopt_long(argc, argv, "a:b:c:d:D:f:Ghk:K:l:Ln:o:rs:S:Vw:x:y:", long_options, &index)) != -1 ) 
+    while( (c = getopt_long(argc, argv, "a:b:c:d:D:ef:gGhHk:K:l:Ln:o:rs:S:Vw:x:y:z", long_options, &index)) != -1 ) 
     {
         switch(c) 
         {
@@ -287,8 +287,16 @@ int processOptions(int argc, char *argv[], options *opts)
             case 'D': 
                 from_string<unsigned int>(opts->highDRsize, optarg, std::dec);
                 break;
+            case 'e':
+#ifdef DEBUG
+                opts->noDebugGraph = true;
+#endif
+                break;
             case 'f':
                 from_string<int>(opts->covCutoff, optarg, std::dec);
+                break;
+            case 'g':
+                 opts->logToScreen = true;
                 break;
             case 'G':
             	opts->showSingles= true;
@@ -297,6 +305,9 @@ int processOptions(int argc, char *argv[], options *opts)
                 versionInfo(); 
                 usage();
                 exit(1); 
+                break;
+            case 'H':
+                opts->removeHomopolymers = true;
                 break;
             case 'k': 
                 from_string<int>(opts->kmer_clust_size, optarg, std::dec);
@@ -351,7 +362,9 @@ int processOptions(int argc, char *argv[], options *opts)
                 }
                 break;
             case 'r': 
-                opts->reportStats = true; 
+#ifdef RENDERING 
+                opts->noRendering = true; 
+#endif
                 break;
             case 's': 
                 from_string<unsigned int>(opts->lowSpacerSize, optarg, std::dec);
@@ -395,18 +408,12 @@ int processOptions(int argc, char *argv[], options *opts)
                 }
                 scalling = true;
                 break;
+            case 'z':
+                opts->dontPerformScalling = true;
+                break;
             case 0:
-                if ( strcmp( "removeHomopolymers", long_options[index].name ) == 0 ) opts->removeHomopolymers = true;
-                else if ( strcmp( "logToScreen", long_options[index].name ) == 0 ) opts->logToScreen = true;
-                else if ( strcmp( "noScalling", long_options[index].name ) == 0 ) opts->dontPerformScalling = true;
-#ifdef RENDERING 
-                else if (strcmp( "noRendering", long_options[index].name ) == 0 ) opts->noRendering = true; 
-#endif  
-#ifdef DEBUG
-                else if (strcmp( "noDebugGraph", long_options[index].name ) == 0 ) opts->noDebugGraph = true;
-#endif
 #ifdef SEARCH_SINGLETON
-                else if (strcmp("searchChecker", long_options[index].name) == 0) opts->searchChecker = optarg;
+                if (strcmp("searchChecker", long_options[index].name) == 0) opts->searchChecker = optarg;
 #endif
                 break;
             default: 

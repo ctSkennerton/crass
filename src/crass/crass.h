@@ -61,32 +61,30 @@ static struct option long_options [] = {
     {"graphColour",required_argument,NULL,'c'},
     {"minDR", required_argument, NULL, 'd'},
     {"maxDR", required_argument, NULL, 'D'},
+#ifdef DEBUG
+    {"noDebugGraph",no_argument,NULL,'e'},
+#endif
     {"covCutoff",required_argument,NULL,'f'},
+    {"logToScreen", no_argument, NULL, 'g'},
     {"showSingltons",no_argument,NULL,'G'},
     {"help", no_argument, NULL, 'h'},
+    {"removeHomopolymers",no_argument,NULL,'H'},
     {"kmerCount", required_argument, NULL, 'k'},
     {"graphNodeLen",required_argument,NULL,'K'},
     {"logLevel", required_argument, NULL, 'l'},
     {"longDescription",no_argument,NULL,'L'},
-    {"maxMismatches", required_argument, NULL, 'm'},
     {"minNumRepeats", required_argument, NULL, 'n'},
     {"outDir", required_argument, NULL, 'o'},
-    {"reportStats", no_argument, NULL, 'r'},
+#ifdef RENDERING
+    {"noRendering",no_argument,NULL,'r'},
+#endif
     {"minSpacer", required_argument, NULL, 's'},
     {"maxSpacer", required_argument, NULL, 'S'},
     {"version", no_argument, NULL, 'V'},
     {"windowLength", required_argument, NULL, 'w'},
     {"spacerScalling",required_argument,NULL,'x'},
     {"repeatScalling",required_argument,NULL,'y'},
-    {"logToScreen", no_argument, NULL, 0},
-    {"removeHomopolymers",no_argument,NULL,0},
-    {"noScalling",required_argument,NULL,0},
-#ifdef RENDERING
-    {"noRendering",no_argument,NULL,0},
-#endif
-#ifdef DEBUG
-    {"noDebugGraph",no_argument,NULL,0},
-#endif
+    {"noScalling",no_argument,NULL,'z'},
 #ifdef SEARCH_SINGLETON
     {"searchChecker", required_argument, NULL, 0},
 #endif

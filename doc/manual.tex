@@ -237,44 +237,35 @@ which leaves all of the user options at their default values.
 \subsubsection{User Flags}
 \label{sec:userflags}
 Crass has a large munber of user options which may seem overwhelming to a new user.  Luckily most of the options are considered 'advanced' and should never have to be changed from their default values.  Of course they are in there as user options in case you want to experiment or you suspect that your sample contains a very unusual CRISPR which may require special attention. 
-\paragraph{Basic Options}
-Most of the basic options control the output style, for example the colours of the spacr graph or the verbosity of the log file.  There are as well some options which will change the way Crass works.  These inclue the upper and lower size ranges for the spacers and direct repeats and the number of reads that a putative CRISPR must contain to be considered real.
     \begin{longtable}{  l   p{10cm} }
     \hline
     Option & Definition \\  \hline\hline
+\\
     \combinedoptionflagarg{a}{layoutAlgorithm}{STRING} &   When enable-rendering is set and you have Graphviz installed this option will become available and allow you to change the Graphviz layout engine.  The full range of layout engines is: neato, dot, fdp, sfdp, twopi, circo \\ \\
+\combinedoptionflagarg{b}{numBins}{INT} &  sets the number of colour bins used in the output spacer graph for visualising the coverage of spacers in a dataset.  By default the number of bins is equal to the range of the highest and lowest coverage for a CRISPR \\ \\
 \combinedoptionflagarg{c}{graphColour}{STRING} & Changes the colour range for the output spacer graph.  There are four colour scales: red-blue, blue-red, green-red-blue, red-blue-green with the default being red-blue\\ \\
 \combinedoptionflagarg{d}{minDR}{INT} & The lower bound considered acceptable for the size of a direct repeat.  The default is 23bp\\ \\
 \combinedoptionflagarg{D}{maxDR}{INT} & The upper bound considered acceptable for the size of a direct repeat. The default is 47bp\\ \\
+\combinedoptionflag{e}{noDebugGraph} & When the DEBUG preprocessor symbol is defined this option will become available.  When set it prevents the output of any of the debugging .gv files being produced \\ \\
 \combinedoptionflagarg{f}{covCutoff}{INT} & This variable sets the minimum number of spacers allowed for a putative CRISPR to be considered real and for the assembly to be attempted.  The default is 3  \\ \\
+\combinedoptionflag{g}{logToScreen} & Does not produce a log file but instead prints the contents to screen.\\ \\
 \combinedoptionflag{G}{showSingletons} & Set this flag if you would like to see unconnected singleton spacers in the final graph.\\ \\
 \combinedoptionflag{h}{help} & Print the basic usage and version information. \\ \\
-
+\combinedoptionflag{H}{removeHomopolymers} & This is an experimental feature of Crass where the search algorithms attempt to correct for homopolymer errors in reads.\\ \\
+\combinedoptionflagarg{k}{kmerCount}{INT} & Sets the number of kmers that need to be shared between putative direct repeats for them to be clustered together after the find stage.  Clustered direct repeats are eventually concatenated to form a 'true' direct repeat for a CRISPR; putative repeats that cannot be clustered are removed from consideration.  Change this variable if you feel that the clustering is too stringent and is breaking appart one CRISPR into multiple types.  The default number of kmers is 6, however the value should not be set below 6 as this would not be stringent enough; a higher value would split closely related direct repeats apart\\ \\
+\combinedoptionflagarg{K}{graphNodeLen}{INT} & Crass makes a graph by cutting kmers on either side of the direct repeat and then joining these together.  The length of the kmer will dictate how connected the graph will be.  A smaller number will increase the chances of new conections being formed, however it also increases the chances of false positives.  The default value is 9.\\ \\ 
 \combinedoptionflagarg{l}{logLevel}{INT} & Sets the verbosity of the log file.  Under most circumstances the log level cannot go higher than 4, unless the enable-debug option is set during configuration, which will increase the maximum value to 10.  Note that above a level of 4 alot of the information will not be understandable to the user as most of these messages are specifically for us, the developers to track down bugs.  \\ \\
 \combinedoptionflag{L}{longDescription} & This changes  the names of the nodes in the spacer graph to include the sequence of the spacer.  The default is to just use the spacer ID\\ \\
-\longoptionflag{logToScreen} & Does not produce a log file but instead prints the contents to screen.\\ \\
-\longoptionflag{noDebugGraph} & When the DEBUG preprocessor symbol is defined this option will become available.  When set it prevents the output of any of the debugging .gv files being produced \\ \\
-\longoptionflag{noRendering} & When the RENDERING preprocessor symbol is defined this option will become available.  When set it prevents the generation of rendered images from the intermeadiate debugging graphs (if DEBUG preprocessor symbol is set) and the final graphs.\\ \\
+\combinedoptionflag{n}{minNumRepeats} & Used only for long reads, sets the minimum number of repeats that must be identified in a read for it to be considered part of a CRISPR [default: 3]\\ \\
 \combinedoptionflagarg{o}{outDir}{STRING} & Sets the output directory for files produced by Crass.  The default is the current directory\\ \\
+\combinedoptionflag{r}{noRendering} & When the RENDERING preprocessor symbol is defined this option will become available.  When set it prevents the generation of rendered images from the intermeadiate debugging graphs (if DEBUG preprocessor symbol is set) and the final graphs.\\ \\
 \combinedoptionflagarg{s}{minSpacer}{INT} & The lower bound considered acceptable for the size of a spacer sequence. Default is 26bp.\\ \\
 \combinedoptionflagarg{S}{maxSpacer}{INT} & The upper bound considered acceptable for the size of a spacer sequence. Default is 50bp.\\ \\
-\combinedoptionflag{V}{version} & Preints out program version information. \\
-    \hline
- \end{longtable}
-\paragraph{Advanced Options}
-Crass also contains a number of options for fine tunning various parts of the underlying algorithms.  These options should not be used under normal circumstances as their behaviour could cause unexpected results.  There has been alot of time and effort put in to testing and creating the default variables for these options so it is important to change them only if you understand what they are doing.
-    \begin{longtable}{  l   p{10cm} }
-    \hline
-    Option & Definition \\  \hline\hline 
-\combinedoptionflagarg{b}{numBins}{INT} &  sets the number of colour bins used in the output spacer graph for visualising the coverage of spacers in a dataset.  By default the number of bins is equal to the range of the highest and lowest coverage for a CRISPR \\ \\
-\combinedoptionflagarg{k}{kmerCount}{INT} & Sets the number of kmers that need to be shared between putative direct repeats for them to be clustered together after the find stage.  Clustered direct repeats are eventually concatenated to form a 'true' direct repeat for a CRISPR; putative repeats that cannot be clustered are removed from consideration.  Change this variable if you feel that the clustering is too stringent and is breaking appart one CRISPR into multiple types.  The default number of kmers is 6, however the value should not be set below 6 as this would not be stringent enough; a higher value would split closely related direct repeats apart\\ \\
-\combinedoptionflagarg{K}{graphNodeLen}{INT} & Crass makes a graph by cutting kmers on either side of the direct repeat and then joining these together.  The length of the kmer will dictate how connected the graph will be.  A smaller number will increase the chances of new conections being formed, however it also increases the chances of false positives.  The default value is 9.\\ \\
-\combinedoptionflagarg{n}{minNumRepeats}{INT} & Changes the minimum number of repeated seed sequences needed in the long read search algorithm. The default is 3.\\ \\
-\longoptionflag{noScalling} & This turns off the effects of (\optionflag{x} or \optionflag{y}) so that the bounds of the direct repeat and spacer (\optionflag{dDsS}) given on the command line are interpreted literally when the \longoptionflag{removeHomopolymers} option is set. \\ \\
-\longoptionflag{removeHomopolymers} & This is an experimental feature of Crass where the search algorithms attempt to correct for homopolymer errors in reads.\\ \\ 
+\combinedoptionflag{V}{version} & Preints out program version information. \\ \\
 \combinedoptionflagarg{w}{windowLength}{INT} & When using the long read search algorithm, changes the window length for finding seed sequences; can be set between 6 - 9bp.  The default value is 8bp.\\ \\ 
 \combinedoptionflagarg{x}{spacerScalling}{DECIMAL} & Overide the default scalling of the spacer bounds (\optionflag{sS}) set by \longoptionflag{removeHomopolymers}.  The default is 0.7, i.e. the size of the spacer bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.   \\ \\
 \combinedoptionflagarg{y}{repeatScalling}{DECIMAL} & Overide the default scalling of the direct repeat bounds (\optionflag{dD}) set by \longoptionflag{removeHomopolymers}.  The default is 0.7, i.e. the size of the direct repeat bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.\\ 
+\combinedoptionflag{z}{noScalling} & This turns off the effects of (\optionflag{x} or \optionflag{y}) so that the bounds of the direct repeat and spacer (\optionflag{dDsS}) given on the command line are interpreted literally when the \longoptionflag{removeHomopolymers} option is set. \\ \\
 \hline
     \end{longtable}
 \subsubsection{Output From Crass}
