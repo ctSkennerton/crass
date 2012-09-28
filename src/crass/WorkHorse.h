@@ -55,6 +55,8 @@
 #include "SearchChecker.h"
 #endif
 #include "Types.h"
+#include "Aligner.h"
+
 
 // typedefs
 typedef std::map<std::string, NodeManager *> DR_List;
@@ -85,9 +87,7 @@ class WorkHorse {
         //**************************************
         // file IO
         //**************************************
-        //void write_spacerID(direct_repeat &dr_match, kseq_t *seq);
-        //void write_direct_repeatID(direct_repeat &dr_match, kseq_t *seq);
-        //void writeLookupToFile(string &outFileName, lookupTable &outLookup);
+
         int numOfReads(void);
     
     
@@ -125,54 +125,22 @@ class WorkHorse {
                 StringToken * masterDRToken, 
                 std::string * masterDRSequence);
         
-        bool populateCoverageArray( int GID, 
-                std::string master_DR_sequence, 
-                StringToken master_DR_token, 
-                std::map<StringToken, int> * DR_offset_map, 
-                int * dr_zone_start, 
-                int * dr_zone_end, 
-                int ** coverage_array );
+        bool populateCoverageArray( int GID, Aligner drAligner );
         
         std::string calculateDRConsensus(int GID, 
-                std::map<StringToken, int> * DR_offset_map, 
-                int * collapsed_pos, 
-                std::map<char, int> * collapsed_options, 
-                std::map<int, bool> * refined_DR_ends, 
-                int * dr_zone_start, 
-                int * dr_zone_end, 
-                int ** coverage_array, 
-                char * consensus_array, 
-                float * conservation_array, 
-                int * nextFreeGID);
+                                         Aligner drAligner, 
+                                         int& nextFreeGID,
+                                         int& collapsedPos,
+                                         std::map<char, int> collapsedOptions,
+                                         std::map<int, bool> refinedDREnds
+                                         );
         
         bool parseGroupedDRs( int GID, int * nextFreeGID);
         
         int numberOfReadsInGroup(DR_Cluster * currentGroup);
         
-        bool isKmerPresent(bool * didRevComp, 
-                int * startPosition, 
-                const std::string kmer, 
-                const std::string * DR);
-        
-        int getNMostAbundantKmers(Vecstr& mostAbundantKmers, 
-                int num2Get, 
-                std::map<std::string, int> * kmer_CountMap);
-
-        int getNMostAbundantKmers(int maxAmount, 
-                Vecstr& mostAbundantKmers, 
-                int num2Get, 
-                std::map<std::string, int> * kmer_CountMap);
-
-        int getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR, bool& reversed, bool& failed);
-        
-        void removeDRAndCleanMemory(int ** coverageArray, 
-                char * consensusArray, 
-                float * conservationArray, 
-                int GID);
-        
         void cleanGroup(int GID);
         
-        void cleanArrays(int ** coverageArray, char * consensusArray, float * conservationArray);
         //**************************************
         // spacer graphs
         //**************************************

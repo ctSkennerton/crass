@@ -41,9 +41,10 @@
 #include "ksw.h"
 #include "StringCheck.h"
 #include "Types.h"
+#include "crassDefines.h"
 
 
-typedef std::bitset<2> AlignerFlag_t;
+typedef std::bitset<3> AlignerFlag_t;
 
 
 class Aligner 
@@ -73,6 +74,28 @@ class Aligner
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
+    };
+    
+    
+    // ASCII table that converts characters into the multiplier
+    // used for finding the correct index in the coverage array
+    const unsigned char CHAR_TO_INDEX[256] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 public:
     //int gapo = 5, gape = 2, minsc = 0, xtra = KSW_XSTART;
@@ -105,6 +128,8 @@ public:
         }
         for (j = 0; j < 5; ++j) AL_scoringMatrix[k++] = 0;
     }
+    
+    
     ~Aligner(){
         if (AL_masterDR != NULL) {
             delete AL_masterDR;
@@ -112,14 +137,46 @@ public:
         } 
     }
     
-    inline void setMasterDR(std::string& master) {
-        AL_masterDRToken = mStringCheck->getToken(master);
-        prepareMasterForAlignment(master);
-    }
+    inline StringToken getMasterDrToken(){return AL_masterDRToken;}
+    
+    void setMasterDR(std::string& master);
+    
+    void alignSlave(StringToken& slaveDRToken);
+
+    // add in all of the reads for this group to the coverage array
+    void generateConsensus();
+    
+    inline std::map<StringToken, int>::iterator offsetBegin(){return AL_Offsets.begin();}
+    
+    inline std::map<StringToken, int>::iterator offsetEnd(){return AL_Offsets.end();}
+    
+    inline std::map<StringToken, int>::iterator offsetFind(StringToken& token){return AL_Offsets.find(token);}
+    
+    inline int offset(StringToken& drToken){return AL_Offsets[drToken];}
+
+    inline int getDRZoneStart(){return AL_ZoneStart;}
+    
+    inline int getDRZoneEnd(){return AL_ZoneEnd;}
+    
+    inline void setDRZoneStart(int i){AL_ZoneStart = i;}
+    
+    inline void setDRZoneEnd(int i){AL_ZoneEnd = i;}
+    
+    inline int coverageAt(int i, char c){return AL_coverage.at(CHAR_TO_INDEX[c] * i); }
+    
+    inline char consensusAt(int i){return AL_consensus.at(i);}
+    
+    inline float conservationAt(int i){return AL_consensus.at(i);}
+    
+    inline int depthAt(int i){return AL_coverage[i] + AL_coverage[2*i] + AL_coverage[3*i] + AL_coverage[4*i];}
 
 private:
     // private methods
     //
+    
+    // call ksw alignment to determine the offset for this slave against the master
+    int getOffsetAgainstMaster(std::string& slaveDR,
+                               AlignerFlag_t& flags);
 
     // transform any sequence into the right form for ksw
     void prepareSequenceForAlignment(std::string& sequence, uint8_t *transformedSequence);
@@ -133,22 +190,15 @@ private:
     inline void prepareMasterForAlignment(std::string& masterDR) {
         AL_masterDRLength = masterDR.length();
         AL_masterDR = new uint8_t[AL_masterDRLength+1];
-        return prepareSequenceForAlignment(masterDR, AL_masterDR);
+        prepareSequenceForAlignment(masterDR, AL_masterDR);
     };
     
-    // call ksw alignment to determine the offset for this slave against the master
-    int getOffsetAgainstMaster(std::string& slaveDR,
-                               AlignerFlag_t& flags);
-    
-    // add in all of the reads for this group to the coverage array
-    void generateCoverage();
-    
-    // inner loop for generateCoverage()
+
     void placeReadsInCoverageArray(StringToken& currentDRToken);
     
     void extendSlaveDR(std::string& slaveDR, std::string& extendedSlaveDR);
 
-
+    void calculateDRZone(int& zone_start, int& zone_end);
     
     
     
@@ -172,12 +222,17 @@ private:
     int AL_minAlignmentScore;
     int AL_xtra;
     int8_t AL_scoringMatrix[25];
+    
+    // master DR
     uint8_t *AL_masterDR;
     int AL_masterDRLength;
     StringToken AL_masterDRToken;
+    
+    // "Glue" between WorkHorse
     ReadMap * mReads;
     StringCheck * mStringCheck;
-    
+    int AL_ZoneStart;
+    int AL_ZoneEnd;
 
     
 };

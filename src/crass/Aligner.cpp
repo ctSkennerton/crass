@@ -32,9 +32,164 @@
  *                               A
  */
 #include <iostream>
+#include <libcrispr/Exception.h>
 #include "Aligner.h"
 #include "LoggerSimp.h"
 #include "SeqUtils.h"
+
+void Aligner::setMasterDR(std::string& master) {
+    AL_masterDRToken = mStringCheck->getToken(master);
+    AL_Offsets[AL_masterDRToken] = (int)(AL_length * CRASS_DEF_CONS_ARRAY_START);
+    prepareMasterForAlignment(master);
+    placeReadsInCoverageArray(AL_masterDRToken);
+    calculateDRZone(AL_ZoneStart, AL_ZoneEnd);
+    
+}
+
+void Aligner::alignSlave(StringToken& slaveDRToken) {
+    
+    AL_Offsets[slaveDRToken] = -1;
+    std::string slaveDR = mStringCheck->getString(slaveDRToken);
+    AlignerFlag_t flags;
+    int offset = getOffsetAgainstMaster(slaveDR, flags);
+    
+    if (flags[score_equal]) {
+        std::string extended_slave_dr;
+        extendSlaveDR(slaveDR, extended_slave_dr);
+        flags.reset();
+        offset = getOffsetAgainstMaster(extended_slave_dr, flags);
+        if (flags[score_equal]) {
+            logWarn("@Alignment Warning: Extended Slave scores equal",4);
+            logWarn("Cannot place slave: "<<slaveDR<<" ("<<slaveDRToken<<") in array", 4);
+            logWarn("Original slave: "<<slaveDR, 4);
+            logWarn("Extended Slave: "<<extended_slave_dr, 4);
+            logWarn("Master: "<<mStringCheck->getString(AL_masterDRToken), 4);
+            logWarn("******", 4);
+            flags[failed] = true;
+        }
+    }
+    
+    if (flags[failed]) {
+        return;
+    } 
+    
+    if (flags[reversed] ) {
+        // we need to reverse all the reads and the DR for these reads
+        try {
+            ReadListIterator read_iter = mReads->at(slaveDRToken)->begin();
+            while (read_iter != mReads->at(slaveDRToken)->end()) 
+            {
+                (*read_iter)->reverseComplementSeq();
+                read_iter++;
+            }
+        } catch(crispr::exception& e) {
+            std::cerr<<e.what()<<std::endl;
+            throw crispr::exception(__FILE__,
+                                    __LINE__,
+                                    __PRETTY_FUNCTION__,
+                                    "cannot reverse complement sequence");
+        }
+        // fix the places where the DR is stored
+        
+        slaveDR = reverseComplement(slaveDR);
+        StringToken st = mStringCheck->addString(slaveDR);
+        mReads->at(st) = mReads->at(slaveDRToken);
+        mReads->at(slaveDRToken) = NULL;
+        slaveDRToken = st;
+        //AL_Offsets[slaveDRToken] = -1;       
+    }
+    AL_Offsets[slaveDRToken] = AL_Offsets[AL_masterDRToken] + offset;
+    
+    placeReadsInCoverageArray(slaveDRToken);
+}
+
+void Aligner::generateConsensus() {
+    
+    logInfo("Calculating consensus sequence from aligned reads", 1)
+#ifdef DEBUG
+    logInfo("DR zone: " << AL_ZoneStart << " -> " << AL_ZoneEnd, 1);
+#endif
+
+	// chars we luv!
+    char alphabet[4] = {'A', 'C', 'G', 'T'};
+
+	
+	// populate the conservation array
+    int num_GT_zero = 0;
+    for(int j = 0; j < AL_length; j++)
+	{
+		int max_count = 0;
+		float total_count = 0;
+		for(int i = 1; i <= 4; i++)
+		{
+			
+			total_count += static_cast<float>(AL_coverage[i*j]);
+			if(AL_coverage[i*j] > max_count)
+			{
+				max_count = AL_coverage[i*j];
+				AL_consensus[j] = alphabet[i-1];
+			}
+		}
+        
+		// we need at least CRASS_DEF_MIN_READ_DEPTH reads to call a DR
+		if(total_count > CRASS_DEF_MIN_READ_DEPTH)
+		{
+			AL_conservation[j] = static_cast<float>(max_count)/total_count;
+			num_GT_zero++;
+		}
+		else
+		{
+			AL_conservation[j] = 0;
+		}
+	}
+    
+    // trim these back a bit (if we trim too much we'll get it back right now anywho)
+    // CTS: Not quite true, if it is low coverage then there will be no extension!
+    // check to see that this DR is supported by a bare minimum of reads
+    if(num_GT_zero < CRASS_DEF_MIN_READ_DEPTH) {
+        logWarn("**WARNING: low confidence DR", 1);
+    } else {
+        // first work from the left and trim back
+	    while(AL_ZoneStart > 0)
+	    {
+		    if(AL_conservation[AL_ZoneStart - 1] < CRASS_DEF_ZONE_EXT_CONS_CUT_OFF) 
+                AL_ZoneStart++;
+            else 
+			    break;
+	    }
+        
+	    // next work from the right
+	    while(AL_ZoneEnd < AL_length - 1)
+	    {
+		    if(AL_conservation[AL_ZoneEnd + 1] < CRASS_DEF_ZONE_EXT_CONS_CUT_OFF)
+			    AL_ZoneEnd--;
+		    else
+			    break;
+	    }
+    }
+	//same as the loops above but this time extend outward
+	while(AL_ZoneStart > 0)
+	{
+		if(AL_conservation[AL_ZoneStart - 1] >= CRASS_DEF_ZONE_EXT_CONS_CUT_OFF) 
+            AL_ZoneStart--;
+        else 
+			break;    
+	}
+    
+	// next work to the right
+	while(AL_ZoneEnd < AL_length - 1)
+	{
+		if(AL_conservation[AL_ZoneEnd + 1] >= CRASS_DEF_ZONE_EXT_CONS_CUT_OFF)
+			AL_ZoneEnd++;
+		else
+			break;
+	}
+    
+#ifdef DEBUG
+    logInfo("DR zone (post fix): " << AL_ZoneStart << " -> " << AL_ZoneEnd, 1);
+#endif
+
+}
 
 void Aligner::prepareSequenceForAlignment(std::string& sequence, uint8_t *transformedSequence) {
 
@@ -103,6 +258,7 @@ int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) 
     // figure out which alignment was better
     if (reverse_return.score == forward_return.score) {
         flags[score_equal] = true;
+        return 0;
     }
         
     if (reverse_return.score > forward_return.score && reverse_return.score >= AL_minAlignmentScore) {
@@ -124,10 +280,6 @@ int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) 
     }
     
     return 0;
-}
-
-void Aligner::generateCoverage() {
-    
 }
 
 void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
@@ -233,7 +385,34 @@ void Aligner::extendSlaveDR(std::string &slaveDR, std::string &extendedSlaveDR){
 
 
 
-
+void Aligner::calculateDRZone(int &zone_start, int &zone_end) {
+    ReadListIterator read_iter = mReads->at(AL_masterDRToken)->begin();
+    while (read_iter != mReads->at(AL_masterDRToken)->end()) 
+    {
+        // don't care about partials
+        int dr_start_index = 0;
+        int dr_end_index = 1;
+        
+        // Find the DR which is the master DR length.
+        // compensates for partial repeats
+        while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != (AL_masterDRLength - 1))
+        {
+            dr_start_index += 2;
+            dr_end_index += 2;
+        }
+        
+        //  This if is to catch some weird-ass scenario, if you get a report that everything is wrong, then you've most likely
+        // corrupted memory somewhere!
+        if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (AL_masterDRLength - 1))
+        {
+            // the start of the read is the position of the master DR - the position of the DR in the read
+            int this_read_start_pos = AL_Offsets.at(AL_masterDRToken) - (*read_iter)->startStopsAt(dr_start_index);
+            zone_start =  this_read_start_pos + (*read_iter)->startStopsAt(dr_start_index);
+            zone_end =  this_read_start_pos + (*read_iter)->startStopsAt(dr_end_index);
+            break;
+        }
+    }
+}
 
 
 

@@ -1,5 +1,6 @@
 // File: WorkHorse.cpp
 // Original Author: Michael Imelfort 2011
+// Hacked to death by Connor Skennerton 2012
 // --------------------------------------------------------------------
 //
 // OVERVIEW:
@@ -705,13 +706,7 @@ bool WorkHorse::findMasterDR(int GID, StringToken * masterDRToken, std::string *
     return true;
 }
 
-bool WorkHorse::populateCoverageArray(int GID, 
-                                      std::string master_DR_sequence, 
-                                      StringToken master_DR_token, 
-                                      std::map<StringToken, int> * DR_offset_map, 
-                                      int * dr_zone_start, 
-                                      int * dr_zone_end, 
-                                      int ** coverage_array)
+bool WorkHorse::populateCoverageArray(int GID, Aligner drAligner)
 {
 	//-----
 	// Use the data structures initialised in parseGroupedDRs
@@ -719,79 +714,6 @@ bool WorkHorse::populateCoverageArray(int GID,
 	//
 	logInfo("Populating consensus array", 1);
 
-	bool first_run = true;          // we only need to do this once
-	int array_len = (CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? 
-                   CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
-
-	// chars we luv!
-    //char alphabet[4] = {'A', 'C', 'G', 'T'};
-
-    // First we add the master DR into the arrays 
-    ReadListIterator read_iter = mReads[master_DR_token]->begin();
-    while (read_iter != mReads[master_DR_token]->end()) 
-    {
-        // don't care about partials
-        int dr_start_index = 0;
-        int dr_end_index = 1;
-
-        // Find the DR which is the master DR length.
-        // compensates for partial repeats
-        while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(master_DR_sequence.length()) - 1))
-        {
-            dr_start_index += 2;
-            dr_end_index += 2;
-        }
-        
-        //  This if is to catch some weird-ass scenario, if you get a report that everything is wrong, then you've most likely
-        // corrupted memory somewhere!
-        if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == ((int)(master_DR_sequence.length()) - 1))
-        {
-            // the start of the read is the position of the master DR - the position of the DR in the read
-            int this_read_start_pos = DR_offset_map->at(master_DR_token) - (*read_iter)->startStopsAt(dr_start_index);
-            if(first_run)
-            {
-                *dr_zone_start =  this_read_start_pos + (*read_iter)->startStopsAt(dr_start_index);
-                *dr_zone_end =  this_read_start_pos + (*read_iter)->startStopsAt(dr_end_index);
-                first_run = false;
-            }
-
-            for(int i = 0; i < (int)(*read_iter)->getSeqLength(); i++)
-            {
-                int index = -1;
-                switch((*read_iter)->getSeqCharAt(i))
-                {
-                    case 'A':
-                        index = 0;
-                        break;
-                    case 'C':
-                        index = 1;
-                        break;
-                    case 'G':
-                        index = 2;
-                        break;
-                    default:
-                        index = 3;
-                        break;
-                }
-				int index_b = i+this_read_start_pos; 
-				if((index_b) >= array_len)
-				{
-					logError("The consensus/coverage arrays are too short. Consider changing CRASS_DEF_MIN_CONS_ARRAY_LEN to something larger and re-compiling");
-                }
-				if((index_b) < 0)
-				{
-					logError("***FATAL*** MEMORY CORRUPTION: index = "<< index_b<<" less than array begining");
-				}
-
-				coverage_array[index][index_b]++;
-            }
-        }
-        else
-        {
-            logError("Everything is wrong (A)");
-        }
-        read_iter++;
-    }
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // now go thru all the other DRs in this group and add them into
     // the consensus array
@@ -799,177 +721,24 @@ bool WorkHorse::populateCoverageArray(int GID,
     for (dr_iter = (mDR2GIDMap[GID])->begin(); dr_iter != (mDR2GIDMap[GID])->end(); dr_iter++) 
     {
         // we've already done the master DR
-        if(master_DR_token == *dr_iter)
+        if(drAligner.getMasterDrToken() == *dr_iter)
         {
             continue;
         }
         
         // get the string for this mofo
-        std::string tmp_DR = mStringCheck.getString(*dr_iter);
+        //std::string tmp_DR = mStringCheck.getString(*dr_iter);
+        drAligner.alignSlave(*dr_iter);
 
-        // set this guy to -1 for now
-        (*DR_offset_map)[*dr_iter] = -1;
 
-        bool is_Reversed = false;
-        bool did_fail = false;
-        int offset = getOffsetAgainstMaster(master_DR_sequence, tmp_DR, is_Reversed, did_fail);
-        
-        if (did_fail) { 
-            continue; 
-        }
-
-        if(is_Reversed)
-        {
-            // we need to reverse all the reads and the DR for these reads
-            try {
-                ReadListIterator read_iter = mReads[*dr_iter]->begin();
-                while (read_iter != mReads[*dr_iter]->end()) 
-                {
-                    (*read_iter)->reverseComplementSeq();
-                    read_iter++;
-                }
-            } catch(crispr::exception& e) {
-                std::cerr<<e.what()<<std::endl;
-                throw crispr::exception(__FILE__,
-                                        __LINE__,
-                                        __PRETTY_FUNCTION__,
-                                        "cannot reverse complement sequence");
-            }
-            // fix the places where the DR is stored
-
-            tmp_DR = reverseComplement(tmp_DR);
-            StringToken st = mStringCheck.addString(tmp_DR);
-            mReads[st] = mReads[*dr_iter];
-            mReads[*dr_iter] = NULL;
-            *dr_iter = st;
-            (*DR_offset_map)[*dr_iter] = -1;
-        }
-
-        // note the position of this DR in the array
-        (*DR_offset_map)[*dr_iter] = (*DR_offset_map)[master_DR_token] + offset;//((kmer_positions_ARRAY)[positioning_kmer_index] - (kmer_positions_DR)[positioning_kmer_index]);
-/*
-        // We need to check that at least CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF percent of bases agree within the "Zone"
-        int this_DR_start_index = 0;
-        int zone_start_index = *dr_zone_start;
-        int comparison_length = (int)tmp_DR.length();
-
-        // we only need to compare "within" the zone
-        if((*DR_offset_map)[*dr_iter] < *dr_zone_start)
-        {
-            this_DR_start_index = *dr_zone_start - (*DR_offset_map)[*dr_iter];
-        }
-        else if((*DR_offset_map)[*dr_iter] > *dr_zone_start)
-        {
-            zone_start_index = (*DR_offset_map)[*dr_iter];
-        }
-
-        // work out the comparison length
-        int eff_zone_length = *dr_zone_end - zone_start_index;
-        int eff_DR_length = (int)tmp_DR.length() - this_DR_start_index;
-        if(eff_zone_length < eff_DR_length)
-            comparison_length = eff_zone_length;
-        else
-            comparison_length = eff_DR_length;
-
-        char cons_char = 'X';
-        int comp_end = zone_start_index + comparison_length;
-        double agress_with_zone = 0;
-        double comp_len = 0;
-        while(zone_start_index < comp_end)
-        {
-            // work out the consensus at this position
-            int max_count = 0;
-            for(int i = 0; i < 4; i++)
-            {
-                if(coverage_array[i][zone_start_index] > max_count)
-                {
-                    max_count = coverage_array[i][zone_start_index];
-                    cons_char = alphabet[i];
-                }
-            }
-
-            // see if this DR agress with it
-            if(tmp_DR[this_DR_start_index] == cons_char)
-                agress_with_zone++;
-            comp_len++;
-            zone_start_index++;
-            this_DR_start_index++;
-        }
-
-        agress_with_zone /= comp_len;
-        if(agress_with_zone < CRASS_DEF_PERCENT_IN_ZONE_CUT_OFF)
-        {
-            continue;
-        }
- */
-        // we need to correct for the fact that we may not be using the 0th kmer
-        int positional_offset = (*DR_offset_map)[*dr_iter];//(kmer_positions_DR_master)[0] - (kmer_positions_DR_master)[positioning_kmer_index] + (kmer_positions_ARRAY)[positioning_kmer_index];
-        ReadListIterator read_iter = mReads[*dr_iter]->begin();
-        while (read_iter != mReads[*dr_iter]->end()) 
-        {
-            // don't care about partials
-            int dr_start_index = 0;
-            int dr_end_index = 1;
-            while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(tmp_DR.length()) - 1))
-            {
-                dr_start_index += 2;
-                dr_end_index += 2;
-            } 
-            // go through every full length DR in the read and place in the array
-            do
-            {
-                if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (((int)(tmp_DR.length())) - 1))
-                {
-                    // we need to find the first kmer which matches the mode.
-                    int this_read_start_pos = positional_offset - (*read_iter)->startStopsAt(dr_start_index);
-                    for(int i = 0; i < (int)(*read_iter)->getSeqLength(); i++)
-                    {
-                        int index = -1;
-                        switch((*read_iter)->getSeqCharAt(i))
-                        {
-                            case 'A':
-                                index = 0;
-                                break;
-                            case 'C':
-                                index = 1;
-                                break;
-                            case 'G':
-                                index = 2;
-                                break;
-                            case 'T':
-                                index = 3;
-                                break;
-                        }
-                        if(index >= 0)
-                        {
-                            if((i+this_read_start_pos) >= 0)
-                            {
-                                coverage_array[index][i+this_read_start_pos]++;
-                            }
-                        }
-                    }
-                }
-                // go onto the next DR
-                dr_start_index += 2;
-                dr_end_index += 2;
-
-                // check that this makes sense
-                if(dr_start_index >= (int)((*read_iter)->numRepeats()*2)) {
-                    break;
-                }
-
-            } while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (((int)(tmp_DR.length())) - 1));
-            read_iter++;
-        }
     }
-
     // kill the unfounded ones
     dr_iter = (mDR2GIDMap[GID])->begin();
     while (dr_iter != (mDR2GIDMap[GID])->end()) 
     {
-    	if(DR_offset_map->find(*dr_iter) != DR_offset_map->end())
+    	if(drAligner.offsetFind(*dr_iter) != drAligner.offsetEnd())
     	{
-			if((*DR_offset_map)[*dr_iter] == -1)
+			if(drAligner.offset(*dr_iter) == -1)
 			{
                 //std::cout<<"Removing DR: "<<mStringCheck.getString(*dr_iter)<<' '<<mReads[*dr_iter]->size()<<std::endl;
                 clearReadList(mReads[*dr_iter]);
@@ -989,398 +758,84 @@ bool WorkHorse::populateCoverageArray(int GID,
     return true;
 } 
 
-unsigned char seq_nt4_table[256] = {
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
-};
-
-
-int WorkHorse::getOffsetAgainstMaster(std::string& masterDR, std::string& slaveDR, bool& reversed, bool& failed)
-{
-    // call ksw
-
-    int slave_length = static_cast<int>(slaveDR.length());
-    int master_length = static_cast<int>(masterDR.length());
-
-    // set up values for ksw
-    // gap open, gap extension, min score, save start sites
-	int gapo = 5, gape = 2, minsc = 0, xtra = KSW_XSTART;
-    int sa = 1, sb = 3, i, j, k;
-    int8_t mat[25];
-    // query profile 
-    kswq_t *qry[2] = {0, 0};   
-
-    if (minsc > 0xffff) minsc = 0xffff;
-    if (minsc > 0) xtra |= KSW_XSUBO | minsc;
-    // initialize scoring matrix
-    for (i = k = 0; i < 4; ++i) {
-        for (j = 0; j < 4; ++j)
-            mat[k++] = i == j? sa : -sb;
-        mat[k++] = 0; // ambiguous base
-    }
-    for (j = 0; j < 5; ++j) mat[k++] = 0;
-
-
-    // convert the sequences
-    char * forward_seq = new char[slave_length+1];
-    char * reverse_seq = new char[slave_length+1];
-
-    for (i = 0; i < slave_length; ++i) 
-        forward_seq[i] = seq_nt4_table[(int)slaveDR[i]];
-    
-    for (i = 0, j = slave_length - 1; i < slave_length; ++i, --j)
-        reverse_seq[j] = forward_seq[i] == 4 ? 4 : 3 - forward_seq[i];
-
-    char * master_seq = new char[master_length+1];
-    for (i = 0; i < master_length; ++i) 
-        master_seq[i] = seq_nt4_table[(int)masterDR[i]];
-
-    // null terminate the sequences
-    forward_seq[slave_length] = '\0';
-    reverse_seq[slave_length] = '\0';
-    master_seq[master_length] = '\0';
-    // reverse the slave and re-compute the alignment
-    std::string rev_slave = reverseComplement(slaveDR);
-    
-    // alignment of slave against master
-    kswr_t forward_return = ksw_align( slave_length, 
-                                      (uint8_t*)forward_seq, 
-                                      master_length, 
-                                      (uint8_t*)master_seq, 
-                                      5, 
-                                      mat, 
-                                      gapo, 
-                                      gape, 
-                                      xtra, 
-                                      &qry[0]);
-    
-
-    kswr_t reverse_return = ksw_align(slave_length, 
-                                      (uint8_t*)reverse_seq, 
-                                      master_length, 
-                                      (uint8_t*)master_seq, 
-                                      5, 
-                                      mat, 
-                                      gapo, 
-                                      gape, 
-                                      xtra, 
-                                      &qry[1]);
-    
-
-    // free the query profile
-    free(qry[0]); free(qry[1]);
-    delete forward_seq; delete reverse_seq; 
-
-    // figure out which alignment was better
-    if (reverse_return.score == forward_return.score) {
-        // get the string token for the slave
-        StringToken token = mStringCheck.getToken(slaveDR);
-
-        // go into the reads and get the sequence of the DR plus a few bases on either side
-        ReadListIterator read_iter = mReads[token]->begin();
-        while (read_iter != mReads[token]->end()) 
-        {
-            // don't care about partials
-            int dr_start_index = 0;
-            int dr_end_index = 1;
-
-            // Find the DR which is the right DR length.
-            // compensates for partial repeats
-            while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(slaveDR.length()) - 1))
-            {
-                dr_start_index += 2;
-                dr_end_index += 2;
-            }
-            // check that the DR does not lie too close to the end of the read so that we can extend
-            if((*read_iter)->startStopsAt(dr_start_index) - 2 < 0 || (*read_iter)->startStopsAt(dr_end_index) + 2 > (*read_iter)->getSeqLength()) {
-                // go to the next read
-                read_iter++;
-                continue;
-            } else {
-                // substring the read to get the new length
-                std::string tmp_dr = (*read_iter)->getSeq().substr((*read_iter)->startStopsAt(dr_start_index) - 2, slaveDR.length() + 4);
-
-                // run ksw again to determine if they are still equal
-                // convert the sequences
-                char * forward_seq = new char[tmp_dr.length()+1];
-                char * reverse_seq = new char[tmp_dr.length()+1];
-
-                for (i = 0; i < (int)tmp_dr.length(); ++i) 
-                    forward_seq[i] = seq_nt4_table[(int)tmp_dr[i]];
-
-                for (i = 0, j = (int)tmp_dr.length() - 1; i < (int)tmp_dr.length(); ++i, --j)
-                    reverse_seq[j] = forward_seq[i] == 4 ? 4 : 3 - forward_seq[i];
-
-                // null terminate the sequences
-                forward_seq[tmp_dr.length()] = '\0';
-                reverse_seq[tmp_dr.length()] = '\0';
-                
-                qry[0] = 0; qry[1] = 0;
-                // alignment of slave against master
-                forward_return = ksw_align( slave_length, 
-                        (uint8_t*)forward_seq, 
-                        master_length, 
-                        (uint8_t*)master_seq, 
-                        5, 
-                        mat, 
-                        gapo, 
-                        gape, 
-                        xtra, 
-                        &qry[0]);
-
-
-                reverse_return = ksw_align(slave_length, 
-                        (uint8_t*)reverse_seq, 
-                        master_length, 
-                        (uint8_t*)master_seq, 
-                        5, 
-                        mat, 
-                        gapo, 
-                        gape, 
-                        xtra, 
-                        &qry[1]);
-
-                free(qry[0]); free(qry[1]);
-                delete forward_seq; delete reverse_seq;
-                delete master_seq;
-                // if they are still equal call it a day and remove the variant
-                if (reverse_return.score == forward_return.score) {
-                    logWarn("@Alignment Warning: Extended Slave scores equal",4);
-                    logWarn("Cannot place slave: "<<slaveDR<<" ("<<token<<") in array", 4);
-                    logWarn("Original slave: "<<slaveDR, 4);
-                    logWarn("Extended Slave: "<<tmp_dr, 4);
-                    logWarn("Master: "<<masterDR, 4);
-                    logWarn("Extended slave score: "<<forward_return.score, 4);
-                    logWarn("******", 4);
-                    
-                    failed = true;
-                    return 0;
-                }
-                if (reverse_return.score > forward_return.score && reverse_return.score >= minsc) {
-                    reversed = true;
-                    //std::cout<<"R: "<< masterDR<<"\t"<< reverse_return.tb<<"\t"<< reverse_return.te+1<<"\t"<< rev_slave<<"\t"<< reverse_return.qb<<"\t"<< reverse_return.qe+1<<"\t"<< reverse_return.score<<"\t"<< reverse_return.score2<<"\t"<< reverse_return.te2<<"\t"<<reverse_return.tb - reverse_return.qb<<std::endl;
-                    return reverse_return.tb - reverse_return.qb;
-                } else if (forward_return.score >= minsc) {
-                    //std::cout<<"F: "<< masterDR<<"\t"<< forward_return.tb<<"\t"<< forward_return.te+1<<"\t"<< slaveDR<<"\t"<< forward_return.qb<<"\t"<< forward_return.qe+1<<"\t"<< forward_return.score<<"\t"<< forward_return.score2<<"\t"<< forward_return.te2<<"\t"<<forward_return.tb - forward_return.qb<<std::endl;
-                    return forward_return.tb - forward_return.qb;
-                } else {
-                    logWarn("@Alignment Warning: Extended Slave Score Failure",4);
-                    logWarn("Cannot place slave: "<<slaveDR<<" ("<<token<<") in array", 4);
-                    logWarn("Master: "<<masterDR, 4);
-                    logWarn("Forward score: "<<forward_return.score, 4);
-                    logWarn("Reverse score: "<<reverse_return.score, 4);
-                    logWarn("******", 4);
-                    failed = true;
-                    return 0;
-                }
-            }
-        }
-    }
-
-    delete master_seq;
-
-    if (reverse_return.score > forward_return.score && reverse_return.score >= minsc) {
-        reversed = true;
-        //std::cout<<"R: "<< masterDR<<"\t"<< reverse_return.tb<<"\t"<< reverse_return.te+1<<"\t"<< rev_slave<<"\t"<< reverse_return.qb<<"\t"<< reverse_return.qe+1<<"\t"<< reverse_return.score<<"\t"<< reverse_return.score2<<"\t"<< reverse_return.te2<<"\t"<<reverse_return.tb - reverse_return.qb<<std::endl;
-        return reverse_return.tb - reverse_return.qb;
-    } else if (forward_return.score >= minsc) {
-        //std::cout<<"F: "<< masterDR<<"\t"<< forward_return.tb<<"\t"<< forward_return.te+1<<"\t"<< slaveDR<<"\t"<< forward_return.qb<<"\t"<< forward_return.qe+1<<"\t"<< forward_return.score<<"\t"<< forward_return.score2<<"\t"<< forward_return.te2<<"\t"<<forward_return.tb - forward_return.qb<<std::endl;
-        return forward_return.tb - forward_return.qb;
-    } else {
-        logWarn("@Alignment Warning: Slave Score Failure",4);
-        logWarn("Cannot place slave: "<<slaveDR<<" ("<<mStringCheck.getToken(slaveDR)<<") in array", 4);
-        logWarn("Master: "<<masterDR, 4);
-        logWarn("Forward score: "<<forward_return.score, 4);
-        logWarn("Reverse score: "<<reverse_return.score, 4);
-        logWarn("******", 4);
-
-        failed = true;
-        return 0;
-    }
-
-    return 0;
-}
 
 std::string WorkHorse::calculateDRConsensus(int GID, 
-                                            std::map<StringToken, int> * DR_offset_map, 
-                                            int * collapsed_pos, 
-                                            std::map<char, int> * collapsed_options, 
-                                            std::map<int, bool> * refined_DR_ends, 
-                                            int * dr_zone_start, 
-                                            int * dr_zone_end, 
-                                            int ** coverage_array, 
-                                            char * consensus_array, 
-                                            float * conservation_array, 
-                                            int * nextFreeGID)
+                                            Aligner drAligner, 
+                                            int& nextFreeGID,
+                                            int& collapsedPos,
+                                            std::map<char, int> collapsedOptions,
+                                            std::map<int, bool> refinedDREnds
+                                            )
 {
 	//-----
 	// calculate the consensus sequence in the consensus array and the  
 	// sequence of the true DR
 	// warning, A heavy!
-	logInfo("Calculating consensus sequence from aligned reads", 1)
-#ifdef DEBUG
-		logInfo("DR zone: " << *dr_zone_start << " -> " << *dr_zone_end, 1);
-#endif
-	
-	int array_len = (CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? 
-                   CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
-	// chars we luv!
-    char alphabet[4] = {'A', 'C', 'G', 'T'};
-    std::map<char, int> reverse_alphabet;
-	for(int i = 0; i < 4; i++)
-	{
-		reverse_alphabet[alphabet[i]] = i;
-	}
-	
-	// populate the conservation array
-    int num_GT_zero = 0;
-    for(int j = 0; j < array_len; j++)
-	{
-		int max_count = 0;
-		float total_count = 0;
-		for(int i = 0; i < 4; i++)
-		{
-			
-			total_count += (float)(coverage_array[i][j]);
-			if(coverage_array[i][j] > max_count)
-			{
-				max_count = coverage_array[i][j];
-				consensus_array[j] = alphabet[i];
-			}
-		}
-
-		// we need at least CRASS_DEF_MIN_READ_DEPTH reads to call a DR
-		if(total_count > CRASS_DEF_MIN_READ_DEPTH)
-		{
-			conservation_array[j] = (float)(max_count)/total_count;
-			num_GT_zero++;
-		}
-		else
-		{
-			conservation_array[j] = 0;
-		}
-	}
     
-    // trim these back a bit (if we trim too much we'll get it back right now anywho)
-    // CTS: Not quite true, if it is low coverage then there will be no extension!
-    // check to see that this DR is supported by a bare minimum of reads
-    if(num_GT_zero < CRASS_DEF_MIN_READ_DEPTH) {
-        logWarn("**WARNING: low confidence DR", 1);
-    } else {
-        // first work from the left and trim back
-	    while(*dr_zone_start > 0)
-	    {
-		    if(conservation_array[(*dr_zone_start) - 1] < CRASS_DEF_ZONE_EXT_CONS_CUT_OFF) 
-                (*dr_zone_start)++;
-             else 
-			    break;
-	    }
-
-	    // next work from the right
-	    while(*dr_zone_end < array_len - 1)
-	    {
-		    if(conservation_array[(*dr_zone_end) + 1] < CRASS_DEF_ZONE_EXT_CONS_CUT_OFF)
-			    (*dr_zone_end)--;
-		    else
-			    break;
-	    }
-    }
-	//same as the loops above but this time extend outward
-	while(*dr_zone_start > 0)
-	{
-		if(conservation_array[(*dr_zone_start) - 1] >= CRASS_DEF_ZONE_EXT_CONS_CUT_OFF) 
-            (*dr_zone_start)--;
-        else 
-			break;    
-	}
-
-	// next work to the right
-	while(*dr_zone_end < array_len - 1)
-	{
-		if(conservation_array[(*dr_zone_end) + 1] >= CRASS_DEF_ZONE_EXT_CONS_CUT_OFF)
-			(*dr_zone_end)++;
-		else
-			break;
-	}
-
-#ifdef DEBUG
-		logInfo("DR zone (post fix): " << *dr_zone_start << " -> " << *dr_zone_end, 1);
-#endif
+    
+    
+    drAligner.generateConsensus();
+    
 	
 	// finally, make the true DR and check for consistency
-	std::string true_DR = "";
-	
-	for(int i = *dr_zone_start; i <= *dr_zone_end; i++)
+	std::string true_dr = "";
+    for (int i = drAligner.getDRZoneStart(); drAligner.getDRZoneEnd(); i++)
 	{
 #ifdef DEBUG
-		logInfo("Pos: " << i << " coverage: " << coverage_array[reverse_alphabet[consensus_array[i]]][i] << " conserved(%): " << conservation_array[i] << " consensus: " << consensus_array[i], 1);
+        logInfo("Pos: " << i << " coverage: " << drAligner.coverageAt(i, drAligner.consensusAt(i)) << " conserved(%): " << drAligner.conservationAt(i) << " consensus: " << drAligner.consensusAt(i), 1);
 #endif		
-		(*collapsed_pos)++;
-		if(conservation_array[i] >= CRASS_DEF_COLLAPSED_CONS_CUT_OFF)
+		collapsedPos++;
+		if(drAligner.conservationAt(i) >= CRASS_DEF_COLLAPSED_CONS_CUT_OFF)
 		{
-			(*refined_DR_ends)[i] = true;
-			true_DR += consensus_array[i];
+			refinedDREnds[i] = true;
+			true_dr += drAligner.consensusAt(i);
 		}
 		else
 		{
 			// possible collapsed cluster
-			(*refined_DR_ends)[i] = false;
+			refinedDREnds[i] = false;
 			
 	#ifdef DEBUG
 			logInfo("-------------", 5); 
-			logInfo("Possible collapsed cluster at position: " << *collapsed_pos << " (" << (*dr_zone_start + *collapsed_pos) << " || " << conservation_array[i] << ")", 5);
+			logInfo("Possible collapsed cluster at position: " << collapsedPos << " (" << (drAligner.getDRZoneStart() + collapsedPos) << " || " << drAligner.conservationAt(i) << ")", 5);
 			logInfo("Base:  Count:  Cov:",5);
 	#endif
-			float total_count = coverage_array[0][i] + coverage_array[1][i] + coverage_array[2][i] + coverage_array[3][i];
-			
+			float total_count = drAligner.depthAt(i);
+			char alphabet[4] = {'A', 'C', 'G', 'T'};
 			for(int k = 0; k < 4; k++)
 			{
 	#ifdef DEBUG
-				logInfo("  " << alphabet[k] << "     " << coverage_array[k][i] << "      " << ((float)coverage_array[k][i]/total_count), 5);
+				logInfo("  " << alphabet[k] << "     " << drAligner.coverageAt(i, alphabet[k]) << "      " << ((float)drAligner.coverageAt(i, alphabet[k])/total_count), 5);
 	#endif
 				// check to make sure that each base is represented enough times
-				if((float)coverage_array[k][i]/total_count >= CRASS_DEF_COLLAPSED_THRESHOLD)
+				if((float)drAligner.coverageAt(i, alphabet[k])/total_count >= CRASS_DEF_COLLAPSED_THRESHOLD)
 				{
 					// there's enough bases here to warrant further investigation
-					(*collapsed_options)[alphabet[k]] = (int)(collapsed_options->size() + *nextFreeGID);
-					(*nextFreeGID)++;
+					collapsedOptions[alphabet[k]] = (int)(collapsedOptions.size() + nextFreeGID);
+					nextFreeGID++;
 				}
 			}
 			
 			// make sure we've got more than 1 option
-			if(2 > collapsed_options->size())
+			if(2 > collapsedOptions.size())
 			{
-				collapsed_options->clear();
+				collapsedOptions.clear();
 	#ifdef DEBUG
 				logInfo("   ...ignoring (FA)", 5);
 	#endif
-				true_DR += consensus_array[i];
-				(*refined_DR_ends)[i] = true;
+				true_dr += drAligner.consensusAt(i);
+				refinedDREnds[i] = true;
 			}
 			else
 			{
 				// is this seen at the DR level?
-				(*refined_DR_ends)[i] = false;
+				refinedDREnds[i] = false;
 				std::map<char, int> collapsed_options2;
 				DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
 				while (dr_iter != (mDR2GIDMap[GID])->end()) 
 				{
 					std::string tmp_DR = mStringCheck.getString(*dr_iter);
-					if(-1 != (*DR_offset_map)[*dr_iter])
+					if(-1 != drAligner.offset(*dr_iter))
 					{
 						// check if the deciding character is within range of this DR
 						// collapsed_pos + dr_zone_start gives the index in the ARRAY of the collapsed char
@@ -1388,11 +843,11 @@ std::string WorkHorse::calculateDRConsensus(int GID,
 						// We need to check that collapsed_pos + dr_zone_start >= DR_offset_map[*dr_iter] AND
 						// that collapsed_pos < dr_zone_start - DR_offset_map[*dr_iter] + tmp_DR.length()
 						//if(DR_offset_map[*dr_iter] <= dr_zone_start && dr_zone_start < (DR_offset_map[*dr_iter] + (int)(tmp_DR.length())) && collapsed_pos < (int)(tmp_DR.length()))
-						if((*collapsed_pos + *dr_zone_start >= (*DR_offset_map)[*dr_iter]) && (*collapsed_pos + *dr_zone_start - (*DR_offset_map)[*dr_iter] < ((int)tmp_DR.length())))
+						if((collapsedPos + drAligner.getDRZoneStart() >= drAligner.offset(*dr_iter)) && (collapsedPos + drAligner.getDRZoneStart() - drAligner.offset(*dr_iter) < ((int)tmp_DR.length())))
 						{
 							// this is easy, we can compare based on this char only
-							char decision_char = tmp_DR[*dr_zone_start - (*DR_offset_map)[*dr_iter] + *collapsed_pos];
-							collapsed_options2[decision_char] = (*collapsed_options)[decision_char];
+							char decision_char = tmp_DR[drAligner.getDRZoneStart() - drAligner.offset(*dr_iter) + collapsedPos];
+							collapsed_options2[decision_char] = collapsedOptions[decision_char];
 						}
 					}
 					else
@@ -1408,11 +863,11 @@ std::string WorkHorse::calculateDRConsensus(int GID,
 					// it may be because the spacers ahve a weird distribution of starting
 					// bases. We need to check this out here...
 #ifdef DEBUG
-					if(*collapsed_pos == 0)
+					if(collapsedPos == 0)
 					{
 						logInfo("   ...ignoring (RLO SS)", 5);
 					}
-					else if(*collapsed_pos + *dr_zone_start == *dr_zone_end)
+					else if(collapsedPos + drAligner.getDRZoneStart() == drAligner.getDRZoneEnd())
 					{
 						logInfo("   ...ignoring (RLO EE)", 5);
 					}
@@ -1421,25 +876,25 @@ std::string WorkHorse::calculateDRConsensus(int GID,
 						logInfo("   ...ignoring (RLO KK)", 5);
 					}
 #endif
-					true_DR += consensus_array[i];
-					(*refined_DR_ends)[i] = true;
-					collapsed_options->clear();
+					true_dr += drAligner.consensusAt(i);
+					refinedDREnds[i] = true;
+					collapsedOptions.clear();
 				}
 				else
 				{
 					// If it aint in collapsed_options2 it aint super fantastic!
-					collapsed_options->clear();
-					*collapsed_options = collapsed_options2;
+					collapsedOptions.clear();
+					collapsedOptions = collapsed_options2;
 					
 					// make the collapsed pos array specific and exit this loop
-					*collapsed_pos += *dr_zone_start;
-					i = *dr_zone_end + 1;
+					collapsedPos += drAligner.getDRZoneStart();
+					i = drAligner.getDRZoneStart() + 1;
 				}
 			}
 		}
 	}
-	logInfo("Consensus DR: " << true_DR, 1);
-	return true_DR;
+	logInfo("Consensus DR: " << true_dr, 1);
+	return true_dr;
 }
 
 bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID) 
@@ -1459,66 +914,14 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
     
     // now we have the n most abundant kmers and one DR which contains them all
     // time to rock and rrrroll!
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++
-    // Initialise variables we'll need
-    // chars we luv!
-    char alphabet[4] = {'A', 'C', 'G', 'T'};
-    int array_len = (CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength > CRASS_DEF_MIN_CONS_ARRAY_LEN) ? 
-                     CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength : CRASS_DEF_MIN_CONS_ARRAY_LEN;
-
-    // first we need a 4 * array_len
-    int ** coverage_array = new int*[4];
     
-    // fill it up!
-    for(int i = 0; i < 4; i++)
-    {
-        int * tmp_array = new int[array_len];
-        
-        // intialise to zeros!
-        for(int j = 0; j < array_len; j++)
-        {
-            tmp_array[j] = 0;
-        }
-        coverage_array[i] = tmp_array;
-    }
     
-    // we need a consensus array
-    char * consensus_array = new char[array_len];
-    for(int j = 0; j < array_len; j++)
-    {
-        consensus_array[j] = 'X';
-    }
-    
-    // we need a diversity array
-    float * conservation_array = new float[array_len];
-    for(int j = 0; j < array_len; j++)
-    {
-        conservation_array[j] = 0;
-    }
-    
-    // The offset of the start position of each potential DR 
-    // when compared to the "true DR"
-    // we use this structure when we detect overcollapsing
-    std::map<StringToken, int> DR_offset_map;
-
-    // look for the start and end of the DR zone
-    int dr_zone_start = -1;
-    int dr_zone_end = -1;
-
-    // note the position of the master DR in the array
-    DR_offset_map[master_DR_token] = (int)(array_len*CRASS_DEF_CONS_ARRAY_START);//(kmer_positions_ARRAY[0] - kmer_positions_DR[0]);
+    Aligner dr_aligner(CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength, &mReads, &mStringCheck);
+    dr_aligner.setMasterDR(master_DR_sequence);
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Set up the master DR's array and insert this guy into the main array
-    populateCoverageArray(GID, 
-                          master_DR_sequence, 
-                          master_DR_token, 
-                          &DR_offset_map, 
-                          &dr_zone_start, 
-                          &dr_zone_end, 
-                          coverage_array 
-                          );
+    populateCoverageArray(GID, dr_aligner );
     
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // calculate consensus and diversity
@@ -1527,22 +930,12 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
 	int collapsed_pos = -1;
 	std::map<char, int> collapsed_options;            // holds the chars we need to split on
 	std::map<int, bool> refined_DR_ends;              // so we can update DR ends based on consensus 
-    std::string true_DR = calculateDRConsensus(GID, 
-                                               &DR_offset_map, 
-                                               &collapsed_pos, 
-                                               &collapsed_options, 
-                                               &refined_DR_ends, 
-                                               &dr_zone_start, 
-                                               &dr_zone_end, 
-                                               coverage_array, 
-                                               consensus_array, 
-                                               conservation_array, 
-                                               nextFreeGID);
+    std::string true_DR = calculateDRConsensus(GID, dr_aligner, *nextFreeGID, collapsed_pos, collapsed_options, refined_DR_ends);
 
     // check to make sure that the DR is not just some random long RE
     if((unsigned int)(true_DR.length()) > mOpts->highDRsize)
     {
-        removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+        cleanGroup(GID);
         logInfo("Killed: {" << true_DR << "} cause' it was too long", 1);
         return false;
     }
@@ -1550,14 +943,14 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
     if (collapsed_options.size() == 0) {
         if((unsigned int)(true_DR.length()) < mOpts->lowDRsize)
         {
-            removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+            cleanGroup(GID);
             logInfo("Killed: {" << true_DR << "} cause' the consensus was too short... (" << true_DR.length() << " ," << collapsed_options.size() << ")", 1);
             return false;
         }
         // QC the DR again for low complexity
         if (isRepeatLowComplexity(true_DR)) 
         {
-            removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+            cleanGroup(GID);
             logInfo("Killed: {" << true_DR << "} cause' the consensus was low complexity...", 1);
             return false;
         }
@@ -1566,12 +959,11 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
         try {
             float max_frequency;
             if (drHasHighlyAbundantKmers(true_DR, max_frequency) ) {
-                removeDRAndCleanMemory(coverage_array, consensus_array, conservation_array, GID);
+                cleanGroup(GID);
                 logInfo("Killed: {" << true_DR << "} cause' the consensus contained highly abundant kmers: "<<max_frequency<<" > "<< CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF, 1);
                 return false;
             }
         } catch (crispr::exception& e) {
-            cleanArrays(coverage_array, consensus_array, conservation_array);
             std::cerr<<e.what()<<std::endl;
             throw crispr::runtime_exception(__FILE__, __LINE__, __PRETTY_FUNCTION__, true_DR.c_str());
         }
@@ -1579,6 +971,8 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
 
         
         // update the DR start and ends
+        // make a copy for ease of use
+        int dr_zone_start = dr_aligner.getDRZoneStart(), dr_zone_end = dr_aligner.getDRZoneEnd();
         int diffs = dr_zone_end - dr_zone_start + 1 - (int)true_DR.length();
         while(0 < diffs)
         {
@@ -1597,54 +991,54 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
 				}
             }
         }
+        // set the updated values
+        dr_aligner.setDRZoneStart(dr_zone_start);
+        dr_aligner.setDRZoneEnd(dr_zone_end);
         
+        char alphabet[4] = {'A', 'C', 'G', 'T'};
+
         // print out the consensus array
         if(isLogging(3))
         {
         	int show_xtra = 4;
-        	int print_start = dr_zone_start - show_xtra;
+        	int print_start = dr_aligner.getDRZoneStart() - show_xtra;
         	int print_end = dr_zone_end + show_xtra;
         	stringstream ss;
             ss << std::endl << "%, ";
             for(int i = print_start; i <= print_end; i++)
             {
-            	if(i == dr_zone_start)
-            		ss << "|,"; 
-                ss << conservation_array[i] << ", ";
+            	if(i == dr_aligner.getDRZoneStart())
+            		ss << "|, "; 
+                ss << dr_aligner.conservationAt(i) << ", ";
             	if(i == dr_zone_end)
-            		ss << "|,"; 
+            		ss << "|, "; 
             }
             
-            for(int j = 0; j < 4; j++)
+            for(int j = 1; j <= 4; j++)
             {
                 ss << std::endl;
-                ss << alphabet[j] << ", ";
+                ss << alphabet[j-1] << ", ";
                 for(int i = print_start; i <= print_end; i++)
                 {
-                	if(i == dr_zone_start)
-                		ss << "|,"; 
-                    ss << coverage_array[j][i] << ", ";
+                	if(i == dr_aligner.getDRZoneStart())
+                		ss << "|, "; 
+                    ss << dr_aligner.coverageAt(i, alphabet[j-1]) << ", ";
                 	if(i == dr_zone_end)
-                		ss << "|,"; 
+                		ss << "|, "; 
                 }
             } 
             ss << std::endl << "$, ";
             for(int i = print_start; i <= print_end; i++)
             {
-            	if(i == dr_zone_start)
-            		ss << "|,"; 
-                ss << consensus_array[i] << ", ";
+            	if(i == dr_aligner.getDRZoneStart())
+            		ss << "|, "; 
+                ss << dr_aligner.consensusAt(i) << ", ";
             	if(i == dr_zone_end)
-            		ss << "|,"; 
+            		ss << "|, "; 
             }
             logInfo(ss.str(), 3);
         }
     } 
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++
-    // clean up the mess we made
-    cleanArrays(coverage_array, consensus_array, conservation_array);
-
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // possibly split the DR group
@@ -1670,13 +1064,13 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
         while (dr_iter != (mDR2GIDMap[GID])->end()) 
         {
             std::string tmp_DR = mStringCheck.getString(*dr_iter);
-            if(-1 != DR_offset_map[*dr_iter])
+            if(-1 != dr_aligner.offset(*dr_iter))
             {
                 // check if the deciding character is within range of this DR
-                if(DR_offset_map[*dr_iter] <= collapsed_pos && collapsed_pos < (DR_offset_map[*dr_iter] + (int)(tmp_DR.length())))
+                if(dr_aligner.offset(*dr_iter) <= collapsed_pos && collapsed_pos < (dr_aligner.offset(*dr_iter) + (int)(tmp_DR.length())))
                 {
                     // this is easy, we can compare based on this char only
-                    char decision_char = tmp_DR[collapsed_pos - DR_offset_map[*dr_iter]];
+                    char decision_char = tmp_DR[collapsed_pos - dr_aligner.offset(*dr_iter)];
                     (mDR2GIDMap[ coll_char_to_GID_map[ decision_char ] ])->push_back(*dr_iter);
                 }
                 else
@@ -1686,7 +1080,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                     // get the offset from the start of the DR to the deciding char
                     // if it is negative, the dec char lies before the DR
                     // otherwise it lies after
-                    int dec_diff = collapsed_pos - DR_offset_map[*dr_iter];
+                    int dec_diff = collapsed_pos - dr_aligner.offset(*dr_iter);
                     
                     // we're not guaranteed to see all forms. So we need to be careful here...
                     // First we go through just to count the forms
@@ -1857,13 +1251,13 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
         DR_ClusterIterator drc_iter = (mDR2GIDMap[GID])->begin();
         while(drc_iter != (mDR2GIDMap[GID])->end())
         {
-        	if(DR_offset_map.find(*drc_iter) == DR_offset_map.end())
+        	if(dr_aligner.offsetFind(*drc_iter) == dr_aligner.offsetEnd())
         	{
         		logError("1: Repeat "<< *drc_iter<<" in Group "<<GID <<" has no offset in DR_offset_map");
         	}
         	else
         	{
-				if (DR_offset_map[*drc_iter] == -1 ) 
+				if (dr_aligner.offset(*drc_iter) == -1 ) 
 				{
 					// This means that we couldn't add this DR or any of it's reads into the consensus array
 					logError("2: Repeat "<< *drc_iter<<" in Group "<<GID <<" has no offset in DR_offset_map");
@@ -1874,7 +1268,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
 					ReadListIterator read_iter = mReads[*drc_iter]->begin();
 					while (read_iter != mReads[*drc_iter]->end()) 
 					{
-						(*read_iter)->updateStartStops((DR_offset_map[*drc_iter] - dr_zone_start), &true_DR, mOpts);
+						(*read_iter)->updateStartStops((dr_aligner.offset(*drc_iter) - dr_aligner.getDRZoneStart()), &true_DR, mOpts);
 	
 						// reverse complement sequence if the true DR is not in its laurenized form
 						if (rev_comp) 
@@ -1899,12 +1293,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
     return true;
 }
 
-void WorkHorse::removeDRAndCleanMemory(int ** coverageArray, char * consensusArray, float * conservationArray, int GID)
-{
-    cleanGroup(GID);
-    cleanArrays(coverageArray, consensusArray, conservationArray);
-    
-}
+
 void WorkHorse::cleanGroup(int GID)
 {
     if(NULL != mDR2GIDMap[GID])
@@ -1913,29 +1302,7 @@ void WorkHorse::cleanGroup(int GID)
         mDR2GIDMap[GID] = NULL;
     }
 }
-void WorkHorse::cleanArrays(int ** coverageArray, char * consensusArray, float * conservationArray)
-{
-    if(NULL != consensusArray)
-    {
-        delete[] consensusArray;
-    }
-    if(NULL != conservationArray)
-    {
-        delete[] conservationArray;
-    }
-    if(coverageArray != NULL)
-    {
-		for(int i = 0; i < 4; i++)
-		{
-			if(NULL != coverageArray[i])
-            {
-                delete[] coverageArray[i];
-            }
-		}
-		delete[] coverageArray;
-		coverageArray = NULL;
-    }
-}
+
 
 int WorkHorse::numberOfReadsInGroup(DR_Cluster * currentGroup)
 {
@@ -1947,120 +1314,6 @@ int WorkHorse::numberOfReadsInGroup(DR_Cluster * currentGroup)
         ++grouped_drs_iter;
     }
     return (int)number_of_reads_in_group;
-}
-
-bool WorkHorse::isKmerPresent(bool * didRevComp, int * startPosition, const std::string kmer, const std::string *  DR)
-{
-    //-----
-    // Work out if a Kmer is present in a string and store positions etc...
-    //
-    std::string tmp_kmer = reverseComplement(kmer);
-    size_t pos = DR->find(kmer);
-    if(pos == string::npos)
-    {
-        // try the reverse complement
-        // rev compt the kmer, it's shorter!
-        pos = DR->find(tmp_kmer);
-        if(pos != string::npos)
-        {
-            // found the kmer in the reverse direction!
-        	// make sure I found it once only
-            size_t pos2 = DR->find(tmp_kmer, pos+1);
-            if(pos2 != string::npos)
-            {
-            	// found it twice
-                *startPosition = -1;
-                return false;
-            } // else OK
-            
-            *didRevComp = true;
-            *startPosition = (int)pos;    
-            return true;
-        }
-    }
-    else
-    {
-        // found the kmer in the forward direction!
-        // search for more in the forward direction
-        size_t pos2 = DR->find(kmer, pos+1);
-        if(pos2 != string::npos)
-        {
-        	// found it twice    	
-            *startPosition = -1;
-            return false;
-        }
-        else
-        {
-            // none? -> search in the reverse direction from start
-            pos2 = DR->find(tmp_kmer);
-            if(pos2 != string::npos)
-            {
-            	// found in both dirs!
-                *startPosition = -1;
-                return false;
-            } // else OK
-        }
-        
-        *didRevComp = false;
-        *startPosition = (int)pos;
-        return true;
-    }
-    *startPosition = -1;
-    return false;
-}
-
-int WorkHorse::getNMostAbundantKmers(Vecstr& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
-{
-	//-----
-	// True to it's name get MOST abundant kmers.
-	// 
-	return getNMostAbundantKmers(1000000, mostAbundantKmers, num2Get, kmer_CountMap);
-}
-
-int WorkHorse::getNMostAbundantKmers(int maxAmount, Vecstr& mostAbundantKmers, int num2Get, std::map<std::string, int> * kmer_CountMap)
-{
-	//-----
-	// get the most abundant kmers under a certain amount.
-	//
-    std::string top_kmer;    
-    std::map<std::string, bool> top_kmer_map;
-    
-    if ((int)(kmer_CountMap->size()) < num2Get) 
-    {
-        return 0;
-    } 
-    else 
-    {
-        for (int i = 1; i <= num2Get; i++) 
-        {
-            std::map<std::string, int>::iterator map_iter = kmer_CountMap->begin();
-            int max_count = 0;
-            
-            while (map_iter != kmer_CountMap->end()) 
-            {
-            	//std::cout << map_iter->first << " : " << map_iter->second << " : " << max_count << " : " << maxAmount << std::endl;
-                if((map_iter->second > max_count) && (map_iter->second <= maxAmount) && (top_kmer_map.find(map_iter->first) == top_kmer_map.end()))
-                {
-                    max_count = map_iter->second;
-                    top_kmer = map_iter->first;
-                    //std::cout << "NT: " << top_kmer << std::endl;
-                }
-                map_iter++;
-            }
-            //std::cout << "ADDING: " << top_kmer << std::endl;            
-            top_kmer_map[top_kmer] = true;
-        }
-        int num_mers_found = 0;
-        std::map<std::string, bool>::iterator tkm_iter = top_kmer_map.begin();
-        while(tkm_iter != top_kmer_map.end())
-        {
-            //std::cout<<tkm_iter->first<<std::endl;
-        	num_mers_found++;
-            mostAbundantKmers.push_back(tkm_iter->first);
-            tkm_iter++;
-        }
-        return num_mers_found;
-    }
 }
 
 bool WorkHorse::clusterDRReads(StringToken DRToken, 

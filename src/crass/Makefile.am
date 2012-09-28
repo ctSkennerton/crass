@@ -28,7 +28,8 @@ crassDefines.h\
 StatsManager.h\
 SearchChecker.cpp SearchChecker.h\
 ksw.c ksw.h\
-Types.h
+Types.h\
+Aligner.cpp Aligner.h
 
 if ASSEMBLY_WRAPPER
 crass_SOURCES +=\
