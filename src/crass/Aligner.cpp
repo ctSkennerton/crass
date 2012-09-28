@@ -42,7 +42,7 @@ void Aligner::setMasterDR(std::string& master) {
     AL_Offsets[AL_masterDRToken] = (int)(AL_length * CRASS_DEF_CONS_ARRAY_START);
     prepareMasterForAlignment(master);
     placeReadsInCoverageArray(AL_masterDRToken);
-    calculateDRZone(AL_ZoneStart, AL_ZoneEnd);
+    calculateDRZone();
     
 }
 
@@ -385,7 +385,7 @@ void Aligner::extendSlaveDR(std::string &slaveDR, std::string &extendedSlaveDR){
 
 
 
-void Aligner::calculateDRZone(int &zone_start, int &zone_end) {
+void Aligner::calculateDRZone() {
     ReadListIterator read_iter = mReads->at(AL_masterDRToken)->begin();
     while (read_iter != mReads->at(AL_masterDRToken)->end()) 
     {
@@ -407,8 +407,8 @@ void Aligner::calculateDRZone(int &zone_start, int &zone_end) {
         {
             // the start of the read is the position of the master DR - the position of the DR in the read
             int this_read_start_pos = AL_Offsets.at(AL_masterDRToken) - (*read_iter)->startStopsAt(dr_start_index);
-            zone_start =  this_read_start_pos + (*read_iter)->startStopsAt(dr_start_index);
-            zone_end =  this_read_start_pos + (*read_iter)->startStopsAt(dr_end_index);
+            AL_ZoneStart =  this_read_start_pos + (*read_iter)->startStopsAt(dr_start_index);
+            AL_ZoneEnd =  this_read_start_pos + (*read_iter)->startStopsAt(dr_end_index);
             break;
         }
     }

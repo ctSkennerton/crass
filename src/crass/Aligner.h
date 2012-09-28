@@ -198,7 +198,7 @@ private:
     
     void extendSlaveDR(std::string& slaveDR, std::string& extendedSlaveDR);
 
-    void calculateDRZone(int& zone_start, int& zone_end);
+    void calculateDRZone();
     
     
     
