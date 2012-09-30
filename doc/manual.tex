@@ -163,9 +163,9 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 %%% The "real" document content comes below...
 
-\title{Crass:  The CRISPR assembler (v0.2.17)}
+\title{Crass:  The CRISPR assembler (v0.3.0)}
 \author{Connor Skennerton and Michael Imelfort}
-\date{27th August 2012} % Activate to display a given date or no date (if empty),
+\date{30th September 2012} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
@@ -180,7 +180,7 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 	$ make install
 	
 	$ ./crass [options] input_file{1, n}
-	$ ./crass assemble [velvet|cap3]  [options]
+	$ ./crass-assembler [--velvet | --cap3]  [options]
 \end{lstlisting}
 \section{Installation}
 Crass has been developed with the GNU build system for ease of configuration on the system.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
@@ -276,11 +276,11 @@ The graph file (.gv) is important for you to visualise all of the spacer arrangm
 \subsection{Assembling CRISPRs}
 CRISPRs from metagenomic data can/will have many spacer arrangements.  This makes them difficult for a regular genome assembler to resolve as they look for a single route through the graph.   The Crass assembler is a wrapper for other popular genome assemblers; currently there are wrappers for Velvet and Cap3.  I premise is that you, the user will look at the output from Crass to determine which of the paths to take through the spacer graph, which are listed as different 'contigs'. To perform the assembly you need to tell Crass the group number of the CRISPR from the finder stage (this will be in the file name), the .crispr file from Crass and the a comma separated list of the segments/contigs IDs for your group of interest.  The most minimal command is shown below: 
  \begin{lstlisting}
-	$ ./crass assemble ASSEMBLER [options]
+	$ ./crass-assembler [--velvet | --cap3] [options]
 \end{lstlisting}
  If for example you run Crass of a metagenome and get 5 groups and you want to assemble contigs 1, 2, 5, 6, 10 from group 3 using velvet
  \begin{lstlisting}
-	$ ./crass assemble velvet -g 3 -x crass.crispr -s 1,2,5,6,10
+	$ ./crass-assembler --velvet -g 3 -x crass.crispr -s 1,2,5,6,10
 \end{lstlisting}
 
 This will extract all of the reads that contain spacers from those contigs and use them as input to velvet which will do the assembly in the backgroud.  This is a 'dumb' process in the sense that if you provide contig IDs for multiple pathways the assembler will still try and succeed but this will undoubtibly cause breaks. 

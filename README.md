@@ -1,4 +1,4 @@
-crass -- CRisprASSembler -- version 0 subversion 2 revision 17 (0.2.17)
+crass -- CRisprASSembler -- version 0 subversion 3 revision 0 (0.3.0)
 =======================================================================
 
 
@@ -38,7 +38,7 @@ at the following locations:
 
 [SaSSY - Short read assembler](http://sassy.mikeimelfort.com)
 
-[klib - For kseq & ksw code](http://github.com/attractivechaos/klib)
+[klib](http://github.com/attractivechaos/klib) - For kseq & ksw code
 
 
 INSTALLATION
@@ -88,13 +88,13 @@ example:
 RUNNING CRASS
 -------------
 
-crass has two basic commands:
+crass has two executables:
 
     $ crass [-bcdhklnoswxyDSV] [--removeHomopolymers] [--logToScreen] <sequence_files>
 
 which finds CRISPR containing reads
 
-    $ crass assemble ASSEMBLER -x <file.crispr> -s <segments> -g <group> -i <input directory> [-o]
+    $ crass-assemble [--velvet | --cap3] -x <file.crispr> -s <segments> -g <group> -i <input directory> [-o]
 
 which is a wrapper for genome assemblers to assemble particular branches in a spacer graph 
 
