@@ -125,10 +125,10 @@ class WorkHorse {
                 StringToken * masterDRToken, 
                 std::string * masterDRSequence);
         
-        bool populateCoverageArray( int GID, Aligner drAligner );
+        bool populateCoverageArray( int GID, Aligner& drAligner );
         
         std::string calculateDRConsensus(int GID, 
-                                         Aligner drAligner, 
+                                         Aligner& drAligner, 
                                          int& nextFreeGID,
                                          int& collapsedPos,
                                          std::map<char, int> collapsedOptions,

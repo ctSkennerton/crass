@@ -47,6 +47,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <unistd.h>
+#include <ctime>
 #include <libcrispr/StlExt.h>
 #include <libcrispr/Exception.h>
 
@@ -330,6 +331,9 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
     
     // the sequence of whole spacers and their unique ID
     lookupTable reads_found;
+
+    time_t start_time;
+    time(&start_time);
     while(seq_iter != seqFiles.end())
     {
         logInfo("Parsing file: " << *seq_iter, 1);
@@ -339,7 +343,8 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
                                             &mReads, 
                                             &mStringCheck, 
                                             patterns_lookup, 
-                                            reads_found);
+                                            reads_found,
+                                            start_time);
             
             mMaxReadLength = (max_len > mMaxReadLength) ? max_len : mMaxReadLength;
             logInfo("Finished file: " << *seq_iter, 1);
@@ -358,6 +363,9 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
         
         seq_iter++;
     }
+    // add in a new line so the looger won't overlap itself
+    std::cout<<std::endl;
+
     GroupKmerMap group_kmer_counts_map;
     int next_free_GID = 1;
     Vecstr * non_redundant_set = createNonRedundantSet(group_kmer_counts_map, next_free_GID);
@@ -369,12 +377,14 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
         seq_iter = seqFiles.begin();
         logInfo("Begining Second iteration through files to recruit singletons", 2);
 
+
+        time(&start_time);
         while (seq_iter != seqFiles.end()) {
             
             logInfo("Parsing file: " << *seq_iter, 1);
             
             try {
-                findSingletons(seq_iter->c_str(), *mOpts, non_redundant_set, reads_found, &mReads, &mStringCheck);
+                findSingletons(seq_iter->c_str(), *mOpts, non_redundant_set, reads_found, &mReads, &mStringCheck, start_time);
             } catch (crispr::exception& e) {
                 std::cerr<<e.what()<<std::endl;
                 delete non_redundant_set;
@@ -383,8 +393,10 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
             seq_iter++;
         }
     }
+    // add in a new line so the ouptut won't overlap itself
+    std::cout<<std::endl;
     delete non_redundant_set;
-    std::cout<<__FILE__<<": "<<__LINE__<<": Found Reads: "<<numOfReads()<<std::endl;
+    std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "<<"Found "<<numOfReads()<<" reads"<<std::endl;
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
 
@@ -706,7 +718,7 @@ bool WorkHorse::findMasterDR(int GID, StringToken * masterDRToken, std::string *
     return true;
 }
 
-bool WorkHorse::populateCoverageArray(int GID, Aligner drAligner)
+bool WorkHorse::populateCoverageArray(int GID, Aligner& drAligner)
 {
 	//-----
 	// Use the data structures initialised in parseGroupedDRs
@@ -725,12 +737,9 @@ bool WorkHorse::populateCoverageArray(int GID, Aligner drAligner)
         {
             continue;
         }
-        
         // get the string for this mofo
         //std::string tmp_DR = mStringCheck.getString(*dr_iter);
         drAligner.alignSlave(*dr_iter);
-
-
     }
     // kill the unfounded ones
     dr_iter = (mDR2GIDMap[GID])->begin();
@@ -760,26 +769,19 @@ bool WorkHorse::populateCoverageArray(int GID, Aligner drAligner)
 
 
 std::string WorkHorse::calculateDRConsensus(int GID, 
-                                            Aligner drAligner, 
+                                            Aligner& drAligner, 
                                             int& nextFreeGID,
                                             int& collapsedPos,
                                             std::map<char, int> collapsedOptions,
                                             std::map<int, bool> refinedDREnds
                                             )
 {
-	//-----
-	// calculate the consensus sequence in the consensus array and the  
-	// sequence of the true DR
-	// warning, A heavy!
-    
-    
-    
+
     drAligner.generateConsensus();
-    
 	
-	// finally, make the true DR and check for consistency
+	// make the true DR and check for consistency
 	std::string true_dr = "";
-    for (int i = drAligner.getDRZoneStart(); drAligner.getDRZoneEnd(); i++)
+    for (int i = drAligner.getDRZoneStart(); i <= drAligner.getDRZoneEnd(); i++)
 	{
 #ifdef DEBUG
         logInfo("Pos: " << i << " coverage: " << drAligner.coverageAt(i, drAligner.consensusAt(i)) << " conserved(%): " << drAligner.conservationAt(i) << " consensus: " << drAligner.consensusAt(i), 1);
@@ -915,14 +917,12 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
     // now we have the n most abundant kmers and one DR which contains them all
     // time to rock and rrrroll!
     
-    
-    Aligner dr_aligner(CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength, &mReads, &mStringCheck);
+    Aligner dr_aligner((CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength), &mReads, &mStringCheck);
     dr_aligner.setMasterDR(master_DR_sequence);
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Set up the master DR's array and insert this guy into the main array
     populateCoverageArray(GID, dr_aligner );
-    
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // calculate consensus and diversity
 	// use these variables to identify and store possible

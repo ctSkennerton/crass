@@ -44,6 +44,8 @@
 #include "crassDefines.h"
 
 
+#define coverageIndex(i,c) (((CHAR_TO_INDEX[(int)c] - 1) * AL_length) + i)
+
 typedef std::bitset<3> AlignerFlag_t;
 
 
@@ -51,13 +53,13 @@ class Aligner
 {
     // named accessors for the bitset flags
     enum Flag_t {
-        reversed = 0,
-        failed = 1,
-        score_equal = 2
+        reversed,
+        failed,
+        score_equal
     };
     
     
-    const unsigned char seq_nt4_table[256] = {
+    static const unsigned char seq_nt4_table[256];/* = {
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -74,12 +76,12 @@ class Aligner
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
-    };
+    };*/
     
     
     // ASCII table that converts characters into the multiplier
     // used for finding the correct index in the coverage array
-    const unsigned char CHAR_TO_INDEX[256] = {
+    static const char CHAR_TO_INDEX[128];/* = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -96,7 +98,7 @@ class Aligner
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    };
+    };*/
 public:
     //int gapo = 5, gape = 2, minsc = 0, xtra = KSW_XSTART;
     Aligner(int length, ReadMap *wh_reads, StringCheck *wh_st, int gapo=5, int gape=2, int minsc=5, int xtra=KSW_XSTART): 
@@ -115,8 +117,6 @@ public:
         
         // set up default parameters for ksw alignment
         int sa = 1, sb = 3, i, j, k;
-        AL_masterDRProfile = 0;
-        AL_slaveDR_Profile = 0;
 
         if (AL_minAlignmentScore > 0xffff) AL_minAlignmentScore = 0xffff;
         if (AL_minAlignmentScore > 0) AL_xtra |= KSW_XSUBO | AL_minAlignmentScore;
@@ -146,6 +146,8 @@ public:
     // add in all of the reads for this group to the coverage array
     void generateConsensus();
     
+    void print();
+
     inline std::map<StringToken, int>::iterator offsetBegin(){return AL_Offsets.begin();}
     
     inline std::map<StringToken, int>::iterator offsetEnd(){return AL_Offsets.end();}
@@ -162,13 +164,13 @@ public:
     
     inline void setDRZoneEnd(int i){AL_ZoneEnd = i;}
     
-    inline int coverageAt(int i, char c){return AL_coverage.at(CHAR_TO_INDEX[c] * i); }
+    inline int coverageAt(int i, char c){return AL_coverage.at(coverageIndex(i,c)); }
     
     inline char consensusAt(int i){return AL_consensus.at(i);}
     
-    inline float conservationAt(int i){return AL_consensus.at(i);}
+    inline float conservationAt(int i){return AL_conservation.at(i);}
     
-    inline int depthAt(int i){return AL_coverage[i] + AL_coverage[2*i] + AL_coverage[3*i] + AL_coverage[4*i];}
+    inline int depthAt(int i){return AL_coverage[coverageIndex(i,'A')] + AL_coverage[coverageIndex(i,'C')] + AL_coverage[coverageIndex(i,'G')] + AL_coverage[coverageIndex(i,'T')];}
 
 private:
     // private methods
@@ -199,9 +201,6 @@ private:
     void extendSlaveDR(std::string& slaveDR, std::string& extendedSlaveDR);
 
     void calculateDRZone();
-    
-    
-    
     
     //Members
     

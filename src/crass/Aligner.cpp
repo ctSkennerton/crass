@@ -31,11 +31,44 @@
  *                              A B
  *                               A
  */
+#include <cstdlib>
 #include <iostream>
 #include <libcrispr/Exception.h>
 #include "Aligner.h"
 #include "LoggerSimp.h"
 #include "SeqUtils.h"
+
+const unsigned char Aligner::seq_nt4_table[256] = {
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
+    };
+
+// will convert any char to an A if it is not C,G,T
+const char Aligner::CHAR_TO_INDEX[128] = {
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 2, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 2, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    };
+
 
 void Aligner::setMasterDR(std::string& master) {
     AL_masterDRToken = mStringCheck->getToken(master);
@@ -93,13 +126,11 @@ void Aligner::alignSlave(StringToken& slaveDRToken) {
         
         slaveDR = reverseComplement(slaveDR);
         StringToken st = mStringCheck->addString(slaveDR);
-        mReads->at(st) = mReads->at(slaveDRToken);
-        mReads->at(slaveDRToken) = NULL;
+        (*mReads)[st] = (*mReads)[slaveDRToken];
+        (*mReads)[slaveDRToken] = NULL;
         slaveDRToken = st;
-        //AL_Offsets[slaveDRToken] = -1;       
     }
     AL_Offsets[slaveDRToken] = AL_Offsets[AL_masterDRToken] + offset;
-    
     placeReadsInCoverageArray(slaveDRToken);
 }
 
@@ -119,18 +150,17 @@ void Aligner::generateConsensus() {
     for(int j = 0; j < AL_length; j++)
 	{
 		int max_count = 0;
-		float total_count = 0;
-		for(int i = 1; i <= 4; i++)
+		float total_count = 0.0;
+		for(int i = 0; i < 4; i++)
 		{
 			
-			total_count += static_cast<float>(AL_coverage[i*j]);
-			if(AL_coverage[i*j] > max_count)
+			total_count += static_cast<float>(AL_coverage[coverageIndex(j,alphabet[i])]);
+			if(AL_coverage[coverageIndex(j,alphabet[i])] > max_count)
 			{
-				max_count = AL_coverage[i*j];
-				AL_consensus[j] = alphabet[i-1];
+				max_count = AL_coverage[coverageIndex(j,alphabet[i])];
+				AL_consensus[j] = alphabet[i];
 			}
 		}
-        
 		// we need at least CRASS_DEF_MIN_READ_DEPTH reads to call a DR
 		if(total_count > CRASS_DEF_MIN_READ_DEPTH)
 		{
@@ -215,8 +245,8 @@ void Aligner::prepareSlaveForAlignment(std::string& slaveDR,
 int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) {
 
     int slave_dr_length = static_cast<int>(slaveDR.length());
-    uint8_t slave_dr_forward[slave_dr_length+1];
-    uint8_t slave_dr_reverse[slave_dr_length+1];
+    uint8_t* slave_dr_forward = new uint8_t[slave_dr_length+1];
+    uint8_t* slave_dr_reverse = new uint8_t[slave_dr_length+1];
     
     prepareSlaveForAlignment(slaveDR, slave_dr_forward, slave_dr_reverse);
 
@@ -254,7 +284,8 @@ int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) 
     // free the query profile
     free(slave_forward_query_profile); 
     free(slave_reverse_query_profile);
-    
+    delete slave_dr_reverse;
+    delete slave_dr_forward;
     // figure out which alignment was better
     if (reverse_return.score == forward_return.score) {
         flags[score_equal] = true;
@@ -283,8 +314,7 @@ int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) 
 }
 
 void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
-    // we need to correct for the fact that we may not be using the 0th kmer
-    int positional_offset = AL_Offsets[currentDrToken];//(kmer_positions_DR_master)[0] - (kmer_positions_DR_master)[positioning_kmer_index] + (kmer_positions_ARRAY)[positioning_kmer_index];
+
     ReadListIterator read_iter = mReads->at(currentDrToken)->begin();
     int current_dr_length = static_cast<int>(mStringCheck->getString(currentDrToken).length());
     
@@ -304,26 +334,12 @@ void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
             if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (current_dr_length - 1))
             {
                 // we need to find the first kmer which matches the mode.
-                int this_read_start_pos = positional_offset - (*read_iter)->startStopsAt(dr_start_index);
+                int this_read_start_pos = AL_Offsets[currentDrToken] - (*read_iter)->startStopsAt(dr_start_index);
                 for(int i = 0; i < (int)(*read_iter)->getSeqLength(); i++)
                 {
-                    int index = -1;
-                    switch((*read_iter)->getSeqCharAt(i))
-                    {
-                        case 'A':
-                            index = 1;
-                            break;
-                        case 'C':
-                            index = 2;
-                            break;
-                        case 'G':
-                            index = 3;
-                            break;
-                        default:
-                            index = 4;
-                            break;
-                    }
+                    char current_nt = (*read_iter)->getSeqCharAt(i);
                     int index_b = i+this_read_start_pos; 
+
                     if((index_b) >= AL_length)
                     {
                         logError("***FATAL*** MEMORY CORRUPTION: The consensus/coverage arrays are too short");
@@ -332,8 +348,10 @@ void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
                     {
                         logError("***FATAL*** MEMORY CORRUPTION: index = "<< index_b<<" less than array begining");
                     }
-                    
-                    AL_coverage[index * index_b]++;
+                    if(coverageIndex(index_b,current_nt) >= (int)AL_coverage.size()) {
+                        logError("***FATAL*** MEMORY CORRUPTION: index = "<<coverageIndex(index_b,current_nt)<<"("<<CHAR_TO_INDEX[(int)current_nt]<<" : "<<AL_length<<" : "<<index_b<<") >= "<<AL_coverage.size());
+                    }
+                    AL_coverage[coverageIndex(index_b,current_nt)]++;
                 }
             }
             // go onto the next DR
@@ -348,7 +366,6 @@ void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
         } while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (current_dr_length - 1));
         read_iter++;
     }
-
 }
 
 
@@ -379,6 +396,7 @@ void Aligner::extendSlaveDR(std::string &slaveDR, std::string &extendedSlaveDR){
         } else {
             // substring the read to get the new length
             extendedSlaveDR = (*read_iter)->getSeq().substr((*read_iter)->startStopsAt(dr_start_index) - 2, slaveDR.length() + 4);
+            break;
         }
     }
 }
@@ -414,14 +432,17 @@ void Aligner::calculateDRZone() {
     }
 }
 
+void Aligner::print() {
+    std::vector<int>::iterator iter;
+    for (int j = 1; j <= 4;++j) {
+        for (int i = 0; i < AL_length; ++i) {
+            std::cout<<AL_coverage[i*j]<<",";
+        }
+        std::cout<<"$"<<std::endl;
+    }
 
-
-
-
-
-
-
-
-
-
-
+    //for(iter = AL_coverage.begin(); iter != AL_coverage.end();iter++) {
+    //    std::cout<<*iter<<",";
+    //}
+    std::cout<<std::endl;
+}
