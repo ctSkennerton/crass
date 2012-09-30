@@ -44,6 +44,7 @@
 #include <vector>
 #include <zlib.h> 
 #include <map>
+#include <ctime>
 
 // local includes
 #include "crassDefines.h"
@@ -53,21 +54,17 @@
 #include "ReadHolder.h"
 #include "SeqUtils.h"
 #include "StringCheck.h"
+#include "Types.h"
 #if SEARCH_SINGLETON
 #include "SearchChecker.h"
 #endif
 
 
-typedef std::map<std::string, bool> lookupTable;
-
-typedef std::vector<ReadHolder *> ReadList;
-typedef std::vector<ReadHolder *>::iterator ReadListIterator;
-
-// direct repeat as a string and a list of the read objects that contain that direct repeat
-typedef std::map<StringToken, ReadList *> ReadMap;
-typedef std::map<StringToken, ReadList *>::iterator ReadMapIterator;
 
 
+
+typedef std::vector<WuManber*> MultiSearchVector;
+typedef WuManber::DataFound multiSearchData;
 
 enum READ_TYPE {
     LONG_READ,
@@ -85,45 +82,48 @@ int decideWhichSearch(const char *inputFile,
                       ReadMap * mReads, 
                       StringCheck * mStringCheck, 
                       lookupTable& patternsHash, 
-                      lookupTable& readsFound);
+                      lookupTable& readsFound,
+                      time_t& startTime);
 
-int longReadSearch(ReadHolder * seq, 
+int longReadSearch(ReadHolder& seq, 
                    const options &opts, 
                    ReadMap * mReads, 
                    StringCheck * mStringCheck, 
                    lookupTable &patterns_hash, 
                    lookupTable &readsFound);
 
-int shortReadSearch(ReadHolder * seq, 
+int shortReadSearch(ReadHolder&  seq, 
                     const options &opts, 
                     ReadMap * mReads, 
                     StringCheck * mStringCheck, 
                     lookupTable &patterns_hash, 
                     lookupTable &readsFound);
 
-void findSingletons(const char *input_fastq, 
+void findSingletons(const char *inputFastq, 
                     const options &opts, 
-                    lookupTable &patterns_hash, 
+                    std::vector<std::string> * nonRedundantPatterns, 
                     lookupTable &readsFound, 
-                    ReadMap *mReads, 
-                    StringCheck * mStringCheck);
+                    ReadMap * mReads, 
+                    StringCheck * mStringCheck,
+                    time_t& startTime);
 
 void findSingletonsMultiVector(const char *inputFastq, 
                                const options &opts, 
                                std::vector<std::vector<std::string> *> &patterns, 
                                lookupTable &readsFound, 
                                ReadMap * mReads, 
-                               StringCheck * mStringCheck);
+                               StringCheck * mStringCheck,
+                               time_t& startTime);
 
-int scanRight(ReadHolder * tmp_holder, 
+int scanRight(ReadHolder& tmp_holder, 
               std::string& pattern, 
               unsigned int minSpacerLength, 
               unsigned int scanRange);
 
-unsigned int extendPreRepeat(ReadHolder* tmp_holder, 
+unsigned int extendPreRepeat(ReadHolder& tmp_holder, 
                              int searchWindowLength);
 
-bool qcFoundRepeats(ReadHolder * tmp_holder, 
+bool qcFoundRepeats(ReadHolder& tmp_holder, 
                     int minSpacerLength, 
                     int maxSpacerLength);
 
@@ -135,7 +135,7 @@ bool drHasHighlyAbundantKmers(std::string& directRepeat);
 
 void addReadHolder(ReadMap * mReads, 
                    StringCheck * mStringCheck, 
-                   ReadHolder * tmp_holder);
+                   ReadHolder& tmp_holder);
 
 //
 //

@@ -11,11 +11,7 @@
 .Nd the CRISPR Assembler.
 .Sh SYNOPSIS             
 .Nm
-.Op Fl abcdfhklnoswxyDGKSV
-.Op Fl "-removeHomopolymers"
-.Op Fl "-logToScreen"
-.Op Fl "-noDebugGraph"
-.Op Fl "-noRendering"
+.Op Fl abcdDefgGhHkKlLnorsSVwxyz
 .Ao Em sequence_files Ac
 
 .Nm
@@ -53,28 +49,25 @@ then reads containing direct repeats are then outputed for further analysis.
 .Bl -tag -width -indent
 .It  
 .Nm
-.Op Fl hV
+.Op Fl eghrzGHL
 .Op Fl a Ar LAYOUT_TYPE
 .Op Fl b Ar INT
 .Op Fl c Ar COLOUR_TYPE
 .Op Fl d Ar INT
 .Op Fl f Ar INT
 .Op Fl k Ar INT
+.Op Fl K Ar INT
 .Op Fl l Ar INT
 .Op Fl n Ar INT
-.Op Fl o Ar LOCATION
+.Op Fl o Ar DIR
 .Op Fl s Ar INT
 .Op Fl w Ar INT
 .Op Fl x Ar REAL
 .Op Fl y Ar REAL
 .Op Fl D Ar INT
-.Op Fl G Ar ""
 .Op Fl K Ar INT
 .Op Fl S Ar INT
-.Op Fl "-removeHomopolymers"
-.Op Fl "-logToScreen"
-.Op Fl "-noDebugGraph"
-.Op Fl "-noRendering"
+.Ao Em sequence_files Ac
 
 .It Fl a Ar LAYOUT_TYPE Fl "\^\-layoutAlgorithm" Ar LAYOUT_TYPE
 The Graphviz layout algorithm to be used when rendering graphs.
@@ -96,32 +89,32 @@ Three tone colouring with low coverage spacers in blue and high coverage spacers
 The minimim length of the direct repeat to search for [Default: 23] 
 .It Fl D Ar INT Fl "\^\-maxDR" Ar INT             
 The Maximum length of the direct repeat to search for [Default: 47] 
+.It Fl e Ar "" Fl "\^\-noDebugGraph"
+Option available only when DEBUG preoprocessor symbol is set. Will turn off generating debugging graphs
 .It Fl f Ar INT  Fl "\^\-covCutoff" Ar INT           
 Defines the minimim number of reads that a putative CRISPR must contain to be considered real. [Default: 10]
+.It Fl g Ar "" Fl "\^\-logToScreen"
+Print the logging info to stdout rather than to a file
 .It Fl G Ar ""  Fl "\^\-showSingletons" Ar ""
 Set to show unattached spacers in the graph output  
 .It Fl h Ar ""  Fl "\^\-help" Ar ""           
 Output basic usage informtion to screen
+.It Fl H Ar "" Fl "\^\-removeHomopolymers"
+Correct for homopolymer errors [default: no correction]
 .It Fl l Ar INT Fl "\^\-logLevel" Ar INT
 The level of verbosity to ouput in the
 .Nm 
 log file 
-.It Fl "-logToScreen" Ar ""
-Print all logging information to stdout rather than a file
 .It Fl k Ar INT Fl "\^\-kmerCount" Ar INT            
 The number of kmers at two direct repeats must share to be considered part of the same cluster [Default: 12]
 .It Fl K Ar INT Fl "\^\-graphNodeLen" Ar INT            
 The length of the kmer used to define a node in the graph.  The lower the number the more connected the graph will be but also increases the chance of false positive edges [Default: 7]
 .It Fl n Ar INT Fl "\^\-minNumRepeats" Ar INT            
 The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real' [Default: 3]
-.It Fl "-noDebugGraph" Ar ""
-Available only when the DEBUG preoprocessor macro is set. Stops generation of debuging .gv files being produced [Default: false] 
-.It Fl "-noRendering" Ar ""
-Available only when the RENDERING preoprocessor macro is set. Stops generation of image files being produced [Default: false] 
-.It Fl "-noScalling" Ar ""
-Use the given spacer and direct repeat ranges when --removeHomopolymers is set.  The default is to use the scale these values based on the values of -x and -y. 
 .It Fl o Ar LOCATION  Fl "\^\-outDir" Ar LOCATION          
-The name of the ouput directory for the output files [Default: .]
+The name of the ouput directory for the output files [Default: ./]
+.It Fl r Ar "" Fl "\^\-noRendering" Ar ""
+Option only available when the '--enable-rendering' configure option is set.  Will turn off the generation of image files.
 .It Fl s Ar INT Fl "\^\-minSpacer" Ar INT            
 The minimim length of the spacer to search for [Default: 26]
 .It Fl S Ar INT Fl "\^\-maxSpacer" Ar INT          
@@ -134,7 +127,10 @@ The length of the window size for searching a genome.  Must be between 6 - 9 [De
 A decimal number that represents the reduction in size of the spacer when the --removeHomopolymers option is set [Default: 0.7]
 .It Fl y Ar REAL Fl "\^\-repeatScalling" Ar REAL
 A decimal number that represents the reduction in size of the direct repeat when the --removeHomopolymers option is set [Default: 0.7]
+.It Fl z Ar "" Fl "\^\-noScalling" Ar ""
+Use the given spacer and direct repeat ranges when --removeHomopolymers is set.  The default is to use the scale these values based on the values of -x and -y. 
 
+.Pp
 .It  
 .Nm
 assemble

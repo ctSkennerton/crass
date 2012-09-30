@@ -2,7 +2,7 @@
  *  AssemblyWrapper.cpp is part of the crass project
  *  
  *  Created by Connor Skennerton on 27/10/11.
- *  Copyright 2011 Connor Skennerton and Michael Imelfort. All rights reserved. 
+ *  Copyright 2011, 2012 Connor Skennerton and Michael Imelfort. All rights reserved. 
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -232,8 +232,8 @@ void assemblyVersionInfo(void)
 
 void assemblyUsage(void)
 {
-    std::cout<<"Usage: "PACKAGE_NAME<<" assemble ASSEMBLER -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]"<<std::endl;
-    std::cout<<"\twhere ASSEMBLER is one of the assembly algorithms listed below:"<<std::endl<<std::endl;
+    std::cout<<"Usage: "PACKAGE_NAME<<"-assembler {--velvet|--cap3} -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]"<<std::endl;
+    std::cout<<"\twhere assembler is one of the assembly algorithms listed below:"<<std::endl<<std::endl;
 #ifdef HAVE_VELVET
     std::cout<<"\tvelvet"<<std::endl;
 #endif
@@ -281,6 +281,8 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
         {"insertSize", required_argument, NULL, 'I'},
         {"logToScreen", no_argument, NULL, 0},
         {"xml",required_argument,NULL,'x'},
+        {"velvet",no_argument,NULL,0},
+        {"cap3",no_argument,NULL,0},
         {NULL, no_argument, NULL, 0}
     };
     try 
@@ -471,6 +473,20 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
                 case 0:
                 {
                     if ( strcmp( "logToScreen", assemblyLongOptions[index].name ) == 0 ) opts.logToScreen = true;
+                    if (!strcmp("velvet",assemblyLongOptions[index].name)){
+#ifdef HAVE_VELVET
+                        opts.assembler = velvet;
+#else
+                        throw std::runtime_error("crass-assembler cannot use velvet. Please re-compile with velvet in you PATH");
+#endif
+                    }
+                    if (!strcmp("cap3",assemblyLongOptions[index].name)){
+#ifdef HAVE_CAP3
+                        opts.assembler = cap3;
+#else
+                        throw std::runtime_error("crass-assembler cannot use cap3. Please re-compile with cap3 in you PATH");
+#endif
+                    }
                     break;
                 }
                 default:
@@ -658,7 +674,7 @@ int capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileNam
 }
 
 
-int assemblyMain(int argc, char * argv[])
+int main(int argc, char * argv[])
 {
     if (argc == 1) 
     {
@@ -668,32 +684,15 @@ int assemblyMain(int argc, char * argv[])
     }
     
     assemblyOptions opts;
-    ASSEMBLERS wantedAssembler = unset;
+    opts.assembler = unset;
 
-#ifdef HAVE_VELVET
-    if (strcmp(argv[1], "velvet") == 0) 
-    {
-        // the user wants velvet
-        wantedAssembler = velvet;
-    } 
-#endif
+    processAssemblyOptions(argc - 1, argv + 1, opts);
     
-#ifdef HAVE_CAP3
-    if(strcmp(argv[1], "cap3") == 0)
-    {
-        // the user wants CAP3
-        wantedAssembler = cap3;
-    }
-#endif
-    
-    if(unset == wantedAssembler)
+    if(unset == opts.assembler)
     {
         std::cout << "**ERROR: No valid assemblers installed" << std::endl;
         return 43;
     }
-
-    processAssemblyOptions(argc - 1, argv + 1, opts);
-    
     std::set<std::string> segments;
     parseSegmentString(opts.segments, segments);
     
@@ -726,7 +725,7 @@ int assemblyMain(int argc, char * argv[])
     
     generateTmpAssemblyFile(group_read_file, spacers_for_assembly, opts, tmp_file_name);
     int return_value = 42;
-    switch (wantedAssembler) 
+    switch (opts.assembler) 
     {
         case velvet:
             // velvet wrapper
