@@ -58,9 +58,6 @@
 #include <libcrispr/StlExt.h>
 #include <libcrispr/Exception.h>
 #include "SeqUtils.h"
-#ifdef PERFORM_CRASS_ASSEMBLY
-    #include "AssemblyWrapper.h"
-#endif
 
 
 //**************************************
@@ -482,7 +479,9 @@ int main(int argc, char *argv[])
     if (strcmp(argv[1], "assemble") == 0) 
     {
         // our user wants to do an assembly so let's load up the assembler main function
-        return assemblyMain(argc - 1 , argv + 1);
+        //return assemblyMain(argc - 1 , argv + 1);
+        std::cerr<< "As of version 0.3 of "<<PACKAGE_NAME<<" the assembly wrapper is its own executable.  Please use "<<PACKAGE_NAME<<"-assember now"<<std::endl;
+        return EXIT_FAILURE;
     }
 #endif
     /* application of default options */

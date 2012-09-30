@@ -93,10 +93,8 @@ int decideWhichSearch(const char *inputFastq,
     int long_read_cutoff = longReadCut(opts.lowDRsize, opts.lowSpacerSize);
     int short_read_cutoff = shortReadCut(opts.lowDRsize, opts.lowSpacerSize);
     // read sequence  
-    ReadHolder tmp_holder;
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
-        tmp_holder.clear();
         max_read_length = (l > max_read_length) ? l : max_read_length;
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
@@ -111,6 +109,7 @@ int decideWhichSearch(const char *inputFastq,
         }
         try {
             // grab a readholder
+            ReadHolder tmp_holder;
             tmp_holder.setSequence(seq->seq.s);tmp_holder.setHeader( seq->name.s);
 #if SEARCH_SINGLETON
             SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
@@ -697,7 +696,6 @@ void findSingletonsMultiVector(const char *inputFastq,
     
     MultiSearchVector::iterator wm_iter =  mult_search.begin();
 
-    ReadHolder tmp_holder;
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         // seq is a read what we love
@@ -715,6 +713,7 @@ void findSingletonsMultiVector(const char *inputFastq,
              wm_iter != mult_search.end(); 
              (pats_iter++, wm_iter++)) {
             
+            ReadHolder tmp_holder;
             tmp_holder.setSequence(seq->seq.s);tmp_holder.setHeader( seq->name.s);
             if (seq->comment.s) 
             {

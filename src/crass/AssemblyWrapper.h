@@ -59,7 +59,7 @@ typedef struct{
     std::string segments;               // a comma separated list of segments to assemble
     bool        logToScreen;            // does the user want logging info printed to screen
     int         insertSize;             // the insert size for the paired end assembly
-
+    ASSEMBLERS  assembler;              // the assembler that the user wants
 
 } assemblyOptions;
 
