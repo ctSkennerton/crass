@@ -1,0 +1,222 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="resource-type" content="document">
+<link rel="stylesheet" href="css/man-style.css" type="text/css" media="all">
+<title>
+crass(1)</title>
+</head>
+<body>
+<div class="mandoc">
+<table summary="Document Header" class="head" width="100%">
+<col width="30%">
+<col width="30%">
+<col width="30%">
+<tbody>
+<tr>
+<td class="head-ltitle">
+crass(1)</td>
+<td class="head-vol" align="center">
+General Commands Manual</td>
+<td class="head-rtitle" align="right">
+crass(1)</td>
+</tr>
+</tbody>
+</table>
+<div class="section">
+<h1 id="x4e414d45">NAME</h1> <b class="name">crass</b> &#8212; <span class="desc">the CRISPR Assembler.</span></div>
+<div class="section">
+<h1 id="x53594e4f50534953">SYNOPSIS</h1><table class="synopsis">
+<col style="width: 5.00ex;">
+<col>
+<tbody>
+<tr>
+<td>
+crass</td>
+<td>
+&#91;<span class="opt"><b class="flag">&#45;abcdDefgGhHkKlLnorsSVwxyz</b></span>&#93; <i class="arg">file ...</i><div style="height: 1.00em;">
+&#160;</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section">
+<h1 id="x4445534352495054494f4e">DESCRIPTION</h1> <b class="name">crass</b> is a tool for finding and assembling reads from genomic and metagenomic datasets that contain <span class="emph">C</span>lustered <span class="emph">R</span>egularly <span class="emph">I</span>nterspersed <span class="emph">S</span>hort <span class="emph">P</span>alindromic <span class="emph">R</span>epeats (CRISPR). <b class="name">crass</b> searches through the dataset and identifies reads which contain repeated K-mers that are of a specific length and are separated by a spacer sequence.  These possible direct repeats are then curated internally to remove bad matches and then reads containing direct repeats are then outputed for further analysis.<div style="height: 1.00em;">
+&#160;</div>
+</div>
+<div class="section">
+<h1 id="x4f5054494f4e53">OPTIONS</h1><div style="height: 1.00em;">
+&#160;</div>
+<dl style="margin-top: 0.00em;margin-bottom: 0.00em;" class="list list-tag">
+<dt class="list-tag" style="margin-top: 1.00em;">
+</dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+<b class="name">crass</b> &#91;<span class="opt"><b class="flag">&#45;eghrzGHL</b></span>&#93; &#91;<span class="opt"><b class="flag">&#45;a</b> <i class="arg">LAYOUT_TYPE</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;b</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;c</b> <i class="arg">COLOUR_TYPE</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;d</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;f</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;k</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;K</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;l</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;n</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;o</b> <i class="arg">DIR</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;s</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;w</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;x</b> <i class="arg">REAL</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;y</b> <i class="arg">REAL</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;D</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;K</b> <i class="arg">INT</i></span>&#93; &#91;<span class="opt"><b class="flag">&#45;S</b> <i class="arg">INT</i></span>&#93; <i class="arg">file ...</i><div style="height: 1.00em;">
+&#160;</div>
+</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;a</b> <i class="arg">LAYOUT_TYPE</i> <b class="flag">&#45;&#45;layoutAlgorithm</b> <i class="arg">LAYOUT_TYPE</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The Graphviz layout algorithm to be used when rendering graphs.</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;b</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;numBins</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The number of colour bins for the output graph. Default is to have as many colours as there are different values for the coverage of Nodes in the graph.</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;c</b> <i class="arg">COLOUR_TYPE</i> <b class="flag">&#45;&#45;graphColour</b> <i class="arg">COLOUR_TYPE</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The colour scheme for the output graph based on the coverage of each spacer in the CRISPR, can be one from:<dl style="margin-top: 0.00em;margin-bottom: 0.00em;" class="list list-tag">
+<dt class="list-tag" style="margin-top: 1.00em;">
+red-blue</dt>
+<dd class="list-tag" style="margin-left: 9.00ex;">
+Low coverage spacers are coloured in red and high coverage spaceres are coloured blue. Intermediates are coloured in shades of purple.</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+blue-red</dt>
+<dd class="list-tag" style="margin-left: 9.00ex;">
+Low coverage spacers are coloured in blue and high coverage spaceres are coloured red. Intermediates are coloured in shades of purple.</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+green-red-blue</dt>
+<dd class="list-tag" style="margin-left: 9.00ex;">
+Three tone colouring with low coverage spacers in green and high coverage spacers in blue.</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+red-blue-green</dt>
+<dd class="list-tag" style="margin-left: 9.00ex;">
+Three tone colouring with low coverage spacers in blue and high coverage spacers in green.</dd>
+</dl>
+</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;d</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;minDR</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The minimim length of the direct repeat to search for [Default: 23]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;D</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;maxDR</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The Maximum length of the direct repeat to search for [Default: 47]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;e</b> <i class="arg"></i> <b class="flag">&#45;&#45;noDebugGraph</b></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Option available only when DEBUG preoprocessor symbol is set. Will turn off generating debugging graphs</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;f</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;covCutoff</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Defines the minimim number of reads that a putative CRISPR must contain to be considered real. [Default: 10]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;g</b> <i class="arg"></i> <b class="flag">&#45;&#45;logToScreen</b></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Print the logging info to stdout rather than to a file</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;G</b> <i class="arg"></i> <b class="flag">&#45;&#45;showSingletons</b> <i class="arg"></i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Set to show unattached spacers in the graph output</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;h</b> <i class="arg"></i> <b class="flag">&#45;&#45;help</b> <i class="arg"></i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Output basic usage informtion to screen</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;H</b> <i class="arg"></i> <b class="flag">&#45;&#45;removeHomopolymers</b></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Correct for homopolymer errors [default: no correction]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;l</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;logLevel</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The level of verbosity to ouput in the <b class="name">crass</b> log file</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;k</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;kmerCount</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The number of kmers at two direct repeats must share to be considered part of the same cluster [Default: 12]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;K</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;graphNodeLen</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The length of the kmer used to define a node in the graph.  The lower the number the more connected the graph will be but also increases the chance of false positive edges [Default: 7]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;n</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;minNumRepeats</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real' [Default: 3]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;o</b> <i class="arg">LOCATION</i> <b class="flag">&#45;&#45;outDir</b> <i class="arg">LOCATION</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The name of the ouput directory for the output files [Default: ./]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;r</b> <i class="arg"></i> <b class="flag">&#45;&#45;noRendering</b> <i class="arg"></i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Option only available when the '--enable-rendering' configure option is set.  Will turn off the generation of image files.</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;s</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;minSpacer</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The minimim length of the spacer to search for [Default: 26]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;S</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;maxSpacer</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The maximim length of the spacer to search for [Default: 50]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;V</b> <i class="arg"></i> <b class="flag">&#45;&#45;version</b> <i class="arg"></i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Print version and copy right information</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;w</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;windowLength</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The length of the window size for searching a genome.  Must be between 6 - 9 [Default: 8]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;x</b> <i class="arg">REAL</i> <b class="flag">&#45;&#45;spacerScalling</b> <i class="arg">REAL</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+A decimal number that represents the reduction in size of the spacer when the --removeHomopolymers option is set [Default: 0.7]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;y</b> <i class="arg">REAL</i> <b class="flag">&#45;&#45;repeatScalling</b> <i class="arg">REAL</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+A decimal number that represents the reduction in size of the direct repeat when the --removeHomopolymers option is set [Default: 0.7]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;z</b> <i class="arg"></i> <b class="flag">&#45;&#45;noScalling</b> <i class="arg"></i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Use the given spacer and direct repeat ranges when --removeHomopolymers is set.  The default is to use the scale these values based on the values of -x and -y.</dd>
+</dl>
+<div style="height: 1.00em;">
+&#160;</div>
+</div>
+<div class="section">
+<h1 id="x46494c4553">FILES</h1><dl style="margin-top: 0.00em;margin-bottom: 0.00em;" class="list list-tag">
+<dt class="list-tag" style="margin-top: 1.00em;">
+<i class="file">crass.&lt;TIMESTAP&gt;.log</i></dt>
+<dd class="list-tag" style="margin-left: 32.00ex;">
+Log file containing information about the last execution of <b class="name">crass</b></dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<i class="file">Group_&lt;NUM&gt;_&lt;DNA&gt;.fa</i></dt>
+<dd class="list-tag" style="margin-left: 32.00ex;">
+Fasta file of all reads from a DR type.</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<i class="file">Spacers_&lt;NUM&gt;_&lt;DNA&gt;.spacers.gv</i></dt>
+<dd class="list-tag" style="margin-left: 32.00ex;">
+File representing the graph of the DR type in Graphviz format</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<i class="file">crass.&lt;TIMESTAMP&gt;.keys</i></dt>
+<dd class="list-tag" style="margin-left: 32.00ex;">
+A file in graphviz format that contains all of the colour codes for the coverage values in the output graph</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<i class="file">crass.crispr</i></dt>
+<dd class="list-tag" style="margin-left: 32.00ex;">
+A crispr file representing all the information about each of the DR types identified</dd>
+</dl>
+</div>
+<div class="section">
+<h1 id="x444941474e4f5354494353">DIAGNOSTICS</h1> The <b class="utility">crass</b> utility exits 0 on success, and &gt;0 if an error occurs.<div style="height: 1.00em;">
+&#160;</div>
+</div>
+<div class="section">
+<h1 id="x53454520414c534f">SEE ALSO</h1> <a class="link-man" href="crass-assember1.html">crass-assember(1)</a>, <a class="link-man" href="dot1.html">dot(1)</a>, <a class="link-man" href="crisprtools1.html">crisprtools(1)</a></div>
+<table summary="Document Footer" class="foot" width="100%">
+<col width="50%">
+<col width="50%">
+<tbody>
+<tr>
+<td class="foot-date">
+30/09/12</td>
+<td class="foot-os" align="right">
+Darwin</td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="resource-type" content="document">
+<link rel="stylesheet" href="css/man-style.css" type="text/css" media="all">
+<title>
+crass-assembler(1)</title>
+</head>
+<body>
+<div class="mandoc">
+<table summary="Document Header" class="head" width="100%">
+<col width="30%">
+<col width="30%">
+<col width="30%">
+<tbody>
+<tr>
+<td class="head-ltitle">
+crass-assembler(1)</td>
+<td class="head-vol" align="center">
+General Commands Manual</td>
+<td class="head-rtitle" align="right">
+crass-assembler(1)</td>
+</tr>
+</tbody>
+</table>
+<div class="section">
+<h1 id="x4e414d45">NAME</h1> <b class="name">crass-assembler</b> &#8212; <span class="desc">An assembly wrapper for crass</span></div>
+<div class="section">
+<h1 id="x53594e4f50534953">SYNOPSIS</h1><table class="synopsis">
+<col style="width: 15.00ex;">
+<col>
+<tbody>
+<tr>
+<td>
+crass-assembler</td>
+<td>
+<b class="flag">&#45;x</b> <i class="arg">crass.crispr</i> <b class="flag">&#45;s</b> <i class="arg">CONTIGS</i> <b class="flag">&#45;i</b> <i class="arg">INPUT_DIR</i> <b class="flag">&#45;g</b> <i class="arg">GROUP</i> &#91;<span class="opt"><b class="flag">&#45;ohV</b></span>&#93; &#91;<span class="opt"><b class="flag">&#45;&#45;velvet</b> | <b class="flag">&#45;&#45;cap3</b></span>&#93;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section">
+<h1 id="x4445534352495054494f4e">DESCRIPTION</h1> <b class="name">crass-assembler</b> is a wrapper for a couple of genome assembly algorithms that can be used to reconstruct CRISPR loci. <b class="name">crass-assembler</b> is an add-on to <a class="link-man" href="crass1.html">crass(1)</a> that produces an ordering of spacers from a CRISPR loci. <b class="name">crass-assembler</b> processes this information and passes the reads from individual CRISPR strains onto one of the genome assemblers for generation of contigs.</div>
+<div class="section">
+<h1 id="x4f5054494f4e53">OPTIONS</h1><dl style="margin-top: 0.00em;margin-bottom: 0.00em;" class="list list-tag">
+<dt class="list-tag" style="margin-top: 1.00em;">
+</dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+<b class="name">crass-assembler</b> &#91;<span class="opt"><b class="flag">&#45;hV</b></span>&#93; &#91;<span class="opt"><b class="flag">&#45;o</b> <i class="arg">PATH</i></span>&#93; <b class="flag">&#45;i</b> <i class="arg">PATH</i> <b class="flag">&#45;g</b> <i class="arg">INT</i> <b class="flag">&#45;x</b> <i class="arg">PATH</i> <b class="flag">&#45;s</b> <i class="arg">INT[,INT]</i> &#91;<span class="opt"><b class="flag">&#45;&#45;velvet</b> | <b class="flag">&#45;&#45;cap3</b></span>&#93;</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;g</b> <i class="arg">INT</i> <b class="flag">&#45;&#45;group</b> <i class="arg">INT</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The group number of the CRISPR that you want to assemble</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;h</b> <i class="arg"></i> <b class="flag">&#45;&#45;help</b> <i class="arg"></i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Output basic usage informtion to screen</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;i</b> <i class="arg">PATH</i> <b class="flag">&#45;&#45;inDir</b> <i class="arg">PATH</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The name of the input directory</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;o</b> <i class="arg">PATH</i> <b class="flag">&#45;&#45;outDir</b> <i class="arg">PATH</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The name of the output directory [Default: inDir]</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;s</b> <i class="arg">INT[,INT]</i> <b class="flag">&#45;&#45;segments</b> <i class="arg">INT[,INT]</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+A comma separated list of numbered segments to assemble from the specified group</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;V</b> <i class="arg"></i> <b class="flag">&#45;&#45;version</b> <i class="arg"></i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+Print version and copy right information</dd>
+<dt class="list-tag" style="margin-top: 1.00em;">
+<b class="flag">&#45;x</b> <i class="arg">FILE</i> <b class="flag">&#45;&#45;xml</b> <i class="arg">FILE</i></dt>
+<dd class="list-tag" style="margin-left: 10.00ex;">
+The .crispr xml output file created by crass</dd>
+</dl>
+</div>
+<div class="section">
+<h1 id="x444941474e4f5354494353">DIAGNOSTICS</h1> The <b class="utility">crass-assembler</b> utility exits 0 on success, and &gt;0 if an error occurs.</div>
+<div class="section">
+<h1 id="x53454520414c534f">SEE ALSO</h1> <a class="link-man" href="crass1.html">crass(1)</a>, <a class="link-man" href="crisprtools1.html">crisprtools(1)</a></div>
+<table summary="Document Footer" class="foot" width="100%">
+<col width="50%">
+<col width="50%">
+<tbody>
+<tr>
+<td class="foot-date">
+30/09/12</td>
+<td class="foot-os" align="right">
+Darwin</td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>
+

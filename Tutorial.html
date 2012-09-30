@@ -36,6 +36,7 @@ body {
           <div class="nav-collapse">
         <ul class="nav">
               <li><a href="assets/manual.pdf">Manual</a></li>
+              <li><a href="news.html">News</a></li>
               <li><a href="http://ecogenomic.org">Ecogenomic</a></li>
             </ul>
       </div>
@@ -48,15 +49,18 @@ body {
     <div class="span3">
           <div class="well sidebar-nav">
         <ul class="nav nav-list">
-              <li class="nav-header">Latest Release</li>
-              <li><a href="https://github.com/ctSkennerton/crass/tarball/v0.2.17">Crass 0.2.17</a></li>
-              <!--<li>please cite: Skennerton, C. T., Imelfort, M. &amp; G. W. Tyson. (2012) "Identification and assembly of CRISPR loci using unassembled metagenomic sequencing reads" Genome Biology </li>-->
+			  <li class="nav-header">Latest Release</li>
+              <li><a href="https://github.com/ctSkennerton/crass/tarball/v0.3.0">Crass 0.3.0</a></li>
+             <!-- <li> please cite: Skennerton, C. T., Imelfort, M. &amp; G. W. Tyson. (2012) "Identification and assembly of CRISPR loci using unassembled metagenomic sequencing reads" Genome Biology </li>-->
               <li class="nav-header">Documentation</li>
-              <li class="active"><a href="Tutorial.html">Tutorial</a></li>
+              <li><a href="Tutorial.html">Tutorial</a></li>
               <li><a href="FAQ.html">Frequently Asked Questions</a></li>
               <li><a href="assets/manual.pdf">Manual</a></li>
+              <li><a href="crass1.html">crass(1)</a></li>
+              <li><a href="crass-assembler1.html">crass-assembler(1)</a></li>
+
               <li class="nav-header">Related Software</li>
-              <li><a href="https://github.com/ctSkennerton/crisprtools">crisprtools</a></li>
+              <li><a href="https://ctskennerton.github.com/crisprtools">crisprtools</a></li>
               <li><a href="http://ctskennerton.github.com/libcrispr/">libcrispr</a></li>
               <li class="nav-header">Resources</li>
               <li><a href="assets/Crass-ISME14.pdf">ISME14 Poster</a></li>
@@ -160,11 +164,13 @@ body {
             <p>From the image of the graph above it's pretty obvious that this CRISPR has multiple strains.  If you would like to return the linear sequence of one or many of these strains it is possible to use the <code>crass assembler</code>.  The user (you) will need to tell Crass which strain in the graph needs to be assembled.  For this you will need to give crass a list of linear segments through the graph.  Each node on the graph above has a segment number associated with it; it is the fourth field in the naming scheme.</p>
             <p>The arrangement of spacers produced by Graphviz can sometimes be a little confusing (like in the graph above), unfortunately Graphviz will only give you a static image, however other software programs such as <a href="http://gephi.org">Gephi</a> produce interactive graphs that you can manipulate and therefore get a better idea about the strain variation and which segments to assemble together.</p>
             <h4>Invoking the Crass assembler</h4>
-            <pre>$ crass assemble [velvet|cap3] -x crass.crispr -g NUM -s s1,s2,s3,s4,s5 -i DIR
-            	x           The crispr file produced by Crass containing the CRISPR you would like to assemble
-                g           The group number of the CRISPR produced by Crass that you would like to assemble
-                s           A comma separated list of segments from the group that you would like to assemble
-                i           The directory containing the output results from crass
+            <pre>$ crass-assembler [--velvet | --cap3] -x crass.crispr -g NUM -s s1,s2,s3,s4,s5 -i DIR
+                --velvet     Use the wrapper for the velvet genome assembler
+                --cap3       Use the wrapper for the cap3 genome assembler
+            	-x           The crispr file produced by Crass containing the CRISPR you would like to assemble
+                -g           The group number of the CRISPR produced by Crass that you would like to assemble
+                -s           A comma separated list of segments from the group that you would like to assemble
+                -i           The directory containing the output results from crass
             </pre>
             <p>Once you've figured out which segments in the graph go together to form individual strains you can input the corresponding segment numbers to the crass assembler along with the group number.  The crispr file produced by Crass stores which spacers were found in which reads and therfore extracts the reads for each of these spacers and passes them along to an external assembly algorithm.  At this point in time the only external programs supported are <code>velvet</code> and <code>cap3</code>.</p>
             </div>

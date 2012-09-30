@@ -43,6 +43,7 @@
           <div class="nav-collapse">
             <ul class="nav">
               <li><a href="assets/manual.pdf">Manual</a></li>
+              <li><a href="news.html">News</a></li>
               <li><a href="http://ecogenomic.org">Ecogenomic</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -56,15 +57,18 @@
         <div class="span3">
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
-              <li class="nav-header">Latest Release</li>
-              <li><a href="https://github.com/ctSkennerton/crass/tarball/v0.2.17">Crass 0.2.17</a></li>
-              <!--<li>please cite: Skennerton, C. T., Imelfort, M. &amp; G. W. Tyson. (2012) "Identification and assembly of CRISPR loci using unassembled metagenomic sequencing reads" Genome Biology </li>-->
+			  <li class="nav-header">Latest Release</li>
+              <li><a href="https://github.com/ctSkennerton/crass/tarball/v0.3.0">Crass 0.3.0</a></li>
+             <!-- <li> please cite: Skennerton, C. T., Imelfort, M. &amp; G. W. Tyson. (2012) "Identification and assembly of CRISPR loci using unassembled metagenomic sequencing reads" Genome Biology </li>-->
               <li class="nav-header">Documentation</li>
               <li><a href="Tutorial.html">Tutorial</a></li>
-              <li class="active"><a href="FAQ.html">Frequently Asked Questions</a></li>
+              <li><a href="FAQ.html">Frequently Asked Questions</a></li>
               <li><a href="assets/manual.pdf">Manual</a></li>
+              <li><a href="crass1.html">crass(1)</a></li>
+              <li><a href="crass-assembler1.html">crass-assembler(1)</a></li>
+
               <li class="nav-header">Related Software</li>
-              <li><a href="https://github.com/ctSkennerton/crisprtools">crisprtools</a></li>
+              <li><a href="https://ctskennerton.github.com/crisprtools">crisprtools</a></li>
               <li><a href="http://ctskennerton.github.com/libcrispr/">libcrispr</a></li>
               <li class="nav-header">Resources</li>
               <li><a href="assets/Crass-ISME14.pdf">ISME14 Poster</a></li>
@@ -81,7 +85,7 @@
               <p>No, currently Crass will only work on the raw sequencing reads.  If you have access to the data you could always run Crass on the reads that went into making that genome of yours.  There are three programs that will identify CRISPRs in genome sequences: <a href="http://www.drive5.com/pilercr">PILER-CR</a>, <a href="http://www.room220.com/crt">CRT</a> &amp; <a href="http://crispr.u-psud.fr/">CRISPRFinder</a>; you might want to check them out.  In the future Crass will support full length genome sequences, however due to assumptions made in the algorithm it is not currently possible.</p>
               <h3>How fast is Crass? </h3>
               <p> Well that depends on how much data you have and how diverse that data is. The algorithm used in Crass scales linearly with the number of reads processed but exponentially with the number of CRISPR patterns in the dataset.  With a dataset with 100M reads and a medium level of CRISPR diversity, Crass will run overnight and be read in the morning.</p>
-              <h3> How do I interprate the output from Crass?</h3>
+              <h3> How do I interpret the output from Crass?</h3>
               <p>Best read the <a href="Tutorial.html">tutorial</a></p>
               <h3>Does Crass use paired-read information</h3>
               <p> Currently no, but it is an area of improvement for the algorithm</p>
