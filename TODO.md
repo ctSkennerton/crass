@@ -11,6 +11,8 @@
     * This is not a sequencing error issue as even when searching with mismatches, there is not sign of the spacers
 * Spacer strings only get created during the initial pass of the graph building.  However, spacer objects can also be made from the p-graph
     * This means that spacers may exist in the graph, but not in the output sequences.  Maybe the cause of the above issue
+* If a slave DR is a perfect palindrome of the master DR the offset will be undefined
+    
 
 ## Wanted Features
 * Multi-threading the search algorithms

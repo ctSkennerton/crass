@@ -18,11 +18,17 @@ typedef const vector<string> WuVector;
 
 class WuManber {
 public:
+    typedef struct _DataFound
+	{
+		int	            iFoundPosition;
+		std::string     sDataFound;
+	} DataFound;
+    
     WuManber (void);
     virtual ~WuManber( void );
     void Initialize( WuVector &patterns, 
                     bool bCaseSensitive = false, bool bIncludeSpecialCharacters = false, bool bIncludeExtendedAscii = false );
-    string Search( size_t TextLength, const char *Text, std::vector<std::string> &patterns, int &start_pos );
+    DataFound Search( size_t TextLength, const char *Text, std::vector<std::string> &patterns );
     
 protected:
     size_t k;  // number of patterns;

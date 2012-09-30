@@ -1,10 +1,12 @@
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
-# the previous manual Makefile
 bin_PROGRAMS = crass
+if ASSEMBLY_WRAPPER
+bin_PROGRAMS += crass-assembler
+endif
 
+AM_CXXFLAGS = @LIBCRISPR_CPPFLAGS@ -Werror -pedantic -Wall
+AM_LDFLAGS = @LIBCRISPR_LDFLAGS@ @LIBCRISPR_LIBS@ @zlib_flags@
 
-crass_CXXFLAGS = @LIBCRISPR_CPPFLAGS@ -Werror -pedantic -Wall
-crass_LDFLAGS = @LIBCRISPR_LDFLAGS@ @LIBCRISPR_LIBS@ @zlib_flags@
 
 
 crass_SOURCES =\
@@ -26,10 +28,16 @@ kseq.cpp kseq.h\
 GraphDrawingDefines.h\
 crassDefines.h\
 StatsManager.h\
-SearchChecker.cpp SearchChecker.h
+SearchChecker.cpp SearchChecker.h\
+ksw.c ksw.h\
+Types.h\
+Aligner.cpp Aligner.h
 
-if ASSEMBLY_WRAPPER
-crass_SOURCES +=\
-AssemblyWrapper.cpp AssemblyWrapper.h
-endif
+
+crass_assembler_SOURCES =\
+AssemblyWrapper.cpp AssemblyWrapper.h\
+config.h\
+crassDefines.h\
+kseq.cpp kseq.h\
+SeqUtils.cpp SeqUtils.h
 

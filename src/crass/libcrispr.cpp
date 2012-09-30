@@ -47,7 +47,6 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <exception>
-#include <ctime>
 #include <libcrispr/StlExt.h>
 #include <libcrispr/Exception.h>
 
@@ -61,15 +60,16 @@
 #include "kseq.h"
 #include "config.h"
 
-#define longReadCut(d,s) ((4*d) + (3*s))
-#define shortReadCut(d,s) ((2*d) + s)
+#define longReadCut(d,s) ((4 * d) + (3 * s))
+#define shortReadCut(d,s) ((2 * d) + s)
 
 int decideWhichSearch(const char *inputFastq, 
                       const options& opts, 
                       ReadMap * mReads, 
                       StringCheck * mStringCheck, 
                       lookupTable& patternsHash, 
-                      lookupTable& readsFound
+                      lookupTable& readsFound,
+                      time_t& time_start
                       )
 
 {
@@ -80,7 +80,7 @@ int decideWhichSearch(const char *inputFastq,
     // or the CRT search algorithm
     //
     gzFile fp = getFileHandle(inputFastq);
-    kseq_t *seq;
+    kseq_t * seq;
 
     // initialize seq
     seq = kseq_init(fp);
@@ -88,8 +88,7 @@ int decideWhichSearch(const char *inputFastq,
     int l, log_counter, max_read_length;
     log_counter = max_read_length = 0;
     static int read_counter = 0;
-    time_t time_start, time_current;
-    time(&time_start);
+    time_t time_current;
     
     int long_read_cutoff = longReadCut(opts.lowDRsize, opts.lowSpacerSize);
     int short_read_cutoff = shortReadCut(opts.lowDRsize, opts.lowSpacerSize);
@@ -101,15 +100,17 @@ int decideWhichSearch(const char *inputFastq,
         {
             time(&time_current);
             double diff = difftime(time_current, time_start);
-            time_start = time_current;
-            std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "
+            //time_start = time_current;
+
+            std::cout<<"\r["<<PACKAGE_NAME<<"_patternFinder]: "
 					 << "Processed "<<read_counter<<" ...";
-            std::cout<<diff<<" sec"<<std::endl;
+            std::cout<<diff<<" sec"<<std::flush;
             log_counter = 0;
         }
         try {
             // grab a readholder
-            ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+            ReadHolder tmp_holder;
+            tmp_holder.setSequence(seq->seq.s);tmp_holder.setHeader( seq->name.s);
 #if SEARCH_SINGLETON
             SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
             if (debug_iter != debugger->end()) {
@@ -123,19 +124,19 @@ int decideWhichSearch(const char *inputFastq,
             // test if it has a comment entry and a quality entry (fastq input file)
             if (seq->comment.s) 
             {
-                tmp_holder->setComment(seq->comment.s);
+                tmp_holder.setComment(seq->comment.s);
             }
             if (seq->qual.s) 
             {
-                tmp_holder->setQual(seq->qual.s);
+                tmp_holder.setQual(seq->qual.s);
             }
             
             if (opts.removeHomopolymers)
             {
                 // RLE is necessary...
-                tmp_holder->encode();
+                tmp_holder.encode();
                 // update the value of l based on if we arre removing homopolymers
-                l = static_cast<int>(tmp_holder->getSeq().length());
+                l = static_cast<int>(tmp_holder.getSeq().length());
             }
 
             if (l > long_read_cutoff) {
@@ -154,9 +155,7 @@ int decideWhichSearch(const char *inputFastq,
                                 mStringCheck, 
                                 patternsHash, 
                                 readsFound);
-            } else {
-                delete tmp_holder;
-            }
+            } 
         } catch (crispr::exception& e) {
             std::cerr<<e.what()<<std::endl;
             kseq_destroy(seq);
@@ -176,9 +175,9 @@ int decideWhichSearch(const char *inputFastq,
     logInfo("finished processing file:"<<inputFastq, 1);    
     time(&time_current);
     double diff = difftime(time_current, time_start);
-    time_start = time_current;
-    std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "<< "Processed "<<read_counter<<" ...";
-    std::cout<<diff<<" sec"<<std::endl;
+    //time_start = time_current;
+    std::cout<<"\r["<<PACKAGE_NAME<<"_patternFinder]: "<< "Processed "<<read_counter<<" ...";
+    std::cout<<diff<<" sec"<<std::flush;
     logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
 
     return max_read_length;
@@ -186,7 +185,7 @@ int decideWhichSearch(const char *inputFastq,
 
 
 // CRT search
-int scanRight(ReadHolder * tmp_holder, 
+int scanRight(ReadHolder&  tmp_holder, 
               std::string& pattern, 
               unsigned int minSpacerLength, 
               unsigned int scanRange)
@@ -194,15 +193,15 @@ int scanRight(ReadHolder * tmp_holder,
 #ifdef DEBUG
     logInfo("Scanning Right for more repeats:", 9);
 #endif
-    unsigned int start_stops_size = tmp_holder->getStartStopListSize();
+    unsigned int start_stops_size = tmp_holder.getStartStopListSize();
     
     unsigned int pattern_length = static_cast<unsigned int>(pattern.length());
     
     // final start index
-    unsigned int last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 2);
+    unsigned int last_repeat_index = tmp_holder.getRepeatAt(start_stops_size - 2);
     
     //second to final start index
-    unsigned int second_last_repeat_index = tmp_holder->getRepeatAt(start_stops_size - 4);
+    unsigned int second_last_repeat_index = tmp_holder.getRepeatAt(start_stops_size - 4);
     
     unsigned int repeat_spacing = last_repeat_index - second_last_repeat_index;
     
@@ -214,7 +213,7 @@ int scanRight(ReadHolder * tmp_holder,
     
     unsigned int begin_search, end_search;
     
-    unsigned int read_length = static_cast<unsigned int>(tmp_holder->getSeqLength());
+    unsigned int read_length = static_cast<unsigned int>(tmp_holder.getSeqLength());
     bool more_to_search = true;
     while (more_to_search)
     {
@@ -253,7 +252,7 @@ int scanRight(ReadHolder * tmp_holder,
         }
         /******************** end range checks ********************/
         
-        std::string text = tmp_holder->substr(begin_search, (end_search - begin_search));
+        std::string text = tmp_holder.substr(begin_search, (end_search - begin_search));
         
         #ifdef DEBUG
         logInfo(pattern<<" : "<<text, 9);
@@ -263,7 +262,7 @@ int scanRight(ReadHolder * tmp_holder,
         
         if (position >= 0)
         {
-            tmp_holder->startStopsAdd(begin_search + position, begin_search + position + pattern_length);
+            tmp_holder.startStopsAdd(begin_search + position, begin_search + position + pattern_length);
             second_last_repeat_index = last_repeat_index;
             last_repeat_index = begin_search + position;
             repeat_spacing = last_repeat_index - second_last_repeat_index;
@@ -281,7 +280,7 @@ int scanRight(ReadHolder * tmp_holder,
     return begin_search + position;
 }
 
-int longReadSearch(ReadHolder * tmpHolder, 
+int longReadSearch(ReadHolder& tmpHolder, 
                    const options& opts, 
                    ReadMap * mReads, 
                    StringCheck * mStringCheck, 
@@ -293,9 +292,9 @@ int longReadSearch(ReadHolder * tmpHolder,
     // Should do well at finding crisprs in long reads
     //
     
-    bool match_found = false;
+    //bool match_found = false;
 
-    std::string read = tmpHolder->getSeq();
+    std::string read = tmpHolder.getSeq();
     
     // get the length of this sequence
     unsigned int seq_length = static_cast<unsigned int>(read.length());
@@ -313,8 +312,8 @@ int longReadSearch(ReadHolder * tmpHolder,
     
     if (searchEnd < 0) 
     {
-        logError("Read: "<<tmpHolder->getHeader()<<" length is less than "<<opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength + 1<<"bp");
-        delete tmpHolder;
+        logError("Read: "<<tmpHolder.getHeader()<<" length is less than "<<opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength + 1<<"bp");
+        //delete tmpHolder;
         return 1;
     }
     
@@ -366,18 +365,18 @@ int longReadSearch(ReadHolder * tmpHolder,
 
         if (pattern_in_text_index >= 0)
         {
-            tmpHolder->startStopsAdd(j,  j + opts.searchWindowLength);
+            tmpHolder.startStopsAdd(j,  j + opts.searchWindowLength);
             unsigned int found_pattern_start_index = beginSearch + static_cast<unsigned int>(pattern_in_text_index);
             
-            tmpHolder->startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength);
+            tmpHolder.startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength);
             scanRight(tmpHolder, pattern, opts.lowSpacerSize, 24);
         }
 
-        if ( (tmpHolder->numRepeats() > opts.minNumRepeats) ) //tmp_holder->numRepeats is half the size of the StartStopList
+        if ( (tmpHolder.numRepeats() > opts.minNumRepeats) ) //tmp_holder->numRepeats is half the size of the StartStopList
         {
 #ifdef DEBUG
-            logInfo(tmpHolder->getHeader(), 8);
-            logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " ("<<tmpHolder->numRepeats()<<") repeated kmers found", 8);
+            logInfo(tmpHolder.getHeader(), 8);
+            logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " ("<<tmpHolder.numRepeats()<<") repeated kmers found", 8);
 #endif
 
             unsigned int actual_repeat_length = extendPreRepeat(tmpHolder, opts.searchWindowLength);
@@ -394,19 +393,19 @@ int longReadSearch(ReadHolder * tmpHolder,
 			// version that the singleton finder should be looking for
 			std::string encoded_repeat;
 			if(opts.removeHomopolymers) {
-				encoded_repeat = tmpHolder->repeatStringAt(0);
-				tmpHolder->decode();
+				encoded_repeat = tmpHolder.repeatStringAt(0);
+				tmpHolder.decode();
 
 			}
                 
                 // drop partials
-                tmpHolder->dropPartials();
+                tmpHolder.dropPartials();
                 if (qcFoundRepeats(tmpHolder, opts.lowSpacerSize, opts.highSpacerSize))
                 {
 #ifdef DEBUG
                     logInfo("Passed all tests!", 8);
-                    logInfo("Potential CRISPR containing read found: "<<tmpHolder->getHeader(), 7);
-                    logInfo(tmpHolder->getSeq(), 9);
+                    logInfo("Potential CRISPR containing read found: "<<tmpHolder.getHeader(), 7);
+                    logInfo(tmpHolder.getSeq(), 9);
                     logInfo("-------------------", 7)
 #endif                            
 
@@ -414,34 +413,30 @@ int longReadSearch(ReadHolder * tmpHolder,
                     //*candidate_read = *tmp_holder;
                     //addReadHolder(mReads, mStringCheck, candidate_read);
                     addReadHolder(mReads, mStringCheck, tmpHolder);
-                    match_found = true;
+                    //match_found = true;
 					if(opts.removeHomopolymers) {
 							patternsHash[encoded_repeat] = true;
 						} else {
-							patternsHash[tmpHolder->repeatStringAt(0)] = true;
+							patternsHash[tmpHolder.repeatStringAt(0)] = true;
 						}
-                    readsFound[tmpHolder->getHeader()] = true;
+                    readsFound[tmpHolder.getHeader()] = true;
                     break;
                 }
             }
 #ifdef DEBUG                
             else
             {
-                logInfo("\tFailed test 2. Repeat length: "<<tmpHolder->getRepeatLength() << " : " << match_found, 8); 
+                logInfo("\tFailed test 2. Repeat length: "<<tmpHolder.getRepeatLength()/* << " : " << match_found*/, 8); 
             }
 #endif
-            j = tmpHolder->back() - 1;
+            j = tmpHolder.back() - 1;
         }
-        tmpHolder->clearStartStops();
-    }
-    if (!match_found) 
-    {
-        delete tmpHolder;
+        tmpHolder.clearStartStops();
     }
     return 0;
 }
 
-int shortReadSearch(ReadHolder * tmpHolder, 
+int shortReadSearch(ReadHolder&  tmpHolder, 
                     const options &opts, 
                     ReadMap * mReads, 
                     StringCheck * mStringCheck, 
@@ -449,9 +444,9 @@ int shortReadSearch(ReadHolder * tmpHolder,
                     lookupTable &readsFound)
 {
 
-    bool match_found = false;
+    //bool match_found = false;
     
-    std::string read = tmpHolder->getSeq();
+    std::string read = tmpHolder.getSeq();
 
     unsigned int seq_length = static_cast<unsigned int>(read.length());
     unsigned int search_end = seq_length - opts.lowDRsize - 1;
@@ -511,18 +506,18 @@ int shortReadSearch(ReadHolder * tmpHolder,
 #ifdef DEBUG
                 logInfo("A: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end<<" EX: "<<extenstion_length, 8);
 #endif
-                tmpHolder->startStopsAdd(first_start, first_end + extenstion_length);
-                tmpHolder->startStopsAdd(second_start, second_end + extenstion_length);
-                tmpHolder->setRepeatLength(second_end - second_start + extenstion_length);
+                tmpHolder.startStopsAdd(first_start, first_end + extenstion_length);
+                tmpHolder.startStopsAdd(second_start, second_end + extenstion_length);
+                tmpHolder.setRepeatLength(second_end - second_start + extenstion_length);
             }
             else
             {
 #ifdef DEBUG
                 logInfo("B: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end, 8);
 #endif
-                tmpHolder->startStopsAdd(first_start, first_end);
-                tmpHolder->startStopsAdd(second_start, second_end);
-                tmpHolder->setRepeatLength(second_end - second_start);
+                tmpHolder.startStopsAdd(first_start, first_end);
+                tmpHolder.startStopsAdd(second_start, second_end);
+                tmpHolder.setRepeatLength(second_end - second_start);
             }
 
 			// Declare a tmp string here to hold the encoded DR if 
@@ -531,32 +526,32 @@ int shortReadSearch(ReadHolder * tmpHolder,
 			// version that the singleton finder should be looking for
 			std::string encoded_repeat;
 			if(opts.removeHomopolymers) {
-				encoded_repeat = tmpHolder->repeatStringAt(0);
-				tmpHolder->decode();
+				encoded_repeat = tmpHolder.repeatStringAt(0);
+				tmpHolder.decode();
 			}
 			
             // the low side will always be true since we search for the lowDRSize
-            if ( tmpHolder->getRepeatLength() <= opts.highDRsize )
+            if ( tmpHolder.getRepeatLength() <= opts.highDRsize )
             {
 
-                if ((tmpHolder->getAverageSpacerLength() >= opts.lowSpacerSize) && 
-                    (tmpHolder->getAverageSpacerLength() <= opts.highSpacerSize))
+                if ((tmpHolder.getAverageSpacerLength() >= opts.lowSpacerSize) && 
+                    (tmpHolder.getAverageSpacerLength() <= opts.highSpacerSize))
                 {
                     if (qcFoundRepeats(tmpHolder, opts.lowSpacerSize, opts.highSpacerSize)) 
                     {
 
-                        match_found = true;
+                        //match_found = true;
 #ifdef DEBUG
-                        logInfo("Potential CRISPR containing read found: "<<tmpHolder->getHeader(), 7);
+                        logInfo("Potential CRISPR containing read found: "<<tmpHolder.getHeader(), 7);
                         logInfo(read, 9);
                         logInfo("-------------------", 7)
 #endif
 						if(opts.removeHomopolymers) {
 							patternsHash[encoded_repeat] = true;
 						} else {
-							patternsHash[tmpHolder->repeatStringAt(0)] = true;
+							patternsHash[tmpHolder.repeatStringAt(0)] = true;
 						}
-                        readsFound[tmpHolder->getHeader()] = true;
+                        readsFound[tmpHolder.getHeader()] = true;
                         addReadHolder(mReads, mStringCheck, tmpHolder);
                         break;
                     }
@@ -564,22 +559,18 @@ int shortReadSearch(ReadHolder * tmpHolder,
 #ifdef DEBUG
                 else
                 {
-                    logInfo("\tFailed test 2. The spacer length is not between "<<opts.lowSpacerSize<<" and "<<opts.highSpacerSize<<": "<<tmpHolder->getAverageSpacerLength(), 8);
+                    logInfo("\tFailed test 2. The spacer length is not between "<<opts.lowSpacerSize<<" and "<<opts.highSpacerSize<<": "<<tmpHolder.getAverageSpacerLength(), 8);
                 }
 #endif
             }
 #ifdef DEBUG
             else
             {
-                logInfo("\tFailed test 1. The repeat length is larger than "<<opts.highDRsize<<": " << tmpHolder->getRepeatLength(), 8);
+                logInfo("\tFailed test 1. The repeat length is larger than "<<opts.highDRsize<<": " << tmpHolder.getRepeatLength(), 8);
             }
 #endif
-            first_start = tmpHolder->back();
+            first_start = tmpHolder.back();
         }
-    }
-    if (!match_found)
-    {
-        delete tmpHolder;
     }
     return 0;
 }
@@ -587,18 +578,18 @@ int shortReadSearch(ReadHolder * tmpHolder,
 
 void findSingletons(const char *inputFastq, 
                     const options &opts, 
-                    lookupTable &patternsHash, 
+                    std::vector<std::string> * nonRedundantPatterns, 
                     lookupTable &readsFound, 
                     ReadMap * mReads, 
-                    StringCheck * mStringCheck)
+                    StringCheck * mStringCheck,
+                    time_t& startTime)
+
 {
     //-----
     // given a potentially large set of patterns, call an innefficent function
     // on a possible broken down subset
     //
-    std::vector<std::string> patterns;
-    mapToVector(patternsHash, patterns);
-	if (patterns.empty())
+	if (nonRedundantPatterns->empty())
 	{
 
 		throw crispr::runtime_exception(__FILE__,
@@ -613,7 +604,7 @@ void findSingletons(const char *inputFastq,
     std::vector<std::vector<std::string> * > vec_vec_patterns;
     int cut_start = 0;
     int cut_length = CRASS_DEF_MAX_SING_PATTERNS;
-    int total_pattern_size = (int)patterns.size();
+    int total_pattern_size = static_cast<int>(nonRedundantPatterns->size());
     std::vector<std::string>::iterator start_iter, end_iter;
     while(total_pattern_size > 0)
     {
@@ -631,7 +622,7 @@ void findSingletons(const char *inputFastq,
         }
         
         // make out iterators
-        start_iter = patterns.begin() + cut_start;
+        start_iter = nonRedundantPatterns->begin() + cut_start;
         end_iter = start_iter + cut_length;
         
         // get a new vector to work with
@@ -646,7 +637,7 @@ void findSingletons(const char *inputFastq,
         cut_length = CRASS_DEF_MAX_SING_PATTERNS;
     }
 
-    findSingletonsMultiVector(inputFastq, opts, vec_vec_patterns, readsFound, mReads, mStringCheck);
+    findSingletonsMultiVector(inputFastq, opts, vec_vec_patterns, readsFound, mReads, mStringCheck, startTime);
     
     // clean up
     std::vector<std::vector<std::string> * >::iterator vv_iter = vec_vec_patterns.begin();
@@ -668,7 +659,8 @@ void findSingletonsMultiVector(const char *inputFastq,
                                std::vector<std::vector<std::string> *> &patterns, 
                                lookupTable &readsFound, 
                                ReadMap * mReads, 
-                               StringCheck * mStringCheck)
+                               StringCheck * mStringCheck,
+                               time_t& start_time)
 {
     //-----
     // Find sings given a vector of vectors of patterns
@@ -676,14 +668,17 @@ void findSingletonsMultiVector(const char *inputFastq,
 
 
     // make a wumanber for each set of patterns
-    std::vector<WuManber*> wu_mans;
+    MultiSearchVector mult_search;
+
     std::vector<std::vector<std::string> *>::iterator pats_iter = patterns.begin();
     std::vector<std::vector<std::string> *>::iterator pats_last = patterns.end();
     while(pats_iter != pats_last)
     {
-        WuManber * search = new WuManber();
+
+        WuManber * search = new WuManber(); 
         search->Initialize(*(*pats_iter));
-        wu_mans.push_back(search);
+
+        mult_search.push_back(search);
         pats_iter++;
     }
     
@@ -696,85 +691,76 @@ void findSingletonsMultiVector(const char *inputFastq,
     int l;
     int log_counter = 0;
     static int read_counter = 0;
-    int old_number = (int)mReads->size();
 
-    std::vector<WuManber*>::iterator wm_iter =  wu_mans.begin();
-    std::vector<WuManber*>::iterator wm_last =  wu_mans.end();
-    time_t time_start, time_current;
-    time(&time_start);
+    time_t time_current;
+    
+    MultiSearchVector::iterator wm_iter =  mult_search.begin();
+
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
         // seq is a read what we love
         // search it for the patterns until found
-        bool found = false;
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
         {
             time(&time_current);
-            double diff = difftime(time_current, time_start);
-            time_start = time_current;
-            std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
-            //std::cout.setf(std::ios::fixed);
-            //std::cout.precision(2);
-            std::cout<<diff<<" sec"<<std::endl;
+            double diff = difftime(time_current, start_time);
+            std::cout<<"\r["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
+            std::cout<<diff<<" sec"<<std::flush;
             log_counter = 0;
         }
-        // reset these mofos
-        wm_iter =  wu_mans.begin();
-        wm_last =  wu_mans.end();
-        pats_iter = patterns.begin();
-
-        while(wm_iter != wm_last)
-        {
-            ReadHolder * tmp_holder = new ReadHolder(seq->seq.s, seq->name.s);
+        
+        for ((wm_iter = mult_search.begin(), pats_iter = patterns.begin()); 
+             wm_iter != mult_search.end(); 
+             (pats_iter++, wm_iter++)) {
+            
+            ReadHolder tmp_holder;
+            tmp_holder.setSequence(seq->seq.s);tmp_holder.setHeader( seq->name.s);
             if (seq->comment.s) 
             {
-                tmp_holder->setComment(seq->comment.s);
+                tmp_holder.setComment(seq->comment.s);
             }
             if (seq->qual.s) 
             {
-                tmp_holder->setQual(seq->qual.s);
+                tmp_holder.setQual(seq->qual.s);
             }
             
             if (opts.removeHomopolymers) 
             {
-                tmp_holder->encode();
+                tmp_holder.encode();
             }
-            std::string read = tmp_holder->getSeq();
-            
-            //initialize with an impossible number
-            int start_pos = -1;
-            std::string found_repeat = (*wm_iter)->Search(read.length(), read.c_str(), *(*pats_iter), start_pos);
-            
-            if (start_pos != -1)
+            std::string read = tmp_holder.getSeq();
+#if SEARCH_SINGLETON
+            SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
+            if (debug_iter != debugger->end()) {
+                changeLogLevel(10);
+                debug_iter->second.read(tmp_holder);
+                std::cout<<"Processing interesting read: "<<debug_iter->first<<std::endl;
+            } else {
+                changeLogLevel(opts.logLevel);
+            }
+#endif            
+            multiSearchData search_data = (*wm_iter)->Search(read.length(), read.c_str(), *(*pats_iter));
+
+            if (!search_data.sDataFound.empty())
             {
-                if (readsFound.find(tmp_holder->getHeader()) == readsFound.end())
+                if (readsFound.find(tmp_holder.getHeader()) == readsFound.end())
                 {
-    #ifdef DEBUG
-                    logInfo("new read recruited: "<<tmp_holder->getHeader(), 9);
-                    logInfo(tmp_holder->getSeq(), 10);
-    #endif
-                    unsigned int DR_end = (unsigned int)start_pos + (unsigned int)found_repeat.length();
-                    if(DR_end >= (unsigned int)read.length())
+
+#ifdef DEBUG
+                    logInfo("new read recruited: "<<tmp_holder.getHeader(), 9);
+                    logInfo(tmp_holder.getSeq(), 10);
+#endif
+
+                    unsigned int DR_end = static_cast<unsigned int>(search_data.iFoundPosition) + static_cast<unsigned int>(search_data.sDataFound.length()) - 1;
+                    if(DR_end >= static_cast<unsigned int>(read.length()))
                     {
-                        DR_end = (unsigned int)read.length() - 1;
+                        DR_end = static_cast<unsigned int>(read.length()) - 1;
                     }
-                    tmp_holder->startStopsAdd(start_pos, DR_end);
+                    tmp_holder.startStopsAdd(search_data.iFoundPosition, DR_end);
                     addReadHolder(mReads, mStringCheck, tmp_holder);
-                    found = true;
+                    break;
                 }
-                else
-                    delete tmp_holder;
             }
-            else
-            {
-                delete tmp_holder;
-            }
-            
-            if(found)
-                break;
-            
-            pats_iter++;
-            wm_iter++;
         }
         log_counter++;
         read_counter++;
@@ -784,9 +770,9 @@ void findSingletonsMultiVector(const char *inputFastq,
     kseq_destroy(seq); // destroy seq
 
     // clean up
-    wm_iter =  wu_mans.begin();
-    wm_last =  wu_mans.end();
-    while(wm_iter != wm_last)
+    wm_iter =  mult_search.begin();
+    //wm_last =  mult_search.end();
+    while(wm_iter != mult_search.end())
     {
         if(*wm_iter != NULL)
         {
@@ -796,14 +782,12 @@ void findSingletonsMultiVector(const char *inputFastq,
         wm_iter++;
     }
     time(&time_current);
-    double diff = difftime(time_current, time_start);
-    time_start = time_current;
-    std::cout<<"["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
-    std::cout<<diff<<" sec"<<std::endl;
-    logInfo("Finished second iteration. An extra " << mReads->size() - old_number<<" variants were recruited", 2);
+    double diff = difftime(time_current, start_time);
+    std::cout<<"\r["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
+    std::cout<<diff<<" sec"<<std::flush;
 }
 
-unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
+unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength)
 {
 #ifdef DEBUG
     logInfo("Extending Prerepeat...", 9);
@@ -816,8 +800,8 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
     // the number of repeats
     // equal to half the size of the start stop list
     //!!!!!!!!!!!!!!
-    unsigned int num_repeats = tmp_holder->numRepeats();
-    tmp_holder->setRepeatLength(searchWindowLength);
+    unsigned int num_repeats = tmp_holder.numRepeats();
+    tmp_holder.setRepeatLength(searchWindowLength);
     int cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * num_repeats);
     
     // make sure that we don't go below 2
@@ -831,21 +815,21 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
     
     
     // the index in the read of the first DR kmer
-    unsigned int first_repeat_start_index = tmp_holder->getFirstRepeatStart();
+    unsigned int first_repeat_start_index = tmp_holder.getFirstRepeatStart();
     
     // the index in the read of the last DR kmer
-    unsigned int last_repeat_start_index = tmp_holder->getLastRepeatStart();
+    unsigned int last_repeat_start_index = tmp_holder.getLastRepeatStart();
     
     // the length between the first two DR kmers
-    unsigned int shortest_repeat_spacing = tmp_holder->startStopsAt(2) - tmp_holder->startStopsAt(0);
+    unsigned int shortest_repeat_spacing = tmp_holder.startStopsAt(2) - tmp_holder.startStopsAt(0);
     // loop througth all remaining members of mRepeats
-    unsigned int end_index = tmp_holder->getStartStopListSize();
+    unsigned int end_index = tmp_holder.getStartStopListSize();
     
     for (unsigned int i = 4; i < end_index; i+=2)
     {
         
         // get the repeat spacing of this pair of DR kmers
-        unsigned int curr_repeat_spacing = tmp_holder->startStopsAt(i) - tmp_holder->startStopsAt(i - 2);
+        unsigned int curr_repeat_spacing = tmp_holder.startStopsAt(i) - tmp_holder.startStopsAt(i - 2);
 #ifdef DEBUG
         logInfo(i<<" : "<<curr_repeat_spacing, 10);
 #endif
@@ -867,7 +851,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
 #endif
     // Sometimes we shouldn't use the far right DR. (it may lie too close to the end)
     unsigned int DR_index_end = end_index;
-    unsigned int dist_to_end = tmp_holder->getSeqLength() - last_repeat_start_index - 1;
+    unsigned int dist_to_end = tmp_holder.getSeqLength() - last_repeat_start_index - 1;
     if(dist_to_end < max_right_extension_length)
     {
 #ifdef DEBUG
@@ -892,17 +876,17 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
         for (unsigned int k = 0; k < DR_index_end; k+=2 )
         {
 #ifdef DEBUG
-            logInfo(k<<" : "<<tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength(), 10);
+            logInfo(k<<" : "<<tmp_holder.getRepeatAt(k) + tmp_holder.getRepeatLength(), 10);
 #endif
             // look at the character just past the end of the last repeat
             // make sure our indicies make some sense!
-            if((tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength()) >= static_cast<unsigned int>(tmp_holder->getSeqLength()))
+            if((tmp_holder.getRepeatAt(k) + tmp_holder.getRepeatLength()) >= static_cast<unsigned int>(tmp_holder.getSeqLength()))
             {    
                 k = DR_index_end;
             }
             else
             {
-                switch( tmp_holder->getSeqCharAt(tmp_holder->getRepeatAt(k) + tmp_holder->getRepeatLength()))
+                switch( tmp_holder.getSeqCharAt(tmp_holder.getRepeatAt(k) + tmp_holder.getRepeatLength()))
                 {
                     case 'A':
                         char_count_A++;
@@ -921,11 +905,11 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
         }
         
 #ifdef DEBUG
-        logInfo("R: " << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << tmp_holder->getRepeatLength() << " : " << max_right_extension_length, 9);
+        logInfo("R: " << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << tmp_holder.getRepeatLength() << " : " << max_right_extension_length, 9);
 #endif
         if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
         {
-            tmp_holder->incrementRepeatLength();
+            tmp_holder.incrementRepeatLength();
             max_right_extension_length--;
             right_extension_length++;
             char_count_A = char_count_C = char_count_T = char_count_G = 0;
@@ -940,7 +924,7 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
     
     // again, not too far
     unsigned int left_extension_length = 0;
-    int test_for_negative = shortest_repeat_spacing - tmp_holder->getRepeatLength();// - minSpacerLength;
+    int test_for_negative = shortest_repeat_spacing - tmp_holder.getRepeatLength();// - minSpacerLength;
     unsigned int max_left_extension_length = (test_for_negative >= 0)? static_cast<unsigned int>(test_for_negative) : 0;
 
 #ifdef DEBUG
@@ -969,9 +953,9 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
         for (unsigned int k = DR_index_start; k < end_index; k+=2 )
         {
 #ifdef DEBUG
-            logInfo(k<<" : "<<tmp_holder->getRepeatAt(k) - left_extension_length - 1, 10);
+            logInfo(k<<" : "<<tmp_holder.getRepeatAt(k) - left_extension_length - 1, 10);
 #endif
-            switch(tmp_holder->getSeqCharAt(tmp_holder->getRepeatAt(k) - left_extension_length - 1))
+            switch(tmp_holder.getSeqCharAt(tmp_holder.getRepeatAt(k) - left_extension_length - 1))
             {
                 case 'A':
                     char_count_A++;
@@ -988,12 +972,12 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
             }
         }
 #ifdef DEBUG
-        logInfo("L:" << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << tmp_holder->getRepeatLength() << " : " << left_extension_length, 9);
+        logInfo("L:" << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << tmp_holder.getRepeatLength() << " : " << left_extension_length, 9);
 #endif
         
         if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
         {
-            tmp_holder->incrementRepeatLength();
+            tmp_holder.incrementRepeatLength();
             left_extension_length++;
             char_count_A = char_count_C = char_count_T = char_count_G = 0;
         }
@@ -1002,11 +986,11 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
             break;
         }
     }
-    StartStopListIterator repeat_iter = tmp_holder->begin();
+    StartStopListIterator repeat_iter = tmp_holder.begin();
 #ifdef DEBUG    
     logInfo("Repeat positions:", 9);
 #endif
-    while (repeat_iter < tmp_holder->end()) 
+    while (repeat_iter < tmp_holder.end()) 
     {
         if(*repeat_iter < static_cast<unsigned int>(left_extension_length))
         {
@@ -1024,16 +1008,16 @@ unsigned int extendPreRepeat(ReadHolder * tmp_holder, int searchWindowLength)
         repeat_iter += 2;
     }
     
-    return static_cast<unsigned int>(tmp_holder->getRepeatLength());
+    return static_cast<unsigned int>(tmp_holder.getRepeatLength());
     
 }
 
 
 //need at least two elements
-bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerLength)
+bool qcFoundRepeats(ReadHolder& tmp_holder, int minSpacerLength, int maxSpacerLength)
 {
 
-    if (tmp_holder->numRepeats() < 2) 
+    if (tmp_holder.numRepeats() < 2) 
     {
         throw crispr::exception(__FILE__,
                                 __LINE__,
@@ -1042,7 +1026,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
     }
 
     
-    std::string repeat = tmp_holder->repeatStringAt(0);
+    std::string repeat = tmp_holder.repeatStringAt(0);
     
     if (isRepeatLowComplexity(repeat)) 
     {
@@ -1057,7 +1041,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
 #endif
     // test for a long or short read
     int single_compare_index = 0;
-    bool is_short = (2 > tmp_holder->numSpacers()); 
+    bool is_short = (2 > tmp_holder.numSpacers()); 
     if(!is_short) 
     {
         // for holding stats
@@ -1074,7 +1058,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
         
         //get all the spacer strings
 
-        tmp_holder->getAllSpacerStrings(spacer_vec);
+        tmp_holder.getAllSpacerStrings(spacer_vec);
         
         std::vector<std::string>::iterator spacer_iter = spacer_vec.begin();
         std::vector<std::string>::iterator spacer_last = spacer_vec.end();
@@ -1222,7 +1206,7 @@ bool qcFoundRepeats(ReadHolder * tmp_holder, int minSpacerLength, int maxSpacerL
     // Are we testing a short read or only one spacer?
     if(is_short)
     {
-        std::string spacer = tmp_holder->spacerStringAt(single_compare_index);
+        std::string spacer = tmp_holder.spacerStringAt(single_compare_index);
         float similarity = PatternMatcher::getStringSimilarity(repeat, spacer);
         if (similarity > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY) 
         {
@@ -1291,8 +1275,8 @@ bool isRepeatLowComplexity(std::string& repeat)
     
     int cut_off = static_cast<int>(curr_repeat_length * CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD);
     
-    std::string::iterator dr_iter = repeat.begin();
-    //int i = dr_match.DR_StartPos;
+    std::string::iterator dr_iter;
+    for (dr_iter = repeat.begin(); dr_iter != repeat.end();++dr_iter)
     {
         switch (*dr_iter) 
         {
@@ -1310,7 +1294,6 @@ bool isRepeatLowComplexity(std::string& repeat)
                 g_count++; break;
             default: n_count++; break;
         }
-        dr_iter++;
     }
     if (a_count > cut_off) return true; 
     else if (t_count > cut_off) return true; 
@@ -1370,13 +1353,13 @@ bool drHasHighlyAbundantKmers(std::string& directRepeat, float& maxFrequency)
 
 void addReadHolder(ReadMap * mReads, 
                    StringCheck * mStringCheck, 
-                   ReadHolder * tmpReadholder)
+                   ReadHolder& tmpReadholder)
 {
 
-
+    ReadHolder * candidate = new ReadHolder(tmpReadholder);
     std::string dr_lowlexi;
 	try {
-		dr_lowlexi = tmpReadholder->DRLowLexi();
+		dr_lowlexi = candidate->DRLowLexi();
 	} catch(crispr::exception& e) {
 		std::cerr<<e.what()<<std::endl;
 		throw crispr::exception(__FILE__,
@@ -1385,21 +1368,19 @@ void addReadHolder(ReadMap * mReads,
 		                        "Cannot obtain read in lowlexi form"
 		                        );
 	}
-#ifdef DEBUG
-    logInfo("Direct repeat: "<<dr_lowlexi, 10);
-#endif
+
     StringToken st = mStringCheck->getToken(dr_lowlexi);
-    
     if(0 == st)
     {
         // new guy
         st = mStringCheck->addString(dr_lowlexi);
         (*mReads)[st] = new ReadList();
     }
-#ifdef DEBUG
-    logInfo("String Token: "<<st, 10);
-#endif
 
+#ifdef DEBUG
+    logInfo("Direct repeat: "<<dr_lowlexi<<" String Token: "<<st, 10);
+#endif
+    
 #ifdef SEARCH_SINGLETON
     SearchCheckerList::iterator debug_iter = debugger->find(tmpReadholder->getHeader());
     if (debug_iter != debugger->end()) {
@@ -1409,6 +1390,6 @@ void addReadHolder(ReadMap * mReads,
     }
 #endif
     
-    (*mReads)[st]->push_back(tmpReadholder);
+    (*mReads)[st]->push_back(candidate);
 }
 

@@ -1,4 +1,4 @@
-crass -- CRisprASSembler -- version 0 subversion 2 revision 17 (0.2.17)
+crass -- CRisprASSembler -- version 0 subversion 3 revision 0 (0.3.0)
 =======================================================================
 
 
@@ -34,19 +34,23 @@ at the following locations:
 
 [Levensthein String Comparison Algorithm](http://www.merriampark.com/ldcpp.htm)
 
-[CRISPR Recognition Tool (CRT)](http://www.room220.com)
+[CRISPR Recognition Tool (CRT)](http://www.room220.com/crt)
 
 [SaSSY - Short read assembler](http://sassy.mikeimelfort.com)
+
+[klib](http://github.com/attractivechaos/klib) - For kseq & ksw code
+
 
 INSTALLATION
 ------------
 
-Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) 
+Crass requires a UNIX operating system and has been tested on both 64-bit Linux 
 and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
 It successfully compiles with gcc 4.2, gcc 4.4.5 and gcc 4.6.3 other versions of gcc have not been tested.  
-Crass uses [libcrispr](https://github.com/ctSkennerton/libcrispr) release 1:0:0 which requires [Xerces-c](http://xerces.apache.org/) XML library
-version 3.1.1 and [Zlib](www.zlib.net) are installed for compilation.  
-Optionally you can also install the [Graphviz package](www.graphviz.org) for rendering graphs.  
+Crass uses [libcrispr](https://ctskennerton.github.com/libcrispr) release 1:0:0 which requires 
+[Xerces-c](http://xerces.apache.org/) XML libraryversion 3.1.1 and [Zlib](www.zlib.net) 
+are installed for compilation.  Optionally you can also install the [Graphviz package](www.graphviz.org) 
+for rendering graphs.  
 
 With all this in mind to perform the installation:
 
@@ -84,13 +88,13 @@ example:
 RUNNING CRASS
 -------------
 
-crass has two basic commands:
+crass has two executables:
 
     $ crass [-bcdhklnoswxyDSV] [--removeHomopolymers] [--logToScreen] <sequence_files>
 
 which finds CRISPR containing reads
 
-    $ crass assemble ASSEMBLER -x <file.crispr> -s <segments> -g <group> -i <input directory> [-o]
+    $ crass-assemble [--velvet | --cap3] -x <file.crispr> -s <segments> -g <group> -i <input directory> [-o]
 
 which is a wrapper for genome assemblers to assemble particular branches in a spacer graph 
 

@@ -35,6 +35,7 @@
 // system includes
 #include <iostream>
 #include <string>
+#include <libcrispr/Exception.h>
 
 // local includes
 #include "SpacerInstance.h"
