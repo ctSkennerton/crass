@@ -155,9 +155,9 @@ class WorkHorse {
         //**************************************
         // file IO
         //**************************************
-    inline void dumpReads( NodeManager * manager, std::string& fileName, bool showDetached=false, bool split=false)
+    inline void dumpReads( NodeManager * manager, std::string& fileName, bool showDetached=false)
     {
-        manager->dumpReads(fileName, showDetached, split);
+        manager->dumpReads(fileName, showDetached);
     }
         //int dumpSpacers(void);										// Dump the spacers for this group to file
         
