@@ -372,11 +372,11 @@ int longReadSearch(ReadHolder& tmpHolder,
             scanRight(tmpHolder, pattern, opts.lowSpacerSize, 24);
         }
 
-        if ( (tmpHolder.numRepeats() > opts.minNumRepeats) ) //tmp_holder->numRepeats is half the size of the StartStopList
+        if ( (tmpHolder.numRepeats() >= opts.minNumRepeats) ) //tmp_holder->numRepeats is half the size of the StartStopList
         {
 #ifdef DEBUG
             logInfo(tmpHolder.getHeader(), 8);
-            logInfo("\tPassed test 1. More than "<<opts.minNumRepeats<< " ("<<tmpHolder.numRepeats()<<") repeated kmers found", 8);
+            logInfo("\tPassed test 1. At least "<<opts.minNumRepeats<< " ("<<tmpHolder.numRepeats()<<") repeated kmers found", 8);
 #endif
 
             unsigned int actual_repeat_length = extendPreRepeat(tmpHolder, opts.searchWindowLength);
@@ -385,7 +385,7 @@ int longReadSearch(ReadHolder& tmpHolder,
             {
 #ifdef DEBUG
 
-                logInfo("\tPassed test 2. The repeat length is between "<<opts.lowDRsize<<" and "<<opts.highDRsize, 8);
+                logInfo("\tPassed test 2. The repeat length is "<<opts.lowDRsize<<" >= "<< actual_repeat_length <<" <= "<<opts.highDRsize, 8);
 #endif
 			// Declare a tmp string here to hold the encoded DR if 
 			// removeHolopolymers is in affect.  Later if the read passes all
