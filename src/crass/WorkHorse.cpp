@@ -764,11 +764,6 @@ bool WorkHorse::populateCoverageArray(int GID, Aligner& drAligner)
     		dr_iter++;
     	}
     }
-    std::cout<<__FILE__<<
-    ": "<<
-    __LINE__<<
-    ": Reads: "<< numOfReads()<<std::endl;
-
     return true;
 } 
 
