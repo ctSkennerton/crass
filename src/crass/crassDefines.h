@@ -119,7 +119,7 @@
 #define CRASS_DEF_STATS_REPORT_DELIM            "\t"                // delimiter string for stats report
 #define CRASS_DEF_OUTPUT_DIR                    "./"                // default output directory
 #define CRASS_DEF_MIN_DR_SIZE                   (23)                  // minimum direct repeat size
-#define CRASS_DEF_MAX_DR_SIZE                   (45)                  // maximum direct repeat size
+#define CRASS_DEF_MAX_DR_SIZE                   (47)                  // maximum direct repeat size
 #define CRASS_DEF_MIN_SPACER_SIZE               (26)                  // minimum spacer size
 #define CRASS_DEF_MAX_SPACER_SIZE               (50)                  // maximum spacer size
 #define CRASS_DEF_NUM_DR_ERRORS                 (0)                   // maxiumum allowable errors in direct repeat
