@@ -114,8 +114,7 @@ int decideWhichSearch(const char *inputFastq,
 #if SEARCH_SINGLETON
             SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
             if (debug_iter != debugger->end()) {
-                changeLogLevel(8);
-                debug_iter->second.read(tmp_holder);
+                changeLogLevel(10);
                 std::cout<<"Processing interesting read: "<<debug_iter->first<<std::endl;
             } else {
                 changeLogLevel(opts.logLevel);
@@ -733,7 +732,6 @@ void findSingletonsMultiVector(const char *inputFastq,
             SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
             if (debug_iter != debugger->end()) {
                 changeLogLevel(10);
-                debug_iter->second.read(tmp_holder);
                 std::cout<<"Processing interesting read: "<<debug_iter->first<<std::endl;
             } else {
                 changeLogLevel(opts.logLevel);
@@ -1382,9 +1380,12 @@ void addReadHolder(ReadMap * mReads,
 #endif
     
 #ifdef SEARCH_SINGLETON
-    SearchCheckerList::iterator debug_iter = debugger->find(tmpReadholder->getHeader());
+    SearchCheckerList::iterator debug_iter = debugger->find(tmpReadholder.getHeader());
     if (debug_iter != debugger->end()) {
         // our read got through to this stage
+
+        std::cout<< tmpReadholder.splitApart();
+        tmpReadholder.printContents();
         debug_iter->second.token(st);
         std::cout<<debug_iter->first<<" " <<st<<std::endl;
     }

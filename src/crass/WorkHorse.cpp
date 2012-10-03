@@ -191,7 +191,6 @@ int WorkHorse::doWork(Vecstr seqFiles)
 		logError("FATAL ERROR: parseSeqFiles failed");
         return 2;
 	}
-	
 
     // build the spacer end graph
     if(buildGraph())
@@ -202,7 +201,7 @@ int WorkHorse::doWork(Vecstr seqFiles)
 #ifdef SEARCH_SINGLETON
     std::ofstream debug_out;
     std::stringstream debug_out_file_name;
-    debug_out_file_name << "crass.debug."<<mTimeStamp<<".report";
+    debug_out_file_name <<mOpts->output_fastq<< "crass.debug."<<mTimeStamp<<".report";
     debug_out.open((debug_out_file_name.str()).c_str());
     if(debug_out.good()) {
         SearchCheckerList::iterator debug_iter;
@@ -211,7 +210,7 @@ int WorkHorse::doWork(Vecstr seqFiles)
             std::vector<StringToken>::iterator node_iter = debug_iter->second.begin();
             if(node_iter != debug_iter->second.end()) {
                 debug_out <<*node_iter;
-                for ( ; node_iter != debug_iter->second.end(); node_iter++) {
+                for ( node_iter++ ; node_iter != debug_iter->second.end(); node_iter++) {
                     debug_out<<":"<<*node_iter;
                 }
             }
@@ -219,7 +218,7 @@ int WorkHorse::doWork(Vecstr seqFiles)
             Vecstr::iterator sp_iter = debug_iter->second.beginSp();
             if(sp_iter != debug_iter->second.endSp()) {
                 debug_out<<*sp_iter;
-                for ( ; sp_iter != debug_iter->second.endSp(); sp_iter++) {
+                for ( sp_iter++ ; sp_iter != debug_iter->second.endSp(); sp_iter++) {
                     debug_out<<":"<<*sp_iter;
                 }
             }

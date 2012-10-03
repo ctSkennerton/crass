@@ -577,28 +577,33 @@ int main(int argc, char *argv[])
         cmd_line += argv[i];
         cmd_line += ' ';
     }
+
     WorkHorse * mHorse = new WorkHorse(&opts, timestamp,cmd_line);
-#if SEARCH_SINGLETON
     try {
+#if SEARCH_SINGLETON
         debugger->headerFile(opts.searchChecker);
         debugger->processHeaderFile();
+#endif
 /*        
         SearchCheckerList::iterator debug_iter;
         for (debug_iter  = debugger->begin(); debug_iter != debugger->end(); debug_iter++) {
             std::cout<<debug_iter->first<<std::endl;
         }
  */
+        int error_code = mHorse->doWork(seq_files);
+    
+#ifdef SEARCH_SINGLETON
+        delete debugger;
+#endif
+        delete mHorse;
+        return error_code;
+    
     } catch (crispr::exception& e) {
         std::cerr<<e.what()<<std::endl;
-        return 1;
+        delete mHorse;
+#ifdef SEACH_SINGLETON
+        delete debugger
+#endif
+        return EXIT_FAILURE;
     }
-    
-#endif
-    
-    int error_code = mHorse->doWork(seq_files);
-#ifdef SEARCH_SINGLETON
-    delete debugger;
-#endif
-    delete mHorse;
-    return error_code;
 }

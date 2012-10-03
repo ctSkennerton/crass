@@ -429,6 +429,7 @@ class ReadHolder
         std::string splitApartSimple(void);
         
         void printContents(void);
+        void printContents(std::ostream& out);
         
         void logContents(int logLevel);
     

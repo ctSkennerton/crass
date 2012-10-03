@@ -194,33 +194,41 @@ void ReadHolder::getAllSpacerStrings(std::vector<std::string>& spacers)
 {
     // get the first spacer, but only include it if a DR lies before it
     std::string tmp_string;
-    if(getFirstSpacer(&tmp_string))
-    {		
-        // check to make sure that the read doesn't start on a spacer
-        if(*(RH_StartStops.begin()) == 0)
-        {
-            // starts on a DR
-            spacers.push_back(tmp_string);
+    try {
+        if(getFirstSpacer(&tmp_string))
+        {		
+            // check to make sure that the read doesn't start on a spacer
+            if(*(RH_StartStops.begin()) == 0)
+            {
+                // starts on a DR
+                spacers.push_back(tmp_string);
+            }
+            
+            // get all the middle spacers
+            while(getNextSpacer(&tmp_string))
+            {
+                spacers.push_back(tmp_string);
+            }
+            // check to make sure that the read doesn't end on a spacer
+            if(RH_StartStops.back() != (RH_Seq.length() - 1))
+            {
+                // ends on a Spacer
+                spacers.pop_back();
+            }
         }
-        
-        // get all the middle spacers
-        while(getNextSpacer(&tmp_string))
+        else
         {
-            spacers.push_back(tmp_string);
+            throw crispr::exception(__FILE__,
+                                    __LINE__,
+                                    __PRETTY_FUNCTION__,
+                                    "No Spacers!");
         }
-        // check to make sure that the read doesn't end on a spacer
-        if(RH_StartStops.back() != (RH_Seq.length() - 1))
-        {
-            // ends on a Spacer
-            spacers.pop_back();
-        }
-    }
-    else
-    {
+    } catch (crispr::exception& e) {
+        std::cerr <<e.what()<<std::endl;
         throw crispr::exception(__FILE__,
-                                __LINE__,
-                                __PRETTY_FUNCTION__,
-                                "No Spacers!");
+                               __LINE__,
+                               __PRETTY_FUNCTION__,
+                               "");
     }
 }
 
@@ -290,15 +298,15 @@ void ReadHolder::dropPartials(void)
     StartStopListIterator r_iter = RH_StartStops.begin();
     if(*r_iter == 0)
     {
-        logInfo("\tDropping front partial repeat", 8);
+        logInfo("\tDropping front partial repeat "<<*r_iter << " == 0", 8);
         // this is a partial
         RH_StartStops.erase(r_iter, r_iter+2);
     }
     
     r_iter = RH_StartStops.end() - 1;
-    if(*r_iter > (unsigned int)RH_Seq.length() - RH_RepeatLength)
+    if(*r_iter >= (unsigned int)RH_Seq.length() - 1)
     {
-        logInfo("\tDropping end partial repeat", 8);
+        logInfo("\tDropping end partial repeat "<<*r_iter<<"; seq_len - rep_len = "<< (unsigned int)RH_Seq.length() - RH_RepeatLength<< "; seq_len = "<<RH_Seq.length()<<"; rep_len = "<<RH_RepeatLength, 8);
         // this is a partial
         RH_StartStops.erase(r_iter-1, RH_StartStops.end());
     }
@@ -807,7 +815,7 @@ bool ReadHolder::getFirstSpacer(std::string * retStr)
         return getNextSpacer(retStr);
     } catch (crispr::substring_exception& e) {
         std::cerr<<e.what()<<std::endl;
-        exit(99);
+        throw crispr::exception(__FILE__,__LINE__,__PRETTY_FUNCTION__,"Failed to get first spacer");
     }
 }
 
@@ -820,6 +828,12 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
 	// first check to see if our index offset makes any sense at all
 	if(RH_NextSpacerStart > ((int)(RH_StartStops.size()) - 1))
 	{
+        //std::stringstream ss;
+        //ss << "Next spacer start is greater than length "<<RH_NextSpacerStart<<" > "<<RH_StartStops.size() - 1;
+        //throw crispr::exception(__FILE__,
+        //                        __LINE__,
+        //                        __PRETTY_FUNCTION__,
+        //                        ss.str().c_str());
 		return false;
 	}
 	
@@ -901,10 +915,8 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
 #ifdef DEBUG
             	if(*ss_iter > (RH_Seq.length() - 1))
             	{
-            		throw crispr::exception(__FILE__,
-		                                    __LINE__,
-		                                    __PRETTY_FUNCTION__,
-		                                    "ss list out of range");
+                    this->printContents(std::cerr);
+                    logError( "ss list out of range; "<<*ss_iter<< " > "<<RH_Seq.length() - 1);
             	}
 #endif
                 return false;    		
@@ -1183,6 +1195,26 @@ void ReadHolder::printContents(void)
     std::cout << "Len: " << RH_Seq.length() << std::endl;
     std::cout << "---------------------------------------------" << std::endl;
     std::cout << "---------------------------------------------" << std::endl;
+    
+}
+void ReadHolder::printContents(std::ostream& out)
+{
+    //-----
+    // la!
+    //
+    out <<"Header: "<< RH_Header <<"\n"
+		<< "LowLexi: " << RH_WasLowLexi << " \n ";
+    StartStopListIterator ss_iter = RH_StartStops.begin();
+    while(ss_iter != RH_StartStops.end())
+    {
+        out << *ss_iter << ",";
+        ss_iter++;
+    }
+    out << std::endl;
+    out << "Sequence:"<< RH_Seq << std::endl;
+    out << "Len: " << RH_Seq.length() << std::endl;
+    out << "---------------------------------------------" << std::endl;
+    out << "---------------------------------------------" << std::endl;
     
 }
 
