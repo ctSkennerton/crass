@@ -65,7 +65,11 @@ public:
         SD_nmHeaderToken = 0;
         SD_groupNumber = 0;
     }
-    
+    ~SearchData(){
+        if (SD_holder != NULL) {
+            delete SD_holder;
+        }
+    }
     inline StringToken token(){ return SD_drtoken;}
     inline void token(StringToken i) {SD_drtoken = i;}
     

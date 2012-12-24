@@ -44,6 +44,10 @@ void WuManber::Initialize( const WuVector &patterns,
     // bIncludeExtendedAscii, bIncludeSpecialCharacters matched as whitespace when false
     
     k = patterns.size();
+    // small number of patterns should use an exact table
+/*    if(k < 400) {
+        B = 2;
+    }*/
     m = 0; // start with 0 and grow from there
 
     for ( unsigned int i = 0; i < k; ++i ) 
@@ -144,13 +148,15 @@ void WuManber::Initialize( const WuVector &patterns,
     m_bInitialized = true;
 }
 
-string WuManber::Search( size_t TextLength, const char *Text, std::vector<std::string> &patterns, int &start_pos ) 
+WuManber::DataFound WuManber::Search( size_t TextLength, const char *Text, std::vector<std::string> &patterns ) 
 {
     //assert( k == patterns.size() );
     //assert( m < TextLength );
     //assert( m_bInitialized );
     size_t ix = m - 1; // start off by matching end of largest common pattern
-    string pattern = "";
+    DataFound return_data;
+    return_data.iFoundPosition = 0;
+    return_data.sDataFound = "";
     while ( ix < TextLength ) 
     {
         unsigned int hash1;
@@ -195,8 +201,9 @@ string WuManber::Search( size_t TextLength, const char *Text, std::vector<std::s
                     {  // we found the end of the pattern, so match found
                         
                         //this formula works but I have no idea why. found by trial and error
-                        start_pos = (int)( ix - m + 1);
-                        return patterns[ (*iter).ix ];
+                        return_data.iFoundPosition = (int)( ix - m + 1);
+                        return_data.sDataFound = patterns[ (*iter).ix ];
+                        return return_data;
                     }
                 }
                 ++iter;
@@ -204,7 +211,7 @@ string WuManber::Search( size_t TextLength, const char *Text, std::vector<std::s
             ++ix;
         }
     }
-    return pattern;
+    return return_data;
 }
 
 

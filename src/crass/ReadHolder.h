@@ -127,6 +127,9 @@ class ReadHolder
             RH_Rle.clear();
             RH_Comment.clear();
             RH_Qual.clear();
+            RH_NextSpacerStart = 0; 
+            RH_isSqueezed = false;
+            RH_IsFasta = false;
         }
 
 
@@ -426,6 +429,7 @@ class ReadHolder
         std::string splitApartSimple(void);
         
         void printContents(void);
+        void printContents(std::ostream& out);
         
         void logContents(int logLevel);
     
