@@ -190,7 +190,7 @@ private:
 
     // transform the master DR into the right form for ksw
     inline void prepareMasterForAlignment(std::string& masterDR) {
-        AL_masterDRLength = masterDR.length();
+        AL_masterDRLength = static_cast<int>(masterDR.length());
         AL_masterDR = new uint8_t[AL_masterDRLength+1];
         prepareSequenceForAlignment(masterDR, AL_masterDR);
     };
