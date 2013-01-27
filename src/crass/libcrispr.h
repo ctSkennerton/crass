@@ -85,14 +85,14 @@ int decideWhichSearch(const char *inputFile,
                       lookupTable& readsFound,
                       time_t& startTime);
 
-int longReadSearch(ReadHolder& seq, 
+int longReadSearch(crass::ReadHolder& seq, 
                    const options &opts, 
                    ReadMap * mReads, 
                    StringCheck * mStringCheck, 
                    lookupTable &patterns_hash, 
                    lookupTable &readsFound);
 
-int shortReadSearch(ReadHolder&  seq, 
+int shortReadSearch(crass::ReadHolder&  seq, 
                     const options &opts, 
                     ReadMap * mReads, 
                     StringCheck * mStringCheck, 
@@ -115,15 +115,15 @@ void findSingletonsMultiVector(const char *inputFastq,
                                StringCheck * mStringCheck,
                                time_t& startTime);
 
-int scanRight(ReadHolder& tmp_holder, 
+int scanRight(crass::ReadHolder& tmp_holder, 
               std::string& pattern, 
               unsigned int minSpacerLength, 
               unsigned int scanRange);
 
-unsigned int extendPreRepeat(ReadHolder& tmp_holder, 
+unsigned int extendPreRepeat(crass::ReadHolder& tmp_holder, 
                              int searchWindowLength);
 
-bool qcFoundRepeats(ReadHolder& tmp_holder, 
+bool qcFoundRepeats(crass::ReadHolder& tmp_holder, 
                     int minSpacerLength, 
                     int maxSpacerLength);
 
@@ -135,7 +135,7 @@ bool drHasHighlyAbundantKmers(std::string& directRepeat);
 
 void addReadHolder(ReadMap * mReads, 
                    StringCheck * mStringCheck, 
-                   ReadHolder& tmp_holder);
+                   crass::ReadHolder& tmp_holder);
 
 //
 //

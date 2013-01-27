@@ -48,8 +48,8 @@
 // Types cut from libcrispr.h
 typedef std::map<std::string, bool> lookupTable;
 
-typedef std::vector<ReadHolder *> ReadList;
-typedef std::vector<ReadHolder *>::iterator ReadListIterator;
+typedef std::vector<crass::ReadHolder *> ReadList;
+typedef std::vector<crass::ReadHolder *>::iterator ReadListIterator;
 
 // direct repeat as a string and a list of the read objects that contain that direct repeat
 typedef std::map<StringToken, ReadList *> ReadMap;

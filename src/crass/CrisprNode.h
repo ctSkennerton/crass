@@ -106,7 +106,7 @@ class CrisprNode
         inline int getCoverage() {return mCoverage;}
         int getDiscountedCoverage(void);
         inline void addReadHeader(StringToken readHeader) { mReadHeaders.push_back(readHeader); }
-        inline void addReadHolder(ReadHolder * RH) { mReadHolders.push_back(RH); }
+        inline void addReadHolder(crass::ReadHolder * RH) { mReadHolders.push_back(RH); }
         inline std::vector<StringToken> * getReadHeaders(void) { return &mReadHeaders; }
         inline ReadList * getReadHolders(void) { return &mReadHolders; }
         

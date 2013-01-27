@@ -7,7 +7,7 @@
 // Implementation of NodeManager functions
 //
 // --------------------------------------------------------------------
-//  Copyright  2011 Michael Imelfort and Connor Skennerton
+//  Copyright  2011, 2012 Michael Imelfort and Connor Skennerton
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
@@ -116,7 +116,7 @@ NodeManager::~NodeManager(void)
     clearContigs();
 }
 
-bool NodeManager::addReadHolder(ReadHolder * RH)
+bool NodeManager::addReadHolder(crass::ReadHolder * RH)
 {
     //-----
     // add a readholder to this mofo
@@ -136,7 +136,7 @@ bool NodeManager::addReadHolder(ReadHolder * RH)
 //----
 // private function called from addReadHolder to split the read into spacers and pass it through to others
 //
-bool NodeManager::splitReadHolder(ReadHolder * RH)
+bool NodeManager::splitReadHolder(crass::ReadHolder * RH)
 {
     //-----
     // Split down a read holder and make some nodes
@@ -162,7 +162,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 		//MI std::cout << "first SP: " << working_str << std::endl;
 		try {
 			// do we have a direct repeat from the very beginning
-			if (RH->startStopsAt(0) == 0) 
+			if (RH->startStopsAt(0).first == 0) 
 			{
 				//MI std::cout << "both" << std::endl;
 				addCrisprNodes(&prev_node, working_str, header_st, RH);
@@ -176,7 +176,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 			
 			// get all the spacers in the middle
 			//check to see if we end with a direct repeat or a spacer
-			if (RH->getSeqLength() == (int)RH->back() + 1) 
+			if (RH->getSeqLength() == (int)RH->back().second + 1) 
 			{
 				// direct repeat goes right to the end of the read take both
 				//MI std::cout << "DR until end" << std::endl;
@@ -225,7 +225,7 @@ bool NodeManager::splitReadHolder(ReadHolder * RH)
 //----
 // Private function called from splitReadHolder to cut the kmers and make the nodes
 //
-void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, ReadHolder * RH)
+void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, crass::ReadHolder * RH)
 {
     //-----
     // Given a spacer string, cut kmers from each end and make crispr nodes
@@ -347,7 +347,7 @@ void NodeManager::addCrisprNodes(CrisprNode ** prevNode, std::string& workingStr
     *prevNode = second_kmer_node;
 }
 
-void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, ReadHolder * RH)
+void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, crass::ReadHolder * RH)
 {
     if ((int)workingString.length() < NM_Opts->cNodeKmerLength)
         return;
@@ -392,7 +392,7 @@ void NodeManager::addSecondCrisprNode(CrisprNode ** prevNode, std::string& worki
     // there is no one yet to make an edge
 }
 
-void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, ReadHolder * RH)
+void NodeManager::addFirstCrisprNode(CrisprNode ** prevNode, std::string& workingString, StringToken headerSt, crass::ReadHolder * RH)
 {
     if ((int)workingString.length() < NM_Opts->cNodeKmerLength)
         return;

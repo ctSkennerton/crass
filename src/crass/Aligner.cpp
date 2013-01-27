@@ -316,25 +316,23 @@ int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) 
 void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
 
     ReadListIterator read_iter = mReads->at(currentDrToken)->begin();
-    int current_dr_length = static_cast<int>(mStringCheck->getString(currentDrToken).length());
+    unsigned int current_dr_length = static_cast<unsigned int>(mStringCheck->getString(currentDrToken).length());
     
     while (read_iter != mReads->at(currentDrToken)->end()) 
     {
         // don't care about partials
         int dr_start_index = 0;
-        int dr_end_index = 1;
-        while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != (current_dr_length - 1))
+        while(((*read_iter)->startStopsAt(dr_start_index).second - (*read_iter)->startStopsAt(dr_start_index).first) != (current_dr_length - 1))
         {
-            dr_start_index += 2;
-            dr_end_index += 2;
+            dr_start_index++;
         } 
         // go through every full length DR in the read and place in the array
         do
         {
-            if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (current_dr_length - 1))
+            if(((*read_iter)->startStopsAt(dr_start_index).second - (*read_iter)->startStopsAt(dr_start_index).first) == (current_dr_length - 1))
             {
                 // we need to find the first kmer which matches the mode.
-                int this_read_start_pos = AL_Offsets[currentDrToken] - (*read_iter)->startStopsAt(dr_start_index);
+                int this_read_start_pos = AL_Offsets[currentDrToken] - (*read_iter)->startStopsAt(dr_start_index).first;
                 for(int i = 0; i < (int)(*read_iter)->getSeqLength(); i++)
                 {
                     char current_nt = (*read_iter)->getSeqCharAt(i);
@@ -355,15 +353,15 @@ void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
                 }
             }
             // go onto the next DR
-            dr_start_index += 2;
-            dr_end_index += 2;
+            dr_start_index++;
+            //dr_end_index += 2;
             
             // check that this makes sense
-            if(dr_start_index >= (int)((*read_iter)->numRepeats()*2)) {
+            if(dr_start_index >= (int)((*read_iter)->numRepeats())) {
                 break;
             }
             
-        } while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (current_dr_length - 1));
+        } while(((*read_iter)->startStopsAt(dr_start_index).second - (*read_iter)->startStopsAt(dr_start_index).first) == (current_dr_length - 1));
         read_iter++;
     }
 }
@@ -379,23 +377,23 @@ void Aligner::extendSlaveDR(std::string &slaveDR, std::string &extendedSlaveDR){
     {
         // don't care about partials
         int dr_start_index = 0;
-        int dr_end_index = 1;
+        //int dr_end_index = 1;
         
         // Find the DR which is the right DR length.
         // compensates for partial repeats
-        while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(slaveDR.length()) - 1))
+        while(((*read_iter)->startStopsAt(dr_start_index).second - (*read_iter)->startStopsAt(dr_start_index).first) != ((unsigned int)(slaveDR.length()) - 1))
         {
-            dr_start_index += 2;
-            dr_end_index += 2;
+            dr_start_index++;
+            //dr_end_index += 2;
         }
         // check that the DR does not lie too close to the end of the read so that we can extend
-        if((*read_iter)->startStopsAt(dr_start_index) - 2 < 0 || (*read_iter)->startStopsAt(dr_end_index) + 2 > (*read_iter)->getSeqLength()) {
+        if((*read_iter)->startStopsAt(dr_start_index).first - 2 < 0 || (*read_iter)->startStopsAt(dr_start_index).second + 2 > (unsigned int)(*read_iter)->getSeqLength()) {
             // go to the next read
             read_iter++;
             continue;
         } else {
             // substring the read to get the new length
-            extendedSlaveDR = (*read_iter)->getSeq().substr((*read_iter)->startStopsAt(dr_start_index) - 2, slaveDR.length() + 4);
+            extendedSlaveDR = (*read_iter)->getSeq().substr((*read_iter)->startStopsAt(dr_start_index).first - 2, slaveDR.length() + 4);
             break;
         }
     }
@@ -409,24 +407,24 @@ void Aligner::calculateDRZone() {
     {
         // don't care about partials
         int dr_start_index = 0;
-        int dr_end_index = 1;
+        //int dr_end_index = 1;
         
         // Find the DR which is the master DR length.
         // compensates for partial repeats
-        while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != (AL_masterDRLength - 1))
+        while(((*read_iter)->startStopsAt(dr_start_index).second - (*read_iter)->startStopsAt(dr_start_index).first) != (unsigned int)(AL_masterDRLength - 1))
         {
-            dr_start_index += 2;
-            dr_end_index += 2;
+            dr_start_index++;
+           // dr_end_index += 2;
         }
         
         //  This if is to catch some weird-ass scenario, if you get a report that everything is wrong, then you've most likely
         // corrupted memory somewhere!
-        if(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) == (AL_masterDRLength - 1))
+        if(((*read_iter)->startStopsAt(dr_start_index).second - (*read_iter)->startStopsAt(dr_start_index).first) == (unsigned int)(AL_masterDRLength - 1))
         {
             // the start of the read is the position of the master DR - the position of the DR in the read
-            int this_read_start_pos = AL_Offsets.at(AL_masterDRToken) - (*read_iter)->startStopsAt(dr_start_index);
-            AL_ZoneStart =  this_read_start_pos + (*read_iter)->startStopsAt(dr_start_index);
-            AL_ZoneEnd =  this_read_start_pos + (*read_iter)->startStopsAt(dr_end_index);
+            int this_read_start_pos = AL_Offsets.at(AL_masterDRToken) - (*read_iter)->startStopsAt(dr_start_index).first;
+            AL_ZoneStart =  this_read_start_pos + (*read_iter)->startStopsAt(dr_start_index).first;
+            AL_ZoneEnd =  this_read_start_pos + (*read_iter)->startStopsAt(dr_start_index).second;
             break;
         }
     }

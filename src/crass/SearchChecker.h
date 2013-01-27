@@ -48,7 +48,7 @@
 typedef std::vector<StringToken> SearchDataNodes;
 
 class SearchData {
-    ReadHolder * SD_holder;
+    crass::ReadHolder * SD_holder;
     StringToken SD_drtoken;
     StringToken SD_nmHeaderToken;
     //NodeManager * SD_nodeManager;
@@ -76,8 +76,8 @@ public:
     inline StringToken nmtoken() {return SD_nmHeaderToken;}
     inline void nmtoken(StringToken s) {SD_nmHeaderToken = s;}
     
-    inline ReadHolder * read() {return SD_holder;}
-    inline void read(ReadHolder * r) {SD_holder = r;}
+    inline crass::ReadHolder * read() {return SD_holder;}
+    inline void read(crass::ReadHolder * r) {SD_holder = r;}
     
     inline std::string truedr() {return SD_truedr;}
     inline void truedr(std::string s) {SD_truedr = s;}

@@ -124,7 +124,7 @@ class NodeManager {
         NodeManager(std::string drSeq, const options * userOpts);
         ~NodeManager(void);
 
-		bool addReadHolder(ReadHolder * RH);
+		bool addReadHolder(crass::ReadHolder * RH);
 
         NodeListIterator nodeBegin(void) { return NM_Nodes.begin(); } 
         NodeListIterator nodeEnd(void) { return NM_Nodes.end(); }
@@ -259,22 +259,22 @@ class NodeManager {
     private:
 		
 	// functions
-		bool splitReadHolder(ReadHolder * RH);
+		bool splitReadHolder(crass::ReadHolder * RH);
 
 		void addCrisprNodes(CrisprNode ** prevNode, 
                             std::string& workingString, 
                             StringToken headerSt,
-                            ReadHolder * RH);
+                            crass::ReadHolder * RH);
     
         void addSecondCrisprNode(CrisprNode ** prevNode, 
                                  std::string& workingString, 
                                  StringToken headerSt,
-                                 ReadHolder * RH);
+                                 crass::ReadHolder * RH);
     
         void addFirstCrisprNode(CrisprNode ** prevNode, 
                                 std::string& workingString, 
                                 StringToken headerSt,
-                                ReadHolder * RH);
+                                crass::ReadHolder * RH);
     
         void setContigIDForSpacers(SpacerInstanceVector * currentContigNodes);
     

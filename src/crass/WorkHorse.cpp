@@ -1091,7 +1091,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                         StartStopListIterator ss_iter = (*read_iter)->begin();
                         while(ss_iter != (*read_iter)->end())
                         {
-                            int within_read_dec_pos = *ss_iter + dec_diff;
+                            int within_read_dec_pos = ss_iter->first + dec_diff;
                             if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(*read_iter)->getSeqLength())
                             {
                                 char decision_char = (*read_iter)->getSeqCharAt(within_read_dec_pos);
@@ -1103,7 +1103,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                                 	break;
                                 }
                             }
-                            ss_iter+=2;
+                            ss_iter++;
                         }
                         read_iter++;
                     }
@@ -1122,7 +1122,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                                 StartStopListIterator ss_iter = (*read_iter)->begin();
                                 while(ss_iter != (*read_iter)->end())
                                 {
-                                    int within_read_dec_pos = *ss_iter + dec_diff;
+                                    int within_read_dec_pos = ss_iter->first + dec_diff;
                                     if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(*read_iter)->getSeqLength())
                                     {
                                         char decision_char = (*read_iter)->getSeqCharAt(within_read_dec_pos);
@@ -1134,7 +1134,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                                             break;
                                         }
                                     }
-                                    ss_iter+=2;
+                                    ss_iter++;
                                 }
                                 read_iter++;             
                                 if(break_out)     
@@ -1182,7 +1182,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                                 StartStopListIterator ss_iter = (*read_iter)->begin();
                                 while(ss_iter != (*read_iter)->end())
                                 {
-                                    int within_read_dec_pos = *ss_iter + dec_diff;
+                                    int within_read_dec_pos = ss_iter->first + dec_diff;
                                     if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(*read_iter)->getSeqLength())
                                     {
                                         char decision_char = (*read_iter)->getSeqCharAt(within_read_dec_pos);
@@ -1199,7 +1199,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
 											break;
                                         }
                                     }
-                                    ss_iter+=2;
+                                    ss_iter++;
                                 }
                                 read_iter++;                                    
                             }
