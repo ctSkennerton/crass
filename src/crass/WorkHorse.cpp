@@ -377,7 +377,10 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
         std::cout<<"["<<PACKAGE_NAME<<"_clusterCore]: " << non_redundant_set.size() << " non-redundant patterns."<<std::endl;
         seq_iter = seqFiles.begin();
         logInfo("Begining Second iteration through files to recruit singletons", 2);
-
+        
+        if (!(kmer_length & 1)){
+            kmer_length--;
+        }
         DeBruijnGraph template_graph = DeBruijnGraph(static_cast<int>(kmer_length), non_redundant_set);
         
         time(&start_time);
