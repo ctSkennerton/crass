@@ -653,6 +653,118 @@ void findSingletons(const char *inputFastq,
     
 }
 
+void findSingletons(const char *inputFastq,
+                    const options &opts,
+                    DebruijnGraph &templateGraph,
+                    lookupTable &readsFound,
+                    ReadMap * mReads,
+                    StringCheck * mStringCheck,
+                    time_t& startTime)
+
+{
+    //-----
+    // Find sings given a debruijn graph of patterns
+    //
+
+    gzFile fp = getFileHandle(inputFastq);
+    kseq_t *seq;
+    seq = kseq_init(fp);
+    
+    int l;
+    int log_counter = 0;
+    static int read_counter = 0;
+    
+    time_t time_current;
+        
+    while ( (l = kseq_read(seq)) >= 0 )
+    {
+        // seq is a read what we love
+        // search it for the patterns until found
+        if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER)
+        {
+            time(&time_current);
+            double diff = difftime(time_current, start_time);
+            std::cout<<"\r["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
+            std::cout<<diff<<" sec"<<std::flush;
+            log_counter = 0;
+        }
+
+            
+        ReadHolder tmp_holder;
+        tmp_holder.setSequence(seq->seq.s);tmp_holder.setHeader( seq->name.s);
+        if (seq->comment.s)
+        {
+            tmp_holder.setComment(seq->comment.s);
+        }
+        if (seq->qual.s)
+        {
+            tmp_holder.setQual(seq->qual.s);
+        }
+        
+        if (opts.removeHomopolymers)
+        {
+            tmp_holder.encode();
+        }
+        std::string read = tmp_holder.getSeq();
+#if SEARCH_SINGLETON
+        SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
+        if (debug_iter != debugger->end()) {
+            changeLogLevel(10);
+            std::cout<<"Processing interesting read: "<<debug_iter->first<<std::endl;
+        } else {
+            changeLogLevel(opts.logLevel);
+        }
+#endif
+        DebruijnGraph::DataFound search_data = templateGraph.search(seq->seq.s);
+        if (search_data.iFoundPosition != -1 && readsFound.find(tmp_holder.getHeader()) == readsFound.end()) {
+            if (mStringCheck.getToken(search_data.sDataFound) == 0) {
+                std::string msg = "Cannot find reconstructed sequence in DR list: " + search_data.sDataFound;
+                throw crispr::exception(__FILE__,
+                                        __LINE__,
+                                        __PRETTY_FUNCTION__,
+                                        msg.c_str());
+            }
+            
+                
+#ifdef DEBUG
+            logInfo("new read recruited: "<<tmp_holder.getHeader(), 9);
+            logInfo(tmp_holder.getSeq(), 10);
+#endif
+                
+                unsigned int DR_end = static_cast<unsigned int>(search_data.iFoundPosition) + static_cast<unsigned int>(search_data.sDataFound.length()) - 1;
+                if(DR_end >= static_cast<unsigned int>(read.length()))
+                {
+                    DR_end = static_cast<unsigned int>(read.length()) - 1;
+                }
+                tmp_holder.startStopsAdd(search_data.iFoundPosition, DR_end);
+                addReadHolder(mReads, mStringCheck, tmp_holder);
+            }
+        }
+        log_counter++;
+        read_counter++;
+    }
+    
+    gzclose(fp);
+    kseq_destroy(seq); // destroy seq
+    
+    // clean up
+    wm_iter =  mult_search.begin();
+    //wm_last =  mult_search.end();
+    while(wm_iter != mult_search.end())
+    {
+        if(*wm_iter != NULL)
+        {
+            delete *wm_iter;
+            *wm_iter = NULL;
+        }
+        wm_iter++;
+    }
+    time(&time_current);
+    double diff = difftime(time_current, start_time);
+    std::cout<<"\r["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
+    std::cout<<diff<<" sec"<<std::flush;
+}
+
 void findSingletonsMultiVector(const char *inputFastq, 
                                const options &opts, 
                                std::vector<std::vector<std::string> *> &patterns, 

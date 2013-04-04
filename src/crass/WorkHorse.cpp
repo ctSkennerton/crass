@@ -63,6 +63,7 @@
 #include "StringCheck.h"
 #include "config.h"
 #include "ksw.h"
+#include "DeBruijn.h"
 
 bool sortLengthDecending( const std::string& a, const std::string& b)
 {
@@ -367,26 +368,28 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
 
     GroupKmerMap group_kmer_counts_map;
     int next_free_GID = 1;
-    Vecstr * non_redundant_set = createNonRedundantSet(group_kmer_counts_map, next_free_GID);
+    std::map<StringToken, std::string> non_redundant_set;
+    size_t kmer_length = createNonRedundantSet(group_kmer_counts_map, next_free_GID, non_redundant_set);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
 
-    if (non_redundant_set->size() > 0) 
+    if (non_redundant_set.size() > 0)
     {
-        std::cout<<"["<<PACKAGE_NAME<<"_clusterCore]: " << non_redundant_set->size() << " non-redundant patterns."<<std::endl;
+        std::cout<<"["<<PACKAGE_NAME<<"_clusterCore]: " << non_redundant_set.size() << " non-redundant patterns."<<std::endl;
         seq_iter = seqFiles.begin();
         logInfo("Begining Second iteration through files to recruit singletons", 2);
 
-
+        DeBruijnGraph template_graph = DeBruijnGraph(static_cast<int>(kmer_length), non_redundant_set);
+        
         time(&start_time);
         while (seq_iter != seqFiles.end()) {
             
             logInfo("Parsing file: " << *seq_iter, 1);
             
             try {
-                findSingletons(seq_iter->c_str(), *mOpts, non_redundant_set, reads_found, &mReads, &mStringCheck, start_time);
+                findSingletons(seq_iter->c_str(), *mOpts, template_graph, reads_found, &mReads, &mStringCheck, start_time);
             } catch (crispr::exception& e) {
                 std::cerr<<e.what()<<std::endl;
-                delete non_redundant_set;
+                //delete non_redundant_set;
                 return 1;
             }
             seq_iter++;
@@ -394,7 +397,7 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
     }
     // add in a new line so the ouptut won't overlap itself
     std::cout<<std::endl;
-    delete non_redundant_set;
+    //delete non_redundant_set;
     std::cout<<"["<<PACKAGE_NAME<<"_patternFinder]: "<<"Found "<<numOfReads()<<" reads"<<std::endl;
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
@@ -615,14 +618,14 @@ void WorkHorse::removeRedundantRepeats(Vecstr& repeatVector)
 }
 
 
-Vecstr * WorkHorse::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, int& nextFreeGID)
+size_t WorkHorse::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, int& nextFreeGID, std::map<StringToken, std::string>& nonRedundantRepeats)
 {
     // cluster the direct repeats then remove the redundant ones
-    // creates a vector in dynamic memory, so don't forget to delete 
     //-----
     // Cluster potential DRs and work out their true sequences
     // make the node managers while we're at it!
     //
+    size_t shortest_dr = -1;
     std::map<std::string, int> k2GID_map;
     logInfo("Reducing list of potential DRs (1): Initial clustering", 1);
     logInfo("Reticulating splines...", 1);    
@@ -636,7 +639,7 @@ Vecstr * WorkHorse::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, int&
     std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: "<<mReads.size()<<" variants mapped to "<<mDR2GIDMap.size()<<" clusters"<<std::endl;
     std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: creating non-redundant set"<<std::endl;
 
-    Vecstr * non_redundant_repeats = new Vecstr();
+    //Vecstr * non_redundant_repeats = new Vecstr();
 
     DR_Cluster_MapIterator dcg_iter = mDR2GIDMap.begin();
     while(dcg_iter != mDR2GIDMap.end())
@@ -659,23 +662,36 @@ Vecstr * WorkHorse::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, int&
             
             removeRedundantRepeats(clustered_repeats);
             Vecstr::iterator cr_iter;
-            Vecstr tmp_vec;
+            //Vecstr tmp_vec;
             for (cr_iter = clustered_repeats.begin(); cr_iter != clustered_repeats.end(); ++cr_iter) {
-                tmp_vec.push_back(reverseComplement(*cr_iter));
+                StringToken t = mStringCheck.getToken(*cr_iter);
+                if (t == 0) {
+                    std::string msg = "Cannot find token for DR: " + *cr_iter;
+                    throw crispr::exception(__FILE__,
+                                            __LINE__,
+                                            __PRETTY_FUNCTION__,
+                                            msg.c_str());
+                }
+                nonRedundantRepeats[t] = *cr_iter;
+                if (cr_iter->size() < shortest_dr) {
+                    shortest_dr = cr_iter->size();
+                }
+                //tmp_vec.push_back(reverseComplement(*cr_iter));
             }
-            non_redundant_repeats->insert(non_redundant_repeats->end(), clustered_repeats.begin(), clustered_repeats.end());
-            non_redundant_repeats->insert(non_redundant_repeats->end(), tmp_vec.begin(), tmp_vec.end());
+            //nonRedundantRepeats->insert(non_redundant_repeats->end(), clustered_repeats.begin(), clustered_repeats.end());
+            //non_redundant_repeats->insert(non_redundant_repeats->end(), tmp_vec.begin(), tmp_vec.end());
 
         }
         dcg_iter++;
     }
-    logInfo("non-redundant patterns:", 4);
+    /*logInfo("non-redundant patterns:", 4);
     Vecstr::iterator nr_iter;
     for (nr_iter = non_redundant_repeats->begin(); nr_iter != non_redundant_repeats->end(); ++nr_iter) {
         logInfo(*nr_iter, 4);
     }
     logInfo("-------------", 4);
-    return non_redundant_repeats;
+    return non_redundant_repeats;*/
+    return shortest_dr;
 }
 
 bool WorkHorse::findMasterDR(int GID, StringToken * masterDRToken, std::string * masterDRSequence)

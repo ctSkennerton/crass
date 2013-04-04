@@ -55,6 +55,7 @@
 #include "SeqUtils.h"
 #include "StringCheck.h"
 #include "Types.h"
+#include "DeBruijn.h"
 #if SEARCH_SINGLETON
 #include "SearchChecker.h"
 #endif
@@ -104,6 +105,14 @@ void findSingletons(const char *inputFastq,
                     std::vector<std::string> * nonRedundantPatterns, 
                     lookupTable &readsFound, 
                     ReadMap * mReads, 
+                    StringCheck * mStringCheck,
+                    time_t& startTime);
+
+void findSingletons(const char *inputFastq,
+                    const options &opts,
+                    DeBruijnGraph &templateGraph,
+                    lookupTable &readsFound,
+                    ReadMap * mReads,
                     StringCheck * mStringCheck,
                     time_t& startTime);
 
