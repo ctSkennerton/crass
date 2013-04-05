@@ -36,9 +36,12 @@
 #include "SeqUtils.h"
 #include <libcrispr/Exception.h>
 
-Kmer::Kmer(std::string str, bool first, bool last ) : Str(id), first(first), last(last)
+Kmer::Kmer(std::string str, bool first, bool last ) : Str(str), first(first), last(last)
 {}
 
+void Kmer::print(std::ostream& out) {
+	out << Str <<" : "<< first <<" : "<<last<<std::endl;
+}
 
 DeBruijnGraph::DeBruijnGraph( int l) : Length(l){}
 
@@ -53,7 +56,8 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
     for (iter = seqs.begin(); iter != seqs.end(); iter++) {
         char** kmers = NULL;
         int * kmer_offsets = NULL;
-        int num_mers = consumeSequence(iter->second, kmers, kmer_offsets);
+		std::cout << iter->second <<std::endl;
+        int num_mers = consumeSequence(iter->second, &kmers, &kmer_offsets);
         
         // add the kmers into the graph
         StringToken previous_token = 0;
@@ -61,13 +65,12 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
         {
             // make it a string!
             kmers[i][Length] = '\0';
-            
             // check if the kmer is known
-            StringToken token = IdConverter.getToken(kmers[i]);
+			StringToken token = IdConverter.getToken(kmers[i]);
             if (0 == token) {
                 StringToken t = IdConverter.addString(kmers[i]);
                 Kmer k = Kmer(kmers[i]);
-                if (num_mers == 0) {
+                if (i == 0) {
                     k.setFirst(true);
                 }
                 if (i == num_mers - 1) {
@@ -89,7 +92,7 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
                 }
                 previous_token = token;
             }
-            Nodes[previous_token].addDRType(iter->first, i);
+            //Nodes[previous_token].addDRType(iter->first, i);
         }
         
         // clean up
@@ -104,7 +107,7 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
 }
 
 
-int DeBruijnGraph::consumeSequence(std::string& seq, char **kmers, int *kmer_offsets){
+int DeBruijnGraph::consumeSequence(std::string& seq, char ***kmers, int **kmer_offsets){
     
     int str_len = static_cast<int>(seq.length());
     int off = str_len - Length;
@@ -141,7 +144,7 @@ int DeBruijnGraph::consumeSequence(std::string& seq, char **kmers, int *kmer_off
 	//char ** kmers = NULL;
 	//int * kmer_offsets = NULL;
 	try {
-		kmers = new char*[num_mers];
+		*kmers = new char*[num_mers];
 	} catch(std::exception& e) {
 		std::cerr<<"Attempting to alloc "<<num_mers<<std::endl;
 		throw crispr::exception(__FILE__,
@@ -152,13 +155,13 @@ int DeBruijnGraph::consumeSequence(std::string& seq, char **kmers, int *kmer_off
 	try {
 		for(int i = 0; i < num_mers; i++)
 		{
-			kmers[i] = new char [Length+1];
+			(*kmers)[i] = new char [Length+1];
 		}
         // use these offsets when we cut kmers, they are a component of the algorithm
-		kmer_offsets = new int[num_mers];
+		(*kmer_offsets) = new int[num_mers];
 		for(int i = 0; i < num_mers; i++)
 		{
-			kmer_offsets[i] = i * -1; // Starts at [0, -1, -2, -3, -4, ...]
+			(*kmer_offsets)[i] = i * -1; // Starts at [0, -1, -2, -3, -4, ...]
 		}
 	} catch(std::exception& e) {
 		std::cerr<<"Attempting to alloc "<<Length+1<<std::endl;
@@ -176,9 +179,9 @@ int DeBruijnGraph::consumeSequence(std::string& seq, char **kmers, int *kmer_off
         {
             if(pos_counter >= j)
             {
-                kmers[j][kmer_offsets[j]] = seq[pos_counter];
+                (*kmers)[j][(*kmer_offsets)[j]] = seq[pos_counter];
             }
-            kmer_offsets[j]++;
+            (*kmer_offsets)[j]++;
         }
         pos_counter++;
     }
@@ -188,11 +191,11 @@ int DeBruijnGraph::consumeSequence(std::string& seq, char **kmers, int *kmer_off
     {
         for(int j = 0; j < num_mers; j++)
         {
-            if(kmer_offsets[j] >= 0 && kmer_offsets[j] < Length)
+            if((*kmer_offsets)[j] >= 0 && (*kmer_offsets)[j] < Length)
             {
-                kmers[j][kmer_offsets[j]] = seq[pos_counter];
+                (*kmers)[j][(*kmer_offsets)[j]] = seq[pos_counter];
             }
-            kmer_offsets[j]++;
+            (*kmer_offsets)[j]++;
         }
         pos_counter++;
     }
@@ -202,11 +205,11 @@ int DeBruijnGraph::consumeSequence(std::string& seq, char **kmers, int *kmer_off
     {
         for(int j = 0; j < num_mers; j++)
         {
-            if(kmer_offsets[j] < Length)
+            if((*kmer_offsets)[j] < Length)
             {
-                kmers[j][kmer_offsets[j]] = seq[pos_counter];
+                (*kmers)[j][(*kmer_offsets)[j]] = seq[pos_counter];
             }
-            kmer_offsets[j]++;
+            (*kmer_offsets)[j]++;
         }
         pos_counter++;
     }
@@ -217,23 +220,27 @@ int DeBruijnGraph::consumeSequence(std::string& seq, char **kmers, int *kmer_off
 DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
     char** kmers = NULL;
     int * kmer_offsets = NULL;
-    int num_mers = consumeSequence(seq, kmers, kmer_offsets);
+    int num_mers = consumeSequence(seq, &kmers, &kmer_offsets);
     
     std::vector<StringToken> found_tokens;
     DataFound ret;
     ret.iFoundPosition = -1;
-    for(int i = 0; i < num_mers; ++i)
+    std::cout<< "--------" <<std::endl;
+	for(int i = 0; i < num_mers; ++i)
     {
         // make it a string!
         kmers[i][Length] = '\0';
         StringToken token = IdConverter.getToken(kmers[i]);
         if(token != 0 && Nodes[token].getFirst()){
             found_tokens.push_back(token);
+			std::cout << "adding: "<< token<<std::endl;
             if (Nodes[token].getLast()) {
                 // DR equal to the kmer length
-                ret.iFoundPosition = i;
+                std::cout << "DR in single kmer"<< std::endl;
+				ret.iFoundPosition = i;
                 ret.sDataFound = reconstructSequence(found_tokens);
-                return ret;            }
+                return ret;            
+			}
             if (i != num_mers - 1) {
                 int current_start = i;
                 do {
@@ -243,6 +250,7 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
                     token = IdConverter.getToken(kmers[i]);
                     if ((token != 0) & previous_kmer.hasEdge(token)) {
                         found_tokens.push_back(token);
+						std::cout << "adding: "<< token<<std::endl;
                         if (Nodes[token].getLast()) {
                             // reached the end of a DR
                             ret.iFoundPosition = current_start;
@@ -252,6 +260,7 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
                     }
                     else {
                         // this kmer isn't in the graph
+						std::cout<< "clearing kmer thread" <<std::endl;
                         found_tokens.clear();
                         break;
                     }
@@ -263,12 +272,16 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
 }
 
 std::string DeBruijnGraph::reconstructSequence(std::vector<StringToken>& foundTokens){
-    std::vector<StringToken>::iterator iter = foundTokens.begin();
+    std::cout << "reconstructing sequence"<<std::endl;
+	std::vector<StringToken>::iterator iter = foundTokens.begin();
     std::string reconstructed_sequence = Nodes[*iter].getSeq();
+	std::cout << "creating first seed: "<< reconstructed_sequence<<std::endl;
     for (iter++; iter != foundTokens.end(); iter++) {
         std::string tmp = Nodes[*iter].getSeq();
+		std::cout << "adding final base: " <<tmp[Length - 1] << " from kmer: "<< tmp<<std::endl;
         reconstructed_sequence += tmp[Length - 1];
     }
+	std::cout << "final reconstructed sequence: "<< reconstructed_sequence<<std::endl;
     return reconstructed_sequence;
 }
 

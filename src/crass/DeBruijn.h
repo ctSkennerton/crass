@@ -56,8 +56,9 @@ class Kmer {
     // is this kmer the last in any DR type?
     bool last;
 public:
+	Kmer(){};
     Kmer(std::string str, bool first = false, bool last = false);
-    ~Kmer();
+    ~Kmer(){};
     inline void setFirst(bool b) {first = b;}
     inline void setLast(bool b) { last = b;}
     
@@ -67,6 +68,7 @@ public:
     
     inline void addEdge(StringToken edge) {Edges.insert(edge);}
     inline bool hasEdge(StringToken t) {return Edges.find(t) != Edges.end();}
+	void print(std::ostream& out);
 };
 
 class DeBruijnGraph {
@@ -74,7 +76,7 @@ class DeBruijnGraph {
     // length of the Kmers in this graph
     int Length;
     // a map of all of the kmers in the graph
-    std::map<StringToken, Kmer&> Nodes;
+    std::map<StringToken, Kmer> Nodes;
     // two-way hash joining Kmer sequences and kmer IDs
     StringCheck IdConverter;    
     
@@ -87,9 +89,9 @@ public:
     
     DeBruijnGraph( int l);
     DeBruijnGraph( int l, std::map<StringToken, std::string>& seqs);
-    ~DeBruijnGraph();
+    ~DeBruijnGraph(){};
     void generateGraph(std::map<StringToken, std::string>& seqs);
-    int consumeSequence(std::string& seq, char **kmers, int *kmer_offsets);
+    int consumeSequence(std::string& seq, char ***kmers, int **kmer_offsets);
     DataFound search(std::string seq);
     std::string reconstructSequence(std::vector<StringToken>& foundTokens);
 };
