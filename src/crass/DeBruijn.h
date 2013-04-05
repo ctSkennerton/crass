@@ -70,11 +70,7 @@ public:
 };
 
 class DeBruijnGraph {
-    typedef struct _DataFound
-	{
-		int	            iFoundPosition;
-		std::string     sDataFound;
-	} DataFound;
+
     // length of the Kmers in this graph
     int Length;
     // a map of all of the kmers in the graph
@@ -83,12 +79,18 @@ class DeBruijnGraph {
     StringCheck IdConverter;    
     
 public:
+    typedef struct _DataFound
+	{
+		int	            iFoundPosition;
+		std::string     sDataFound;
+	} DataFound;
+    
     DeBruijnGraph( int l);
     DeBruijnGraph( int l, std::map<StringToken, std::string>& seqs);
     ~DeBruijnGraph();
     void generateGraph(std::map<StringToken, std::string>& seqs);
     int consumeSequence(std::string& seq, char **kmers, int *kmer_offsets);
-    DataFound search(std::string& seq);
+    DataFound search(std::string seq);
     std::string reconstructSequence(std::vector<StringToken>& foundTokens);
 };
 #endif /* defined(__crass__DeBruijn__) */

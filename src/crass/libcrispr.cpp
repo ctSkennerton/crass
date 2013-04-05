@@ -655,7 +655,7 @@ void findSingletons(const char *inputFastq,
 
 void findSingletons(const char *inputFastq,
                     const options &opts,
-                    DebruijnGraph &templateGraph,
+                    DeBruijnGraph &templateGraph,
                     lookupTable &readsFound,
                     ReadMap * mReads,
                     StringCheck * mStringCheck,
@@ -683,13 +683,13 @@ void findSingletons(const char *inputFastq,
         if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER)
         {
             time(&time_current);
-            double diff = difftime(time_current, start_time);
+            double diff = difftime(time_current, startTime);
             std::cout<<"\r["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
             std::cout<<diff<<" sec"<<std::flush;
             log_counter = 0;
         }
-
-            
+        
+        
         ReadHolder tmp_holder;
         tmp_holder.setSequence(seq->seq.s);tmp_holder.setHeader( seq->name.s);
         if (seq->comment.s)
@@ -715,9 +715,9 @@ void findSingletons(const char *inputFastq,
             changeLogLevel(opts.logLevel);
         }
 #endif
-        DebruijnGraph::DataFound search_data = templateGraph.search(seq->seq.s);
+        DeBruijnGraph::DataFound search_data = templateGraph.search(tmp_holder.getSeq());
         if (search_data.iFoundPosition != -1 && readsFound.find(tmp_holder.getHeader()) == readsFound.end()) {
-            if (mStringCheck.getToken(search_data.sDataFound) == 0) {
+            if (mStringCheck->getToken(search_data.sDataFound) == 0) {
                 std::string msg = "Cannot find reconstructed sequence in DR list: " + search_data.sDataFound;
                 throw crispr::exception(__FILE__,
                                         __LINE__,
@@ -725,42 +725,29 @@ void findSingletons(const char *inputFastq,
                                         msg.c_str());
             }
             
-                
+            
 #ifdef DEBUG
             logInfo("new read recruited: "<<tmp_holder.getHeader(), 9);
             logInfo(tmp_holder.getSeq(), 10);
 #endif
-                
-                unsigned int DR_end = static_cast<unsigned int>(search_data.iFoundPosition) + static_cast<unsigned int>(search_data.sDataFound.length()) - 1;
-                if(DR_end >= static_cast<unsigned int>(read.length()))
-                {
-                    DR_end = static_cast<unsigned int>(read.length()) - 1;
-                }
-                tmp_holder.startStopsAdd(search_data.iFoundPosition, DR_end);
-                addReadHolder(mReads, mStringCheck, tmp_holder);
+            
+            unsigned int DR_end = static_cast<unsigned int>(search_data.iFoundPosition) + static_cast<unsigned int>(search_data.sDataFound.length()) - 1;
+            if(DR_end >= static_cast<unsigned int>(read.length()))
+            {
+                DR_end = static_cast<unsigned int>(read.length()) - 1;
             }
+            tmp_holder.startStopsAdd(search_data.iFoundPosition, DR_end);
+            addReadHolder(mReads, mStringCheck, tmp_holder);
         }
         log_counter++;
         read_counter++;
     }
-    
+
     gzclose(fp);
     kseq_destroy(seq); // destroy seq
     
-    // clean up
-    wm_iter =  mult_search.begin();
-    //wm_last =  mult_search.end();
-    while(wm_iter != mult_search.end())
-    {
-        if(*wm_iter != NULL)
-        {
-            delete *wm_iter;
-            *wm_iter = NULL;
-        }
-        wm_iter++;
-    }
     time(&time_current);
-    double diff = difftime(time_current, start_time);
+    double diff = difftime(time_current, startTime);
     std::cout<<"\r["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
     std::cout<<diff<<" sec"<<std::flush;
 }

@@ -214,7 +214,7 @@ int DeBruijnGraph::consumeSequence(std::string& seq, char **kmers, int *kmer_off
     return num_mers;
 }
 
-DeBruijnGraph::DataFound DeBruijnGraph::search(std::string &seq){
+DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
     char** kmers = NULL;
     int * kmer_offsets = NULL;
     int num_mers = consumeSequence(seq, kmers, kmer_offsets);
@@ -231,8 +231,9 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string &seq){
             found_tokens.push_back(token);
             if (Nodes[token].getLast()) {
                 // DR equal to the kmer length
-                return reconstructSequence(found_tokens);
-            }
+                ret.iFoundPosition = i;
+                ret.sDataFound = reconstructSequence(found_tokens);
+                return ret;            }
             if (i != num_mers - 1) {
                 int current_start = i;
                 do {
@@ -240,13 +241,13 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string &seq){
                     ++i;
                     Kmer previous_kmer = Nodes[token];
                     token = IdConverter.getToken(kmers[i]);
-                    if (token != 0 & previous_kmer.hasEdge(token)) {
+                    if ((token != 0) & previous_kmer.hasEdge(token)) {
                         found_tokens.push_back(token);
                         if (Nodes[token].getLast()) {
                             // reached the end of a DR
                             ret.iFoundPosition = current_start;
                             ret.sDataFound = reconstructSequence(found_tokens);
-                            return ret
+                            return ret;
                         }
                     }
                     else {
