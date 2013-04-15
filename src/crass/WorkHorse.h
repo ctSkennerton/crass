@@ -108,8 +108,9 @@ class WorkHorse {
 
         void removeRedundantRepeats(Vecstr& repeatVector);
         
-        Vecstr * createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, 
-                                                         int& nextFreeGID);
+        size_t createNonRedundantSet(GroupKmerMap& groupKmerCountsMap,
+                                   int& nextFreeGID,
+                                   std::map<StringToken, std::string>& nonRedundantRepeats);
 
         int removeLowConfidenceNodeManagers(void);
         
