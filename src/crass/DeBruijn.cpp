@@ -61,6 +61,7 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
         
         // add the kmers into the graph
         StringToken previous_token = 0;
+        StringToken rc_previous_token = 0;
         for(int i = 0; i < num_mers; ++i)
         {
             // make it a string!
@@ -79,12 +80,23 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
                 Nodes[t] = k;
                 std::string rc = reverseComplement(kmers[i]);
                 StringToken rct = IdConverter.addString(rc);
-                Nodes[rct] = k;
-                
+                Kmer rk = Kmer(rc);
+                if (i == 0) {
+                    rk.setLast(true);
+                }
+                if (i == num_mers - 1) {
+                    rk.setFirst(true);
+                }
+                Nodes[rct] = rk;
+
                 if (previous_token != 0) {
                     Nodes[previous_token].addEdge(t);
                 }
+                if (rc_previous_token != 0) {
+                    Nodes[rc_previous_token].addEdge(rct);
+                }
                 previous_token = t;
+                rc_previous_token = rct;
             }
             else {
                 if (previous_token != 0) {
