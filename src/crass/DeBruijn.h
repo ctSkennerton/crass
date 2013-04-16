@@ -68,7 +68,7 @@ public:
     
     inline void addEdge(StringToken edge) {Edges.insert(edge);}
     inline bool hasEdge(StringToken t) {return Edges.find(t) != Edges.end();}
-	void print(std::ostream& out);
+    void print(std::ostream& out);
 };
 
 class DeBruijnGraph {

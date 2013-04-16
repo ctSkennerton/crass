@@ -101,8 +101,12 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
             else {
                 if (previous_token != 0) {
                     Nodes[previous_token].addEdge(token);
+                    previous_token = token;
                 }
-                previous_token = token;
+                if (rc_previous_token != 0) {
+                    Nodes[rc_previous_token].addEdge(token);
+                    rc_previous_token = token;
+                }
             }
             //Nodes[previous_token].addDRType(iter->first, i);
         }
@@ -237,7 +241,7 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
     std::vector<StringToken> found_tokens;
     DataFound ret;
     ret.iFoundPosition = -1;
-    std::cout<< "--------" <<std::endl;
+    //std::cout<< "--------" <<std::endl;
 	for(int i = 0; i < num_mers; ++i)
     {
         // make it a string!
@@ -245,10 +249,10 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
         StringToken token = IdConverter.getToken(kmers[i]);
         if(token != 0 && Nodes[token].getFirst()){
             found_tokens.push_back(token);
-			std::cout << "adding: "<< token<<std::endl;
+			//std::cout << "adding: "<< token<<std::endl;
             if (Nodes[token].getLast()) {
                 // DR equal to the kmer length
-                std::cout << "DR in single kmer"<< std::endl;
+                //std::cout << "DR in single kmer"<< std::endl;
 				ret.iFoundPosition = i;
                 ret.sDataFound = reconstructSequence(found_tokens);
                 return ret;            
@@ -262,7 +266,7 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
                     token = IdConverter.getToken(kmers[i]);
                     if ((token != 0) & previous_kmer.hasEdge(token)) {
                         found_tokens.push_back(token);
-						std::cout << "adding: "<< token<<std::endl;
+						//std::cout << "adding: "<< token<<std::endl;
                         if (Nodes[token].getLast()) {
                             // reached the end of a DR
                             ret.iFoundPosition = current_start;
@@ -272,7 +276,7 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
                     }
                     else {
                         // this kmer isn't in the graph
-						std::cout<< "clearing kmer thread" <<std::endl;
+						//std::cout<< "clearing kmer thread" <<std::endl;
                         found_tokens.clear();
                         break;
                     }
@@ -288,9 +292,11 @@ std::string DeBruijnGraph::reconstructSequence(std::vector<StringToken>& foundTo
 	std::vector<StringToken>::iterator iter = foundTokens.begin();
     std::string reconstructed_sequence = Nodes[*iter].getSeq();
 	std::cout << "creating first seed: "<< reconstructed_sequence<<std::endl;
+    Nodes[*iter].print(std::cout);
     for (iter++; iter != foundTokens.end(); iter++) {
         std::string tmp = Nodes[*iter].getSeq();
 		std::cout << "adding final base: " <<tmp[Length - 1] << " from kmer: "<< tmp<<std::endl;
+        Nodes[*iter].print(std::cout);
         reconstructed_sequence += tmp[Length - 1];
     }
 	std::cout << "final reconstructed sequence: "<< reconstructed_sequence<<std::endl;

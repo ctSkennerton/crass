@@ -715,29 +715,35 @@ void findSingletons(const char *inputFastq,
             changeLogLevel(opts.logLevel);
         }
 #endif
-        DeBruijnGraph::DataFound search_data = templateGraph.search(tmp_holder.getSeq());
-        if (search_data.iFoundPosition != -1 && readsFound.find(tmp_holder.getHeader()) == readsFound.end()) {
-            if (mStringCheck->getToken(search_data.sDataFound) == 0) {
-                std::string msg = "Cannot find reconstructed sequence in DR list: " + search_data.sDataFound;
-                throw crispr::exception(__FILE__,
-                                        __LINE__,
-                                        __PRETTY_FUNCTION__,
-                                        msg.c_str());
-            }
-            
-            
+        if (readsFound.find(tmp_holder.getHeader()) != readsFound.end()) {
+            DeBruijnGraph::DataFound search_data = templateGraph.search(tmp_holder.getSeq());
+            if (search_data.iFoundPosition != -1) {
+                StringToken found_data_token = mStringCheck->getToken(search_data.sDataFound);
+                if (found_data_token == 0) {
+                    std::string msg = "Cannot find reconstructed sequence in DR list: " + search_data.sDataFound;
+                    msg += "\n" + tmp_holder.getSeq();
+                    throw crispr::exception(__FILE__,
+                                            __LINE__,
+                                            __PRETTY_FUNCTION__,
+                                            msg.c_str());
+                } else {
+                    std::cout<< found_data_token <<std::endl;
+                }
+                
+                
 #ifdef DEBUG
-            logInfo("new read recruited: "<<tmp_holder.getHeader(), 9);
-            logInfo(tmp_holder.getSeq(), 10);
+                logInfo("new read recruited: "<<tmp_holder.getHeader(), 9);
+                logInfo(tmp_holder.getSeq(), 10);
 #endif
-            
-            unsigned int DR_end = static_cast<unsigned int>(search_data.iFoundPosition) + static_cast<unsigned int>(search_data.sDataFound.length()) - 1;
-            if(DR_end >= static_cast<unsigned int>(read.length()))
-            {
-                DR_end = static_cast<unsigned int>(read.length()) - 1;
+                
+                unsigned int DR_end = static_cast<unsigned int>(search_data.iFoundPosition) + static_cast<unsigned int>(search_data.sDataFound.length()) - 1;
+                if(DR_end >= static_cast<unsigned int>(read.length()))
+                {
+                    DR_end = static_cast<unsigned int>(read.length()) - 1;
+                }
+                tmp_holder.startStopsAdd(search_data.iFoundPosition, DR_end);
+                addReadHolder(mReads, mStringCheck, tmp_holder);
             }
-            tmp_holder.startStopsAdd(search_data.iFoundPosition, DR_end);
-            addReadHolder(mReads, mStringCheck, tmp_holder);
         }
         log_counter++;
         read_counter++;
