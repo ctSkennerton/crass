@@ -686,7 +686,7 @@ int main(int argc, char * argv[])
     assemblyOptions opts;
     opts.assembler = unset;
 
-    processAssemblyOptions(argc - 1, argv + 1, opts);
+    processAssemblyOptions(argc, argv, opts);
     
     if(unset == opts.assembler)
     {
