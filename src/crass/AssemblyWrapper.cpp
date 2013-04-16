@@ -514,6 +514,9 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
         {
             throw (std::runtime_error("You must specify an input directory with -i"));
         }
+        if (opts.outputDirName.empty()) {
+            opts.outputDirName = ".";
+        }
 
     } 
     catch (std::exception& e) 
@@ -604,17 +607,21 @@ int velvetWrapper( int hashLength, assemblyOptions& opts, std::string& tmpFileNa
         // create the command string for velvet
         std::string h_cmd = "velveth " + opts.outputDirName +" " + to_string(hashLength) + " " + opts.inputDirName + tmpFileName;
         std::string g_cmd = "velvetg " + opts.outputDirName;     
+        std::cout << h_cmd <<std::endl;
         int h_exit = system(h_cmd.c_str());
         if (h_exit) 
         {
             // print error
-            throw (std::runtime_error("velveth did not exit normally"));
+            std::string msg = "velveth did not exit normally\n" + h_cmd;
+            throw (std::runtime_error(msg));
         }
+        std::cout << g_cmd << std::endl;
         int g_exit = system(g_cmd.c_str());
         if (g_exit) 
         {
             // print error
-            throw (std::runtime_error("velvetg did not exit normally"));
+            std::string msg = "velvetg did not exit normally\n" + g_cmd;
+            throw (std::runtime_error(msg));
         }
     } 
     catch (std::exception& e) 
