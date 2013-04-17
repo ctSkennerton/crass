@@ -163,9 +163,9 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 %%% The "real" document content comes below...
 
-\title{Crass:  The CRISPR assembler (v0.3.1)}
+\title{Crass:  The CRISPR assembler (v0.3.2)}
 \author{Connor Skennerton and Michael Imelfort}
-\date{3rd October 2012} % Activate to display a given date or no date (if empty),
+\date{17th April 2013} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
@@ -180,7 +180,7 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 	$ make install
 	
 	$ ./crass [options] input_file{1, n}
-	$ ./crass-assembler [--velvet | --cap3]  [options]
+    $ ./crass-assembler [--velvet | --cap3] -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]
 \end{lstlisting}
 \section{Installation}
 Crass has been developed with the GNU build system for ease of configuration on the system.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
@@ -225,7 +225,7 @@ Crass supports a number of compile-time options as well as the common options:
 Crass has two separate commands for finding and for assembling CRISPRs:
  \begin{lstlisting}
 	$ ./crass [options] input_file
-	$ ./crass assemble ASSEMBLER [options]
+    $ ./crass-assembler [--velvet | --cap3] -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]
 \end{lstlisting}
 \subsection{Finding CRISPRs}
 Once installed the most minimal comand is 
@@ -293,11 +293,11 @@ For example a spacer with the name `sp\_445\_17\_C74' means this is spacer with 
 
   The most minimal command for the assembler is shown below: 
  \begin{lstlisting}
-	$ ./crass-assembler [--velvet | --cap3] [options]
+    $ ./crass-assembler [--velvet | --cap3] -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]
 \end{lstlisting}
  If for example you run Crass of a metagenome and get 5 groups and you want to assemble contigs 1, 2, 5, 6, 10 from group 3 using velvet
  \begin{lstlisting}
-	$ ./crass-assembler --velvet -g 3 -x crass.crispr -s 1,2,5,6,10
+	$ ./crass-assembler --velvet -g 3 -x crass.crispr -s 1,2,5,6,10 -i crass_out
 \end{lstlisting}
 
 This will extract all of the reads that contain spacers from those contigs and use them as input to velvet which will do the assembly in the backgroud.  This is a `dumb' process in the sense that if you provide contig IDs for multiple pathways the assembler will still try and succeed but this will undoubtibly cause breaks. 

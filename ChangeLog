@@ -1,3 +1,378 @@
+commit 54af4fb2cb1134de1685cdb3dfbee177829ca300
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 17 10:27:15 2013 +1000
+
+    Fixed bug in cap3 assembly wrapper
+    The path to the input file wasn't getting passed through properly
+    causing cap3 to both fail and produce a number of hidden files.
+    This fix properly passes the input file to cap3.
+
+commit 4b5487710626d638d4197842699bb3e53a99d9d8
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 17 09:54:40 2013 +1000
+
+    Fixed velvet wrapper bug
+    If the -o option was not set on the command line the velvet wrapper
+    would fail.  Now added a default setting of the current working
+    directory so that it does not fail
+
+commit 08a904e784038e69f365d5e0747253c34008024a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Apr 17 09:41:41 2013 +1000
+
+    Fixed bug with crass-assembler
+    A throwback from the previous interface was that the first
+    argument to the program was getting shifted off and not being
+    processed by getopts, which was causing all sorts of problems
+
+commit c7ac0b37f686dfbe31b32e3a3a0def1424e5a1a5
+Merge: f065f54 970477f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Dec 24 15:20:05 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+commit 970477fc366bc47927f5a05876c65d92047aee06
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Oct 3 22:18:51 2012 +1000
+
+    forgot to update the version number in the manual
+
+commit b6e4a270b9d637776f84c0b80f22456afe8ff600
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Oct 3 19:24:26 2012 +1000
+
+    Updated the version number to 0.3.1 in configure.ac
+
+commit 8ac2e65aa1b7b23cb08040d5df96ffe21b2b1d6d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Oct 3 19:08:32 2012 +1000
+
+    Fixed a bug in ReadHolder::dropPartials()
+    The logic for dropping an end partial repeat was incorrect such
+    that it was removing direct repeats that were close to but not
+    hanging over the edge of the read.  This had flow on effects in
+    libcrispr#longReadFinder() where the last spacer in the read was
+    getting removed when it should not have been
+
+commit 287e194e25c656d21a3acf2f77a39e984a92d69b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 2 16:00:30 2012 +1000
+
+    changed the default for the high DR size to 47 (was 45)
+
+commit d30e5308bd26dea7d42affa88c0ebb5fc8ed6f9b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 2 15:49:43 2012 +1000
+
+    Fixed the function call to NodeManager::dumpReads()
+    During the merging of branches the call to NodeManager::dumpReads()
+    became out of sync with the method definition.  This change removes
+    one of the parameters in WorkHorse::dumpReads() to get the two
+    functions back in sync
+
+commit 8b44ba32f85b3d0c170cfd29478b6345a8903d39
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 2 15:30:43 2012 +1000
+
+    Removed an errant print statement
+
+commit e687f4af5a508a10a91415261265e3d4df158095
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Oct 2 15:26:29 2012 +1000
+
+    Fixed a bug in libcrispr#longReadFinder()
+    The if statement controlling the number of repeats in a read had
+    a strictly greater than comparison rather than the intended inclusive
+    operator.  This meant that by default the number of repeats in a read
+    had to be 4 not 3 which was intended
+
+commit e1028e5dce206027d58aff801eb6bf6f6ceaca60
+Merge: 0847fb3 d7e32c1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 30 22:28:30 2012 +1000
+
+    Merge branch 'dr_aligner'
+    
+    Conflicts:
+    	doc/manual.tex
+    	src/crass/Makefile.am
+    	src/crass/WorkHorse.cpp
+
+commit d7e32c124a4cdb41a1455bd44c6a8803b930efd4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 30 22:14:35 2012 +1000
+
+    Updated to version 0.3.0
+    This version implements a number of changes, both 'under-the-hood'
+    and visible to the user.  First, Crass now has both short and long form
+    for each of it's options.  Second, the assembly wrapper
+    is now a separate executable. The details of the new interface
+    are available in the PDF manual and in a new man page: crass-assember.1.
+    The other changes that will be noticable to the user is the flow of
+    crass has changed so that the initial patterns are found, then clustered,
+    then the second search is run.
+    There have been other changes 'under-the-hood' which means that you
+    may find Crass finding more reads or even new DR types for the
+    same datasets!!
+
+commit 0060ac5aac3f78b053ec157e23d0ab0436314c90
+Merge: d5908be 1cb5559
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 30 19:07:20 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+commit d5908be7a0745cfccb02be69e997600bc41fa0ab
+Merge: a739e21 ebacf7e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 30 19:05:50 2012 +1000
+
+    Merge branch 'dr_aligner'
+
+commit ebacf7e82068146e074fddf9865c25ef003fd6e4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 30 19:05:04 2012 +1000
+
+    Refactored out the assembly wrapper into a separate executable
+
+commit deb9b4de8bcfeaa20b90a35ac2b0dfa048087e6f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 30 17:15:54 2012 +1000
+
+    Ironed out the bugs in the new algorithm for aligning DR clusters together
+
+commit 0df9198404f3d726a06fdc38cc3cea69cf79ae92
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 30 16:45:03 2012 +1000
+
+    Chaged some logging statements and memory allocation
+    Readholder objects used to be constructed exlusively  on the heap
+    requiring alot of 'new' and 'delete' statements.  In the new version
+    a readholder is made on the stack and only if it passes all of the
+    tests will the memory be copyied onto a new readholder.  Also the
+    logging statments have been updated in libcrispr so that Crass
+    will no longer print out many lines of text for the progress through
+    the search algothims, instead only a single line is used for both
+    the singltonfinder and the initial finder
+
+commit 86ed2dbfc560a131208b5481cc9557b801abf5ca
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Sep 28 23:01:18 2012 +1000
+
+    Updated the method call to Aligner::calculateDRZone()
+    Removed the two arguments to the function as they were changed into
+    member variables of the class, and could therefore be called
+    directly.
+
+commit 6cb704e6f56c65e37bd900adc755e99d5c3b12d7
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Sep 28 22:58:33 2012 +1000
+
+    Updated help and documentation
+    Changed the user options so that all options have both a long
+    and short form.  Updated the manual file to reflect these changes.
+    Updated the latex manual to add in extra options and change the
+    order in which the options are described in the manual so that they
+    are alphabetical, the same ordering as in the man file.
+
+commit 6f941244337318ad13bb03288adc8928e32c4c6d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Fri Sep 28 21:58:56 2012 +1000
+
+    Completed the refactor of the DR alignments into a separate class... let the debugging begin!
+
+commit 4fff330739b3afedb9b17f8fd17e7610d14112b0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 22 15:17:21 2012 +1000
+
+    begin changing the way the DR boundaries are called
+
+commit bfecf8ec3bf84647fc44f34216bad9f13dfdc08b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Sep 20 23:17:02 2012 +1000
+
+    Refactoring out Code into Aligner Class
+
+commit 3192e6ef59729bf2ba7da98d042d3a5c0caaa696
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 15 19:33:37 2012 +1000
+
+    The new alignment algorithm runs through the whole way.
+    Removed the exceptions in WorkHorse::getOffsetAgainstMaster() to
+    properly handle cases where the forward and reverse scores are
+    the same or when neither score is high enough
+
+commit 1cb5559e81a66f52b72c7ffc4e1beabd7b00530a
+Author: Connor T. Skennerton <c.skennerton@gmail.com>
+Date:   Wed Sep 12 22:26:11 2012 +1000
+
+    Update README.md
+    
+    Changed a couple of links, the CRT one was wrong and libcrispr's
+    was out of date.  Also added a mention to klib in the contributed
+    code section.
+
+commit 468a0dbebe266be7579aa24af8290f84d78203f0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Sep 11 00:37:38 2012 +1000
+
+    New implementation of aligning reads based on the DR is complete.  Now need to test for edge cases
+
+commit 0847fb350419523c6b0a6e66bc1d30898dc4c95b
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 9 01:13:32 2012 +1000
+
+    updated the manual
+
+commit 7a00ba39ac70ba94611f8a1fc518e2fc21b2b709
+Merge: a281b2b a739e21
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Sep 9 00:12:54 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+commit 95a5bbd67203917affe5454b39627a0b12f64882
+Merge: 227c0e2 d21891c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 8 18:35:40 2012 +1000
+
+    Merge branch 'dr_aligner' of github.com:ctSkennerton/crass into dr_aligner
+
+commit d21891c761ddaddca32ad5169dbaeb4465d7b996
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 8 18:34:36 2012 +1000
+
+    add in the ksw source files
+
+commit 227c0e2ba88b79a49dedcd3a1f1c4e99586d82fb
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 8 01:52:46 2012 +1000
+
+    changed 'NULL' to '\0' in SeqUtils#reverseComplement() to fix a compiler error found in gcc4.5.4
+
+commit 52f0ce32d51936b5b4b0d62433fe3aa17021cdc1
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 8 01:58:27 2012 +1000
+
+    changed some logic in LoggerSimp::Inst() to remove compiler errors in gcc4.6.3
+
+commit 23028edf549e86ec4aa94f73c1091b2b0b89237f
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 8 15:46:18 2012 +1000
+
+    Changing the underlying algorithm used to place DRs into the coverage array for determining the consensus DR
+
+commit a739e21283bf04734a47dd746b0df74ba299abed
+Author: Connor T. Skennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 8 02:05:39 2012 +1000
+
+    Update README to include new compiler versions
+
+commit 533d2f44674b6e127fde5e784bce0e2605194961
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 8 01:58:27 2012 +1000
+
+    changed some logic in LoggerSimp::Inst() to remove compiler errors in gcc4.6.3
+
+commit 0c4220e554c2c29f133106b1292bf6ddf5cebd83
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 8 01:52:46 2012 +1000
+
+    changed 'NULL' to '\0' in SeqUtils#reverseComplement() to fix a compiler error found in gcc4.5.4
+
+commit 0d1f2e69f183adaa1649596266ee648305070b64
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Sep 8 01:49:00 2012 +1000
+
+    remove reference to gcc4.5 in README, has not been tested in this environment
+
+commit 3e71ac487182cd13abb8f94a467d65dced0bd1a2
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Thu Aug 30 20:26:59 2012 +1000
+
+    keeping on tracking down this bug
+
+commit b66636a0ade4f745ef10380fb3b9155ccbff0a3e
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Aug 29 06:55:29 2012 +1000
+
+    tracking down a but in WorkHorse::populateCoverageArray
+
+commit a281b2b7e350eae300b903517e8f7e50096382f2
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Wed Aug 29 06:28:12 2012 +1000
+
+    remove unnecessary variable from NodeManager::dumpReads
+
+commit 147ef84a17238e2191675a6a884794e055886f0d
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 10 15:29:41 2012 +1000
+
+    Added in another test dataset
+
+commit 98b6d9c81e4e98573959a78f01c4fb68e73cfa8c
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Aug 28 23:19:35 2012 +1000
+
+    Fixed bug in Makefile that was causing SearchChecker to not be compiled silently
+
+commit ec53431b3cf944eb1c6525afc1abb82a1cae2cc7
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Aug 28 23:21:23 2012 +1000
+
+    refactored WorkHorse::printXML and WorkHorse::printSpacerGraphs into a single function: WorkHorse::outputResults
+
+commit 91400cd1d12a34f32c84c6714c2f630618209f42
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Aug 28 23:19:35 2012 +1000
+
+    Fixed bug in Makefile that was causing SearchChecker to not be compiled silently
+
+commit 4c1c3a3f36983506ce3e735ab5b937f1673fe815
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Aug 28 23:18:53 2012 +1000
+
+    minor code cleanup in libcrispr#findSingletonsMultiVector
+
+commit 4e3a9ddc96213baa08afe0be2f6c41990905ab00
+Merge: b218991 c2dbfce
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Aug 28 16:17:02 2012 +1000
+
+    Merge branch 'master' into nr_repeats
+
+commit 67115c44e63d6ac68daabcf60e5fef46b39879ce
+Author: Connor T. Skennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 27 06:58:52 2012 +1000
+
+    Update TODO.md
+
+commit db1ac30288574357a600f85251998385261bc777
+Author: Connor T. Skennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 27 06:57:38 2012 +1000
+
+    Update TODO.md
+
+commit c2dbfcec461bc5ffd547a06080dd8627f1d1d1c0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 27 06:41:45 2012 +1000
+
+    updated the manual with the relevant changes for version 0.2.17
+
+commit f065f54db6b665795be919609a16ad8400b3192f
+Merge: a3107b9 6c729cf
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 27 06:03:15 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
+commit 6c729cf3994b790409aad481f6d828440f942ad6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Aug 27 05:55:53 2012 +1000
+
+    Updated config files for v0.2.17
+
 commit 65eba6408936915d145c438bde7c58dc66839e60
 Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Mon Aug 27 05:29:49 2012 +1000
@@ -34,6 +409,13 @@ Date:   Fri Aug 24 05:32:26 2012 +1000
 
     small update to the manual
 
+commit a3107b9aadfb40d3e64463cf59a88734e852c4d0
+Merge: 51e449e d8afdbf
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jul 7 22:58:25 2012 +1000
+
+    Merge branch 'master' of github.com:ctSkennerton/crass
+
 commit d8afdbfbc6a7199c874dc1fb10d95823c568b4b0
 Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Fri Jun 29 22:08:19 2012 +1000
@@ -45,6 +427,49 @@ Author: Connor T. Skennerton <c.skennerton@gmail.com>
 Date:   Sat Jun 16 13:57:36 2012 +1000
 
     Changed the default cutoff length for long reads in libcrispr#decideWhichSeach() to accomodate Illumina 150bp reads
+
+commit 51e449e0d0a0117b3f68cab729da2ebbcc1cefe3
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 10 15:29:41 2012 +1000
+
+    Added in another test dataset
+
+commit b218991d67e9a83fe7a5a95ea252dde762646577
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jun 11 18:24:59 2012 +1000
+
+    Fixed a bug in WorkHorse::createNonRedundantSet() that was causing the NR repeats to be incorrect
+
+commit c783640961f920f6b7cfe9c3603a13d4336d8117
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jun 11 02:45:03 2012 +1000
+
+    Added in a new test file
+
+commit a31b9242df99606007726ea6b17ef2cdc1a8b40a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jun 11 02:42:38 2012 +1000
+
+    Fixed a bug in libcrispr#findSingletonsMultiVector() that was causing DR boundaries to be called incorrectly
+
+commit c0d0fa8757b6af6d2d652bcbab1bd57521179522
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Jun 11 02:41:46 2012 +1000
+
+    Changed the return value of WuManber::Search() to be a struct
+
+commit 95fe5d642da4d4021c04dac7e4c5e11b6f370a55
+Merge: 5997bd6 acff928
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 10 15:29:59 2012 +1000
+
+    Merge branch 'master' into nr_repeats
+
+commit 5997bd67601c8087915714ed4cf852494b90b470
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 10 15:29:41 2012 +1000
+
+    Added in another test dataset
 
 commit acff928c6c30a837a1ed4dcd170e14750c92df5d
 Author: ctSkennerton <c.skennerton@gmail.com>
@@ -89,6 +514,37 @@ Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Mon Jun 4 16:30:59 2012 +1000
 
     moved code across from libcrispr into crass
+
+commit b5bfe1d54714b1a3ef778e90f2279e88cc9bc6fd
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sun Jun 3 01:43:05 2012 +1000
+
+    Fixed a bug in WorkHorse::addMetadataToDOM where the spacer graph file was not getting outputted
+
+commit 0429055fe7a2ee99deb6393c5f087cc9a482c3d0
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jun 2 00:55:03 2012 +1000
+
+    small code clean up
+
+commit 722653a4585511a4124725ccfc20855cfaffdc13
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jun 2 00:54:28 2012 +1000
+
+    Added in some typedefs
+
+commit ff08384049ee353bf2f44e7fe87feb2289fdbe7c
+Merge: 4519f1e d4abf01
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Sat Jun 2 00:33:10 2012 +1000
+
+    Merge branch 'master' into nr_repeats
+    
+    Conflicts:
+    	src/crass/WorkHorse.cpp
+    	src/crass/WorkHorse.h
+    	src/crass/libcrispr.cpp
+    	src/crass/libcrispr.h
 
 commit 4e44bfc4a5400418d29d9888b1ee3d56e236d948
 Author: ctSkennerton <c.skennerton@gmail.com>
@@ -526,6 +982,12 @@ Date:   Mon Apr 23 21:32:27 2012 +1000
 
     SanitiseTool::processOptions will now throw an error if no option is given.  A new shortcut option has been added for sanitising all features.  Fixes issue #46
 
+commit 4519f1e28c5fbb378535953d024083a0d365e189
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 21:10:58 2012 +1000
+
+    added print statement for debugging
+
 commit 75d7db2c491447be1c35bae008c199f4568ebbb3
 Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Mon Apr 23 21:01:58 2012 +1000
@@ -546,6 +1008,36 @@ Author: minillinim <mike@mikeimelfort.com>
 Date:   Mon Apr 23 16:21:21 2012 +1000
 
     Finsihing off connors work on the kmer abundance stuff. Should be more accurate fdor finding true DRs now
+
+commit a266148fe0d2c0f5d60c7a83259795adfa11f2a4
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 01:01:16 2012 +1000
+
+    needed to reverse complement patterns found in WorkHorse::createNonRedundantSet
+
+commit 3585a34af09d96dfa3ec0d499d2f2e20f5ae83dc
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 00:32:21 2012 +1000
+
+    fixed print statements in libcrispr#decideWhichSearch and libcrispr#findSingletonsMultiVector so that they output the units of time
+
+commit bd45cd63d410f9a2804fe92e7c4edf528e2140ab
+Merge: b7fd41f 8590aab
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 00:27:40 2012 +1000
+
+    Merge branch 'master' into nr_repeats
+    
+    Conflicts:
+    	src/crass/WorkHorse.cpp
+    	src/crass/libcrispr.cpp
+
+commit b7fd41fad2dda5159dd844edbbc39773da0281e3
+Merge: d17cc27 c6cc7f6
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Mon Apr 23 00:15:56 2012 +1000
+
+    Merge branch 'nr_repeats' of github.com:ctSkennerton/crass into nr_repeats
 
 commit 60793b21eb6f7aaf3c74ef7ef2e14bf7fd1d1036
 Author: ctSkennerton <c.skennerton@gmail.com>
@@ -676,6 +1168,17 @@ Date:   Tue Apr 10 15:51:59 2012 +1000
 
     Merge branch 'master' of github.com:ctSkennerton/crass
 
+commit d17cc2751eeb4792616bb640f7c3364530bc72ca
+Merge: bbf3a2a 4070bb5
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Apr 10 00:58:52 2012 +1000
+
+    Merge branch 'master' into refactor
+    
+    Conflicts:
+    	src/crass/WorkHorse.cpp
+    	src/crass/libcrispr.cpp
+
 commit 4070bb5b3060bb0550649efd576c87ecfdbf177f
 Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Sun Apr 8 14:52:28 2012 +1000
@@ -753,6 +1256,19 @@ Author: ctSkennerton <c.skennerton@gmail.com>
 Date:   Tue Apr 3 21:34:06 2012 +1000
 
     merge conflicts
+
+commit c6cc7f6212deef2a74f0494d23db03aad03c0479
+Merge: 73bf3b0 bbf3a2a
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Apr 3 21:32:36 2012 +1000
+
+    merge conflicts
+
+commit bbf3a2afcbcce083953538ddda492f4cd20a6b81
+Author: ctSkennerton <c.skennerton@gmail.com>
+Date:   Tue Apr 3 21:18:36 2012 +1000
+
+    Altered the flow of the program so that clustering of patterns occurs before the singleton finder.  By doing this we can remove redundant repeats and therefore speed up the singleton finder
 
 commit 73bf3b00ebfcd921376526b83faed0c72ac00c4f
 Merge: 8c98055 7be45d1
