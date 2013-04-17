@@ -605,8 +605,8 @@ int velvetWrapper( int hashLength, assemblyOptions& opts, std::string& tmpFileNa
     try 
     {
         // create the command string for velvet
-        std::string h_cmd = "velveth " + opts.outputDirName +" " + to_string(hashLength) + " " + opts.inputDirName + tmpFileName;
-        std::string g_cmd = "velvetg " + opts.outputDirName;     
+        std::string h_cmd = "velveth " + opts.outputDirName +" " + to_string(hashLength) + " " + opts.inputDirName +'/'+ tmpFileName;
+        std::string g_cmd = "velvetg " + opts.outputDirName;
         std::cout << h_cmd <<std::endl;
         int h_exit = system(h_cmd.c_str());
         if (h_exit) 
