@@ -665,7 +665,8 @@ int capWrapper(int overlapLength, assemblyOptions& opts, std::string& tmpFileNam
                                              __PRETTY_FUNCTION__,
                                              "Input file stream is not good");
         }
-        std::string cap3cmd = "cap3 " + opts.outputDirName + tmpFileName + " -o " + to_string(overlapLength) + " -x crass > " + opts.outputDirName + tmpFileName + ".crass.cap3";
+        std::string cap3cmd = "cap3 " + opts.inputDirName + '/' + tmpFileName + " -o " + to_string(overlapLength) + " -x crass > " + opts.outputDirName + '/' + tmpFileName + ".crass.cap3";
+        std::cout << cap3cmd << std::endl;
         int cap_exit = system(cap3cmd.c_str());
         if (cap_exit) 
         {
@@ -715,11 +716,6 @@ int main(int argc, char * argv[])
     } catch (crispr::xml_exception& e) {
         std::cerr<<e.what()<<std::endl;
         return 1;
-    }
-    
-    std::set<std::string>::iterator read_iter;
-    for (read_iter = spacers_for_assembly.begin(); read_iter != spacers_for_assembly.end(); read_iter++) {
-        std::cout<<*read_iter<<std::endl;
     }
     
     // parse the read file and create tmp.fa for the right segments
