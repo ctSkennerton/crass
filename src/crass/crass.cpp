@@ -207,7 +207,7 @@ int processOptions(int argc, char *argv[], options *opts)
     int c;
     int index;
     bool scalling = false;
-    while( (c = getopt_long(argc, argv, "a:b:c:d:D:ef:gGhHk:K:l:Ln:o:rs:S:Vw:x:y:z", long_options, &index)) != -1 ) 
+    while( (c = getopt_long(argc, argv, "a:b:c:d:D:ef:gGhHk:K:l:Ln:o:p:rs:S:Vw:x:y:z", long_options, &index)) != -1 ) 
     {
         switch(c) 
         {
@@ -358,7 +358,10 @@ int processOptions(int argc, char *argv[], options *opts)
                     exit(1);
                 }
                 break;
-            case 'r': 
+            case 'p':
+                opts->patterns_file = optarg;
+                break;
+            case 'r':
 #ifdef RENDERING 
                 opts->noRendering = true; 
 #endif

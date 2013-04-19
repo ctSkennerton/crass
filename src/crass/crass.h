@@ -75,6 +75,7 @@ static struct option long_options [] = {
     {"longDescription",no_argument,NULL,'L'},
     {"minNumRepeats", required_argument, NULL, 'n'},
     {"outDir", required_argument, NULL, 'o'},
+    {"patterns", required_argument, NULL, 'p'},
 #ifdef RENDERING
     {"noRendering",no_argument,NULL,'r'},
 #endif

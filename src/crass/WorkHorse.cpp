@@ -378,9 +378,6 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
         seq_iter = seqFiles.begin();
         logInfo("Begining Second iteration through files to recruit singletons", 2);
         
-        if (!(kmer_length & 1)){
-            kmer_length--;
-        }
         DeBruijnGraph template_graph = DeBruijnGraph(static_cast<int>(kmer_length), non_redundant_set);
         
         time(&start_time);
@@ -694,7 +691,8 @@ size_t WorkHorse::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, int& n
     }
     logInfo("-------------", 4);
     return non_redundant_repeats;*/
-    return shortest_dr;
+    size_t kmer_length = (shortest_dr & 1) ? shortest_dr - 2 : shortest_dr - 1;
+    return kmer_length;
 }
 
 bool WorkHorse::findMasterDR(int GID, StringToken * masterDRToken, std::string * masterDRSequence)
