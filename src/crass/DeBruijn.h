@@ -42,6 +42,7 @@
 #include <string>
 #include <utility>
 #include <set>
+#include <libcrispr/StlExt.h>
 #include "StringCheck.h"
 #include "Types.h"
 
@@ -52,19 +53,15 @@ class Kmer {
     // A vector of stringTokens that are edges to this kmer
     std::set<StringToken> Edges;
     // is this kmer the first in any DR type?
-    bool first;
-    // is this kmer the last in any DR type?
-    bool last;
+    bool Terminal;
 public:
 	Kmer(){};
-    Kmer(std::string str, bool first = false, bool last = false);
+    Kmer(std::string str, bool terminal = true);
     ~Kmer(){};
-    inline void setFirst(bool b) {first = b;}
-    inline void setLast(bool b) { last = b;}
-    
-    inline bool getFirst(){return first;}
-    inline bool getLast(){return last;}
-    inline std::string getSeq(){return Str;}
+    inline void setTerminal(bool b) {Terminal = b;}
+    inline bool getTerminal(void){return Terminal;}
+    inline std::string getSeq(void){return Str;}
+
     
     inline void addEdge(StringToken edge) {Edges.insert(edge);}
     inline bool hasEdge(StringToken t) {return Edges.find(t) != Edges.end();}
@@ -77,6 +74,8 @@ class DeBruijnGraph {
     int Length;
     // a map of all of the kmers in the graph
     std::map<StringToken, Kmer> Nodes;
+    // a map of kmer id threads to kmer ids
+    std::map<std::string, std::string> Lookup;
     // two-way hash joining Kmer sequences and kmer IDs
     StringCheck IdConverter;    
     

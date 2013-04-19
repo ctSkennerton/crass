@@ -36,11 +36,11 @@
 #include "SeqUtils.h"
 #include <libcrispr/Exception.h>
 
-Kmer::Kmer(std::string str, bool first, bool last ) : Str(str), first(first), last(last)
+Kmer::Kmer(std::string str, bool t ) : Str(str), Terminal(t)
 {}
 
 void Kmer::print(std::ostream& out) {
-	out << Str <<" : "<< first <<" : "<<last<<std::endl;
+	out << Str <<" : "<< Terminal<<std::endl;
 }
 
 DeBruijnGraph::DeBruijnGraph( int l) : Length(l){}
@@ -62,6 +62,8 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
         // add the kmers into the graph
         StringToken previous_token = 0;
         StringToken rc_previous_token = 0;
+        std::string kmer_thread = "";
+        std::string rc_kmer_thread = "";
         for(int i = 0; i < num_mers; ++i)
         {
             // make it a string!
@@ -71,21 +73,19 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
             if (0 == token) {
                 StringToken t = IdConverter.addString(kmers[i]);
                 Kmer k = Kmer(kmers[i]);
-                if (i == 0) {
-                    k.setFirst(true);
+                kmer_thread += to_string(t);
+                
+                if (i == 0 || i == num_mers - 1) {
+                    k.setTerminal(true);
                 }
-                if (i == num_mers - 1) {
-                    k.setLast(true);
-                }
+
                 Nodes[t] = k;
                 std::string rc = reverseComplement(kmers[i]);
                 StringToken rct = IdConverter.addString(rc);
                 Kmer rk = Kmer(rc);
-                if (i == 0) {
-                    rk.setLast(true);
-                }
-                if (i == num_mers - 1) {
-                    rk.setFirst(true);
+                rc_kmer_thread += to_string(rct);
+                if (i == 0 || i == num_mers - 1) {
+                    rk.setTerminal(true);
                 }
                 Nodes[rct] = rk;
 
@@ -106,7 +106,8 @@ void DeBruijnGraph::generateGraph(std::map<StringToken, std::string>& seqs) {
             }
             //Nodes[previous_token].addDRType(iter->first, i);
         }
-        
+        Lookup[kmer_thread] = iter->second;
+        Lookup[rc_kmer_thread] = iter->second;
         // clean up
         delete [] kmer_offsets;
         for(int i = 0; i < num_mers; i++)
@@ -235,6 +236,7 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
     int num_mers = consumeSequence(seq, &kmers, &kmer_offsets);
     
     std::vector<StringToken> found_tokens;
+    std::string token_thread = "";
     DataFound ret;
     ret.iFoundPosition = -1;
     std::cout<< "--------" <<std::endl;
@@ -243,37 +245,43 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
         // make it a string!
         kmers[i][Length] = '\0';
         StringToken token = IdConverter.getToken(kmers[i]);
-        if(token != 0 && Nodes[token].getFirst()){
-            found_tokens.push_back(token);
+        if(token != 0 && Nodes[token].getTerminal()){
+            //found_tokens.push_back(token);
+            token_thread += to_string(token);
 			std::cout << "adding: "<< token<<std::endl;
-            if (Nodes[token].getLast()) {
-                // DR equal to the kmer length
-                std::cout << "DR in single kmer"<< std::endl;
-				ret.iFoundPosition = i;
-                ret.sDataFound = reconstructSequence(found_tokens);
-                return ret;            
-			}
+//            if (Nodes[token].getLast()) {
+//                // DR equal to the kmer length
+//                std::cout << "DR in single kmer"<< std::endl;
+//				ret.iFoundPosition = i;
+//                ret.sDataFound = reconstructSequence(found_tokens);
+//                return ret;            
+//			}
             if (i != num_mers - 1) {
                 int current_start = i;
                 do {
-                    
                     ++i;
                     Kmer previous_kmer = Nodes[token];
                     token = IdConverter.getToken(kmers[i]);
                     if ((token != 0) & previous_kmer.hasEdge(token)) {
-                        found_tokens.push_back(token);
+                        //found_tokens.push_back(token);
+                        token_thread += to_string(token);
 						std::cout << "adding: "<< token<<std::endl;
-                        if (Nodes[token].getLast()) {
+                        if (Nodes[token].getTerminal()) {
                             // reached the end of a DR
-                            ret.iFoundPosition = current_start;
-                            ret.sDataFound = reconstructSequence(found_tokens);
-                            return ret;
+                            
+                            // check to se if this thread is seen in the lookup
+                            if (Lookup.find(token_thread) != Lookup.end()) {
+                                ret.iFoundPosition = current_start;
+                                ret.sDataFound = Lookup[token_thread];
+                                return ret;
+                            }                            
                         }
                     }
                     else {
                         // this kmer isn't in the graph
 						std::cout<< "clearing kmer thread" <<std::endl;
-                        found_tokens.clear();
+                        //found_tokens.clear();
+                        token_thread = "";
                         break;
                     }
                 } while (i < num_mers);
