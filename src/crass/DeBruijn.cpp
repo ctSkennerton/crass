@@ -243,16 +243,17 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
     std::string token_thread = "";
     DataFound ret;
     ret.iFoundPosition = -1;
-    //std::cout<< "--------" <<std::endl;
+    //std::cout<< num_mers<<"\n--------" <<std::endl;
 	for(int i = 0; i < num_mers; ++i)
     {
         // make it a string!
         kmers[i][Length] = '\0';
+        //std::cout<<kmers[i]<<std::endl;
         StringToken token = IdConverter.getToken(kmers[i]);
         if(token != 0 && Nodes[token].getTerminal()){
             //found_tokens.push_back(token);
             token_thread += to_string(token);
-			std::cout << "adding: "<< token<<std::endl;
+			//std::cout << "adding: "<< token<<std::endl;
 //            if (Nodes[token].getLast()) {
 //                // DR equal to the kmer length
 //                std::cout << "DR in single kmer"<< std::endl;
@@ -260,16 +261,19 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
 //                ret.sDataFound = reconstructSequence(found_tokens);
 //                return ret;            
 //			}
-            if (i != num_mers - 1) {
-                int current_start = i;
+            int current_start = i;
+            if (i < num_mers - 2) {
                 do {
                     ++i;
                     Kmer previous_kmer = Nodes[token];
+                    //std::cout << i << num_mers <<std::endl;
+                    kmers[i][Length] = '\0';
+                    //std::cout <<kmers[i] << std::endl;
                     token = IdConverter.getToken(kmers[i]);
-                    if ((token != 0) & previous_kmer.hasEdge(token)) {
+                    if ((token != 0) && previous_kmer.hasEdge(token)) {
                         //found_tokens.push_back(token);
                         token_thread += to_string(token);
-						std::cout << "adding: "<< token<<std::endl;
+						//std::cout << "adding: "<< token<<std::endl;
                         if (Nodes[token].getTerminal()) {
                             // reached the end of a DR
                             
@@ -277,14 +281,22 @@ DeBruijnGraph::DataFound DeBruijnGraph::search(std::string seq){
                             if (Lookup.find(token_thread) != Lookup.end()) {
                                 ret.iFoundPosition = current_start;
                                 ret.sDataFound = Lookup[token_thread];
+                                std::cout << "found: "<< Lookup[token_thread] <<std::endl;
                                 return ret;
-                            }                            
+                            } /*else {
+                                std::cout << "Terminal but no thread" <<std::endl;
+                            }*/
                         }
-                    }
-                    else {
+                    } else {
                         // this kmer isn't in the graph
-						std::cout<< "clearing kmer thread" <<std::endl;
+						//std::cout<< "clearing kmer thread" <<std::endl;
                         //found_tokens.clear();
+                        if (Lookup.find(token_thread) != Lookup.end()) {
+                                ret.iFoundPosition = current_start;
+                                ret.sDataFound = Lookup[token_thread];
+                                std::cout << "found: "<< Lookup[token_thread] <<std::endl;
+                                return ret;
+                            }
                         token_thread = "";
                         break;
                     }
