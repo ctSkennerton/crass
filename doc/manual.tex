@@ -163,9 +163,9 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 %%% The "real" document content comes below...
 
-\title{Crass:  The CRISPR assembler (v0.3.2)}
+\title{Crass:  The CRISPR assembler (v0.3.3)}
 \author{Connor Skennerton and Michael Imelfort}
-\date{17th April 2013} % Activate to display a given date or no date (if empty),
+\date{23rd April 2013} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
@@ -207,7 +207,11 @@ On a GNU system simply:
 NOTE: running \lstinline$./autogen.sh$ may be necessary to generate the \lstinline$configure$ program
 \subsubsection{Configure/Compiling Options}
 \label{sec:configure}
-Crass supports a number of compile-time options as well as the common options:
+If either Xerces or libcrispr were installed into non-default locations it is necessary to define those locations when performing \lstinline$configure$.  It may also be necessary to add the installation directories into your \lstinline$LD_LIBRARY_PATH$ environmental variable.  For example if librispr is installed in \lstinline$/opt/local$ then add this directory with: 
+\begin{lstlisting}
+$ export LD_LIBRARY_PATH=/opt/local/lib
+\end{lstlisting}
+ These changes can be made permanent by adding the export statement into your \lstinline$~/.bashrc$ file. 
 
     \begin{longtable}{  l    p{10cm} }
     \hline
@@ -215,8 +219,8 @@ Crass supports a number of compile-time options as well as the common options:
    \longoptionflag{enable-verbose\_logging} & This option is different from enable-debug as it changes what information is printed in the log statments.  enabling verbose logging will add the source file name, the function name and the line number for every log statement. \\ \\    
 \longoptionflag{enable-rendering} &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\  \\
    \longoptionflag{disable-assembly} & Disables the assembly wrapper even if the Xerces library and suitable genome assemblers can be found.  Disabling the assembly wrapper willl change which souce files are compiled and as a result reduce the size of the executable. \\ \\
-\longoptionflag{with-xerces} & Set the path where the Xerces header and library objcets can be found\\ \\
-\longoptionflag{with-libcrispr} & Set the path where libcrispr header and library objects can be found \\
+\longoptionflag{with-xerces} & Set the path where the Xerces header and library objcets can be found.  For example if the libraries are installed in \lstinline$/opt/local/lib$ and the headers are installed in \lstinline$/opt/local/include$, specify \lstinline$--with-xerces=/opt/local$\\ \\
+\longoptionflag{with-libcrispr} & Set the path where libcrispr header and library objects can be found. For example if the libraries are installed in \lstinline$/opt/local/lib$ and the headers are installed in \lstinline$/opt/local/include$, specify \lstinline$--with-libcrispr=/opt/local$\\
 
     \hline
     \end{longtable}
