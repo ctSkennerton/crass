@@ -1,4 +1,4 @@
-crass -- CRisprASSembler -- version 0 subversion 3 revision 2 (0.3.2)
+crass -- CRisprASSembler -- version 0 subversion 3 revision 3 (0.3.3)
 =======================================================================
 
 
@@ -6,7 +6,7 @@ crass -- CRisprASSembler -- version 0 subversion 3 revision 2 (0.3.2)
 COPYRIGHT
 --------
 
-Copyright 2011, 2012 Connor Skennerton & Michael Imelfort. All rights reserved. 
+Copyright 2011-2013 Connor Skennerton & Michael Imelfort. All rights reserved. 
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
