@@ -92,17 +92,23 @@ void Aligner::alignSlave(StringToken& slaveDRToken) {
         flags.reset();
         offset = getOffsetAgainstMaster(extended_slave_dr, flags);
         if (flags[score_equal]) {
-            logWarn("@Alignment Warning: Extended Slave scores equal",4);
-            logWarn("Cannot place slave: "<<slaveDR<<" ("<<slaveDRToken<<") in array", 4);
-            logWarn("Original slave: "<<slaveDR, 4);
-            logWarn("Extended Slave: "<<extended_slave_dr, 4);
-            logWarn("Master: "<<mStringCheck->getString(AL_masterDRToken), 4);
+            logWarn("Alignment Warning: Extended Slave scores equal",4);
+            logWarn("\tCannot place slave: "<<slaveDR<<" ("<<slaveDRToken<<") in array", 4);
+            logWarn("\tOriginal slave: "<<slaveDR, 4);
+            logWarn("\tExtended Slave: "<<extended_slave_dr, 4);
+            logWarn("\tMaster: "<<mStringCheck->getString(AL_masterDRToken), 4);
             logWarn("******", 4);
             flags[failed] = true;
         }
     }
     
     if (flags[failed]) {
+        if(! flags[score_equal]){
+            logWarn("Alignment Warning: Alignment failed", 4);
+            logWarn("\tCannot place slave: "<<slaveDR<<" ("<<slaveDRToken<<") in array", 4);
+            logWarn("\tMaster: "<<mStringCheck->getString(AL_masterDRToken), 4);
+            logWarn("******", 4);
+        }
         return;
     } 
     
@@ -291,26 +297,35 @@ int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) 
         flags[score_equal] = true;
         return 0;
     }
-        
-    if (reverse_return.score > forward_return.score && reverse_return.score >= AL_minAlignmentScore) {
+    kswr_t best_alignment_info;
+    if(reverse_return.score > forward_return.score) {
+        best_alignment_info = reverse_return;
         flags[reversed] = true;
-        //std::cout<<"R: "<< masterDR<<"\t"<< reverse_return.tb<<"\t"<< reverse_return.te+1<<"\t"<< rev_slave<<"\t"<< reverse_return.qb<<"\t"<< reverse_return.qe+1<<"\t"<< reverse_return.score<<"\t"<< reverse_return.score2<<"\t"<< reverse_return.te2<<"\t"<<reverse_return.tb - reverse_return.qb<<std::endl;
-        return reverse_return.tb - reverse_return.qb;
-    } else if (forward_return.score >= AL_minAlignmentScore) {
-        //std::cout<<"F: "<< masterDR<<"\t"<< forward_return.tb<<"\t"<< forward_return.te+1<<"\t"<< slaveDR<<"\t"<< forward_return.qb<<"\t"<< forward_return.qe+1<<"\t"<< forward_return.score<<"\t"<< forward_return.score2<<"\t"<< forward_return.te2<<"\t"<<forward_return.tb - forward_return.qb<<std::endl;
-        return forward_return.tb - forward_return.qb;
     } else {
-        logWarn("@Alignment Warning: Slave Score Failure",4);
-        logWarn("Cannot place slave: "<<slaveDR<<" ("<<mStringCheck->getToken(slaveDR)<<") in array", 4);
-        logWarn("Master: "<<AL_masterDR, 4);
-        logWarn("Forward score: "<<forward_return.score, 4);
-        logWarn("Reverse score: "<<reverse_return.score, 4);
+        best_alignment_info = forward_return;
+    }
+    if((best_alignment_info.score < AL_minAlignmentScore) || (best_alignment_info.qb != 0 && best_alignment_info.qe != slave_dr_length - 1)) {
+        logWarn("Alignment Warning: Slave Alignment Failure",4);
+        logWarn("\tCannot place slave: "<<slaveDR<<" ("<<mStringCheck->getToken(slaveDR)<<") in array", 4);
+        logWarn("\tMaster: "<<AL_masterDR, 4);
+        logWarn("\tForward score: "<<forward_return.score, 4);
+        logWarn("\tReverse score: "<<reverse_return.score, 4);
+        logWarn("\tmaster: "<<mStringCheck->getString(AL_masterDRToken) <<
+                "\n\ttb: "<< best_alignment_info.tb<<
+                "\n\tte: "<< best_alignment_info.te+1<<
+                "\n\tslave: "<< slaveDR<<
+                "\n\tqb: "<< best_alignment_info.qb<<
+                "\n\tqe: "<< best_alignment_info.qe+1<<
+                "\n\tscore: "<< best_alignment_info.score<<
+                "\n\t2nd-score: "<< best_alignment_info.score2<<
+                "\n\t2nd-te: "<< best_alignment_info.te2<<
+                "\n\toffset: "<<best_alignment_info.tb - best_alignment_info.qb,4);
         logWarn("******", 4);
         flags[failed] = true;
         return 0;
+    } else {
+        return best_alignment_info.tb - best_alignment_info.qb;
     }
-    
-    return 0;
 }
 
 void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
@@ -432,17 +447,17 @@ void Aligner::calculateDRZone() {
     }
 }
 
-void Aligner::print() {
+void Aligner::print(std::ostream& out) {
     std::vector<int>::iterator iter;
     for (int j = 1; j <= 4;++j) {
         for (int i = 0; i < AL_length; ++i) {
-            std::cout<<AL_coverage[i*j]<<",";
+            out<<AL_coverage[i*j]<<",";
         }
-        std::cout<<"$"<<std::endl;
+        out<<"$"<<std::endl;
     }
 
     //for(iter = AL_coverage.begin(); iter != AL_coverage.end();iter++) {
     //    std::cout<<*iter<<",";
     //}
-    std::cout<<std::endl;
+    out<<std::endl;
 }

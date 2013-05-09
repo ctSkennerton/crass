@@ -345,7 +345,7 @@ class ReadHolder
 		void reverseStartStops(void);           // fix start stops what got corrupted during revcomping
 	
 		// update the DR after finding the TRUE DR
-		void updateStartStops(int frontOffset, std::string * DR, const options * opts);
+		void updateStartStops(const int frontOffset, std::string * DR, const options * opts);
 		
 		// the positions are the start positions of the direct repeats
 		// 

@@ -37,6 +37,7 @@
 #include <vector>
 #include <bitset>
 #include <map>
+#include <iostream>
 
 #include "ksw.h"
 #include "StringCheck.h"
@@ -146,7 +147,7 @@ public:
     // add in all of the reads for this group to the coverage array
     void generateConsensus();
     
-    void print();
+    void print(std::ostream &out = std::cout);
 
     inline std::map<StringToken, int>::iterator offsetBegin(){return AL_Offsets.begin();}
     

@@ -1267,8 +1267,33 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
 					ReadListIterator read_iter = mReads[*drc_iter]->begin();
 					while (read_iter != mReads[*drc_iter]->end()) 
 					{
-						(*read_iter)->updateStartStops((dr_aligner.offset(*drc_iter) - dr_aligner.getDRZoneStart()), &true_DR, mOpts);
-	
+                        //if ((dr_aligner.offset(*drc_iter) - dr_aligner.getDRZoneStart()) < 0) {
+                        //   // std::stringstream ss;
+                        //    std::cerr << "front offset is a negative number\ndr_aligner.offset="<<dr_aligner.offset(*drc_iter)
+                        //       << " dr_aligner.getDRZoneStart="<<dr_aligner.getDRZoneStart()
+                        //       << " frontOffset="<<dr_aligner.offset(*drc_iter) - dr_aligner.getDRZoneStart();
+                        //    //throw crispr::exception(__FILE__,
+                        //    //                        __LINE__,
+                        //    //                        __PRETTY_FUNCTION__,
+                        //    //                        ss.str().c_str());
+                        //} else {
+                        //    std::cerr << "dr_aligner.offset="<<dr_aligner.offset(*drc_iter)
+                        //       << " dr_aligner.getDRZoneStart="<<dr_aligner.getDRZoneStart()
+                        //       << " frontOffset="<<dr_aligner.offset(*drc_iter) - dr_aligner.getDRZoneStart()<< std::endl;
+                        //}
+                        try {
+                        //    std::cerr << "Alignment offset: "<< dr_aligner.offset(*drc_iter)<< " DR Zone Start: " <<dr_aligner.getDRZoneStart()<<std::endl;
+						    (*read_iter)->updateStartStops((dr_aligner.offset(*drc_iter) - dr_aligner.getDRZoneStart()), &true_DR, mOpts);
+                        } catch (crispr::exception &e) {
+                            std::cerr << e.what() << endl;
+                            std::cerr << "Dumping read set of group:"<<std::endl;
+                            for (drc_iter = (mDR2GIDMap[GID])->begin(); drc_iter != (mDR2GIDMap[GID])->end(); drc_iter++) {
+                                for (read_iter = mReads[*drc_iter]->begin(); read_iter != mReads[*drc_iter]->end(); read_iter++) {
+                                    std::cerr << *(*read_iter) <<std::endl;
+                                }
+                            }
+                            throw e;
+                        }
 						// reverse complement sequence if the true DR is not in its laurenized form
 						if (rev_comp) 
 						{

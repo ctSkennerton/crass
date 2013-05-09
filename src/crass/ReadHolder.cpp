@@ -373,7 +373,7 @@ void ReadHolder::reverseStartStops(void)
     RH_StartStops.insert(RH_StartStops.begin(), tmp_ss.begin(), tmp_ss.end());
 }
 
-void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const options * opts)
+void ReadHolder::updateStartStops(const int frontOffset, std::string * DR, const options * opts)
 {
     //-----
     // Update the start and stops to capture the largest part
@@ -405,9 +405,10 @@ void ReadHolder::updateStartStops(int frontOffset, std::string * DR, const optio
 #ifdef DEBUG
         if(*ss_iter > static_cast<unsigned int>(RH_Seq.length())) { 
 			std::stringstream ss;
-			ss<<"Something wrong with front offset! " 
-				<<"ss iter: "<<*ss_iter << " \n " 
-				<<"front offset: " << frontOffset;
+			ss<<"Something wrong with front offset!\n" 
+				<<"ss iter: "<<*ss_iter << "\n" 
+				<<"front offset: " << frontOffset<<"\n";
+            this->printContents(ss);
 			throw crispr::exception(__FILE__,
 			                        __LINE__,
 			                        __PRETTY_FUNCTION__,
