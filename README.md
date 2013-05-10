@@ -64,6 +64,14 @@ then on most Unix systems:
     $ make
     $ make install
 
+On some installations you may need to update the `LD_LIBRARY_PATH`
+environmental variable so that crass can find the libcrispr shared
+library.  This is essential if you have libcrispr in a non-standard
+location, although I've also noticed this in the latest versions of
+Ubuntu (12.10) that `/usr/local/lib` is not included in
+`LD_LIBRARY_PATH` by default so even a 'standard' installation may
+require this.
+
 NON-STANDARD INSTALLATIONS
 --------------------------
 
