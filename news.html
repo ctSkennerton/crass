@@ -61,7 +61,7 @@
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
 			  <li class="nav-header">Latest Release</li>
-              <li><a href="https://github.com/ctSkennerton/crass/archive/v0.3.3.tar.gz">Crass 0.3.3</a></li>
+              <li><a href="https://github.com/ctSkennerton/crass/archive/v0.3.4.tar.gz">Crass 0.3.4</a></li>
 <li> <small class="crass">Skennerton, C. T., Imelfort, M. &amp; G. W. Tyson. (2013) "Crass: identification and reconstruction of CRISPR from unassembled metagenomic data" Nucleic Acids Research; <a href="http://nar.oxfordjournals.org/content/early/2013/03/19/nar.gkt183.abstract">doi:10.1093/nar/gkt183</a> </small> </li>
               <li class="nav-header">Documentation</li>
               <li><a href="Tutorial.html">Tutorial</a></li>
@@ -82,6 +82,36 @@
           
           <div class="row-fluid">
             <div class="span9">
+              <h3>Version 0.3.4 Released</h3>
+                <p>This is a bug fix release, but it may have important implications
+                  for the interpretation of previous results!  I noticed an error on
+                  one of my datasets which was causing crass to crash.  Upon tracking
+                  it down I found that in certain edge cases a direct repeat would be 
+                  aligned to another in such a way that would cause the alignment function to return 
+                  an invalid value. 
+                </p>
+
+                <p>The actual cause was due to the aligner not checking
+                to make sure that the aligned bases were not some internal motif
+                that may be common to the DR group or including sequences that were
+                close but not really from the DR.  This error was not caught at this stage but instead
+                created flow on effects eventually resulting in a seemingly unrelated
+                error in a different part of the code.
+                </p>  
+                <p>Aligning to an internal motif seemed to be the dominant alignments
+                produced by repeats that were not of CRISPR origin and would get thrown 
+                out anyway during later filtering steps in crass.  However
+                I have noticed  that many groups have
+                a few less spacers in them than they had before. I believe that this
+                is a good thing, ie those 'spacers' were not real. However I have not
+                performed extensive testing to determine if this is the case.  I 
+                recommend all users to examine the results from both 0.3.4 (or greater)
+                and versions 0.3.3 and before to see if there are spacers going missing.
+                If there are manually check to see if those spacers are being removed
+                improperly (ie crass shouldn't be throwing them out), in which case 
+                open an issue in <a href="https://github.com/ctSkennerton/crass/issues"> github</a>
+                or send me an email so I can work on the logic some more. 
+                </p>
               <h3>Crass paper published</h3>
               <p>Our manuscript describing the Crass algorithm has been published in Nucleic Acids Research.  You can find the manuscript <a href="http://nar.oxfordjournals.org/content/early/2013/03/19/nar.gkt183.abstract">here</a></p>
               <h3>Version 0.3.0 Released</h3>
@@ -113,7 +143,7 @@
       <hr>
 
       <footer>
-        <p>&copy; Connor Skennerton &amp; Michael Imelfort 2011, 2012</p>
+        <p>&copy; Connor Skennerton &amp; Michael Imelfort 2011 - 2013</p>
       </footer>
 
     </div> <!-- /container -->
