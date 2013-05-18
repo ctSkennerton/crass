@@ -120,6 +120,13 @@ if(logger->getLogLevel() >= ll) { \
 } \
 }
 
+// for dumping large amounts of info to the logfile after a msg
+#define logInfoNoPrefix(cOUTsTRING, ll) {                       \
+    if(logger->getLogLevel() >= ll) {                           \
+        (*(logger->mGlobalHandle)) << cOUTsTRING <<std::endl;   \
+    }                                                           \
+}
+
 // for errors
 #define logError(cOUTsTRING) { \
 std::stringstream s; s<<cOUTsTRING;\

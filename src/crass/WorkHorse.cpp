@@ -1285,11 +1285,10 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                         //    std::cerr << "Alignment offset: "<< dr_aligner.offset(*drc_iter)<< " DR Zone Start: " <<dr_aligner.getDRZoneStart()<<std::endl;
 						    (*read_iter)->updateStartStops((dr_aligner.offset(*drc_iter) - dr_aligner.getDRZoneStart()), &true_DR, mOpts);
                         } catch (crispr::exception &e) {
-                            std::cerr << e.what() << endl;
-                            std::cerr << "Dumping read set of group:"<<std::endl;
+                            logInfo("Dumping read set of group:", 1);
                             for (drc_iter = (mDR2GIDMap[GID])->begin(); drc_iter != (mDR2GIDMap[GID])->end(); drc_iter++) {
                                 for (read_iter = mReads[*drc_iter]->begin(); read_iter != mReads[*drc_iter]->end(); read_iter++) {
-                                    std::cerr << *(*read_iter) <<std::endl;
+                                    logInfoNoPrefix( *(*read_iter), 1); 
                                 }
                             }
                             throw e;

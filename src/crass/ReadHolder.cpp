@@ -402,19 +402,18 @@ void ReadHolder::updateStartStops(const int frontOffset, std::string * DR, const
         {
             *ss_iter -= frontOffset;
         }
-#ifdef DEBUG
         if(*ss_iter > static_cast<unsigned int>(RH_Seq.length())) { 
 			std::stringstream ss;
 			ss<<"Something wrong with front offset!\n" 
 				<<"ss iter: "<<*ss_iter << "\n" 
 				<<"front offset: " << frontOffset<<"\n";
             this->printContents(ss);
-			throw crispr::exception(__FILE__,
-			                        __LINE__,
-			                        __PRETTY_FUNCTION__,
-			                        (ss.str()).c_str());
+			logError(ss.str());
+            //throw crispr::exception(__FILE__,
+			//                        __LINE__,
+			//                        __PRETTY_FUNCTION__,
+			//                        (ss.str()).c_str());
 		}
-#endif
         // the second guy is the end of the DR
         ss_iter++;
         *ss_iter = *(ss_iter - 1) + usable_length;
@@ -444,26 +443,26 @@ void ReadHolder::updateStartStops(const int frontOffset, std::string * DR, const
 			{
 				if(((DR->rfind(sp.second) + (sp.second).length()) == DR->length()) && (0 == part_s))
 				{
-#ifdef DEBUG
 					logInfo("adding direct repeat to start",10);
 					logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
 					if(part_e < 0) { 
 						std::stringstream ss;
 						ss<<"Adding negative to SS list! " << part_e;
-						throw crispr::exception(__FILE__,
-						                        __LINE__,
-						                        __PRETTY_FUNCTION__,
-						                        (ss.str()).c_str());
+						logError(ss.str());
+                        //throw crispr::exception(__FILE__,
+						//                        __LINE__,
+						//                        __PRETTY_FUNCTION__,
+						//                        (ss.str()).c_str());
 					}
 					if(part_e > (int)RH_Seq.length()) { 
 						std::stringstream ss;
 						ss <<"SS longer than read: " << part_e;
-						throw crispr::exception(__FILE__,
-						                        __LINE__,
-						                        __PRETTY_FUNCTION__,
-						                        (ss.str()).c_str());	
+						logError(ss.str());
+                        //throw crispr::exception(__FILE__,
+						//                        __LINE__,
+						//                        __PRETTY_FUNCTION__,
+						//                        (ss.str()).c_str());	
 					}
-#endif
 					std::reverse(RH_StartStops.begin(), RH_StartStops.end());
 					RH_StartStops.push_back(part_e);
 					RH_StartStops.push_back(0);
@@ -493,11 +492,9 @@ void ReadHolder::updateStartStops(const int frontOffset, std::string * DR, const
 			{
 				if((((int)(RH_Seq.length()) - 1 ) == part_e) && (0 == DR->find(sp.second)))
 				{
-#ifdef DEBUG
 					logInfo("adding partial direct repeat to end",10);
 					logInfo(sp.first << " : " << sp.second << " : " << part_s << " : " << part_e,10);
 					logInfo((int)sp.first.length() - (int)sp.second.length(),10);
-#endif
 					// in most cases the right index is returned however 
 					// if the length of the smith waterman alignment differ the index needs to be corrected 
 					startStopsAdd(part_s + abs((int)sp.first.length() - (int)sp.second.length()), part_e);
