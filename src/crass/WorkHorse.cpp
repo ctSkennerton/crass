@@ -431,7 +431,7 @@ int WorkHorse::buildGraph(void)
     // go through the DR2GID_map and make all reads in each group into nodes
     
     DR_Cluster_MapIterator drg_iter = mDR2GIDMap.begin();
-    std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<mTrueDRs.size()<<" putative CRISPRs found!"<<std::endl;
+    //std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<mTrueDRs.size()<<" putative CRISPRs found!"<<std::endl;
     //MI std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<std::flush;
     while(drg_iter != mDR2GIDMap.end())
     {
@@ -1285,6 +1285,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                         //    std::cerr << "Alignment offset: "<< dr_aligner.offset(*drc_iter)<< " DR Zone Start: " <<dr_aligner.getDRZoneStart()<<std::endl;
 						    (*read_iter)->updateStartStops((dr_aligner.offset(*drc_iter) - dr_aligner.getDRZoneStart()), &true_DR, mOpts);
                         } catch (crispr::exception &e) {
+                            std::cerr <<dr_aligner.offset(*drc_iter) << " : "<<  dr_aligner.getDRZoneStart()<<std::endl;
                             logInfo("Dumping read set of group:", 1);
                             for (drc_iter = (mDR2GIDMap[GID])->begin(); drc_iter != (mDR2GIDMap[GID])->end(); drc_iter++) {
                                 for (read_iter = mReads[*drc_iter]->begin(); read_iter != mReads[*drc_iter]->end(); read_iter++) {

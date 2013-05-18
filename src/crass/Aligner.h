@@ -192,6 +192,7 @@ private:
     // transform the master DR into the right form for ksw
     inline void prepareMasterForAlignment(std::string& masterDR) {
         AL_masterDRLength = masterDR.length();
+        //AL_minAlignmentScore = static_cast<int>(AL_masterDRLength * 0.5);
         AL_masterDR = new uint8_t[AL_masterDRLength+1];
         prepareSequenceForAlignment(masterDR, AL_masterDR);
     };
@@ -203,6 +204,7 @@ private:
 
     void calculateDRZone();
     
+    void printAlignment(const kswr_t& alignment, const std::string& slave, std::ostream& out);
     //Members
     
     // length of the arrays

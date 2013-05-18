@@ -136,6 +136,7 @@ void Aligner::alignSlave(StringToken& slaveDRToken) {
         (*mReads)[slaveDRToken] = NULL;
         slaveDRToken = st;
     }
+    //std::cerr << AL_Offsets[AL_masterDRToken] +  offset <<std::endl;
     AL_Offsets[slaveDRToken] = AL_Offsets[AL_masterDRToken] + offset;
     placeReadsInCoverageArray(slaveDRToken);
 }
@@ -304,28 +305,45 @@ int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) 
     } else {
         best_alignment_info = forward_return;
     }
-    if((best_alignment_info.score < AL_minAlignmentScore) || (best_alignment_info.qb != 0 && best_alignment_info.qe != slave_dr_length - 1)) {
+    int min_query_seq_coverage = static_cast<int>(slave_dr_length / 2);
+    // this is not the way you are supposed to use goto
+    // actually you're never supposed to use goto
+    // but you know what, I don't care!
+    // http://xkcd.com/292/
+    if(min_query_seq_coverage > best_alignment_info.score) {
         logWarn("Alignment Warning: Slave Alignment Failure",4);
-        logWarn("\tCannot place slave: "<<slaveDR<<" ("<<mStringCheck->getToken(slaveDR)<<") in array", 4);
-        logWarn("\tMaster: "<<AL_masterDR, 4);
-        logWarn("\tForward score: "<<forward_return.score, 4);
-        logWarn("\tReverse score: "<<reverse_return.score, 4);
-        logWarn("\tmaster: "<<mStringCheck->getString(AL_masterDRToken) <<
-                "\n\ttb: "<< best_alignment_info.tb<<
-                "\n\tte: "<< best_alignment_info.te+1<<
-                "\n\tslave: "<< slaveDR<<
-                "\n\tqb: "<< best_alignment_info.qb<<
-                "\n\tqe: "<< best_alignment_info.qe+1<<
-                "\n\tscore: "<< best_alignment_info.score<<
-                "\n\t2nd-score: "<< best_alignment_info.score2<<
-                "\n\t2nd-te: "<< best_alignment_info.te2<<
-                "\n\toffset: "<<best_alignment_info.tb - best_alignment_info.qb,4);
-        logWarn("******", 4);
-        flags[failed] = true;
-        return 0;
-    } else {
-        return best_alignment_info.tb - best_alignment_info.qb;
+        logWarn("\tfailed query coverage test", 4);
+        logWarn("\trequired: "<<min_query_seq_coverage, 4);
+        goto FAILED;
     }
+    if(best_alignment_info.score < AL_minAlignmentScore) {
+        logWarn("Alignment Warning: Slave Alignment Failure",4);
+        logWarn("\tfailed minimum score test", 4);
+        goto FAILED;
+    }
+    //if (best_alignment_info.qb != 0 && best_alignment_info.qe != slave_dr_length - 1) {
+    //    logWarn("Alignment Warning: Slave Alignment Failure",4);
+    //    logWarn("\tfailed internal only test", 4);
+    //    goto FAILED;
+    //}
+    //std::cerr << best_alignment_info.tb - best_alignment_info.qb << " : ";
+    //this->printAlignment(best_alignment_info, slaveDR, std::cerr);
+    return best_alignment_info.tb - best_alignment_info.qb;
+
+FAILED:
+    logWarn("\tmaster: "<<mStringCheck->getString(AL_masterDRToken) , 4);
+    logWarn("\ttb: "<< best_alignment_info.tb, 4);
+    logWarn("\tte: "<< best_alignment_info.te+1, 4);
+    logWarn("\tslave: "<< slaveDR, 4);
+    logWarn("\tqb: "<< best_alignment_info.qb, 4);
+    logWarn("\tqe: "<< best_alignment_info.qe+1, 4);
+    logWarn("\tscore: "<< best_alignment_info.score, 4);
+    logWarn("\t2nd-score: "<< best_alignment_info.score2, 4);
+    logWarn("\t2nd-te: "<< best_alignment_info.te2, 4);
+    logWarn("\toffset: "<<best_alignment_info.tb - best_alignment_info.qb,4);
+    logWarn("******", 4);
+    flags[failed] = true;
+    return 0;
 }
 
 void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
@@ -460,4 +478,19 @@ void Aligner::print(std::ostream& out) {
     //    std::cout<<*iter<<",";
     //}
     out<<std::endl;
+}
+
+void Aligner::printAlignment(const kswr_t &alignment, const std::string& slave, std::ostream& out) {
+    out << "slave: "<<slave<<" ("<<mStringCheck->getToken(slave)<<") in array" <<std::endl;
+    out << "master: "<<AL_masterDR <<std::endl;
+    out << "t: "<<mStringCheck->getString(AL_masterDRToken) <<
+            "\ntb: "<< alignment.tb<<
+            "\nte: "<< alignment.te+1<<
+            "\nq: "<< slave<<
+            "\nqb: "<< alignment.qb<<
+            "\nqe: "<< alignment.qe+1<<
+            "\nscore: "<< alignment.score<<
+            "\n2nd-score: "<< alignment.score2<<
+            "\n2nd-te: "<< alignment.te2<<
+            "\noffset: "<<alignment.tb - alignment.qb <<std::endl;
 }
