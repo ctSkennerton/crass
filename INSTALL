@@ -1,9 +1,16 @@
-Crass has two library dependancies that need to be installed prior to building:
+Crass has three library dependancies that need to be installed prior to building:
 
 libcrispr - A library for manipulating crispr files (www.ctskennerton.github.com/libcrispr)
 
 zlib - is commonly already installed so you shouldn't have to worry about it. But 
 just in case www.zlib.org
+
+Xerces-c++ (http://xerces.apache.org/xerces-c/) - This is an XML parsing library.  
+At least one user has noticed that the binary distribution on the Xerces website is 
+broken so it is recomended that the source code is downloaded and installed.  On many 
+Linux distributions there will be a package for xerces, on Ubuntu this package is 
+called libxerces-c3-dev, installation via your system's package manager is also fine
+and should be successful.
 
 then on most UNIX systems type:
     
@@ -11,4 +18,6 @@ then on most UNIX systems type:
     make
     sudo make install
 
-If that fails you may meed to run autogen.sh to rebuild the GNU build system for crass
+If that fails you may meed to run autogen.sh to rebuild the GNU build system for crass.
+Also note that you may need to update the LD_LIBRARY_PATH environmental variable if you
+have installed any of the above libraries in non-standard locations.
