@@ -32,21 +32,8 @@
     linkcolor=blue,%
     urlcolor=blue
 }
-\usepackage{listings} % for source code
-\usepackage{listings}
 \usepackage[usenames,dvipsnames]{color}
 
-\definecolor{gray}{rgb}{0.4,0.4,0.4}
-\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
-\definecolor{cyan}{rgb}{0.0,0.6,0.6}
-
-\lstset{
-  basicstyle=\ttfamily,
-  columns=fullflexible,
-  showstringspaces=false,
-  commentstyle=\color{gray}\upshape
-  breaklines=true
-}
 \usepackage{longtable}
 \usepackage{booktabs} % for much better looking tables
 \usepackage{array} % for better arrays (eg matrices) in maths
@@ -75,9 +62,9 @@
 
 %%% Source Code Appearance
 \usepackage{listings}
-\usepackage[usenames,dvipsnames]{color}
 
 \definecolor{gray}{rgb}{0.4,0.4,0.4}
+\definecolor{lightgray}{rgb}{0.8,0.8,0.8}
 \definecolor{darkblue}{rgb}{0.0,0.0,0.6}
 \definecolor{cyan}{rgb}{0.0,0.6,0.6}
 
@@ -87,6 +74,19 @@
   showstringspaces=false,
   commentstyle=\color{gray}\upshape
   breaklines=true
+}
+
+\lstdefinestyle{BashInputStyle}{
+  language=bash,
+  basicstyle=\ttfamily,
+  numbersep=3pt,
+  columns=fullflexible,
+  backgroundcolor=\color{lightgray},
+  linewidth=0.9\linewidth,
+  xleftmargin=0.1\linewidth,
+  breaklines=true,
+  breakatwhitespace=true,
+  breakautoindent=true 
 }
 
 \lstdefinelanguage{XML_new}
@@ -173,14 +173,14 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 \tableofcontents
 \section{Quick Start}
-\begin{lstlisting}
+\begin{lstlisting}[style=BashInputStyle]
 	[$ ./autogen.sh]
 	$ ./configure
 	$ make
 	$ make install
 	
 	$ ./crass [options] input_file{1, n}
-    $ ./crass-assembler [--velvet | --cap3] -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]
+        $ ./crass-assembler [--velvet | --cap3] -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]
 \end{lstlisting}
 \section{Installation}
 Crass has been developed with the GNU build system for ease of configuration on the system.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
@@ -198,7 +198,7 @@ Crass can also be run as a wrapper for some common assembly algorithms to assemb
 
 \subsection{Compiling}
 On a GNU system simply:
-\begin{lstlisting}
+\begin{lstlisting}[style=BashInputStyle]
 	[$ ./autogen.sh]
 	$  ./configure
 	$  make
@@ -227,9 +227,9 @@ $ export LD_LIBRARY_PATH=/opt/local/lib
 
 \section{Running Instructions}
 Crass has two separate commands for finding and for assembling CRISPRs:
- \begin{lstlisting}
+ \begin{lstlisting}[style=BashInputStyle]
 	$ ./crass [options] input_file
-    $ ./crass-assembler [--velvet | --cap3] -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]
+        $ ./crass-assembler [--velvet | --cap3] -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]
 \end{lstlisting}
 \subsection{Finding CRISPRs}
 Once installed the most minimal comand is 
@@ -296,11 +296,11 @@ The segments are listed in the names of the spacers in the graph file.
 For example a spacer with the name `sp\_445\_17\_C74' means this is spacer with id 445, in segment (contig) 17 with a coverage of 74.
 
   The most minimal command for the assembler is shown below: 
- \begin{lstlisting}
+ \begin{lstlisting}[style=BashInputStyle]
     $ ./crass-assembler [--velvet | --cap3] -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]
 \end{lstlisting}
  If for example you run Crass of a metagenome and get 5 groups and you want to assemble contigs 1, 2, 5, 6, 10 from group 3 using velvet
- \begin{lstlisting}
+ \begin{lstlisting}[style=BashInputStyle]
 	$ ./crass-assembler --velvet -g 3 -x crass.crispr -s 1,2,5,6,10 -i crass_out
 \end{lstlisting}
 
