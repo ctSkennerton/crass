@@ -202,3 +202,4 @@ float PatternMatcher::getStringSimilarity(std::string& s1, std::string& s2)
     float edit_distance =  levenstheinDistance(s1 ,  s2);
     return 1.0 - (edit_distance/max_length);
 }
+
