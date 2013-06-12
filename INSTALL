@@ -1,23 +1,57 @@
-Crass has three library dependancies that need to be installed prior to building:
+INSTALLATION
+------------
 
-libcrispr - A library for manipulating crispr files (www.ctskennerton.github.com/libcrispr)
+Crass requires a UNIX operating system and has been tested on 64-bit Linux 
+personal computers with intel processors and servers with 64-bit Opteron processors.
+It successfully compiles with gcc 4.4.5 and gcc 4.6.3 other versions of gcc have not been tested.  
+Crass uses [libcrispr](https://ctskennerton.github.com/libcrispr) release 1:0:0 which requires 
+[Xerces-c](http://xerces.apache.org/) XML libraryversion 3.1.1 and [Zlib](www.zlib.net) 
+are installed for compilation.  Optionally you can also install the [Graphviz package](www.graphviz.org) 
+for rendering graphs.  
 
-zlib - is commonly already installed so you shouldn't have to worry about it. But 
-just in case www.zlib.org
+WARNING: Do not install the binary distribution of Xerces from their
+website, it is broken and looks for other shared libraries in specific
+places.  Install xerces from source or using a package manager for you
+system.
 
-Xerces-c++ (http://xerces.apache.org/xerces-c/) - This is an XML parsing library.  
-At least one user has noticed that the binary distribution on the Xerces website is 
-broken so it is recomended that the source code is downloaded and installed.  On many 
-Linux distributions there will be a package for xerces, on Ubuntu this package is 
-called libxerces-c3-dev, installation via your system's package manager is also fine
-and should be successful.
+With all this in mind to perform the installation:
 
-then on most UNIX systems type:
-    
-    ./configure
-    make
-    sudo make install
+download the source files from git.
+then on most Unix systems:
 
-If that fails you may meed to run autogen.sh to rebuild the GNU build system for crass.
-Also note that you may need to update the LD_LIBRARY_PATH environmental variable if you
-have installed any of the above libraries in non-standard locations.
+    $ tar -xf crass.tar.gz
+    $ cd crass
+    $ ./autogen.sh
+    $ ./configure
+    $ make
+    $ make install
+
+On some installations you may need to update the `LD_LIBRARY_PATH`
+environmental variable so that crass can find the libcrispr shared
+library.  This is essential if you have libcrispr in a non-standard
+location, although I've also noticed this in the latest versions of
+Ubuntu (12.10) that `/usr/local/lib` is not included in
+`LD_LIBRARY_PATH` by default so even a 'standard' installation may
+require this.
+
+NON-STANDARD INSTALLATIONS
+--------------------------
+
+Crass can access the graphviz libraies and executables if desired. Use the 
+`--enable-rendering` during configure to access this feature.
+
+If libcrispr or Xerces are installed in non-standard loacations use the `--with-libcrispr=[PREFIX]`
+and  `--with-xerces=[PREFIX]` configure option to change the location prefix. Configure will look for 
+`$prefix/lib/` and `$prefix/include` directories for the library objects and header files.  Note that the 
+below options for changing `LDFLAGS` and `CPPFLAGS` will not work for Xerces as it is a C++ library and not a 
+C library and therefore different code is used to check for it.   
+
+`LDFLAGS` - set this environmental variable during configure to add to the path where library object files can be found. 
+Don't forget to use `-L` a the begining
+
+`CPPFLAGS` - set this environmental variable during configure to add to the path where header files are located.
+
+example:
+
+    $ ./configure --enable-rendering LDFLAGS="-L/usr/home/user_name/local/lib/" CPPFLAGS="-I/usr/home/user_name/local/include/" 
+

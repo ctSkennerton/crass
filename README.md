@@ -58,6 +58,11 @@ Crass uses [libcrispr](https://ctskennerton.github.com/libcrispr) release 1:0:0 
 are installed for compilation.  Optionally you can also install the [Graphviz package](www.graphviz.org) 
 for rendering graphs.  
 
+WARNING: Do not install the binary distribution of Xerces from their
+website, it is broken and looks for other shared libraries in specific
+places.  Install xerces from source or using a package manager for you
+system.
+
 With all this in mind to perform the installation:
 
 download the source files from git.
