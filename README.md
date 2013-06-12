@@ -1,10 +1,16 @@
 crass -- CRisprASSembler -- version 0 subversion 3 revision 5 (0.3.5)
 =======================================================================
 
+CITATION
+--------
+
+Connor T. Skennerton, Michael Imelfort, and Gene W. Tyson
+Crass: identification and reconstruction of CRISPR from unassembled
+metagenomic data Nucl. Acids Res. (2013) 41(10): e105
 
 
 COPYRIGHT
---------
+---------
 
 Copyright 2011-2013 Connor Skennerton & Michael Imelfort. All rights reserved. 
 
@@ -44,9 +50,9 @@ at the following locations:
 INSTALLATION
 ------------
 
-Crass requires a UNIX operating system and has been tested on both 64-bit Linux 
-and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
-It successfully compiles with gcc 4.2, gcc 4.4.5 and gcc 4.6.3 other versions of gcc have not been tested.  
+Crass requires a UNIX operating system and has been tested on 64-bit Linux 
+personal computers with intel processors and servers with 64-bit Opteron processors.
+It successfully compiles with gcc 4.4.5 and gcc 4.6.3 other versions of gcc have not been tested.  
 Crass uses [libcrispr](https://ctskennerton.github.com/libcrispr) release 1:0:0 which requires 
 [Xerces-c](http://xerces.apache.org/) XML libraryversion 3.1.1 and [Zlib](www.zlib.net) 
 are installed for compilation.  Optionally you can also install the [Graphviz package](www.graphviz.org) 

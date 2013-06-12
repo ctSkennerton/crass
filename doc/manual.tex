@@ -33,8 +33,9 @@
     urlcolor=blue
 }
 \usepackage[usenames,dvipsnames]{color}
-
+\usepackage{multicol}
 \usepackage{longtable}
+\usepackage{tabu}
 \usepackage{booktabs} % for much better looking tables
 \usepackage{array} % for better arrays (eg matrices) in maths
 \usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
@@ -172,9 +173,10 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 \maketitle
 
 \tableofcontents
+\newpage
 \section{Quick Start}
 \begin{lstlisting}[style=BashInputStyle]
-	[$ ./autogen.sh]
+	$ ./autogen.sh
 	$ ./configure
 	$ make
 	$ make install
@@ -183,35 +185,51 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
         $ ./crass-assembler [--velvet | --cap3] -g INT -s LIST -x CRASS_XML_FILE -i INDIR [options]
 \end{lstlisting}
 \section{Installation}
-Crass has been developed with the GNU build system for ease of configuration on the system.  However, because of this Crass requires a UNIX operating system and has been tested on both 64-bit Linux (Ubuntu) and MacOSX personal computers with intel processors and servers with 64-bit Opteron processors.
-\subsection{Prerequisites}
-\subsubsection{Computer Resources}
-Crass should run on Linux or MacOSX with 64-bit architectures with gcc installed (note that other compilers have not been tested).  Crass successfully compiles with gcc 4.2 and gcc 4.4 other versions of gcc have not been tested.    
+Crass has been developed with the GNU build system for ease of configuration on the system.  However, because of this Crass requires a UNIX operating system and has been tested on 64-bit Linux (Ubuntu).  Crass should run on Linux 64-bit architectures with gcc installed (note that other compilers have not been tested).  Crass successfully compiles with gcc 4.4 and 4.6 other versions of gcc have not been tested.    
 
-\subsubsection{Pre-installed Software and Libraries}
-Crass requires that \href{http://ctskennerton.github.com/libcrispr}{libcrispr} and \href{www.zlib.net}{zlib} be installed for compilation.
-In turn, libcrispr requires that  \href{http://xerces.apache.org/}{Xerces-c} is also present on the system.  Therefore make sure that zlib and Xerces-c are installed, then install libcrispr and finally Crass on the system.
+\subsection{Pre-installed Software and Libraries}
+\begin{multicols}{3}[In short]
+\begin{itemize}
+\item \href{http://gcc.gnu.org/}{gcc} \textgreater= 4.4
+\item \href{http://www.gnu.org/software/autoconf/}{autoconf}  \textgreater= 2.61
+\item \href{http://www.gnu.org/software/automake/}{automake} \textgreater= 1.10
+\item \href{http://www.gnu.org/software/libtool/}{libtool} \textgreater= 2.2
+\item \href{http://ctskennerton.github.com/libcrispr}{libcrispr} \textgreater= 1.0.0
+\item \href{http://xerces.apache.org/}{Xerces-c++} \textgreater= 3.1.1
+\item \href{http://zlib.net/}{zlib}
+\end{itemize}
+\end{multicols}
+Cass requires that the GNU atuotools packages are installed, this includes \emph{autoconf}, \emph{automake} and \emph{libtool}.  Before installation please check the version of these tools; some linux distributions contain very old versions as default, and this will mess up the install in obscure ways. Make sure that you have recent versions of libtool, automake, and autoconf.
+
+Crass requires that \href{http://ctskennerton.github.com/libcrispr}{libcrispr 1.0.0} and \href{www.zlib.net}{zlib} be installed for compilation.
+In turn, libcrispr requires that  \href{http://xerces.apache.org/}{Xerces-c 3.1.1} is also present on the system.  Therefore make sure that zlib and Xerces-c are installed, then install libcrispr and finally Crass on the system.  At least one user has reported that the binary distributions available on the Xerces-c website are broken and you should not assume that they will work on your system.  If possible, try and install Xerces-c through your system's package manager making sure that you install the `dev' version of the package.  On debian based linux systems this will be a package called `libxerces-c3-dev' or similar; for systems that use RPM, the package will be called `libxerces-c-devel' or similar.  However, if you do not have root access you must install the xerces source code to a directory that you have write access to and specify th correct configuration options (see ~\nameref{sec:configure}).
 \subsubsection{Optional Packages and Programs}
 There are a number of optional features of Crass that require additional software.  These programs are not required for compilation but add extra features that you might find useful.  It is possible to create image files of the graphs that are produced by Crass if the \href{www.graphviz.org}{Graphviz} package is installed.  By default Crass outputs a .gv file containing Graphviz source code, so even if your running Crass on a server that doesn't have it installed you can download the .gv file to another computer for visualization.  Testing for the Graphviz package occurs during configuration.  Even if you have Graphviz installed you still need to opt-in to graph rendering (see  ~\nameref{sec:configure} for the correct options) as rendering images for a large number of graphs can take alot of time.  If you enable rendering during the configuration process you can still set user options during run-time to prevent image rendering. (see~\nameref{sec:userflags}).
 
 Crass can also be run as a wrapper for some common assembly algorithms to assemble CRISPRs into contigs.  Currently there are two assembly wrappers, one for \texttt{velvet} and \texttt{cap3}. To activate this feature you must have the executables for either of these two programs in your \texttt{\$PATH} environment variable.  If at least one of them is in your \texttt{\$PATH} then the assembly wrapper will be compiled.  
 
 \subsection{Compiling}
-On a GNU system simply:
+On a GNU system with the prerequisites install, simply:
 \begin{lstlisting}[style=BashInputStyle]
-	[$ ./autogen.sh]
+	$ ./autogen.sh
 	$  ./configure
 	$  make
 	$  [sudo] make install
 \end{lstlisting}
-NOTE: running \lstinline$./autogen.sh$ may be necessary to generate the \lstinline$configure$ program
+
 \subsubsection{Configure/Compiling Options}
 \label{sec:configure}
-If either Xerces or libcrispr were installed into non-default locations it is necessary to define those locations when performing \lstinline$configure$.  It may also be necessary to add the installation directories into your \lstinline$LD_LIBRARY_PATH$ environmental variable.  For example if librispr is installed in \lstinline$/opt/local$ then add this directory with: 
-\begin{lstlisting}
-$ export LD_LIBRARY_PATH=/opt/local/lib
+If either Xerces or libcrispr were installed into non-default locations it is necessary to define those locations when performing \lstinline$configure$.  It may also be necessary to add the installation directories into your \lstinline$LD_LIBRARY_PATH$ environmental variable.  For example if you do not have root access you could install librispr and Xerces-c in \texttt{\~/local/} then specify that location to configure: 
+\begin{lstlisting}[style=BashInputStyle]
+$ ./autogen.sh
+$ ./configure --with-libcrispr=$HOME/local --with-xerces=$HOME/local --prefix=$HOME/local
+$ make install
+$ export LD_LIBRARY_PATH=$HOME/local
+[$ echo export LD_LIBRARY_PATH=$HOME/local >> ~/.bashrc] 
 \end{lstlisting}
- These changes can be made permanent by adding the export statement into your \lstinline$~/.bashrc$ file. 
+
+In this example the \texttt{--with-libcrispr} and \texttt{--with-xerces} get passed the installation prefix for those libraries, in this case \texttt{\~/local}.  It is expected that within this directory there are directories called `include' and `lib' that contain the headers and shared objects for the libraries.
+
 
     \begin{longtable}{  l    p{10cm} }
     \hline
@@ -305,6 +323,16 @@ For example a spacer with the name `sp\_445\_17\_C74' means this is spacer with 
 \end{lstlisting}
 
 This will extract all of the reads that contain spacers from those contigs and use them as input to velvet which will do the assembly in the backgroud.  This is a `dumb' process in the sense that if you provide contig IDs for multiple pathways the assembler will still try and succeed but this will undoubtibly cause breaks. 
+
+\section{Trubleshooting}
+\label{sec:trubleshooting}
+\begin{longtabu} to \textwidth {X[1 , p ]  X[1 , p ]}
+\hline
+Error & Solution \\ \hline \hline 
+\texttt{LT\_INIT: command not found} & Seen during configure, and will cause configure to fail.  Caused by the version of libtool being less than 2.2.  You will need to install a newer version of both libtool (get newer versions of autoconf and automake while your at it) and try again.  You may also need to delete the crass directory and download a fresh copy of the source code as old versions of libtool/autoconf pollute the code with outdated install helper scripts that prevent future installations \\
+\texttt{crass: error while loading shared libraries} & Occurs when you have installed a dependancy for crass (libcrispr or Xerces-c) in a location that is non-standard.  See the example in ~\nameref{sec:configure} for how to solve this problem. \\
+\hline
+\end{longtabu}
 
 \section{The CRISPR File (.crispr)}
 \label{sec:Fileformats}
