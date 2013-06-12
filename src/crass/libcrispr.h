@@ -121,7 +121,8 @@ int scanRight(ReadHolder& tmp_holder,
               unsigned int scanRange);
 
 unsigned int extendPreRepeat(ReadHolder& tmp_holder, 
-                             int searchWindowLength);
+                             int searchWindowLength,
+                             int minSpacerLength);
 
 bool qcFoundRepeats(ReadHolder& tmp_holder, 
                     int minSpacerLength, 

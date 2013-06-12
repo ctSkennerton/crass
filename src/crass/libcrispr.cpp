@@ -378,7 +378,7 @@ int longReadSearch(ReadHolder& tmpHolder,
             logInfo("\tPassed test 1. At least "<<opts.minNumRepeats<< " ("<<tmpHolder.numRepeats()<<") repeated kmers found", 8);
 #endif
 
-            unsigned int actual_repeat_length = extendPreRepeat(tmpHolder, opts.searchWindowLength);
+            unsigned int actual_repeat_length = extendPreRepeat(tmpHolder, opts.searchWindowLength, opts.lowSpacerSize);
 
             if ( (actual_repeat_length >= opts.lowDRsize) && (actual_repeat_length <= opts.highDRsize) )
             {
@@ -785,8 +785,11 @@ void findSingletonsMultiVector(const char *inputFastq,
     std::cout<<diff<<" sec"<<std::flush;
 }
 
-unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength)
+unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, int minSpacerLength)
 {
+#ifdef DEBUG
+    tmp_holder.logContents(9);
+#endif
 #ifdef DEBUG
     logInfo("Extending Prerepeat...", 9);
 #endif
@@ -843,7 +846,7 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength)
 #endif
     unsigned int right_extension_length = 0;
     // don't search too far  
-    unsigned int max_right_extension_length = shortest_repeat_spacing;// - minSpacerLength;
+    unsigned int max_right_extension_length = shortest_repeat_spacing - minSpacerLength;
 #ifdef DEBUG
     logInfo("max right extension length: "<<max_right_extension_length, 9);
 #endif
@@ -853,27 +856,31 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength)
     if(dist_to_end < max_right_extension_length)
     {
 #ifdef DEBUG
-        logInfo("removing end partial: "<<dist_to_end<<" < "<<max_right_extension_length, 9);
+        logInfo("removing end partial: "<<tmp_holder.getLastRepeatStart()<<" ("<<dist_to_end<<" < "<<max_right_extension_length<<")", 9);
 #endif
         DR_index_end -= 2;
         cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * (num_repeats - 1));
         if (2 > cut_off) 
         {
-            cut_off =2;
+            cut_off = 2;
         }
 #ifdef DEBUG
-        logInfo("new cutoff: "<<cut_off, 9);
+        logInfo("minimum number of repeats needed with same nucleotide for extension: "<<cut_off, 9);
 #endif
     }
     std::string curr_repeat;
     int char_count_A, char_count_C, char_count_T, char_count_G;
     char_count_A = char_count_C = char_count_T = char_count_G = 0;
     //(from the right side) extend the length of the repeat to the right as long as the last base of all repeats are at least threshold
+#ifdef DEBUG
+    int iteration_counter = 0;
+#endif
     while (max_right_extension_length > 0)
     {
         for (unsigned int k = 0; k < DR_index_end; k+=2 )
         {
 #ifdef DEBUG
+            logInfo("Iteration "<<iteration_counter++, 10);
             logInfo(k<<" : "<<tmp_holder.getRepeatAt(k) + tmp_holder.getRepeatLength(), 10);
 #endif
             // look at the character just past the end of the last repeat
@@ -1001,11 +1008,11 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength)
             *(repeat_iter+1) += right_extension_length;
         }
 #ifdef DEBUG    
-        logInfo(*repeat_iter<<","<<*(repeat_iter+1), 9);
+        logInfo("\t"<<*repeat_iter<<","<<*(repeat_iter+1), 9);
 #endif
         repeat_iter += 2;
     }
-    
+
     return static_cast<unsigned int>(tmp_holder.getRepeatLength());
     
 }

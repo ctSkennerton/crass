@@ -910,13 +910,13 @@ bool ReadHolder::getNextSpacer(std::string * retStr)
             else
             {
             	// read ends with a DR. No more spacers to get
-#ifdef DEBUG
             	if(*ss_iter > (RH_Seq.length() - 1))
             	{
-                    this->printContents(std::cerr);
-                    logError( "ss list out of range; "<<*ss_iter<< " > "<<RH_Seq.length() - 1);
+                    std::stringstream error_stream;
+                    this->printContents(error_stream);
+                    error_stream <<"ss list out of range; "<<*ss_iter<< " > "<<RH_Seq.length() - 1;
+                    logError(error_stream.str().c_str());
             	}
-#endif
                 return false;    		
             }
     	}
@@ -1229,9 +1229,7 @@ void ReadHolder::logContents(int logLevel)
         ss << *ss_iter << ",";
         ss_iter++;
     }
-    std::string bob;
-    ss >> bob;
-    logInfo(bob, logLevel);
+    logInfo(ss.str().c_str(), logLevel);
     logInfo(RH_Seq, logLevel);
 }
 
