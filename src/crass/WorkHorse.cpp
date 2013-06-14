@@ -1605,7 +1605,7 @@ int WorkHorse::cleanSpacerGraphs(void)
 	//
     // go through the DR2GID_map and make all reads in each group into nodes
 #ifdef DEBUG
-    renderSpacerGraphs("Spacer_Preclean_");
+    //renderSpacerGraphs("Spacer_Preclean_");
 #endif
     DR_ListIterator dr_iter = mDRs.begin();
     while(dr_iter != mDRs.end())
@@ -1824,53 +1824,16 @@ int WorkHorse::renderSpacerGraphs(std::string namePrefix)
     return 0;
 }
 
-bool WorkHorse::checkFileOrError(const char * fileName)
+int WorkHorse::checkFileOrError(const char * fileName)
 {
-    try {
-        // Test to see if the file is ok.
-        struct stat inputDirStatus;
-        int xStat = stat(fileName, &inputDirStatus);
-        // stat failed
-        switch (xStat) 
-        {
-            case -1:
-            {
-                switch (errno)
-                {
-                    case ENOENT:
-                    {
-                        throw ( std::runtime_error("Path to file does not exist, or path is an empty string.") );
-                        break;
-                    }
-                    case ELOOP:
-                    {
-                        throw ( std::runtime_error("Too many symbolic links encountered while traversing the path to file."));
-                        break;
-                    }
-                    case EACCES:
-                    {
-                        throw ( std::runtime_error("You do not have permission to access the file."));
-                        break;
-                    }
-                    default:
-                    {
-                        throw (std::runtime_error("An error occured when reading the file"));
-                        break;
-                    }
-                }
-                break;
-            }
-            default:
-            {
-                return true;
-                break;
-            }
-        }
-    } catch (std::exception& e) {
-        std::cerr << e.what()<<std::endl;
-        logError(e.what());
-        return false;
+    // Test to see if the file is ok.
+    struct stat inputDirStatus;
+    int xStat = stat(fileName, &inputDirStatus);
+    // stat failed
+    if (xStat == -1) {
+        return errno;
     }
+    return 0;
 }
 
 bool WorkHorse::outputResults(std::string namePrefix)
@@ -1881,8 +1844,10 @@ bool WorkHorse::outputResults(std::string namePrefix)
 	//
 
 #ifdef RENDERING
-    std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering final spacer graphs using Graphviz"<<std::endl;
-    logInfo("Rendering spacer graphs" , 1);
+    if(! mOpts->noRendering) {
+        std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering final spacer graphs using Graphviz"<<std::endl;
+        logInfo("Rendering spacer graphs" , 1);
+    }
 #endif
     // make a single file with all of the keys for the groups
     std::ofstream key_file;
@@ -1949,6 +1914,19 @@ bool WorkHorse::outputResults(std::string namePrefix)
                                                mOpts->longDescription, 
                                                mOpts->showSingles))
         {
+#ifdef RENDERING
+            if (!mOpts->noRendering) 
+            {
+                // create a command string and call graphviz to make the image file
+                std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering group "<<drg_iter->first<<std::endl;
+                std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
+                if(system(cmd.c_str()))
+                {
+                    logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
+                    return 1;
+                }
+            }
+#endif
             // add our group to the key
             current_manager->printSpacerKey(key_file, 
                                             10, 
@@ -1981,19 +1959,6 @@ bool WorkHorse::outputResults(std::string namePrefix)
              */
             xercesc::DOMElement * assem_elem = xml_doc->addAssembly(group_elem);
             current_manager->printAssemblyToDOM(xml_doc, assem_elem, false);
-#if RENDERING
-            if (!mOpts->noRendering) 
-            {
-                // create a command string and call graphviz to make the image file
-                std::cout<<"["<<PACKAGE_NAME<<"_imageRenderer]: Rendering group "<<drg_iter->first<<std::endl;
-                std::string cmd = mOpts->layoutAlgorithm + " -Teps " + graph_file_name + " > "+ graph_file_prefix + ".eps";
-                if(system(cmd.c_str()))
-                {
-                    logError("Problem running "<<mOpts->layoutAlgorithm<<" when rendering spacer graphs");
-                    return 1;
-                }
-            }
-#endif
         }
         else 
         {
@@ -2064,7 +2029,7 @@ bool WorkHorse::addDataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement *
 
 bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMElement * groupElement, int groupNumber)
 {
-    try{
+    try {
         
         std::stringstream notes;
         notes << "Run on "<< mTimeStamp;
@@ -2090,7 +2055,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         {
             // we whould have a log file
             file_name = mOpts->output_fastq + PACKAGE_NAME + "." + mTimeStamp + ".log";
-            if (checkFileOrError(file_name.c_str())) 
+            if (! checkFileOrError(file_name.c_str())) 
             {
                 xmlDoc->addFileToMetadata("log", absolute_dir + file_name, metadata_elem);
             }
@@ -2110,7 +2075,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         {
             file_name = mOpts->output_fastq + "Group_"; 
             std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_debug.gv";
-            if (checkFileOrError((file_name + file_sufix).c_str())) 
+            if (! checkFileOrError((file_name + file_sufix).c_str())) 
             {
                 xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
             } 
@@ -2124,7 +2089,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
             
             // and now for the cleaned .gv
             file_name = mOpts->output_fastq + "Clean_";
-            if (checkFileOrError((file_name + file_sufix).c_str())) 
+            if (! checkFileOrError((file_name + file_sufix).c_str())) 
             {
                 xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
             } 
@@ -2146,7 +2111,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         if (!mOpts->noDebugGraph) 
         {
             file_name = mOpts->output_fastq + "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
-            if (checkFileOrError(file_name.c_str())) 
+            if (! checkFileOrError(file_name.c_str())) 
             {
                 xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
             } 
@@ -2157,7 +2122,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
             
             file_name = mOpts->output_fastq + "Clean_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
             
-            if (checkFileOrError(file_name.c_str())) 
+            if (! checkFileOrError(file_name.c_str())) 
             {
                 xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
             } 
@@ -2171,7 +2136,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         if (!mOpts->noRendering) 
         {
             file_name = mOpts->output_fastq + "Spacers_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".eps";
-            if (checkFileOrError(file_name.c_str())) 
+            if (! checkFileOrError(file_name.c_str())) 
             {
                 xmlDoc->addFileToMetadata("image", absolute_dir + file_name, metadata_elem);
             } 
@@ -2187,7 +2152,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         // add in the final Spacer graph
         file_name = mOpts->output_fastq + "Spacers_"; 
         std::string file_sufix = to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + "_spacers.gv";
-        if (checkFileOrError((file_name + file_sufix).c_str())) 
+        if (! checkFileOrError((file_name + file_sufix).c_str())) 
         {
             xmlDoc->addFileToMetadata("data", absolute_dir + file_name + file_sufix, metadata_elem);
         } 
@@ -2202,7 +2167,7 @@ bool WorkHorse::addMetadataToDOM(crispr::xml::writer * xmlDoc, xercesc::DOMEleme
         
         // check the sequence file
         file_name = mOpts->output_fastq +  "Group_" + to_string(groupNumber) + "_" + mTrueDRs[groupNumber] + ".fa";
-        if (checkFileOrError(file_name.c_str())) 
+        if (! checkFileOrError(file_name.c_str())) 
         {
             xmlDoc->addFileToMetadata("sequence", absolute_dir + file_name, metadata_elem);
         } 

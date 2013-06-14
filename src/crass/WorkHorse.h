@@ -169,7 +169,7 @@ class WorkHorse {
         
         int renderSpacerGraphs(std::string namePrefix);
         
-        bool checkFileOrError(const char * fileName);
+        int checkFileOrError(const char * fileName);
     
         bool outputResults(void) { return outputResults(mOpts->output_fastq + "crass"); } // print all the assembly gossip to XML
         
