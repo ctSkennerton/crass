@@ -1243,7 +1243,7 @@ std::ostream& ReadHolder::print (std::ostream& s)
         s<<'>'<<RH_Header;
         if (RH_Comment.length() > 0) 
         {
-            s<<'_'<<RH_Comment;
+            s<<' '<<RH_Comment;
         }
         s<<std::endl<<RH_Seq;
 #ifdef OUTPUT_READS_FASTQ
