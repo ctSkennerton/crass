@@ -131,8 +131,8 @@ class WorkHorse {
                                          Aligner& drAligner, 
                                          int& nextFreeGID,
                                          int& collapsedPos,
-                                         std::map<char, int> collapsedOptions,
-                                         std::map<int, bool> refinedDREnds
+                                         std::map<char, int>& collapsedOptions,
+                                         std::map<int, bool>& refinedDREnds
                                          );
         
         bool parseGroupedDRs( int GID, int * nextFreeGID);

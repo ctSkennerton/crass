@@ -771,8 +771,8 @@ std::string WorkHorse::calculateDRConsensus(int GID,
                                             Aligner& drAligner, 
                                             int& nextFreeGID,
                                             int& collapsedPos,
-                                            std::map<char, int> collapsedOptions,
-                                            std::map<int, bool> refinedDREnds
+                                            std::map<char, int>& collapsedOptions,
+                                            std::map<int, bool>& refinedDREnds
                                             )
 {
 
@@ -805,25 +805,33 @@ std::string WorkHorse::calculateDRConsensus(int GID,
 			char alphabet[4] = {'A', 'C', 'G', 'T'};
 			for(int k = 0; k < 4; k++)
 			{
-	#ifdef DEBUG
-				logInfo("  " << alphabet[k] << "     " << drAligner.coverageAt(i, alphabet[k]) << "      " << ((float)drAligner.coverageAt(i, alphabet[k])/total_count), 5);
-	#endif
+                float nt_proportion = static_cast<float>(drAligner.coverageAt(i, alphabet[k])/total_count);
+
 				// check to make sure that each base is represented enough times
-				if((float)drAligner.coverageAt(i, alphabet[k])/total_count >= CRASS_DEF_COLLAPSED_THRESHOLD)
+				if(nt_proportion >= CRASS_DEF_COLLAPSED_THRESHOLD)
 				{
-					// there's enough bases here to warrant further investigation
+#ifdef DEBUG
+                logInfo("  " << alphabet[k] << "     " << drAligner.coverageAt(i, alphabet[k]) << "      " << nt_proportion <<"   above threshold, added to colapsed options", 5);
+#endif
+                    // there's enough bases here to warrant further investigation
 					collapsedOptions[alphabet[k]] = (int)(collapsedOptions.size() + nextFreeGID);
 					nextFreeGID++;
 				}
+#ifdef DEBUG
+                else
+                {
+                    logInfo("  " << alphabet[k] << "     " << drAligner.coverageAt(i, alphabet[k]) << "      " << nt_proportion <<"   below threshold", 5);
+                }
+#endif
 			}
 			
 			// make sure we've got more than 1 option
 			if(2 > collapsedOptions.size())
 			{
 				collapsedOptions.clear();
-	#ifdef DEBUG
+#ifdef DEBUG
 				logInfo("   ...ignoring (FA)", 5);
-	#endif
+#endif
 				true_dr += drAligner.consensusAt(i);
 				refinedDREnds[i] = true;
 			}
@@ -889,7 +897,7 @@ std::string WorkHorse::calculateDRConsensus(int GID,
 					
 					// make the collapsed pos array specific and exit this loop
 					collapsedPos += drAligner.getDRZoneStart();
-					i = drAligner.getDRZoneStart() + 1;
+					i = drAligner.getDRZoneEnd() + 1;
 				}
 			}
 		}
@@ -930,7 +938,6 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
 	std::map<char, int> collapsed_options;            // holds the chars we need to split on
 	std::map<int, bool> refined_DR_ends;              // so we can update DR ends based on consensus 
     std::string true_DR = calculateDRConsensus(GID, dr_aligner, *nextFreeGID, collapsed_pos, collapsed_options, refined_DR_ends);
-
     // check to make sure that the DR is not just some random long RE
     if((unsigned int)(true_DR.length()) > mOpts->highDRsize)
     {
@@ -1055,7 +1062,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
             int group = (*nextFreeGID)++;
             mDR2GIDMap[group] = new DR_Cluster;
             coll_char_to_GID_map[co_iter->first] = group;
-            logInfo("Mapping \""<< co_iter->first << " : "  << co_iter->second << "\" to group: " << group, 1);
+            logInfo("Mapping \""<< co_iter->first << " : "  << co_iter->second << "\" to group: " << group << " "<< &mDR2GIDMap[group], 1);
             co_iter++;
         }
         
@@ -1068,19 +1075,21 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                 // check if the deciding character is within range of this DR
                 if(dr_aligner.offset(*dr_iter) <= collapsed_pos && collapsed_pos < (dr_aligner.offset(*dr_iter) + (int)(tmp_DR.length())))
                 {
+                    logInfo("\tdeciding character within DR "<< *dr_iter,5);
                     // this is easy, we can compare based on this char only
                     char decision_char = tmp_DR[collapsed_pos - dr_aligner.offset(*dr_iter)];
                     (mDR2GIDMap[ coll_char_to_GID_map[ decision_char ] ])->push_back(*dr_iter);
                 }
                 else
                 {
+                    logInfo("\tRebuilding cluster from the ground up for DR " << *dr_iter,5);
                     // this is tricky, we need to completely break the group and re-cluster
                     // from the ground up based on reads
                     // get the offset from the start of the DR to the deciding char
                     // if it is negative, the dec char lies before the DR
                     // otherwise it lies after
                     int dec_diff = collapsed_pos - dr_aligner.offset(*dr_iter);
-                    
+                    logInfo("\t\tBuilding form map",5);
                     // we're not guaranteed to see all forms. So we need to be careful here...
                     // First we go through just to count the forms
                     std::map<char, ReadList *> forms_map;
@@ -1113,6 +1122,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                     {
                         case 1:
                         {
+                            logInfo("\t\tOne form found", 5);
                             // we can just reuse the existing ReadList!
                             // find out which group this bozo is in
                             read_iter = mReads[*dr_iter]->begin();
@@ -1145,9 +1155,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                         case 0:
                         {
                             // Something is wrong!
-#ifdef DEBUG                        	
-                            logWarn("No reads fit the form: " << tmp_DR, 8);
-#endif
+                            logWarn("\t\tNo reads fit the form: " << tmp_DR, 1);
                             if(NULL != mReads[*dr_iter])
                             {
                                 clearReadList(mReads[*dr_iter]);
@@ -1160,6 +1168,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
                         {
                             // we need to make a couple of new readlists and nuke the old one.
                             // first make the new readlists
+                            logInfo("\t\tMultiple forms, splitting reads", 5);
                             std::map<char, ReadList *>::iterator fm_iter = forms_map.begin();
                             while(fm_iter != forms_map.end())
                             {
@@ -1221,9 +1230,10 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
         }
         
         // time to delete the old clustered DRs and the group from the DR2GID_map
+        logInfo("\tRemoving original group "<< GID, 5);
         cleanGroup(GID);
         
-        logInfo("Calling the parser recursively", 4);
+        logInfo("\tCalling the parser recursively", 4);
         
         // call this baby recursively with the new clusters
         std::map<char, int>::iterator cc_iter = coll_char_to_GID_map.begin();
@@ -1247,10 +1257,12 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
         logInfo("Found DR: " << laurenized_true_dr, 2);
         
         mTrueDRs[GID] = laurenized_true_dr;
+        logInfo("group: "<< GID<< " associated:" << &mDR2GIDMap[GID], 5);
         DR_ClusterIterator drc_iter = (mDR2GIDMap[GID])->begin();
         while(drc_iter != (mDR2GIDMap[GID])->end())
         {
-        	if(dr_aligner.offsetFind(*drc_iter) == dr_aligner.offsetEnd())
+        	logInfo("\tRepeat: "<<*drc_iter, 5);
+            if(dr_aligner.offsetFind(*drc_iter) == dr_aligner.offsetEnd())
         	{
         		logError("1: Repeat "<< *drc_iter<<" in Group "<<GID <<" has no offset in DR_offset_map");
         	}
