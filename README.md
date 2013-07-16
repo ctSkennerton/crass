@@ -1,4 +1,4 @@
-crass -- CRisprASSembler -- version 0 subversion 3 revision 6 (0.3.6)
+crass -- CRisprASSembler -- version 0 subversion 3 revision 7 (0.3.7)
 =======================================================================
 
 CITATION
