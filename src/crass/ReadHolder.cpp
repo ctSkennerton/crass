@@ -55,7 +55,8 @@ unsigned int ReadHolder::getRepeatAt(unsigned int i)
     if (i % 2 != 0) 
     {
         std::stringstream ss;
-		ss<<"Attempting to get a repeat start index from a odd numbered index in RH_StartStops: "<<i;
+		ss<<"Attempting to get a repeat start index from a odd numbered index in RH_StartStops: "<<i<<"\n";
+        this->printContents(ss);
 		throw crispr::exception(__FILE__,
 		                        __LINE__,
 		                        __PRETTY_FUNCTION__,
@@ -64,7 +65,8 @@ unsigned int ReadHolder::getRepeatAt(unsigned int i)
     if (i > RH_StartStops.size()) 
     {
         std::stringstream ss;
-		ss<<"Index is greater than the length of the Vector: "<<i;
+		ss<<"Index is greater than the length of the Vector: "<<i<<"\n";
+        this->printContents(ss);
 		throw crispr::exception(__FILE__,
 		                        __LINE__,
 		                        __PRETTY_FUNCTION__,
@@ -77,7 +79,8 @@ std::string ReadHolder::repeatStringAt(unsigned int i)
 	if (i % 2 != 0) 
     {
         std::stringstream ss;
-		ss<<"Attempting to cut a repeat sequence from a odd numbered index in RH_StartStops: "<<i;
+		ss<<"Attempting to cut a repeat sequence from a odd numbered index in RH_StartStops: "<<i<<"\n";
+        this->printContents(ss);
 		throw crispr::exception(__FILE__,
 		                        __LINE__,
 		                        __PRETTY_FUNCTION__,
@@ -86,7 +89,8 @@ std::string ReadHolder::repeatStringAt(unsigned int i)
     if (i > RH_StartStops.size()) 
     {
         std::stringstream ss;
-		ss<<"Index is greater than the length of the Vector: "<<i;
+		ss<<"Index is greater than the length of the Vector: "<<i<<"\n";
+        this->printContents(ss);
 		throw crispr::exception(__FILE__,
 		                        __LINE__,
 		                        __PRETTY_FUNCTION__,
@@ -100,7 +104,8 @@ std::string ReadHolder::spacerStringAt(unsigned int i)
     if (i % 2 != 0) 
     {
         std::stringstream ss;
-		ss<<"Attempting to cut a spacer sequence from a odd numbered index in RH_StartStops: "<<i;
+		ss<<"Attempting to cut a spacer sequence from a odd numbered index in RH_StartStops: "<<i<<"\n";
+        this->printContents(ss);
 		throw crispr::exception(__FILE__,
 		                        __LINE__,
 		                        __PRETTY_FUNCTION__,
@@ -109,7 +114,8 @@ std::string ReadHolder::spacerStringAt(unsigned int i)
     if (i > RH_StartStops.size()) 
     {
         std::stringstream ss;
-		ss<<"Index is greater than the length of the Vector: "<<i<<" >= "<<RH_StartStops.size();
+		ss<<"Index is greater than the length of the Vector: "<<i<<" >= "<<RH_StartStops.size()<<"\n";
+        this->printContents(ss);
 		throw crispr::exception(__FILE__,
 		                        __LINE__,
 		                        __PRETTY_FUNCTION__,
