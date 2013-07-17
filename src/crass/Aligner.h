@@ -133,7 +133,7 @@ public:
     
     ~Aligner(){
         if (AL_masterDR != NULL) {
-            delete AL_masterDR;
+            delete [] AL_masterDR;
             AL_masterDR = NULL;
         } 
     }

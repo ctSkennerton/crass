@@ -291,8 +291,8 @@ int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) 
     // free the query profile
     free(slave_forward_query_profile); 
     free(slave_reverse_query_profile);
-    delete slave_dr_reverse;
-    delete slave_dr_forward;
+    delete [] slave_dr_reverse;
+    delete [] slave_dr_forward;
     // figure out which alignment was better
     if (reverse_return.score == forward_return.score) {
         flags[score_equal] = true;
