@@ -141,7 +141,7 @@ std::string laurenize(std::string seq);
             mNextRead = n;
         }
         RawRead * nextRead() {
-            return n;
+            return mNextRead;
         }
         
         void previousRead(RawRead *p) {

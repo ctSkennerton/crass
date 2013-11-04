@@ -95,12 +95,12 @@ std::string RawRead::orientateRepeatLowLexi(void)
 
         if ((*it).first == 0)
         {
-            tmp_dr = *repeatStringAt(1);
+            tmp_dr = (*repeatStringAt(1));
             rev_comp = reverseComplement(tmp_dr);
         }
-        else if ((*it2).second == static_cast<int>(mSeq.length()))
+        else if ((*it1).second == static_cast<int>(mSeq.length()))
         {
-            tmp_dr = repeatStringAt(0);
+            tmp_dr = (*repeatStringAt(0));
             rev_comp = reverseComplement(tmp_dr);
 
         }
@@ -112,12 +112,12 @@ std::string RawRead::orientateRepeatLowLexi(void)
             
             if (lenA > lenB)
             {
-                tmp_dr = *repeatStringAt(0);
+                tmp_dr = (*repeatStringAt(0));
                 rev_comp = reverseComplement(tmp_dr);
             }
             else
             {
-                tmp_dr = *repeatStringAt(1);
+                tmp_dr = (*repeatStringAt(1));
                 rev_comp = reverseComplement(tmp_dr);
             }
         }
@@ -126,7 +126,7 @@ std::string RawRead::orientateRepeatLowLexi(void)
     else
     {
         // take the second
-        tmp_dr = *repeatStringAt(1);
+        tmp_dr = (*repeatStringAt(1));
         rev_comp = reverseComplement(tmp_dr);
         
     }
@@ -155,12 +155,17 @@ std::string RawRead::orientateRepeatLowLexi(void)
 int main() {
     
     RepeatArray r = RepeatArray();
-    RawRead seq1 = RawRead("1", "my seq", "AAAAAAAGGGGGGG", "@@#$%3", r);
+    RawRead seq1 = RawRead("1", "my seq", "AAAAAAAGGGGGGG", "@@#$%3&^%#@ABDH", r);
     seq1.push_back(0, 3);
     seq1.push_back(7, 12);
     seq1.inspect();
     std::cout<<"Testing reverse complement:"<<std::endl;
     seq1.revComp();
+    seq1.inspect();
+    seq1.revComp();
+    std::cout<<"Testing DR LowLexi orientation:"<<std::endl;
+    std::string s = seq1.orientateRepeatLowLexi();
+    std::cout<<s<<std::endl;
     seq1.inspect();
     std::cout<<"Testing repeat string iteration:"<<std::endl;
     for(auto it = seq1.repeatStringBegin(); it != seq1.repeatStringEnd(); ++it) {
