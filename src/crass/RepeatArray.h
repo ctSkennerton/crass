@@ -38,6 +38,8 @@ namespace crass {
             
             self_t operator++() { self_t i = *this; current_pos += 2; return i; }
             self_t operator++(int junk) { current_pos+=2; return *this; }
+            self_t operator--() { self_t i = *this; current_pos -= 2; return i; }
+            self_t operator--(int junk) { current_pos-=2; return *this; }
 
             
             bool operator==(const self_t& rhs) { return current_pos == rhs.current_pos; }
@@ -46,6 +48,15 @@ namespace crass {
             bool operator<=(const self_t& rhs) { return current_pos <= rhs.current_pos; }
             bool operator>(const self_t& rhs) { return current_pos > rhs.current_pos; }
             bool operator>=(const self_t& rhs) { return current_pos >= rhs.current_pos; }
+            
+                
+            self_t operator+(const value_t offset) { return current_pos + (offset*2); }
+            self_t operator+=(const value_t offset) { return current_pos += (offset*2); }
+            self_t operator-(const value_t offset) { return current_pos - (offset*2); }
+            self_t operator-=(const value_t offset) { return current_pos -= (offset*2); }
+
+
+
                 
         private:
             storage_t::iterator current_pos;
@@ -67,8 +78,8 @@ namespace crass {
             
             self_t operator++() { self_t i = *this; current_pos += 2; return i; }
             self_t operator++(int junk) { current_pos+=2; return *this; }
-            //self_t& operator=(storage_t::iterator rhs) {current_pos = rhs; return *this;}
-            //self_t& operator=(storage_t::iterator& rhs) {current_pos = rhs; return *this;}
+            self_t operator--() { self_t i = *this; current_pos -= 2; return i; }
+            self_t operator--(int junk) { current_pos-=2; return *this; }
             
             bool operator==(const self_t& rhs) { return current_pos == rhs.current_pos; }
             bool operator!=(const self_t& rhs) { return current_pos != rhs.current_pos; }
@@ -76,6 +87,12 @@ namespace crass {
             bool operator<=(const self_t& rhs) { return current_pos <= rhs.current_pos; }
             bool operator>(const self_t& rhs) { return current_pos > rhs.current_pos; }
             bool operator>=(const self_t& rhs) { return current_pos >= rhs.current_pos; }
+            
+                
+            self_t operator+(const value_t offset) { return current_pos + (offset*2); }
+            self_t operator+=(const value_t offset) { return current_pos += (offset*2); }
+            self_t operator-(const value_t offset) { return current_pos - (offset*2); }
+            self_t operator-=(const value_t offset) { return current_pos -= (offset*2); }
             
             
         private:
@@ -113,13 +130,13 @@ namespace crass {
             
         RepeatIterator repeatAt(int i);
         SpacerIterator spacerAt(int i);
-        
+            
 
-        
     protected:
         std::vector<int> positions;
     };
     
+    std::ostream& operator<<(std::ostream& output, RepeatArray& data);
 }
 #endif /* defined(__crass__DRArray__) */
 

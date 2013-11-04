@@ -46,7 +46,19 @@ RepeatArray::SpacerIterator RepeatArray::spacerAt(int i) {
     }
 }
 
+std::ostream& crass::operator<<(std::ostream &output, RepeatArray& data) {
+    
+    for(auto it = data.repeatBegin(); it != (data.repeatEnd() - 1); ++it ) {
+        output << "("<<(*it).first<<","<<(*it).second<<"), ";
+    }
+    auto it = data.repeatEnd();
+    it--;
+    output << "("<<(*it).first<<','<<(*it).second<<')';
+    return output;
+}
+
 #ifdef crass_RepeatArray_main
+#include <cassert>
 int main() {
     crass::RepeatArray r = crass::RepeatArray();
     r.add(1,3);
@@ -68,11 +80,35 @@ int main() {
     
     std::cout<<"Testing modification:"<<std::endl;
     
-    RepeatArray::RepeatIterator it = r.repeatBegin();
+    auto it = r.repeatBegin();
+    auto it2 = r.repeatBegin();
     (*it).first = 0;
-    //(*it).second = 123;
-    
+    assert(it == it2);
+    assert((*it).first == (*it2).first);
     r.dump();
+    
+    std::cout<<"Testing operators:"<<std::endl;
+    
+    std::cout<<"right shift:"<<std::endl;
+    std::cout << r << std::endl;
+    
+    std::cout<<"plus (+):";
+    assert((*(it + 1)).first == 7);
+    std::cout << " pass"<<std::endl;
+    
+    std::cout<<"plus equals (+=):";
+    assert((it += 1) == (it2+1));
+    assert((*it).first == 7);
+    std::cout << " pass"<<std::endl;
+    
+    std::cout<<"minus (-):";
+    assert((*(it - 1)).first == 0);
+    std::cout << " pass"<<std::endl;
+    
+    std::cout<<"plus equals (-=):";
+    assert((it -= 1) == it2);
+    assert((*it).first == 0);
+    std::cout << " pass"<<std::endl;
     
     std::cout<< "Testing reversal:"<<std::endl;
     r.reverseRepeatPositions(14);
