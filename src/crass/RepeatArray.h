@@ -36,10 +36,11 @@ namespace crass {
                 return return_t(*(current_pos), *(current_pos + 1 ));
             }
             
-            self_t operator++() { self_t i = *this; current_pos += 2; return i; }
-            self_t operator++(int junk) { current_pos+=2; return *this; }
-            self_t operator--() { self_t i = *this; current_pos -= 2; return i; }
-            self_t operator--(int junk) { current_pos-=2; return *this; }
+            self_t& operator++() { current_pos+=2; return *this; }
+            self_t operator++(int ) { self_t i = *this; operator++(); return i; }
+            
+            self_t& operator--() { current_pos-=2; return *this; }
+            self_t operator--(int) { self_t i = *this; operator--(); return i; }
 
             
             bool operator==(const self_t& rhs) { return current_pos == rhs.current_pos; }
@@ -50,17 +51,28 @@ namespace crass {
             bool operator>=(const self_t& rhs) { return current_pos >= rhs.current_pos; }
             
                 
-            self_t operator+(const value_t offset) { return current_pos + (offset*2); }
-            self_t operator+=(const value_t offset) { return current_pos += (offset*2); }
-            self_t operator-(const value_t offset) { return current_pos - (offset*2); }
-            self_t operator-=(const value_t offset) { return current_pos -= (offset*2); }
-
-
+                self_t& operator+=(const value_t& offset) {
+                    current_pos += (offset*2);
+                    return *this;
+                }
+                self_t operator+(const value_t& offset) {
+                    self_t ret = *this;
+                    return ret += offset;
+                }
+                
+                self_t& operator-=(const value_t& offset) {
+                    current_pos -= (offset*2);
+                    return *this;
+                }
+                self_t operator-(const value_t& offset) {
+                    self_t ret = *this;
+                    return ret -= offset;
+                }
 
                 
         private:
             storage_t::iterator current_pos;
-            };
+        };
             
         class SpacerIterator {
         public:
@@ -76,10 +88,12 @@ namespace crass {
                 return return_t(*(current_pos), *(current_pos + 1 ));
             }
             
-            self_t operator++() { self_t i = *this; current_pos += 2; return i; }
-            self_t operator++(int junk) { current_pos+=2; return *this; }
-            self_t operator--() { self_t i = *this; current_pos -= 2; return i; }
-            self_t operator--(int junk) { current_pos-=2; return *this; }
+            self_t& operator++() { current_pos+=2; return *this; }
+            self_t operator++(int ) { self_t i = *this; operator++(); return i; }
+
+            self_t& operator--() { current_pos-=2; return *this; }
+            self_t operator--(int) { self_t i = *this; operator--(); return i; }
+
             
             bool operator==(const self_t& rhs) { return current_pos == rhs.current_pos; }
             bool operator!=(const self_t& rhs) { return current_pos != rhs.current_pos; }
@@ -89,10 +103,24 @@ namespace crass {
             bool operator>=(const self_t& rhs) { return current_pos >= rhs.current_pos; }
             
                 
-            self_t operator+(const value_t offset) { return current_pos + (offset*2); }
-            self_t operator+=(const value_t offset) { return current_pos += (offset*2); }
-            self_t operator-(const value_t offset) { return current_pos - (offset*2); }
-            self_t operator-=(const value_t offset) { return current_pos -= (offset*2); }
+            self_t& operator+=(const value_t& offset) {
+                current_pos += (offset*2);
+                return *this;
+            }
+            self_t operator+(const value_t& offset) {
+                self_t ret = *this;
+                return ret += offset;
+            }
+
+            self_t& operator-=(const value_t& offset) {
+                current_pos -= (offset*2);
+                return *this;
+            }
+            self_t operator-(const value_t& offset) {
+                self_t ret = *this;
+                return ret -= offset;
+            }
+
             
             
         private:
