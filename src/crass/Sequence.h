@@ -172,26 +172,60 @@ std::string laurenize(std::string seq);
             std::cout<<mRepeatPositions<<std::endl;
             
         }
-            RepeatArray::RepeatIterator repeatBegin(){return mRepeatPositions.repeatBegin();}
-            RepeatArray::RepeatIterator repeatEnd(){return mRepeatPositions.repeatEnd();}
+    
+        size_t length() {
+            return mSeq.length();
+        }
+        size_t size() {
+            return mSeq.length();
+        }
             
-            RepeatArray::SpacerIterator spacerBegin(){return mRepeatPositions.spacerBegin();}
-            RepeatArray::SpacerIterator spacerEnd(){return mRepeatPositions.spacerEnd();}
-            
-            RawRead::SpacerStringIterator spacerStringBegin(){return SpacerStringIterator(mSeq, mRepeatPositions.spacerBegin());}
-            RawRead::SpacerStringIterator spacerStringEnd(){return SpacerStringIterator(mSeq, mRepeatPositions.spacerEnd());}
-            
-            RawRead::RepeatStringIterator repeatStringBegin(){return RepeatStringIterator(mSeq, mRepeatPositions.repeatBegin());}
-            RawRead::RepeatStringIterator repeatStringEnd(){return RepeatStringIterator(mSeq, mRepeatPositions.repeatEnd());}
-            
-            RawRead::RepeatStringIterator repeatStringAt(int i){return RepeatStringIterator(mSeq, mRepeatPositions.repeatAt(i));}
-            RawRead::SpacerStringIterator spacerStringAt(int i){return SpacerStringIterator(mSeq, mRepeatPositions.spacerAt(i));}
-            
+        int numberOfRepeats() {
+            return mRepeatPositions.numberOfRepeats();
+        }
         
+        int numberOfSpacers() {
+            return mRepeatPositions.numberOfSpacers();
+        }
+            
+        bool startPartial() {
+            auto it = mRepeatPositions.repeatBegin();
+            return (*it).first == 0;
+        }
+        
+        bool endPartial() {
+            auto it = mRepeatPositions.repeatEnd() - 1;
+            return (*it).first == length();
+        }
+        
+        RepeatArray::RepeatIterator repeatBegin(){return mRepeatPositions.repeatBegin();}
+        RepeatArray::RepeatIterator repeatEnd(){return mRepeatPositions.repeatEnd();}
+        
+        RepeatArray::SpacerIterator spacerBegin(){return mRepeatPositions.spacerBegin();}
+        RepeatArray::SpacerIterator spacerEnd(){return mRepeatPositions.spacerEnd();}
+            
+            RepeatArray::RepeatIterator repeatAt(int i){return mRepeatPositions.repeatAt(i);}
+            RepeatArray::SpacerIterator spacerAt(int i){return mRepeatPositions.spacerAt(i);}
+        
+        RawRead::SpacerStringIterator spacerStringBegin(){return SpacerStringIterator(mSeq, mRepeatPositions.spacerBegin());}
+        RawRead::SpacerStringIterator spacerStringEnd(){return SpacerStringIterator(mSeq, mRepeatPositions.spacerEnd());}
+        
+        RawRead::RepeatStringIterator repeatStringBegin(){return RepeatStringIterator(mSeq, mRepeatPositions.repeatBegin());}
+        RawRead::RepeatStringIterator repeatStringEnd(){return RepeatStringIterator(mSeq, mRepeatPositions.repeatEnd());}
+        
+        RawRead::RepeatStringIterator repeatStringAt(int i){return RepeatStringIterator(mSeq, mRepeatPositions.repeatAt(i));}
+        RawRead::SpacerStringIterator spacerStringAt(int i){return SpacerStringIterator(mSeq, mRepeatPositions.spacerAt(i));}
+        
+        char& operator[](int i) {
+            return mSeq[i];
+        }
+    
         void revComp();
             
         std::string orientateRepeatLowLexi();
-        
+            
+        int getFirstNonPartialRepeatLength();
+                    
 
 
 

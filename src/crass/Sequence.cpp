@@ -136,7 +136,7 @@ std::string RawRead::orientateRepeatLowLexi(void)
         // the direct repeat is in it lowest lexicographical form
         mRepeatLowLexi = true;
 #ifdef DEBUG
-        logInfo("DR in low lexi"<<endl<<RH_Seq, 9);
+        //logInfo("DR in low lexi"<<mSeq, 9);
 #endif
         return tmp_dr;
     }
@@ -145,9 +145,46 @@ std::string RawRead::orientateRepeatLowLexi(void)
         revComp();
         mRepeatLowLexi = false;
 #ifdef DEBUG
-        logInfo("DR not in low lexi"<<endl<<RH_Seq, 9);
+        //logInfo("DR not in low lexi"<<mSeq, 9);
 #endif
         return rev_comp;
+    }
+}
+
+int RawRead::getFirstNonPartialRepeatLength() {
+    switch (numberOfRepeats()) {
+        case 0: {
+            // error
+            return -1;
+            break;
+        }
+        case 1: {
+            return mRepeatPositions.repeatLengthAt(0);
+            break;
+        }
+        case 2: {
+            int first_length = mRepeatPositions.repeatLengthAt(0);
+            int second_length = mRepeatPositions.repeatLengthAt(1);
+            bool sp = startPartial();
+            bool ep = endPartial();
+            if (sp && ep) {
+                return (first_length > second_length) ? first_length : second_length;
+            } else if (sp) {
+                return second_length;
+            } else {
+                return first_length;
+            }
+            break;
+        }
+        default: {
+            auto it = repeatBegin();
+            if(startPartial()) {
+                return mRepeatPositions.repeatLengthAt(1);
+            } else {
+                return mRepeatPositions.repeatLengthAt(2);
+            }
+            break;
+        }
     }
 }
 
@@ -175,5 +212,6 @@ int main() {
     for(auto it = seq1.spacerStringBegin(); it != seq1.spacerStringEnd(); ++it) {
         std::cout<<*it<<std::endl;
     }
+    return 0;
 }
 #endif
