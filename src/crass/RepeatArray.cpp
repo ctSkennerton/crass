@@ -46,8 +46,21 @@ RepeatArray::SpacerIterator RepeatArray::spacerAt(int i) {
     }
 }
 
+int RepeatArray::repeatLengthAt(int i) {
+    auto it = repeatAt(i);
+    return (*it).second - (*it).first;
+}
+
+int RepeatArray::spacerLengthAt(int i) {
+    auto it = spacerAt(i);
+    return (*it).second - (*it).first;
+}
+
 std::ostream& crass::operator<<(std::ostream &output, RepeatArray& data) {
     
+    if (data.empty()) {
+        return output;
+    }
     for(auto it = data.repeatBegin(); it != (data.repeatEnd() - 1); ++it ) {
         output << "("<<(*it).first<<","<<(*it).second<<"), ";
     }
