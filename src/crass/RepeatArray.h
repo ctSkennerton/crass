@@ -30,6 +30,8 @@ namespace crass {
             typedef int* pointer_t;
             typedef std::pair<reference_t, reference_t> return_t;
             
+            RepeatIterator(){}
+            
             RepeatIterator(storage_t::iterator input) : current_pos(input){}
             
             return_t operator *() {
@@ -81,6 +83,8 @@ namespace crass {
             typedef int& reference_t;
             typedef int* pointer_t;
             typedef std::pair<reference_t, reference_t> return_t;
+            
+            SpacerIterator(){}
             
             SpacerIterator(storage_t::iterator input) : current_pos(input){}
             
@@ -145,6 +149,9 @@ namespace crass {
             std::cout <<std::endl;
         }
         
+            bool empty() { return positions.empty();}
+        
+        
         int numberOfRepeats();
         int numberOfSpacers();
             
@@ -158,6 +165,8 @@ namespace crass {
             
         RepeatIterator repeatAt(int i);
         SpacerIterator spacerAt(int i);
+            int repeatLengthAt(int i);
+            int spacerLengthAt(int i);
             
 
     protected:
