@@ -152,14 +152,19 @@ std::string RawRead::orientateRepeatLowLexi(void)
 }
 
 int RawRead::getFirstNonPartialRepeatLength() {
+    RepeatStringIterator it = getFirstNonPartialRepeat();
+    return static_cast<int>((*it).length());
+}
+
+RawRead::RepeatStringIterator crass::RawRead::getFirstNonPartialRepeat() {
     switch (numberOfRepeats()) {
         case 0: {
             // error
-            return -1;
+            return repeatStringAt(0);
             break;
         }
         case 1: {
-            return mRepeatPositions.repeatLengthAt(0);
+            return repeatStringAt(0);
             break;
         }
         case 2: {
@@ -168,20 +173,20 @@ int RawRead::getFirstNonPartialRepeatLength() {
             bool sp = startPartial();
             bool ep = endPartial();
             if (sp && ep) {
-                return (first_length > second_length) ? first_length : second_length;
+                return (first_length > second_length) ? repeatStringAt(0) : repeatStringAt(1);
             } else if (sp) {
-                return second_length;
+                return repeatStringAt(1);
             } else {
-                return first_length;
+                return repeatStringAt(0);
             }
             break;
         }
         default: {
             auto it = repeatBegin();
             if(startPartial()) {
-                return mRepeatPositions.repeatLengthAt(1);
+                return repeatStringAt(1);
             } else {
-                return mRepeatPositions.repeatLengthAt(2);
+                return repeatStringAt(0);
             }
             break;
         }

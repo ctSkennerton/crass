@@ -75,7 +75,8 @@ public:
             mMinSpacerLength(CRASS_DEF_MIN_SPACER_SIZE),
             mMaxSpacerLength(CRASS_DEF_MAX_SPACER_SIZE),
             mSearchWindowLength(CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH),
-            mScanRange(CRASS_DEF_SCAN_LENGTH)
+            mScanRange(CRASS_DEF_SCAN_LENGTH),
+            mMinSeedCount(CRASS_DEF_DEFAULT_MIN_NUM_REPEATS)
     {}
     
     // get/set
@@ -124,27 +125,25 @@ public:
     
     bool search(std::string& read1, std::string& read2, crass::RepeatArray& drPositions);
 #endif
+    int longReadSearch(crass::RawRead& read);
+    
     int scanRight(crass::RawRead& read,
                   std::string& pattern);
     
     int extendPreRepeat(crass::RawRead& read);
     
 private:
-#if 0
-    bool searchBrute(crass::RawRead& read);
-    bool searchCRT(crass::RawRead& read);
-    
-
-    
-    bool qcFoundRepeats(crass::RawRead& read,
-                        int minSpacerLength,
-                        int maxSpacerLength);
+    bool qcFoundRepeats(crass::RawRead& read);
     
     bool isRepeatLowComplexity(std::string& repeat);
     
     bool doesRepeatHaveHighlyAbundantKmers(std::string& directRepeat, float& max_count);
     
     bool doesRepeatHaveHighlyAbundantKmers(std::string& directRepeat);
+
+#if 0
+    bool searchBrute(crass::RawRead& read);
+    bool searchCRT(crass::RawRead& read);
     
     void addReadHolder(ReadHolder& tmp_holder);
     
@@ -157,6 +156,7 @@ private:
     int mMaxSpacerLength;
     int mSearchWindowLength;
     int mScanRange;
+    int mMinSeedCount;
     
 };
     

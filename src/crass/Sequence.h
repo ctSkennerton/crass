@@ -180,6 +180,8 @@ std::string laurenize(std::string seq);
             return mSeq.length();
         }
             
+            void clearRepeatPositions() {mRepeatPositions.clear();}
+            
         int numberOfRepeats() {
             return mRepeatPositions.numberOfRepeats();
         }
@@ -197,6 +199,7 @@ std::string laurenize(std::string seq);
             auto it = mRepeatPositions.repeatEnd() - 1;
             return (*it).first == length();
         }
+            
         
         RepeatArray::RepeatIterator repeatBegin(){return mRepeatPositions.repeatBegin();}
         RepeatArray::RepeatIterator repeatEnd(){return mRepeatPositions.repeatEnd();}
@@ -225,6 +228,8 @@ std::string laurenize(std::string seq);
         std::string orientateRepeatLowLexi();
             
         int getFirstNonPartialRepeatLength();
+            
+        RawRead::RepeatStringIterator getFirstNonPartialRepeat();
                     
 
 

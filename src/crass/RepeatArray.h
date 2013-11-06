@@ -150,6 +150,7 @@ namespace crass {
         }
         
             bool empty() { return positions.empty();}
+            void clear() {positions.clear();}
         
         
         int numberOfRepeats();
