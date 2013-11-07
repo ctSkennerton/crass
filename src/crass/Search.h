@@ -125,14 +125,16 @@ public:
     
     bool search(std::string& read1, std::string& read2, crass::RepeatArray& drPositions);
 #endif
+    int shortReadSearch(crass::RawRead& read);
+
     int longReadSearch(crass::RawRead& read);
     
+private:
     int scanRight(crass::RawRead& read,
                   std::string& pattern);
     
     int extendPreRepeat(crass::RawRead& read);
     
-private:
     bool qcFoundRepeats(crass::RawRead& read);
     
     bool isRepeatLowComplexity(std::string& repeat);

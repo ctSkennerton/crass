@@ -41,6 +41,120 @@
 #include "Search.h"
 #include "PatternMatcher.h"
 
+int crass::Search::shortReadSearch(crass::RawRead&  read)
+{
+    
+    //bool match_found = false;
+    
+    
+    int seq_length = static_cast<int>(read.seq().length());
+    int search_end = seq_length - mMinRepeatLength - 1;
+    int final_index = seq_length - 1;
+    
+    
+    // boyer-moore search
+    for (int first_start = 0; first_start < search_end; first_start++)
+    {
+        int search_begin = first_start + mMinRepeatLength + mMinSpacerLength;
+        
+        if (search_begin >= search_end ) break;
+        
+        // do the search
+        int second_start = -1;
+        
+        //try {
+            second_start = PatternMatcher::bmpSearch(read.seq().substr(search_begin),
+                                                     read.seq().substr(first_start, mMinRepeatLength) );
+        /*} catch (std::exception& e) {
+            
+			std::stringstream ss;
+            ss<<read<<"\n";
+            ss<<search_begin<<" : "<<first_start<<" : "<<opts.lowDRsize;
+            throw crispr::runtime_exception( __FILE__,
+                                            __LINE__,
+                                            __PRETTY_FUNCTION__,
+                                            ss);
+        }*/
+        
+        // check to see if we found something
+        if (second_start > -1)
+        {
+            // bingo!
+            second_start += search_begin;
+            int second_end = second_start + mMinRepeatLength;
+            int first_end = first_start + mMinRepeatLength;
+            
+            int next_index = second_end + 1;
+            
+            // make sure that the kmer match is not already at the end of the read before incrementing
+            // increment so we are looking at the next base after the match
+            if ( next_index <= final_index)
+            {
+                // read through the subsuquent bases untill they don't match
+                int extenstion_length = 0;
+                while (read[first_end + extenstion_length] == read[second_end + extenstion_length])
+                {
+#ifdef DEBUG
+                    logInfo(read[first_end + extenstion_length]<<" == "<<read[second_end + extenstion_length],20);
+#endif
+                    extenstion_length++;
+                    next_index++;
+                    if (next_index > final_index) break;
+                    
+                }
+#ifdef DEBUG
+                logInfo("A: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end<<" EX: "<<extenstion_length, 8);
+#endif
+                read.push_back(first_start, first_end + extenstion_length);
+                read.push_back(second_start, second_end + extenstion_length);
+            }
+            else
+            {
+#ifdef DEBUG
+                logInfo("B: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end, 8);
+#endif
+                read.push_back(first_start, first_end);
+                read.push_back(second_start, second_end);
+            }
+			
+            // the low side will always be true since we search for the lowDRSize
+            if ( read.getFirstNonPartialRepeatLength() <= mMaxRepeatLength )
+            {
+                int i = static_cast<int>((*read.spacerStringAt(0)).length());
+                if (( i >= mMinSpacerLength) && (i <= mMaxSpacerLength))
+                {
+                    if (qcFoundRepeats(read))
+                    {
+                        
+                        //match_found = true;
+#ifdef DEBUG
+                        logInfo("Potential CRISPR containing read found: ", 8);
+                        read.inspect();
+                        logInfo("-------------------", 8)
+#endif
+                        //readsFound[tmpHolder.getHeader()] = true;
+                        //addReadHolder(mReads, mStringCheck, tmpHolder);
+                        break;
+                    }
+                }
+#ifdef DEBUG
+                else
+                {
+                    logInfo("\tFailed test 2. The spacer length is not between "<<mMinSpacerLength<<" and "<<mMaxSpacerLength<<": "<< i, 8);
+                }
+#endif
+            }
+#ifdef DEBUG
+            else
+            {
+                logInfo("\tFailed test 1. The repeat length is larger than "<<mMaxRepeatLength<<": " << read.getFirstNonPartialRepeatLength(), 8);
+            }
+#endif
+            first_start = (*(read.repeatEnd() - 1)).second;
+        }
+    }
+    return 0;
+}
 
 
 int crass::Search::longReadSearch(crass::RawRead& read)
@@ -835,15 +949,13 @@ int main() {
     //                                                   01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
     crass::RawRead read100("Accumulibacter_CRISPR", "", "GTTTCCCCCGCGTCAGCGGGGATAGGCCCCACGCCGTGACGGAAGGGCTGATCACGAAATGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGCGCGGCATG", "", crass::RepeatArray());
     crass::RawRead read350("Accumulibacter_CRISPR", "", "GTTTCCCCCGCGTCAGCGGGGATAGGCCCCACGCCGTGACGGAAGGGCTGATCACGAAATGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGCGCGGCATGGCCTGGCGCATGGGCTTGGCGGGTTTCCCCCGCGTCAGCGGGGATAGGCCCCCATCGCTCCAGGCGACACGCCGCAAGCGGCGGTTTCCCCCGCGTCAGCGGGGATAGGCCCACGCGGCCATCGAATTCGGTGGTCTTGCCGCCGTTTCCCCCGCGTCAGCGGGGATAGGCCCTGTGCTGGCGCGTGAAGTCGCAGCCCATTGGCGTTTCCCCCGCGTCAGCGGGGATAGGCCGCAAAGCCACAATCTTT", "",crass::RepeatArray());
-    //                                                   RRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+    //Read350                                            RRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+    //Read100                                            RRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSS
     s.longReadSearch(read350);
-    //read350.push_back(0,6);
-    //read350.push_back(61,70);
-    //std::string str = "GTTTCCCCC";
-    //s.scanRight(read350, str);
-    //int new_length = s.extendPreRepeat(read350);
-    //std::cout<<"Extended Length: "<< new_length<<std::endl;
     read350.inspect();
+    
+    s.shortReadSearch(read100);
+    read100.inspect();
     return 0;
 }
 #endif
