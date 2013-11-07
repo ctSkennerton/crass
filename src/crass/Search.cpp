@@ -41,6 +41,97 @@
 #include "Search.h"
 #include "PatternMatcher.h"
 
+#define longReadCut(d,s) ((4 * d) + (3 * s))
+#define shortReadCut(d,s) ((2 * d) + s)
+
+int crass::Search::searchFileSerial(const char *inputFastq)
+
+{
+    //-----
+    // Wrapper used for searching reads for DRs
+    // depending on the length of the read.
+	// this funciton may use the boyer moore algorithm
+    // or the CRT search algorithm
+    //
+    gzFile fp = getFileHandle(inputFastq);
+    kseq_t * seq = kseq_init(fp);
+    
+    int l, log_counter, max_read_length;
+    log_counter = max_read_length = 0;
+    static int read_counter = 0;
+    time_t time_current;
+    
+    int long_read_cutoff = longReadCut(mMinRepeatLength, mMinSpacerLength);
+    int short_read_cutoff = shortReadCut(mMinRepeatLength, mMinSpacerLength);
+    // read sequence
+    while ( (l = kseq_read(seq)) >= 0 )
+    {
+        max_read_length = (l > max_read_length) ? l : max_read_length;
+        /*if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER)
+        {
+            time(&time_current);
+            double diff = difftime(time_current, time_start);
+            //time_start = time_current;
+            
+            std::cout<<"\r["<<PACKAGE_NAME<<"_patternFinder]: "
+            << "Processed "<<read_counter<<" ...";
+            std::cout<<diff<<" sec"<<std::flush;
+            log_counter = 0;
+        }*/
+        //try {
+            // grab a readholder
+        crass::RawRead read(seq->name.s, "", seq->seq.s, "", crass::RepeatArray());
+        if (seq->comment.s != NULL) {
+            read.comment(seq->comment.s);
+        }
+        if(seq->qual.s != NULL) {
+            read.quality(seq->qual.s);
+        }
+#if SEARCH_SINGLETON
+            SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
+            if (debug_iter != debugger->end()) {
+                changeLogLevel(10);
+                std::cout<<"Processing interesting read: "<<debug_iter->first<<std::endl;
+            } else {
+                changeLogLevel(opts.logLevel);
+            }
+#endif
+            
+            if (l > long_read_cutoff) {
+                // perform long read seqrch
+                longReadSearch(read);
+            } else if (l >= short_read_cutoff){
+                // perform short read search
+                shortReadSearch(read);
+            }
+        /*} catch (crispr::exception& e) {
+            std::cerr<<e.what()<<std::endl;
+            kseq_destroy(seq);
+            gzclose(fp);
+            throw crispr::exception(__FILE__,
+                                    __LINE__,
+                                    __PRETTY_FUNCTION__,
+                                    "Fatal error in search algorithm!");
+        }*/
+        log_counter++;
+        read_counter++;
+    }
+    
+    kseq_destroy(seq); // destroy seq
+    gzclose(fp);
+    
+    /*logInfo("finished processing file:"<<inputFastq, 1);
+    time(&time_current);
+    double diff = difftime(time_current, time_start);
+    //time_start = time_current;
+    std::cout<<"\r["<<PACKAGE_NAME<<"_patternFinder]: "<< "Processed "<<read_counter<<" ...";
+    std::cout<<diff<<" sec"<<std::flush;
+    logInfo("So far " << mReads->size()<<" direct repeat variants have been found from " << read_counter << " reads", 2);
+    */
+    return max_read_length;
+}
+
+
 int crass::Search::shortReadSearch(crass::RawRead&  read)
 {
     
@@ -293,6 +384,31 @@ int crass::Search::longReadSearch(crass::RawRead& read)
         read.clearRepeatPositions();
     }
     return 0;
+}
+
+gzFile crass::Search::getFileHandle(const char *inputFile) {
+    gzFile fp;
+    if ( strcmp(inputFile, "-") == 0 )
+    {
+        fp = gzdopen(fileno(stdin), "r");
+    }
+    else
+    {
+        fp = gzopen(inputFile, "r");
+    }
+
+    if ( (fp == NULL) && (strcmp(inputFile, "-") != 0) )
+    {
+        std::cerr<<"[ERROR] Could not open FASTQ "<<inputFile<<" for reading."<<std::endl;
+        exit(1);
+    }
+
+    if ( (fp == NULL) && (strcmp(inputFile, "-") == 0) )
+    {
+        std::cerr<<"[ERROR] Could not open stdin for reading."<<std::endl;
+        exit(1);
+    }
+    return fp;
 }
 
 int crass::Search::scanRight(crass::RawRead& read,
@@ -942,20 +1058,21 @@ bool crass::Search::doesRepeatHaveHighlyAbundantKmers(std::string& directRepeat,
 }
 
 #if crass_Search_main
-int main() {
+int main(int argc, char *argv[]) {
     crass::Search s = crass::Search();
     //                                                                                                                                                       1                                                                                                   2                                                                                                   3
     //                                                             1         2         3         4         5         6         7         8         9         0         1         2         3         4         5         6         7         8         9         0         1         2         3         4         5         6         7         8         9         0         1         2         3         4
     //                                                   01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
-    crass::RawRead read100("Accumulibacter_CRISPR", "", "GTTTCCCCCGCGTCAGCGGGGATAGGCCCCACGCCGTGACGGAAGGGCTGATCACGAAATGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGCGCGGCATG", "", crass::RepeatArray());
-    crass::RawRead read350("Accumulibacter_CRISPR", "", "GTTTCCCCCGCGTCAGCGGGGATAGGCCCCACGCCGTGACGGAAGGGCTGATCACGAAATGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGCGCGGCATGGCCTGGCGCATGGGCTTGGCGGGTTTCCCCCGCGTCAGCGGGGATAGGCCCCCATCGCTCCAGGCGACACGCCGCAAGCGGCGGTTTCCCCCGCGTCAGCGGGGATAGGCCCACGCGGCCATCGAATTCGGTGGTCTTGCCGCCGTTTCCCCCGCGTCAGCGGGGATAGGCCCTGTGCTGGCGCGTGAAGTCGCAGCCCATTGGCGTTTCCCCCGCGTCAGCGGGGATAGGCCGCAAAGCCACAATCTTT", "",crass::RepeatArray());
+    //crass::RawRead read100("Accumulibacter_CRISPR", "", "GTTTCCCCCGCGTCAGCGGGGATAGGCCCCACGCCGTGACGGAAGGGCTGATCACGAAATGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGCGCGGCATG", "", crass::RepeatArray());
+    //crass::RawRead read350("Accumulibacter_CRISPR", "", "GTTTCCCCCGCGTCAGCGGGGATAGGCCCCACGCCGTGACGGAAGGGCTGATCACGAAATGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGCGCGGCATGGCCTGGCGCATGGGCTTGGCGGGTTTCCCCCGCGTCAGCGGGGATAGGCCCCCATCGCTCCAGGCGACACGCCGCAAGCGGCGGTTTCCCCCGCGTCAGCGGGGATAGGCCCACGCGGCCATCGAATTCGGTGGTCTTGCCGCCGTTTCCCCCGCGTCAGCGGGGATAGGCCCTGTGCTGGCGCGTGAAGTCGCAGCCCATTGGCGTTTCCCCCGCGTCAGCGGGGATAGGCCGCAAAGCCACAATCTTT", "",crass::RepeatArray());
     //Read350                                            RRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
     //Read100                                            RRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSS
-    s.longReadSearch(read350);
-    read350.inspect();
+    //s.longReadSearch(read350);
+    //read350.inspect();
     
-    s.shortReadSearch(read100);
-    read100.inspect();
+    //s.shortReadSearch(read100);
+    //read100.inspect();
+    s.searchFileSerial(argv[1]);
     return 0;
 }
 #endif

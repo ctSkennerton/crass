@@ -37,8 +37,10 @@
 #include <cstdio>
 #include <set>
 #include <string>
+#include <zlib.h>
 #include "RepeatArray.h"
 #include "Sequence.h"
+#include "kseq.h"
 // --------------------------------------------------------------------
 // SEARCH ALGORITHM PARAMETERS
 // --------------------------------------------------------------------
@@ -106,7 +108,6 @@ public:
     }
 #if 0
     // for single reads/files
-    bool searchFileSerial(FILE *file);
     
     bool searchFileParallel(FILE *file);
     
@@ -125,11 +126,15 @@ public:
     
     bool search(std::string& read1, std::string& read2, crass::RepeatArray& drPositions);
 #endif
+    int searchFileSerial(const char *fileName);
+    
     int shortReadSearch(crass::RawRead& read);
 
     int longReadSearch(crass::RawRead& read);
     
 private:
+    gzFile getFileHandle(const char * inputFile);
+    
     int scanRight(crass::RawRead& read,
                   std::string& pattern);
     
