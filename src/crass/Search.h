@@ -123,9 +123,7 @@ public:
     
     bool searchFileForPatterns(FILE *file, crass::list& patters);
     bool searchFileForPatterns(FILE *file, crass::list& patters, std::set<std::string>& skipReads);
-    
-    bool search(std::string& read, crass::RepeatArray& drPositions);
-    
+        
     //for read pairs/file pairs
     bool searchFileSerial(FILE *file1, FILE *file2);
     
@@ -134,21 +132,16 @@ public:
     bool searchFileForPatterns(FILE *file1, FILE *file2, crass::list& patters);
     bool searchFileForPatterns(FILE *file1, FILE *file2, crass::list& patters, std::set<std::string>& skipReads);
     
-    bool search(std::string& read1, std::string& read2, crass::RepeatArray& drPositions);
 #endif
     int searchFileSerial(const char *fileName);
-    
-    bool shortReadSearch(crass::RawRead& read);
 
-    bool longReadSearch(crass::RawRead& read);
-    
-    bool shortReadPairSearch(crass::RawRead& read1, crass::RawRead& read2);
-    
-    bool longReadPairSearch(crass::RawRead& read1, crass::RawRead& read2);
+    bool readSearch(crass::RawRead& read);
+        
+    bool readPairSearch(crass::RawRead& read1, crass::RawRead& read2);
     
 private:
     
-    bool longReadPairSearchCore(crass::RawRead& read1, crass::RawRead& read2);
+    bool readPairSearchCore(crass::RawRead& read1, crass::RawRead& read2);
     
     gzFile getFileHandle(const char * inputFile);
     

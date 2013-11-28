@@ -41,9 +41,6 @@
 #include "Search.h"
 #include "PatternMatcher.h"
 
-#define longReadCut(d,s) ((4 * d) + (3 * s))
-#define shortReadCut(d,s) ((2 * d) + s)
-
 int crass::Search::searchFileSerial(const char *inputFastq)
 
 {
@@ -61,8 +58,7 @@ int crass::Search::searchFileSerial(const char *inputFastq)
     static int read_counter = 0;
     time_t time_current;
     
-    int long_read_cutoff = 1;//longReadCut(mMinRepeatLength, mMinSpacerLength);
-    int short_read_cutoff = 1;//shortReadCut(mMinRepeatLength, mMinSpacerLength);
+    int length_cutoff = (2 * mMinRepeatLength) + mMinSpacerLength;
     int reads_found_with_crispr = 0;
     while ( (l = kseq_read(seq)) >= 0 )
     {
@@ -95,13 +91,9 @@ int crass::Search::searchFileSerial(const char *inputFastq)
             }
 #endif
             
-            if (l > long_read_cutoff) {
+            if (l > length_cutoff) {
                 // perform long read seqrch
-                if(longReadSearch(read))
-                    reads_found_with_crispr++;
-            } else if (l >= short_read_cutoff){
-                // perform short read search
-                if(shortReadSearch(read))
+                if(readSearch(read))
                     reads_found_with_crispr++;
             }
 
@@ -124,241 +116,9 @@ int crass::Search::searchFileSerial(const char *inputFastq)
     return max_read_length;
 }
 
-
-bool crass::Search::shortReadSearch(crass::RawRead&  read)
+bool crass::Search::readSearch(crass::RawRead& read)
 {
-    
-    //bool match_found = false;
-    
-    
-    int seq_length = static_cast<int>(read.seq().length());
-    int search_end = seq_length - mMinRepeatLength - 1;
-    int final_index = seq_length - 1;
-    
-    
-    // boyer-moore search
-    for (int first_start = 0; first_start < search_end; first_start++)
-    {
-        int search_begin = first_start + mMinRepeatLength + mMinSpacerLength;
-        
-        if (search_begin >= search_end ) break;
-        
-        // do the search
-        int second_start = -1;
-        
-        //try {
-            second_start = PatternMatcher::bmpSearch(read.seq().substr(search_begin),
-                                                     read.seq().substr(first_start, mMinRepeatLength) );
-        /*} catch (std::exception& e) {
-            
-			std::stringstream ss;
-            ss<<read<<"\n";
-            ss<<search_begin<<" : "<<first_start<<" : "<<opts.lowDRsize;
-            throw crispr::runtime_exception( __FILE__,
-                                            __LINE__,
-                                            __PRETTY_FUNCTION__,
-                                            ss);
-        }*/
-        
-        // check to see if we found something
-        if (second_start > -1)
-        {
-            // bingo!
-            second_start += search_begin;
-            int second_end = second_start + mMinRepeatLength;
-            int first_end = first_start + mMinRepeatLength;
-            
-            int next_index = second_end + 1;
-            
-            // make sure that the kmer match is not already at the end of the read before incrementing
-            // increment so we are looking at the next base after the match
-            if ( next_index <= final_index)
-            {
-                // read through the subsuquent bases untill they don't match
-                int extenstion_length = 0;
-                while (read[first_end + extenstion_length] == read[second_end + extenstion_length])
-                {
-#ifdef DEBUG
-                    logInfo(read[first_end + extenstion_length]<<" == "<<read[second_end + extenstion_length],20);
-#endif
-                    extenstion_length++;
-                    next_index++;
-                    if (next_index > final_index) break;
-                    
-                }
-#ifdef DEBUG
-                logInfo("A: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end<<" EX: "<<extenstion_length, 8);
-#endif
-                read.push_back(first_start, first_end + extenstion_length);
-                read.push_back(second_start, second_end + extenstion_length);
-            }
-            else
-            {
-#ifdef DEBUG
-                logInfo("B: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end, 8);
-#endif
-                read.push_back(first_start, first_end);
-                read.push_back(second_start, second_end);
-            }
-			
-            // the low side will always be true since we search for the lowDRSize
-            if ( read.getFirstNonPartialRepeatLength() <= mMaxRepeatLength )
-            {
-                int i = static_cast<int>((*read.spacerStringAt(0)).length());
-                if (( i >= mMinSpacerLength) && (i <= mMaxSpacerLength))
-                {
-                    if (qcFoundRepeats(read))
-                    {
-                        
-                        //match_found = true;
-#ifdef DEBUG
-                        logInfo("Potential CRISPR containing read found: ", 8);
-                        read.inspect();
-                        logInfo("-------------------", 8)
-#endif
-                        //readsFound[tmpHolder.getHeader()] = true;
-                        //addReadHolder(mReads, mStringCheck, tmpHolder);
-                        return true;
-                    }
-                }
-#ifdef DEBUG
-                else
-                {
-                    logInfo("\tFailed test 2. The spacer length is not between "<<mMinSpacerLength<<" and "<<mMaxSpacerLength<<": "<< i, 8);
-                }
-#endif
-            }
-#ifdef DEBUG
-            else
-            {
-                logInfo("\tFailed test 1. The repeat length is larger than "<<mMaxRepeatLength<<": " << read.getFirstNonPartialRepeatLength(), 8);
-            }
-#endif
-            first_start = (*(read.repeatEnd() - 1)).second;
-        }
-    }
-    return false;
-}
 
-
-
-bool crass::Search::shortReadPairSearch(crass::RawRead& read1, crass::RawRead& read2)
-{
-    
-    
-    int seq_length = static_cast<int>(read1.seq().length());
-    int search_end = seq_length - mMinRepeatLength - 1;
-    int final_index = seq_length - 1;
-    
-    
-    for (int first_start = 0; first_start < search_end; first_start++)
-    {
-        int search_begin = first_start + mMinRepeatLength + mMinSpacerLength;
-        
-        if (search_begin >= search_end ) break;
-        
-        int second_start = -1;
-        std::string pattern = read1.seq().substr(first_start, mMinRepeatLength);
-        second_start = PatternMatcher::bmpSearch(read1.seq().substr(search_begin), pattern );
-
-        
-        if (second_start > -1)
-        {
-            second_start += search_begin;
-            int second_end = second_start + mMinRepeatLength;
-            int first_end = first_start + mMinRepeatLength;
-            
-            read1.push_back(first_start, first_end);
-            read1.push_back(second_start, second_end);
-            
-            int next_index = second_end + 1;
-            
-            // make sure that the kmer match is not already at the end of the read before incrementing
-            // increment so we are looking at the next base after the match
-            if ( next_index <= final_index)
-            {
-                
-                std::vector<int> patvec;
-                PatternMatcher::bmpMultiSearch(read2.seq(), pattern, patvec);
-                if(! patvec.empty()) {
-                    
-                }
-                
-                int extenstion_length = 0;
-                while (read1[first_end + extenstion_length] == read1[second_end + extenstion_length])
-                {
-#ifdef DEBUG
-                    logInfo(read1[first_end + extenstion_length]<<" == "<<read1[second_end + extenstion_length],20);
-#endif
-                    extenstion_length++;
-                    next_index++;
-                    if (next_index > final_index) break;
-                    
-                }
-#ifdef DEBUG
-                logInfo("A: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end<<" EX: "<<extenstion_length, 8);
-#endif
-                read1.push_back(first_start, first_end + extenstion_length);
-                read1.push_back(second_start, second_end + extenstion_length);
-            }
-            else
-            {
-#ifdef DEBUG
-                logInfo("B: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end, 8);
-#endif
-            }
- 
-            // the low side will always be true since we search for the lowDRSize
-            if ( read1.getFirstNonPartialRepeatLength() <= mMaxRepeatLength )
-            {
-                int i = static_cast<int>((*read1.spacerStringAt(0)).length());
-                if (( i >= mMinSpacerLength) && (i <= mMaxSpacerLength))
-                {
-                    
-                    if (qcFoundRepeats(read1))
-                    {
-                        
-                        //match_found = true;
-#ifdef DEBUG
-                        logInfo("Potential CRISPR containing read found: ", 8);
-                        read1.inspect();
-                        logInfo("-------------------", 8)
-#endif
-                        //readsFound[tmpHolder.getHeader()] = true;
-                        //addReadHolder(mReads, mStringCheck, tmpHolder);
-                        return true;
-                    }
-                }
-#ifdef DEBUG
-                else
-                {
-                    logInfo("\tFailed test 2. The spacer length is not between "<<mMinSpacerLength<<" and "<<mMaxSpacerLength<<": "<< i, 8);
-                }
-#endif
-            }
-#ifdef DEBUG
-            else
-            {
-                logInfo("\tFailed test 1. The repeat length is larger than "<<mMaxRepeatLength<<": " << read1.getFirstNonPartialRepeatLength(), 8);
-            }
-#endif
-            first_start = (*(read1.repeatEnd() - 1)).second;
-        }
-    }
-    return false;
-}
-
-
-bool crass::Search::longReadSearch(crass::RawRead& read)
-{
-    //-----
-    // Code lifted from CRT, ported by Connor and hacked by Mike.
-    // Should do well at finding crisprs in long reads
-    //
-    
-    //bool match_found = false;
-    
-    // get the length of this sequence
     int seq_length = static_cast<int>(read.seq().length());
     
     
@@ -375,7 +135,6 @@ bool crass::Search::longReadSearch(crass::RawRead& read)
     if (searchEnd < 0)
     {
         logInfo("Read:"<<read.identifier()<<" length is less than " << mMinRepeatLength + mMinSpacerLength + mSearchWindowLength<<"bp", 1);
-        //delete tmpHolder;
         return false;
     }
     
@@ -402,7 +161,6 @@ bool crass::Search::longReadSearch(crass::RawRead& read)
         pattern = read.seq().substr(j, mSearchWindowLength);
 
         
-        //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
         int pattern_in_text_index = -1;
         pattern_in_text_index = PatternMatcher::bmpSearch(text, pattern);
         
@@ -418,7 +176,7 @@ bool crass::Search::longReadSearch(crass::RawRead& read)
         if ( (read.numberOfRepeats() >= mMinSeedCount) )
         {
 #ifdef DEBUG
-            //logInfo(read.identifier(), 8);
+            logInfo(read.identifier(), 8);
             logInfo("\tPassed test 1. At least "<<mMinSeedCount<< " ("<<read.numberOfRepeats()<<") repeated kmers found", 8);
 #endif
             
@@ -455,29 +213,24 @@ bool crass::Search::longReadSearch(crass::RawRead& read)
     return false;
 }
 
-bool crass::Search::longReadPairSearch(crass::RawRead& read1, crass::RawRead& read2)
+bool crass::Search::readPairSearch(crass::RawRead& read1, crass::RawRead& read2)
 {
 
-    if (!longReadPairSearchCore(read1, read2)) {
-        std::cout << "HELP"<<std::endl;
+    if (!readPairSearchCore(read1, read2)) {
         read1.clearRepeatPositions();
         read2.clearRepeatPositions();
-        if (!longReadPairSearchCore(read2, read1)) {
-            std::cout <<"HELP2"<<std::endl;
+        
+        if (!readPairSearchCore(read2, read1)) {
             read1.clearRepeatPositions();
             read2.clearRepeatPositions();
             return false;
-        } else {
-            std::cout<< "second time's the charm"<<std::endl;
-        }
-    } else {
-        std::cout << "got it in one"<<std::endl;
-    }
+        } 
+    } 
     return true;
 }
 
 
-bool crass::Search::longReadPairSearchCore(crass::RawRead &read1, crass::RawRead &read2) {
+bool crass::Search::readPairSearchCore(crass::RawRead &read1, crass::RawRead &read2) {
     
     int seq_length = static_cast<int>(read1.seq().length());
     
@@ -494,8 +247,7 @@ bool crass::Search::longReadPairSearchCore(crass::RawRead &read1, crass::RawRead
     
     if (searchEnd < 0)
     {
-        //logError("Read:"<<read.identifier()<<" length is less than " << mMaxRepeatLength + mMaxSpacerLength + mSearchWindowLength<<"bp");
-        //delete tmpHolder;
+        logInfo("Read:"<<read1.identifier()<<" length is less than " << mMinRepeatLength + mMinSpacerLength + mSearchWindowLength<<"bp", 1);
         return false;
     }
     
@@ -522,7 +274,6 @@ bool crass::Search::longReadPairSearchCore(crass::RawRead &read1, crass::RawRead
         pattern = read1.seq().substr(j, mSearchWindowLength);
         
         
-        //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
         int pattern_in_text_index = -1;
         pattern_in_text_index = PatternMatcher::bmpSearch(text, pattern);
         
@@ -548,7 +299,6 @@ bool crass::Search::longReadPairSearchCore(crass::RawRead &read1, crass::RawRead
             int actual_repeat_length;
             if (!sposs.empty()) {
                 for(auto it = sposs.begin(); it != sposs.end(); ++it) {
-                    //logInfo("read2 repeat found: "<<(*it), 10);
                     read2.push_back(*it, (*it) + mSearchWindowLength);
                 }
                 actual_repeat_length = extendPreRepeatPair(read1, read2);
@@ -621,7 +371,6 @@ int crass::Search::scanRight(crass::RawRead& read,
 #ifdef DEBUG
     logInfo("Scanning Right for more repeats:", 9);
 #endif
-    //unsigned int start_stops_size = tmp_holder.getStartStopListSize();
     
     unsigned int pattern_length = static_cast<int>(pattern.length());
     
@@ -717,7 +466,7 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
     int num_repeats = read.numberOfRepeats();
     int cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * num_repeats);
     
-    // make sure that we don't go below 2
+    // make sure that we don't go below 2 or everything will match
     if (2 > cut_off)
     {
         cut_off = 2;
@@ -739,7 +488,6 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
     for (it = read.repeatBegin(), it2 = it + 1; it2 != read.repeatEnd(); ++it, ++it2) {
         int curr_repeat_spacing = (*it2).first - (*it).first;
         
-        // if it is shorter than what we already have, make it the shortest
         if (curr_repeat_spacing < shortest_repeat_spacing)
         {
             shortest_repeat_spacing = curr_repeat_spacing;
@@ -791,7 +539,6 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
 #endif
         if ( (char_count_A >= cut_off) || (char_count_C >= cut_off) || (char_count_G >= cut_off) || (char_count_T >= cut_off) )
         {
-            //tmp_holder.incrementRepeatLength();
             right_extension_length++;
             char_count_A = char_count_C = char_count_T = char_count_G = 0;
         }
@@ -803,7 +550,6 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
     
     char_count_A = char_count_C = char_count_T = char_count_G = 0;
     
-    // again, not too far
     int left_extension_length = 0;
     int max_left_extension_length = shortest_repeat_spacing - mMinSpacerLength - right_extension_length;
     if(max_left_extension_length < 0) {
@@ -815,7 +561,6 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
     
     begin_iter = read.repeatBegin();
     end_iter = read.repeatEnd();
-    //(from the left side) extends the length of the repeat to the left as long as the first base of all repeats is at least threshold
     while (left_extension_length <= max_left_extension_length)
     {
         if(first_repeat_start_index - left_extension_length < 0) {
@@ -824,9 +569,6 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
         }
         for (RepeatArray::RepeatIterator it = begin_iter; it != read.repeatEnd(); ++it )
         {
-#ifdef DEBUG
-            //logInfo(k<<" : "<<tmp_holder.getRepeatAt(k) - left_extension_length - 1, 10);
-#endif
             switch(read[(*it).first - left_extension_length - 1])
             {
                 case 'A':
@@ -849,7 +591,6 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
         
         if ( (char_count_A >= cut_off) || (char_count_C >= cut_off) || (char_count_G >= cut_off) || (char_count_T >= cut_off) )
         {
-            //tmp_holder.incrementRepeatLength();
             left_extension_length++;
             char_count_A = char_count_C = char_count_T = char_count_G = 0;
         }
@@ -934,29 +675,7 @@ int crass::Search::extendPreRepeatPair(crass::RawRead& templateRead, crass::RawR
     RepeatArray::RepeatIterator read2_end_iter = read2.repeatEnd();
     RepeatArray::RepeatIterator template_read_begin_iter = templateRead.repeatBegin();
     RepeatArray::RepeatIterator read2_begin_iter = read2.repeatBegin();
-    
-    /*if((templateRead.length() - template_read_last_repeat_start_index) < max_right_extension_length)
-    {
-        --template_read_end_iter;
-        --num_repeats;
-    }
 
-    if ((read2.length() - read2_last_repeat_start_index) < max_right_extension_length) {
-        --read2_end_iter;
-        --num_repeats;
-    }
-    
-    if(max_left_extension_length > template_read_first_repeat_start_index)
-    {
-        template_read_begin_iter++;
-        --num_repeats;
-    }
-    
-    if(max_left_extension_length > read2_first_repeat_start_index)
-    {
-        read2_begin_iter++;
-        --num_repeats;
-    }*/
     
     int cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * num_repeats);
     
@@ -1409,10 +1128,8 @@ bool crass::Search::doesRepeatHaveHighlyAbundantKmers(std::string& directRepeat,
     size_t max_index = (directRepeat.length() - kmer_length);
     std::string kmer;
     int total_count = 0;
-    //try {
         for (size_t i = 0; i < max_index; i++) {
             kmer = directRepeat.substr(i, kmer_length);
-            //std::cout << kmer << ", ";
             if (kmer_counter.find(kmer) == kmer_counter.end()) {
                 kmer_counter[kmer] = 1;
             } else {
@@ -1420,24 +1137,14 @@ bool crass::Search::doesRepeatHaveHighlyAbundantKmers(std::string& directRepeat,
             }
             total_count++;
         }
-   /* } catch (std::exception& e) {
-        throw crispr::runtime_exception(__FILE__,
-                                        __LINE__,
-                                        __PRETTY_FUNCTION__,
-                                        e.what());
-    }*/
-    //std::cout << std::endl;
     
     std::map<std::string, int>::iterator iter;
-    //std::cout << directRepeat << std::endl;
     int max_count = 0;
     for (iter = kmer_counter.begin(); iter != kmer_counter.end(); ++iter) {
         if (iter->second > max_count) {
             max_count = iter->second;
         }
-        //std::cout << "{" << iter->first << ", " << iter->second << ", " << (float(iter->second)/float(total_count)) << "}, ";
     }
-    //std::cout << std::endl;
     maxFrequency = static_cast<float>(max_count)/static_cast<float>(total_count);
     if (maxFrequency > CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF) {
         return true;
