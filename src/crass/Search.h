@@ -49,7 +49,7 @@
 #define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH     (8)
 #define CRASS_DEF_SCAN_LENGTH                      (30)
 #define CRASS_DEF_SCAN_CONFIDENCE                  (0.70)
-#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           (0.5)
+#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           (0.75)
 #define CRASS_DEF_MIN_DR_SIZE                   (23)                  // minimum direct repeat size
 #define CRASS_DEF_MAX_DR_SIZE                   (47)                  // maximum direct repeat size
 #define CRASS_DEF_MIN_SPACER_SIZE               (26)                  // minimum spacer size
@@ -138,11 +138,11 @@ public:
 #endif
     int searchFileSerial(const char *fileName);
     
-    int shortReadSearch(crass::RawRead& read);
+    bool shortReadSearch(crass::RawRead& read);
 
     bool longReadSearch(crass::RawRead& read);
     
-    //int shortReadPairSearch(crass::RawRead& read1, crass::RawRead& read2);
+    bool shortReadPairSearch(crass::RawRead& read1, crass::RawRead& read2);
     
     bool longReadPairSearch(crass::RawRead& read1, crass::RawRead& read2);
     
