@@ -248,7 +248,124 @@ int crass::Search::shortReadSearch(crass::RawRead&  read)
 }
 
 
-int crass::Search::longReadSearch(crass::RawRead& read)
+#if 0
+int crass::Search::shortReadPairSearch(crass::RawRead& read1, crass::RawRead& read2)
+{
+    
+    //bool match_found = false;
+    
+    
+    int seq_length = static_cast<int>(read.seq().length());
+    int search_end = seq_length - mMinRepeatLength - 1;
+    int final_index = seq_length - 1;
+    
+    
+    // boyer-moore search
+    for (int first_start = 0; first_start < search_end; first_start++)
+    {
+        int search_begin = first_start + mMinRepeatLength + mMinSpacerLength;
+        
+        if (search_begin >= search_end ) break;
+        
+        // do the search
+        int second_start = -1;
+        
+        //try {
+        second_start = PatternMatcher::bmpSearch(read.seq().substr(search_begin),
+                                                 read.seq().substr(first_start, mMinRepeatLength) );
+        /*} catch (std::exception& e) {
+         
+         std::stringstream ss;
+         ss<<read<<"\n";
+         ss<<search_begin<<" : "<<first_start<<" : "<<opts.lowDRsize;
+         throw crispr::runtime_exception( __FILE__,
+         __LINE__,
+         __PRETTY_FUNCTION__,
+         ss);
+         }*/
+        
+        // check to see if we found something
+        if (second_start > -1)
+        {
+            // bingo!
+            second_start += search_begin;
+            int second_end = second_start + mMinRepeatLength;
+            int first_end = first_start + mMinRepeatLength;
+            
+            int next_index = second_end + 1;
+            
+            // make sure that the kmer match is not already at the end of the read before incrementing
+            // increment so we are looking at the next base after the match
+            if ( next_index <= final_index)
+            {
+                // read through the subsuquent bases untill they don't match
+                int extenstion_length = 0;
+                while (read[first_end + extenstion_length] == read[second_end + extenstion_length])
+                {
+#ifdef DEBUG
+                    logInfo(read[first_end + extenstion_length]<<" == "<<read[second_end + extenstion_length],20);
+#endif
+                    extenstion_length++;
+                    next_index++;
+                    if (next_index > final_index) break;
+                    
+                }
+#ifdef DEBUG
+                logInfo("A: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end<<" EX: "<<extenstion_length, 8);
+#endif
+                read.push_back(first_start, first_end + extenstion_length);
+                read.push_back(second_start, second_end + extenstion_length);
+            }
+            else
+            {
+#ifdef DEBUG
+                logInfo("B: FS: " << first_start<< " FE: "<<first_end<<" SS: "<< second_start<< " SE: "<<second_end, 8);
+#endif
+                read.push_back(first_start, first_end);
+                read.push_back(second_start, second_end);
+            }
+			
+            // the low side will always be true since we search for the lowDRSize
+            if ( read.getFirstNonPartialRepeatLength() <= mMaxRepeatLength )
+            {
+                int i = static_cast<int>((*read.spacerStringAt(0)).length());
+                if (( i >= mMinSpacerLength) && (i <= mMaxSpacerLength))
+                {
+                    if (qcFoundRepeats(read))
+                    {
+                        
+                        //match_found = true;
+#ifdef DEBUG
+                        logInfo("Potential CRISPR containing read found: ", 8);
+                        read.inspect();
+                        logInfo("-------------------", 8)
+#endif
+                        //readsFound[tmpHolder.getHeader()] = true;
+                        //addReadHolder(mReads, mStringCheck, tmpHolder);
+                        break;
+                    }
+                }
+#ifdef DEBUG
+                else
+                {
+                    logInfo("\tFailed test 2. The spacer length is not between "<<mMinSpacerLength<<" and "<<mMaxSpacerLength<<": "<< i, 8);
+                }
+#endif
+            }
+#ifdef DEBUG
+            else
+            {
+                logInfo("\tFailed test 1. The repeat length is larger than "<<mMaxRepeatLength<<": " << read.getFirstNonPartialRepeatLength(), 8);
+            }
+#endif
+            first_start = (*(read.repeatEnd() - 1)).second;
+        }
+    }
+    return 0;
+}
+#endif
+
+bool crass::Search::longReadSearch(crass::RawRead& read)
 {
     //-----
     // Code lifted from CRT, ported by Connor and hacked by Mike.
@@ -256,7 +373,7 @@ int crass::Search::longReadSearch(crass::RawRead& read)
     //
     
     //bool match_found = false;
-        
+    
     // get the length of this sequence
     int seq_length = static_cast<int>(read.seq().length());
     
@@ -275,7 +392,7 @@ int crass::Search::longReadSearch(crass::RawRead& read)
     {
         //logError("Read:"<<read.identifier()<<" length is less than " << mMaxRepeatLength + mMaxSpacerLength + mSearchWindowLength<<"bp");
         //delete tmpHolder;
-        return 1;
+        return false;
     }
     
     for ( int j = 0; j <= searchEnd; j = j + skips)
@@ -296,29 +413,10 @@ int crass::Search::longReadSearch(crass::RawRead& read)
         
         std::string text;
         std::string pattern;
-        //try {
-            text = read.seq().substr(beginSearch, (endSearch - beginSearch));
-            
-        /*} catch (std::exception& e) {
-            throw crispr::substring_exception(e.what(),
-                                              text.c_str(),
-                                              beginSearch,
-                                              (endSearch - beginSearch),
-                                              __FILE__,
-                                              __LINE__,
-                                              __PRETTY_FUNCTION__);
-        }
-        try {*/
-            pattern = read.seq().substr(j, mSearchWindowLength);
-        /*} catch (std::exception& e) {
-            throw crispr::substring_exception(e.what(),
-                                              read.c_str(),
-                                              j,
-                                              mSearchWindowLength,
-                                              __FILE__,
-                                              __LINE__,
-                                              __PRETTY_FUNCTION__);
-        }*/
+        text = read.seq().substr(beginSearch, (endSearch - beginSearch));
+
+        pattern = read.seq().substr(j, mSearchWindowLength);
+
         
         //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
         int pattern_in_text_index = -1;
@@ -349,8 +447,6 @@ int crass::Search::longReadSearch(crass::RawRead& read)
                 logInfo("\tPassed test 2. The repeat length is "<<mMinRepeatLength<<" >= "<< actual_repeat_length <<" <= "<<mMaxRepeatLength, 8);
 #endif
                 
-                // drop partials
-                //tmpHolder.dropPartials();
                 if (qcFoundRepeats(read))
                 {
 #ifdef DEBUG
@@ -359,18 +455,7 @@ int crass::Search::longReadSearch(crass::RawRead& read)
                     logInfo("-------------------", 8)
 #endif
                     
-                    //ReadHolder * candidate_read = new ReadHolder();
-                    //*candidate_read = *tmp_holder;
-                    //addReadHolder(mReads, mStringCheck, candidate_read);
-                    //addReadHolder(mReads, mStringCheck, tmpHolder);
-                    //match_found = true;
-//					if(opts.removeHomopolymers) {
-//                        patternsHash[encoded_repeat] = true;
-//                    } else {
-//                        patternsHash[tmpHolder.repeatStringAt(0)] = true;
-//                    }
-//                    readsFound[tmpHolder.getHeader()] = true;
-                    break;
+                    return true;
                 }
             }
 #ifdef DEBUG
@@ -383,7 +468,141 @@ int crass::Search::longReadSearch(crass::RawRead& read)
         }
         read.clearRepeatPositions();
     }
-    return 0;
+    return false;
+}
+
+bool crass::Search::longReadPairSearch(crass::RawRead& read1, crass::RawRead& read2)
+{
+
+    if (!longReadPairSearchCore(read1, read2)) {
+        std::cout << "HELP"<<std::endl;
+        read1.clearRepeatPositions();
+        read2.clearRepeatPositions();
+        if (!longReadPairSearchCore(read2, read1)) {
+            std::cout <<"HELP2"<<std::endl;
+            read1.clearRepeatPositions();
+            read2.clearRepeatPositions();
+            return false;
+        } else {
+            std::cout<< "second time's the charm"<<std::endl;
+        }
+    } else {
+        std::cout << "got it in one"<<std::endl;
+    }
+    return true;
+}
+
+
+bool crass::Search::longReadPairSearchCore(crass::RawRead &read1, crass::RawRead &read2) {
+    
+    int seq_length = static_cast<int>(read1.seq().length());
+    
+    
+    //the number of bases that can be skipped while we still guarantee that the entire search
+    //window will at some point in its iteration thru the sequence will not miss a any repeat
+    unsigned int skips = mMinRepeatLength - (2 * mSearchWindowLength - 1);
+    if (skips < 1)
+    {
+        skips = 1;
+    }
+    
+    int searchEnd = seq_length - mMaxRepeatLength - mMaxSpacerLength - mSearchWindowLength;
+    
+    if (searchEnd < 0)
+    {
+        //logError("Read:"<<read.identifier()<<" length is less than " << mMaxRepeatLength + mMaxSpacerLength + mSearchWindowLength<<"bp");
+        //delete tmpHolder;
+        return false;
+    }
+    
+    for ( int j = 0; j <= searchEnd; j = j + skips)
+    {
+        
+        int beginSearch = j + mMinRepeatLength + mMinSpacerLength;
+        int endSearch = j + mMaxRepeatLength + mMaxSpacerLength + mSearchWindowLength;
+        
+        if (endSearch >= seq_length)
+        {
+            endSearch = seq_length;
+        }
+        //should never occur
+        if (endSearch < beginSearch)
+        {
+            endSearch = beginSearch;
+        }
+        
+        std::string text;
+        std::string pattern;
+        text = read1.seq().substr(beginSearch, (endSearch - beginSearch));
+        
+        pattern = read1.seq().substr(j, mSearchWindowLength);
+        
+        
+        //if pattern is found, add it to candidate list and scan right for additional similarly spaced repeats
+        int pattern_in_text_index = -1;
+        pattern_in_text_index = PatternMatcher::bmpSearch(text, pattern);
+        
+        if (pattern_in_text_index >= 0)
+        {
+            read1.push_back(j,  j + mSearchWindowLength);
+            int found_pattern_start_index = beginSearch + pattern_in_text_index;
+            
+            read1.push_back(found_pattern_start_index, found_pattern_start_index + mSearchWindowLength);
+            scanRight(read1, pattern);
+            
+        }
+        
+        if ( (read1.numberOfRepeats() >= mMinSeedCount) )
+        {
+#ifdef DEBUG
+            logInfo(read1.identifier(), 8);
+            logInfo("\tPassed test 1. At least "<<mMinSeedCount<< " ("<<read1.numberOfRepeats()<<") repeated kmers found", 8);
+#endif
+            // find seed in second read
+            std::vector<int> sposs;
+            PatternMatcher::bmpMultiSearch(read2.seq(), pattern, sposs);
+            int actual_repeat_length;
+            if (!sposs.empty()) {
+                for(auto it = sposs.begin(); it != sposs.end(); ++it) {
+                    //logInfo("read2 repeat found: "<<(*it), 10);
+                    read2.push_back(*it, (*it) + mSearchWindowLength);
+                }
+                actual_repeat_length = extendPreRepeatPair(read1, read2);
+            } else {
+                actual_repeat_length = extendPreRepeat(read1);
+            }
+            
+            
+            if ( (actual_repeat_length >= mMinRepeatLength) && (actual_repeat_length <= mMaxRepeatLength) )
+            {
+#ifdef DEBUG
+                
+                logInfo("\tPassed test 2. The repeat length is "<<mMinRepeatLength<<" >= "<< actual_repeat_length <<" <= "<<mMaxRepeatLength, 8);
+#endif
+                
+                if (qcFoundRepeats(read1))
+                {
+#ifdef DEBUG
+                    logInfo("Passed all tests!", 8);
+                    read1.inspect();
+                    logInfo("-------------------", 8)
+#endif
+                    
+                    return true;
+                }
+            }
+#ifdef DEBUG
+            else
+            {
+                logInfo("\tFailed test 2. Repeat length: "<<actual_repeat_length/* << " : " << match_found*/, 8);
+            }
+#endif
+            j = (*(read1.repeatEnd() - 1)).second;
+        }
+        read1.clearRepeatPositions();
+        read2.clearRepeatPositions();
+    }
+    return false;
 }
 
 gzFile crass::Search::getFileHandle(const char *inputFile) {
@@ -505,6 +724,7 @@ int crass::Search::scanRight(crass::RawRead& read,
     
     return begin_search + position;
 }
+
 
 int crass::Search::extendPreRepeat(crass::RawRead& read)
 {
@@ -723,6 +943,257 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
         }
     }
     return read.getFirstNonPartialRepeatLength();
+}
+
+int crass::Search::extendPreRepeatPair(crass::RawRead& templateRead, crass::RawRead& read2)
+{
+    
+    int num_repeats = templateRead.numberOfRepeats() + read2.numberOfRepeats();
+
+    
+    RepeatArray::RepeatIterator it = templateRead.repeatBegin();
+    RepeatArray::RepeatIterator it2 = read2.repeatBegin();
+
+    int template_read_first_repeat_start_index = (*it).first;
+    int read2_first_repeat_start_index = (*it2).first;
+    
+    it = templateRead.repeatEnd() - 1;
+    it2 = read2.repeatEnd() - 1;
+    int template_read_last_repeat_start_index = (*it).first;
+    int read2_last_repeat_start_index = (*it2).first;
+
+    
+    int shortest_repeat_spacing = (*(templateRead.repeatAt(1))).first - (*(templateRead.repeatAt(0))).first;
+
+    for (it = templateRead.repeatBegin(), it2 = it + 1; it2 != templateRead.repeatEnd(); ++it, ++it2) {
+        int curr_repeat_spacing = (*it2).first - (*it).first;
+        
+        if (curr_repeat_spacing < shortest_repeat_spacing)
+        {
+            shortest_repeat_spacing = curr_repeat_spacing;
+        }
+    }
+    if (read2.numberOfRepeats() > 1) {
+        for (it = read2.repeatBegin(), it2 = it + 1; it2 != read2.repeatEnd(); ++it, ++it2) {
+            int curr_repeat_spacing = (*it2).first - (*it).first;
+            
+            if (curr_repeat_spacing < shortest_repeat_spacing)
+            {
+                shortest_repeat_spacing = curr_repeat_spacing;
+            }
+        }
+    }
+
+
+
+    int right_extension_length = 0;
+    int max_right_extension_length = shortest_repeat_spacing - mMinSpacerLength;
+    int left_extension_length = 0;
+    int max_left_extension_length = shortest_repeat_spacing - mMinSpacerLength - right_extension_length;
+    if(max_left_extension_length < 0) {
+        max_left_extension_length = 0;
+    }
+
+    
+#ifdef DEBUG
+    logInfo("shortest repeat spacing: "<<shortest_repeat_spacing, 9);
+    logInfo("max right extension: "<<max_right_extension_length, 9);
+    logInfo("max left extension: "<<max_left_extension_length, 9);
+#endif
+    RepeatArray::RepeatIterator template_read_end_iter = templateRead.repeatEnd();
+    RepeatArray::RepeatIterator read2_end_iter = read2.repeatEnd();
+    RepeatArray::RepeatIterator template_read_begin_iter = templateRead.repeatBegin();
+    RepeatArray::RepeatIterator read2_begin_iter = read2.repeatBegin();
+    
+    if((templateRead.length() - template_read_last_repeat_start_index) < max_right_extension_length)
+    {
+        --template_read_end_iter;
+        --num_repeats;
+    }
+
+    if ((read2.length() - read2_last_repeat_start_index) < max_right_extension_length) {
+        --read2_end_iter;
+        --num_repeats;
+    }
+    
+    if(max_left_extension_length > template_read_first_repeat_start_index)
+    {
+        template_read_begin_iter++;
+        --num_repeats;
+    }
+    
+    if(max_left_extension_length > read2_first_repeat_start_index)
+    {
+        read2_begin_iter++;
+        --num_repeats;
+    }
+    
+    int cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * num_repeats);
+    
+    if (2 > cut_off)
+    {
+        cut_off = 2;
+    }
+#ifdef DEBUG
+    logInfo("cuoff: "<<cut_off, 9);
+#endif
+    
+    int char_count_A, char_count_C, char_count_T, char_count_G;
+    char_count_A = char_count_C = char_count_T = char_count_G = 0;
+
+    while (max_right_extension_length > right_extension_length)
+    {
+        for ( it = templateRead.repeatBegin(); it != template_read_end_iter; ++it )
+        {
+
+            if(((*it).second + right_extension_length) >= static_cast<int>(templateRead.length()))
+            {
+                it = template_read_end_iter;
+            }
+            else
+            {
+                switch( templateRead[(*it).second + right_extension_length])
+                {
+                    case 'A':
+                        char_count_A++;
+                        break;
+                    case 'C':
+                        char_count_C++;
+                        break;
+                    case 'G':
+                        char_count_G++;
+                        break;
+                    case 'T':
+                        char_count_T++;
+                        break;
+                }
+            }
+        }
+        
+        for ( it = read2.repeatBegin(); it != read2_end_iter; ++it )
+        {
+            
+            if(((*it).second + right_extension_length) >= static_cast<int>(templateRead.length()))
+            {
+                it = read2_end_iter;
+            }
+            else
+            {
+                switch( read2[(*it).second + right_extension_length])
+                {
+                    case 'A':
+                        char_count_A++;
+                        break;
+                    case 'C':
+                        char_count_C++;
+                        break;
+                    case 'G':
+                        char_count_G++;
+                        break;
+                    case 'T':
+                        char_count_T++;
+                        break;
+                }
+            }
+        }
+#ifdef DEBUG
+        logInfo("R: " << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << right_extension_length, 9);
+#endif
+        if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
+        {
+            right_extension_length++;
+            char_count_A = char_count_C = char_count_T = char_count_G = 0;
+        }
+        else
+        {
+            break;
+        }
+    }
+    
+    char_count_A = char_count_C = char_count_T = char_count_G = 0;
+    
+
+    while (left_extension_length <= max_left_extension_length)
+    {
+        for ( it = template_read_begin_iter; it != templateRead.repeatEnd(); ++it )
+        {
+            switch(templateRead[(*it).first - left_extension_length - 1])
+            {
+                case 'A':
+                    char_count_A++;
+                    break;
+                case 'C':
+                    char_count_C++;
+                    break;
+                case 'G':
+                    char_count_G++;
+                    break;
+                case 'T':
+                    char_count_T++;
+                    break;
+            }
+        }
+        
+        for ( it = read2_begin_iter; it != read2.repeatEnd(); ++it )
+        {
+            switch(read2[(*it).first - left_extension_length - 1])
+            {
+                case 'A':
+                    char_count_A++;
+                    break;
+                case 'C':
+                    char_count_C++;
+                    break;
+                case 'G':
+                    char_count_G++;
+                    break;
+                case 'T':
+                    char_count_T++;
+                    break;
+            }
+        }
+#ifdef DEBUG
+        logInfo("L: " << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : "  << left_extension_length, 9);
+#endif
+        if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
+        {
+            left_extension_length++;
+            char_count_A = char_count_C = char_count_T = char_count_G = 0;
+        }
+        else
+        {
+            break;
+        }
+    }
+    
+    for( it = templateRead.repeatBegin(); it != templateRead.repeatEnd(); ++it) {
+        if((*it).first - left_extension_length < 0){
+            (*it).first = 0;
+        } else {
+            (*it).first -= left_extension_length;
+        }
+        
+        if((*it).second + right_extension_length >= static_cast<int>(templateRead.length())) {
+            (*it).second = static_cast<int>(templateRead.length());
+        } else {
+            (*it).second += right_extension_length;
+        }
+    }
+    
+    for( it = read2.repeatBegin(); it != read2.repeatEnd(); ++it) {
+        if((*it).first - left_extension_length < 0){
+            (*it).first = 0;
+        } else {
+            (*it).first -= left_extension_length;
+        }
+        
+        if((*it).second + right_extension_length >= static_cast<int>(read2.length())) {
+            (*it).second = static_cast<int>(read2.length());
+        } else {
+            (*it).second += right_extension_length;
+        }
+    }
+    return templateRead.getFirstNonPartialRepeatLength();
 }
 
 bool crass::Search::qcFoundRepeats(crass::RawRead& read)
@@ -1060,6 +1531,7 @@ bool crass::Search::doesRepeatHaveHighlyAbundantKmers(std::string& directRepeat,
 #if crass_Search_main
 int main(int argc, char *argv[]) {
     crass::Search s = crass::Search();
+    //s.minSpacerLength(2);
     //                                                                                                                                                       1                                                                                                   2                                                                                                   3
     //                                                             1         2         3         4         5         6         7         8         9         0         1         2         3         4         5         6         7         8         9         0         1         2         3         4         5         6         7         8         9         0         1         2         3         4
     //                                                   01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
@@ -1070,9 +1542,34 @@ int main(int argc, char *argv[]) {
     //s.longReadSearch(read350);
     //read350.inspect();
     
-    //s.shortReadSearch(read100);
+    //s.longReadSearch(read100);
     //read100.inspect();
-    s.searchFileSerial(argv[1]);
+    
+    //crass::RawRead read1_not("", "", "AGGTAGTGTCGTCGTTGTCTGGCGCGATCTGAATGAAACCGGGGGTGTTGGGATCAAGACGCTGGGTGAGCCGTCGAAGGAGCTTGTCGAGGTTGACGGCCTCTGGCTGGTGAAACGGATGGTATAAAGTGCTCTTTAACAAAATGAATCGATGTTGAGGTTTTCTCTTGTAGTTCATAGGGCTACCTACAAGAGTTTCCCCCGCGTCAGCGGGGATAGGCCCCACGCCGTGACGGAAGGGCTGATCACGAAATGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGCGCGGCATGGCCTGG", "", crass::RepeatArray());
+    //crass::RawRead read2_yes("", "", "ACCCGGGTTTCCCCCGCGTCAGCGGGGATAGGCCCCGGCGTGTTCGAATTCAATGGTCTTGCGCTCGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGCCTGCCGGCTGGCCTTGCGCATCGGGCTCGGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGGGCGGCCCATACCGGTGACGCCCTTGGTAGGGTTTCCCCCGCGTCAGCGGGGATAGGCCCCTTCCCGGCGCATGTCGTCGGCACCTGACTAGGTTTCCCCCGCGTCAGCGGGGATAGGCCCTTTTCGATCACTTCCTGGCCT", "", crass::RepeatArray());
+    
+    //s.longReadPairSearch(read1_not, read2_yes);
+    //read1_not.inspect();
+    //read2_yes.inspect();
+    //std::cout<<"*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*"<<std::endl;
+    crass::RawRead read1_yes("", "", "GGCAGTTTCCCCCGCGTCAGCGGGGATAGGCCCCATCGACGACGGCCAGCGCCTGGTCGAACAGTGTTTCCCCCGCGTCAGCGGGGATAGGCCCGGTGGGCGAGATTCGCGACTCGCGGCCGTTGCGTTTCCCCCGCGTCAGCGGGGATAGGCCCCGCAGCACGGGCAGGGCTCGCAGCGCTGCGAGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGTCGTCCGGCTTGTGGGATTCGGCAGTATGGGGTTTCCCCCGCGTCAGCGGGGATAGGCCGCCAAGGGTCGAGGGCTTGGCGT", "", crass::RepeatArray());
+    crass::RawRead read2_not("", "", "GGCGACAGTCTCGCCCCCGGCTGACCTACAGTTTCCCCCGCGTCAGCGGGGATAGGCCCCGGGCGTGCCCGAAGTCGTCGAGAGATGCTTAGGCGCTGCGGGGCCTGCCGCGTTCGCTGTAGTAGATCGCGGCCTCGTCGAGTTCGGCCAGCGCCGGCGGCAGGATGACGATTTTCATGTCGGCCGGTGGCTGGCGATTCTGGCGCGGGTCTGCGCAATGGCTTCGTCGATATCAACGGTGCCAATCTCACCGCGGTCGAAAGCGTCGGCTCTGCGCTCGAGTTCTTCCTGCCACGCGGCCAGG", "", crass::RepeatArray());
+    //s.longReadSearch(read1_yes);
+    s.longReadPairSearch(read1_yes, read2_not);
+    //s.longReadPairSearch(read2_not, read1_yes);
+    read1_yes.inspect();
+    read2_not.inspect();
+    
+    //crass::RawRead read1_bothyes("", "", "AAAGGGTTTGGCGACGCAAGTTTCCCCCGCGTCAGCGGGGATAGGCCCCTCGAGCTGGACCGCAATCTGGAGTCTGCCCTGTTTCCCCCGCGTCAGCGGGGATAGGCCCGACGCCATCGAGGCGATCGAGGCGCAGATCGGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGTCCGAGCATCGCGGCGTATCAAAGCGCGGGGGTTTCCCCCGCGTCAGCGGGGATAGGCCCTCCACAGCGTAGAAATGCCG", "", crass::RepeatArray());
+    //crass::RawRead read2_bothyes("", "", /*crass::reverseComplement(*/"TGTTTCCCCCGCGTCAGCGGGGATAGGCCCCCGCACCACGACGACACCAGCTTACTACGGCCGTTTCCCCCGCGTCAGCGGGGATAGGCCCTCGCCCATATCGGTATCTGTCCAGAGCGCAGCGTTTCCCCCGCGTCAGCGGGGATAGGCCCTGCTGCGGGATCATCGCGTCGGCACGCCCGGCGTTTCCCCCGCGTCAGCGGGGATAGGCCCTGTACGGTCGGGGGTGCTGGATATATATCGAGGTTT"/*)*/, "", crass::RepeatArray());
+    //s.longReadSearch(read1_bothyes);
+    //s.longReadSearch(read2_bothyes);
+    //s.longReadPairSearch(read1_bothyes, read2_bothyes);
+    //read1_bothyes.inspect();
+    //read2_bothyes.inspect();
+    
+    //s.searchFileSerial(argv[1]);
+    
     return 0;
 }
 #endif

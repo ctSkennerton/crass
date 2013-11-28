@@ -193,6 +193,43 @@ RawRead::RepeatStringIterator crass::RawRead::getFirstNonPartialRepeat() {
     }
 }
 
+RepeatArray::RepeatIterator crass::RawRead::getFirstNonPartialRepeatPositions() {
+    switch (numberOfRepeats()) {
+        case 0: {
+            // error
+            return repeatAt(0);
+            break;
+        }
+        case 1: {
+            return repeatAt(0);
+            break;
+        }
+        case 2: {
+            int first_length = mRepeatPositions.repeatLengthAt(0);
+            int second_length = mRepeatPositions.repeatLengthAt(1);
+            bool sp = startPartial();
+            bool ep = endPartial();
+            if (sp && ep) {
+                return (first_length > second_length) ? repeatAt(0) : repeatAt(1);
+            } else if (sp) {
+                return repeatAt(1);
+            } else {
+                return repeatAt(0);
+            }
+            break;
+        }
+        default: {
+            auto it = repeatBegin();
+            if(startPartial()) {
+                return repeatAt(1);
+            } else {
+                return repeatAt(0);
+            }
+            break;
+        }
+    }
+}
+
 #ifdef crass_RawRead_main
 int main() {
     

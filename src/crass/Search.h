@@ -88,23 +88,33 @@ public:
     void minRepeatLength(int i) {
         mMinRepeatLength = i;
     }
+    
     int maxRepeatLength() {
         return mMaxRepeatLength;
     }
     void maxRepeatLength(int i) {
         mMaxRepeatLength = i;
     }
+    
     int minSpacerLength() {
         return mMinSpacerLength;
     }
     void minSpacerLength(int i) {
         mMinSpacerLength = i;
     }
+    
     int maxSpacerLength() {
         return mMaxSpacerLength;
     }
     void maxSpacerLength(int i) {
         mMaxSpacerLength = i;
+    }
+    
+    int minSeedCount() {
+        return mMinSeedCount;
+    }
+    void minSeedCount(int i) {
+        mMinSeedCount = i;
     }
 #if 0
     // for single reads/files
@@ -130,15 +140,24 @@ public:
     
     int shortReadSearch(crass::RawRead& read);
 
-    int longReadSearch(crass::RawRead& read);
+    bool longReadSearch(crass::RawRead& read);
+    
+    //int shortReadPairSearch(crass::RawRead& read1, crass::RawRead& read2);
+    
+    bool longReadPairSearch(crass::RawRead& read1, crass::RawRead& read2);
     
 private:
+    
+    bool longReadPairSearchCore(crass::RawRead& read1, crass::RawRead& read2);
+    
     gzFile getFileHandle(const char * inputFile);
     
     int scanRight(crass::RawRead& read,
                   std::string& pattern);
     
     int extendPreRepeat(crass::RawRead& read);
+    
+    int extendPreRepeatPair(crass::RawRead& read1, crass::RawRead& read2);
     
     bool qcFoundRepeats(crass::RawRead& read);
     

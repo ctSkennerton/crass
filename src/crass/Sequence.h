@@ -230,7 +230,8 @@ std::string laurenize(std::string seq);
         int getFirstNonPartialRepeatLength();
             
         RawRead::RepeatStringIterator getFirstNonPartialRepeat();
-                    
+            RepeatArray::RepeatIterator getFirstNonPartialRepeatPositions();
+            
 
 
 

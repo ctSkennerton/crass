@@ -43,7 +43,9 @@
 
 // forward declaration of readholder class
 //class ReadHolder;
-
+namespace crass {
+    typedef std::vector<std::string> list;
+}
 
 // Types cut from libcrispr.h
 typedef std::map<std::string, bool> lookupTable;
