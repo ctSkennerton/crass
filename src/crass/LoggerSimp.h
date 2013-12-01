@@ -131,7 +131,6 @@ if(logger->getLogLevel() >= ll) { \
 #define logError(cOUTsTRING) { \
 std::stringstream s; s<<cOUTsTRING;\
 (*(logger->mGlobalHandle)) << logger->timeToString(true) << "\tERR " << __FILE__ << " : " << __PRETTY_FUNCTION__ << " : " << __LINE__ << ": " <<  cOUTsTRING << std::endl; \
-throw crispr::exception(__FILE__, __LINE__, __PRETTY_FUNCTION__,s.str().c_str());\
 }
 
 // for warnings
