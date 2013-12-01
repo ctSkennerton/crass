@@ -67,6 +67,7 @@ void RawRead::revComp() {
     if(!mQual.empty()) {
         std::reverse(mQual.begin(), mQual.end());
     }
+    mRevComp = !mRevComp;
     mRepeatLowLexi = !mRepeatLowLexi;
 }
     

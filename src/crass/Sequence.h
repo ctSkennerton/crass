@@ -93,7 +93,8 @@ std::string laurenize(std::string seq);
                 mSeq(s),
                 mQual(q),
                 mRepeatPositions(r),
-                mRepeatLowLexi(false),
+                mRepeatLowLexi(true),
+                mRevComp(false),
                 mPrevRead(nullptr),
                 mNextRead(nullptr)
         {}
@@ -230,7 +231,7 @@ std::string laurenize(std::string seq);
         int getFirstNonPartialRepeatLength();
             
         RawRead::RepeatStringIterator getFirstNonPartialRepeat();
-            RepeatArray::RepeatIterator getFirstNonPartialRepeatPositions();
+        RepeatArray::RepeatIterator getFirstNonPartialRepeatPositions();
             
 
 
@@ -245,6 +246,7 @@ std::string laurenize(std::string seq);
         std::string mQual;
         RepeatArray mRepeatPositions;
         bool mRepeatLowLexi;
+        bool mRevComp;
         RawRead *mPrevRead;
         RawRead *mNextRead;
     };
