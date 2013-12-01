@@ -42,6 +42,7 @@
 #include "Sequence.h"
 #include "kseq.h"
 #include "LoggerSimp.h"
+#include "Storage.h"
 // --------------------------------------------------------------------
 // SEARCH ALGORITHM PARAMETERS
 // --------------------------------------------------------------------
@@ -71,7 +72,19 @@ class Search {
   
 
 public:
-    Search() : 
+    Search() :
+            mReadStore(nullptr),
+            mMinRepeatLength(CRASS_DEF_MIN_DR_SIZE),
+            mMaxRepeatLength(CRASS_DEF_MAX_DR_SIZE),
+            mMinSpacerLength(CRASS_DEF_MIN_SPACER_SIZE),
+            mMaxSpacerLength(CRASS_DEF_MAX_SPACER_SIZE),
+            mSearchWindowLength(CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH),
+            mScanRange(CRASS_DEF_SCAN_LENGTH),
+            mMinSeedCount(CRASS_DEF_DEFAULT_MIN_NUM_REPEATS)
+    {}
+    
+    Search(crass::Storage * readStore) :
+            mReadStore(readStore),
             mMinRepeatLength(CRASS_DEF_MIN_DR_SIZE),
             mMaxRepeatLength(CRASS_DEF_MAX_DR_SIZE),
             mMinSpacerLength(CRASS_DEF_MIN_SPACER_SIZE),
@@ -160,11 +173,9 @@ private:
     
     bool doesRepeatHaveHighlyAbundantKmers(std::string& directRepeat);
 
-#if 0
     
     // members
     crass::Storage *mReadStore;
-#endif
     int mMinRepeatLength;
     int mMaxRepeatLength;
     int mMinSpacerLength;

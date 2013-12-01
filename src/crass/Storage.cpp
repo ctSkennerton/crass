@@ -80,3 +80,8 @@ void Storage::add(RawRead& read1, RawRead& read2) {
     linkReadToRepeat(mReads.size() - 2, mReads.size() - 1, t);
     
 }
+
+void Storage::inspect(std::ostream &out) {
+    out <<"Number of reads: "<<mReads.size()<<std::endl;
+    out << "Number of patterns:"<<mRepeatsToReads.size()<<std::endl;
+}

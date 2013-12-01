@@ -64,6 +64,11 @@ int crass::Search::searchFileSerial(const char *inputFastq)
     while ( (l = kseq_read(seq)) >= 0 )
     {
         max_read_length = (l > max_read_length) ? l : max_read_length;
+        if(l < (3*mMinRepeatLength) + (2*mMinSpacerLength)) {
+            mMinSeedCount = 2;
+        } else {
+            mMinSeedCount = 3;
+        }
         /*if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER)
         {
             time(&time_current);
@@ -82,21 +87,11 @@ int crass::Search::searchFileSerial(const char *inputFastq)
         if(seq->qual.s != NULL) {
             read.quality(seq->qual.s);
         }
-#if SEARCH_SINGLETON
-            SearchCheckerList::iterator debug_iter = debugger->find(seq->name.s);
-            if (debug_iter != debugger->end()) {
-                changeLogLevel(10);
-                std::cout<<"Processing interesting read: "<<debug_iter->first<<std::endl;
-            } else {
-                changeLogLevel(opts.logLevel);
-            }
-#endif
             
-            if (l > length_cutoff) {
-                // perform long read seqrch
-                if(readSearch(read))
-                    reads_found_with_crispr++;
-            }
+        if (l > length_cutoff) {
+            if(readSearch(read))
+                reads_found_with_crispr++;
+        }
 
         log_counter++;
         read_counter++;
@@ -197,7 +192,7 @@ bool crass::Search::readSearch(crass::RawRead& read)
                     read.inspect();
                     logInfo("-------------------", 8)
 #endif
-                    
+                    mReadStore->add(read);
                     return true;
                 }
             }
@@ -323,7 +318,7 @@ bool crass::Search::readPairSearchCore(crass::RawRead &read1, crass::RawRead &re
                     read1.inspect();
                     logInfo("-------------------", 8)
 #endif
-                    
+                    mReadStore->add(read1, read2);
                     return true;
                 }
             }

@@ -34,6 +34,8 @@
 #include "main.h"
 #include "config.h"
 #include "StlExt.h"
+#include "Storage.h"
+#include "Search.h"
 #include <iostream>
 #include <sys/stat.h>
 #include <getopt.h>
@@ -66,10 +68,16 @@ void versionInfo(void)
 void usage() {
     std::cout<<std::endl;
     std::cout<<"Usage:  "<<std::endl;
-    std::cout<<PACKAGE_NAME<<"  [options] <inputFile>..."<<std::endl<<std::endl;
+    std::cout<<PACKAGE_NAME<<"  [options] <inputFile>..."<<std::endl;
+    //std::cout<<PACKAGE_NAME<<"  [options] -ps (<readfile1> <readfile2>)..."<<std::endl;
+    //std::cout<<PACKAGE_NAME<<"  [options] -pi <readfile12>..."<<std::endl;
+
     std::cout<<"Options:"<<std::endl;
     std::cout<< "-h --help                    This help message"<<std::endl;
     std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_LOGGING<<"]"<<std::endl;
+    std::cout<< "-L --logFile         <FILE>  Name of the file for log in the output directory."<<std::endl;
+    std::cout<< "                             use 'stdout' or 'stderr' to print logging info to that stream"<<std::endl;
+    std::cout<< "                             [Default: log.txt]"<<std::endl;
     std::cout<< "-o --outDir          <DIR>   Output directory; will be created if it doesn't exist [default: .]"<<std::endl;
     std::cout<< "-V --version                 Program and version information"<<std::endl;
     std::cout<< "-d --minDR           <INT>   Minimim length of the direct repeat"<<std::endl;
@@ -215,13 +223,25 @@ int main(int argc, char * argv[]) {
     }
     CrassOpts opts;
     int opt_idx = processOptions(argc, argv, opts);
-    
+    if(opts.logFile == "stderr" || opts.logFile == "stdout") {
+        intialiseGlobalLogger(opts.logFile, opts.logLevel);
+    } else {
+        intialiseGlobalLogger(opts.outdir + opts.logFile, opts.logLevel);
+    }
+    logTimeStamp();
     if (opt_idx >= argc)
     {
+        logError("no sequence files to process");
         std::cerr<<PACKAGE_NAME<<" [ERROR]: Specify sequence files to process!"<<std::endl;
         usage();
         return 1;
     }
     
+    crass::Storage read_store = crass::Storage();
+    crass::Search searcher = crass::Search(&read_store);
+    for (; opt_idx < argc; ++opt_idx) {
+        searcher.searchFileSerial(argv[opt_idx]);
+    }
+    read_store.inspect(std::cout);
     return 0;
 }

@@ -142,33 +142,8 @@ if(logger->getLogLevel() >= ll) { \
 
 // time stamp
 #define logTimeStamp() { \
-(*(logger->mGlobalHandle)) << "----------------------------------------------------------------------\n----------------------------------------------------------------------\n-- " << logger->timeToString(false) << "  --  " << PACKAGE_FULL_NAME<<" ("<<PACKAGE_NAME<<")" << " --  Version: " << PACKAGE_VERSION << " --\n----------------------------------------------------------------------\n----------------------------------------------------------------------\n" << std::endl; \
+(*(logger->mGlobalHandle)) << "----------------------------------------------------------------------\n----------------------------------------------------------------------\n-- " << logger->timeToString(false) << "  --  " << PACKAGE_NAME << " --  Version: " << PACKAGE_VERSION << " --\n----------------------------------------------------------------------\n----------------------------------------------------------------------\n" << std::endl; \
 }
 
-#ifdef SUPER_LOGGING
-#undef logInfo
-#undef logError
-#undef logWarn
-
-// for logging info
-#define logInfo(cOUTsTRING, ll) { \
-if(logger->getLogLevel() >= ll) { \
-(*(logger->mGlobalHandle)) << logger->timeToString(true) << "\tI   " << __FILE__ << " : " << __PRETTY_FUNCTION__ << " : " << __LINE__ << ": " <<  cOUTsTRING << std::endl; \
-} \
-}
-
-// for errors
-#define logError(cOUTsTRING) { \
-(*(logger->mGlobalHandle)) << logger->timeToString(true) << "\tERR " << __FILE__ << " : " << __PRETTY_FUNCTION__ << " : " << __LINE__ << ": " <<  cOUTsTRING << std::endl; \
-}
-
-// for warnings
-#define logWarn(cOUTsTRING, ll) { \
-if(logger->getLogLevel() >= ll) { \
-(*(logger->mGlobalHandle)) << logger->timeToString(true) << "\tW   " << __FILE__ << " : " << __PRETTY_FUNCTION__ << " : " << __LINE__ << ": " <<  cOUTsTRING << std::endl; \
-} \
-}
-
-#endif // __SUPER_LOGGING
 
 #endif //LoggerSimp_h

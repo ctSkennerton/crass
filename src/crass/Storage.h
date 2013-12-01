@@ -9,6 +9,7 @@
 #ifndef __crass__Storage__
 #define __crass__Storage__
 
+#include <iostream>
 #include <vector>
 #include <list>
 #include <unordered_map>
@@ -32,6 +33,7 @@ namespace crass {
     public:
         void add(crass::RawRead& read);
         void add(crass::RawRead& read1, crass::RawRead& read2);
+        void inspect(std::ostream& out);
     };
     
 }

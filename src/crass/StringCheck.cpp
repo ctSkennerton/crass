@@ -64,7 +64,7 @@ std::string StringCheck::getString(const StringToken token)
     } else {
         logError("Token: "<<token<<" not stored!");
     }
-
+    return "";
 }
 
 StringToken StringCheck::getToken( std::string& queryStr)

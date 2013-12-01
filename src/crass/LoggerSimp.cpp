@@ -87,11 +87,18 @@ void LoggerSimp::init(std::string logFile, int logLevel)
 {
     mInstance->setLogLevel(logLevel);
     mInstance->setStartTime();
-    if(logFile == "")
+    std::cout<<logFile<<std::endl;
+    if(logFile == "stdout")
     {
         // set the logger to cout
         std::streambuf * buff = mInstance->getBuff();
         buff = std::cout.rdbuf();
+        mGlobalHandle = new std::iostream(buff);
+    }
+    else if (logFile == "stderr") {
+        // set the logger to cout
+        std::streambuf * buff = mInstance->getBuff();
+        buff = std::cerr.rdbuf();
         mGlobalHandle = new std::iostream(buff);
     }
     else
