@@ -49,15 +49,6 @@
 // --------------------------------------------------------------------
 #define isNotDecimal(number) (number > 1.0 || number < 0.0)
 // --------------------------------------------------------------------
- // SEARCH ALGORITHM PARAMETERS
-// --------------------------------------------------------------------
-#define CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH         (6)
-#define CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH         (9)
-#define CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH     (8)
-#define CRASS_DEF_SCAN_LENGTH                      (30)
-#define CRASS_DEF_SCAN_CONFIDENCE                  (0.70)
-#define CRASS_DEF_TRIM_EXTEND_CONFIDENCE           (0.5)
-// --------------------------------------------------------------------
  // STRING LENGTH / MISMATCH / CLUSTER SIZE PARAMETERS
 // --------------------------------------------------------------------
 #define CRASS_DEF_MAX_CLUSTER_SIZE_FOR_SW       (30)                  // Maximum number of cluster reps we will all vs all sw for
@@ -81,15 +72,6 @@
 #define CRASS_DEF_PARTIAL_SIM_CUT_OFF           (0.85)              // The similarity needed to exted into partial matches
 #define CRASS_DEF_MIN_PARTIAL_LENGTH            (4)                 // The mininum length allowed for a partial direct repeat at the beginning or end of a read 
 #define CRASS_DEF_MAX_SING_PATTERNS				(5000)				// the maximum number of patterns we'll search for in a single hit
-// --------------------------------------------------------------------
- // HARD CODED PARAMS FOR DR FILTERING
-// --------------------------------------------------------------------
-#define CRASS_DEF_LOW_COMPLEXITY_THRESHHOLD        (0.75)
-#define CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY  (0.82)
-#define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF     (12)
-#define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF     (30)
-#define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          (3)
-#define CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF	       (0.23)			// DRs should NOT have kmers more abundant than this percentage!
 // --------------------------------------------------------------------
   // FILE IO
 // --------------------------------------------------------------------
