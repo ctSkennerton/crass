@@ -35,17 +35,9 @@
 #ifndef __SEQ_UTILS_H
 #define __SEQ_UTILS_H
 #include <string>
-#include <zlib.h>
 
 std::string reverseComplement(std::string str);
 
 std::string laurenize(std::string seq);
 
-//**************************************
-// system
-//**************************************
-
-gzFile getFileHandle(const char * inputFile);
-
-void RecursiveMkdir(std::string dir);
 #endif

@@ -32,19 +32,6 @@
  *                               A
  */
 
-
-#include <string>
-#include <algorithm>
-#include <iostream>
-#include <sstream>
-#include <zlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <config.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include "SeqUtils.h"
 
 
@@ -97,43 +84,6 @@ std::string laurenize (std::string seq1)
 }
 
 
-gzFile getFileHandle(const char * inputFile)
-{
-    gzFile fp;
-    if ( strcmp(inputFile, "-") == 0 ) 
-    {
-        fp = gzdopen(fileno(stdin), "r");
-    }
-    else 
-    {
-        fp = gzopen(inputFile, "r");
-    }
-    
-    if ( (fp == NULL) && (strcmp(inputFile, "-") != 0) ) 
-    {
-        std::cerr<< PACKAGE_NAME<<" : [ERROR] Could not open FASTQ "<<inputFile<<" for reading."<<std::endl;
-        exit(1);
-    }
-    
-    if ( (fp == NULL) && (strcmp(inputFile, "-") == 0) ) 
-    {
-        std::cerr<< PACKAGE_NAME<<" : [ERROR] Could not open stdin for reading."<<std::endl;
-        exit(1);
-    }
-    return fp;
-}
 
-#define OUT_FILE_PERMISSION_MASK (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)
-
-void RecursiveMkdir(std::string dir) 
-{
-    std::string tmp;
-    size_t pos = 0;
-    while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
-        tmp = dir.substr(0,pos);
-        mkdir(tmp.c_str(), OUT_FILE_PERMISSION_MASK);
-    }
-    mkdir(dir.c_str(), OUT_FILE_PERMISSION_MASK);
-}
 
 

@@ -37,6 +37,7 @@
 //
 // system includes
 #include <map>
+#include <cmath>
 // local includes
 #include "Search.h"
 #include "PatternMatcher.h"
