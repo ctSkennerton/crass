@@ -7,6 +7,7 @@
 //
 
 #include "Sequence.h"
+#include "LoggerSimp.h"
 #include <algorithm>
 
 using namespace crass;

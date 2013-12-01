@@ -41,6 +41,7 @@
 #include "RepeatArray.h"
 #include "Sequence.h"
 #include "kseq.h"
+#include "LoggerSimp.h"
 // --------------------------------------------------------------------
 // SEARCH ALGORITHM PARAMETERS
 // --------------------------------------------------------------------
@@ -64,7 +65,6 @@
 #define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          (3)
 #define CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF	       (0.23)			// DRs should NOT have kmers more abundant than this percentage!
 
-#define logInfo(cOUTsTRING, lEVEL) std::cerr <<__FILE__<<" "<<__LINE__<<">> "<< cOUTsTRING << std::endl;
 namespace crass {
     
 class Search {
@@ -161,10 +161,6 @@ private:
     bool doesRepeatHaveHighlyAbundantKmers(std::string& directRepeat);
 
 #if 0
-    bool searchBrute(crass::RawRead& read);
-    bool searchCRT(crass::RawRead& read);
-    
-    void addReadHolder(ReadHolder& tmp_holder);
     
     // members
     crass::Storage *mReadStore;

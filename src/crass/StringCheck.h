@@ -56,9 +56,9 @@ public:
 		StringCheck(void) : mNextFreeToken(1), mName("unset"){}
         ~StringCheck(void) {}  
         
-        StringToken addString(std::string newStr);
-        std::string getString(StringToken token);
-        StringToken getToken(std::string queryStr);
+        StringToken addString(std::string& newStr);
+        std::string getString(const StringToken token);
+        StringToken getToken( std::string& queryStr);
         
         inline void setName(std::string name) { mName = name; }
 private:

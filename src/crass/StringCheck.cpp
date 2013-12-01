@@ -40,10 +40,10 @@
 
 // local includes
 #include "StringCheck.h"
-#include <libcrispr/Exception.h>
+#include "LoggerSimp.h"
 
 
-StringToken StringCheck::addString(std::string newStr)
+StringToken StringCheck::addString(std::string& newStr)
 {
     //-----
     // add the string and retuen it's token
@@ -54,7 +54,7 @@ StringToken StringCheck::addString(std::string newStr)
     return mNextFreeToken;
 }
 
-std::string StringCheck::getString(StringToken token)
+std::string StringCheck::getString(const StringToken token)
 {
     //-----
     // return the string for a given token or spew
@@ -62,15 +62,12 @@ std::string StringCheck::getString(StringToken token)
     if(mT2S_map.find(token) != mT2S_map.end()) {
         return mT2S_map[token];
     } else {
-        throw crispr::exception(__FILE__, 
-                                __LINE__, 
-                                __PRETTY_FUNCTION__,
-                                "Token not stored");
+        logError("Token: "<<token<<" not stored!");
     }
 
 }
 
-StringToken StringCheck::getToken(std::string queryStr)
+StringToken StringCheck::getToken( std::string& queryStr)
 {
     //-----
     // return the token or 0
