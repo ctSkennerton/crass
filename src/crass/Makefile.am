@@ -8,4 +8,4 @@ AM_LDFLAGS =  @zlib_flags@
 
 
 crass_SOURCES =\
-PatternMatcher.cpp kseq.cpp Search.cpp Sequence.cpp RepeatArray.cpp Storage.cpp main.cpp LoggerSimp.cpp StringCheck.cpp
+PatternMatcher.cpp kseq.cpp Search.cpp Sequence.cpp RepeatArray.cpp Storage.cpp main.cpp LoggerSimp.cpp StringCheck.cpp SeqUtils.cpp

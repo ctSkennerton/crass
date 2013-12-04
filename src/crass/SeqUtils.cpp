@@ -34,7 +34,6 @@
 
 #include "SeqUtils.h"
 
-
 char comp_tab[] = {
     0,   1,	2,	 3,	  4,   5,	6,	 7,	  8,   9,  10,	11,	 12,  13,  14,	15,
     16,  17,  18,	19,	 20,  21,  22,	23,	 24,  25,  26,	27,	 28,  29,  30,	31,
@@ -46,7 +45,7 @@ char comp_tab[] = {
 	'p', 'q', 'y', 's', 'a', 'a', 'b', 'w', 'x', 'r', 'z', 123, 124, 125, 126, 127
 };
 
-std::string reverseComplement(std::string str)
+std::string crass::reverseComplement(std::string str)
 {
 
 	int l = static_cast<int>(str.length());
@@ -73,9 +72,9 @@ std::string reverseComplement(std::string str)
     return ret;
 }
 
-std::string laurenize (std::string seq1)
+std::string crass::laurenize (std::string seq1)
 {
-    std::string seq2 = reverseComplement(seq1);
+    std::string seq2 = crass::reverseComplement(seq1);
     if (seq1 < seq2)
     {
         return seq1;
@@ -83,6 +82,110 @@ std::string laurenize (std::string seq1)
     return seq2;
 }
 
+char ** crass::cutIntoKmers(std::string& s, int k, int& merCount)
+{
+    int str_len = static_cast<int>(s.length());
+    int off = str_len - k;
+    merCount = off + 1;
+
+    
+    // STOLED FROM SaSSY!!!!
+    // First we cut kmers from the sequence then we use these to
+    // determine overlaps, finally we make edges
+    //
+    // When we cut kmers from a read it is like this...
+    //
+    // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    // ------------------------------
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    // XXXXXXXXXXXXXXXXXXXXXXXXXX
+    //
+    // so we break the job into three parts
+    //
+    // XXXX|XXXXXXXXXXXXXXXXXXXXXX|XXXX
+    // ----|----------------------|----
+    // XXXX|XXXXXXXXXXXXXXXXXXXXXX|
+    //  XXX|XXXXXXXXXXXXXXXXXXXXXX|X
+    //   XX|XXXXXXXXXXXXXXXXXXXXXX|XX
+    //    X|XXXXXXXXXXXXXXXXXXXXXX|XXX
+    //     |XXXXXXXXXXXXXXXXXXXXXX|XXXX
+    //
+    // the first and last part may be a little slow but the middle part can fly through...
+    //
+    
+    // make a 2d array for the kmers!
+	char ** kmers = NULL;
+	int * kmer_offsets = NULL;
+    kmers = new char*[merCount];
+	
+    for(int i = 0; i < merCount; i++)
+    {
+        kmers[i] = new char [k+1];
+    }
+    // use these offsets when we cut kmers, they are a component of the algorithm
+    kmer_offsets = new int[merCount];
+    for(int i = 0; i < merCount; i++)
+    {
+        kmer_offsets[i] = i * -1; // Starts at [0, -1, -2, -3, -4, ...]
+    }
+	
+    int pos_counter = 0;
+    
+    // a slow-ish first part
+    while(pos_counter < k)
+    {
+        for(int j = 0; j < merCount; j++)
+        {
+            if(pos_counter >= j)
+            {
+                kmers[j][kmer_offsets[j]] = s[pos_counter];
+            }
+            kmer_offsets[j]++;
+        }
+        pos_counter++;
+    }
+    
+    // this is the fast part of the loop
+    while(pos_counter < off)
+    {
+        for(int j = 0; j < merCount; j++)
+        {
+            if(kmer_offsets[j] >= 0 && kmer_offsets[j] < k)
+            {
+                kmers[j][kmer_offsets[j]] = s[pos_counter];
+            }
+            kmer_offsets[j]++;
+        }
+        pos_counter++;
+    }
+    
+    // an even slower ending
+    while(pos_counter < str_len)
+    {
+        for(int j = 0; j < merCount; j++)
+        {
+            if(kmer_offsets[j] < k)
+            {
+                kmers[j][kmer_offsets[j]] = s[pos_counter];
+            }
+            kmer_offsets[j]++;
+        }
+        pos_counter++;
+    }
+    delete [] kmer_offsets;
+    return kmers;
+}
+
+void crass::cutIntoKmers(std::string& s, int k, std::vector<std::string>& mers)
+{
+    int off = static_cast<int>(s.length()) - k;
+    for (int i = 0; i < off; ++i) {
+        mers.push_back(s.substr(i,k));
+    }
+}
 
 
 

@@ -11,14 +11,10 @@
 
 #include <iostream>
 #include <string>
-
+#include <SeqUtils.h>
 #include "RepeatArray.h"
 namespace crass {
 
-// global functions
-std::string reverseComplement(std::string str);
-
-std::string laurenize(std::string seq);
     
     class RawRead {
 

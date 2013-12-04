@@ -35,9 +35,14 @@
 #ifndef __SEQ_UTILS_H
 #define __SEQ_UTILS_H
 #include <string>
-
+#include <vector>
+namespace crass {
 std::string reverseComplement(std::string str);
 
 std::string laurenize(std::string seq);
 
+char ** cutIntoKmers(std::string& s, int k, int& merCount);
+
+void cutIntoKmers(std::string& s, int k, std::vector<std::string>& kmers);
+}
 #endif
