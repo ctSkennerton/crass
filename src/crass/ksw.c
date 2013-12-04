@@ -47,7 +47,7 @@ struct _kswq_t {
 /**
  * Initialize the query data structure
  *
- * @param size   Number of bytes used to store a score; valid valures are 1 or 2
+ * @param size   Number of bytes used to store a score; valid values are 1 or 2
  * @param qlen   Length of the query sequence
  * @param query  Query sequence
  * @param m      Size of the alphabet
