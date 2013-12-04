@@ -5,9 +5,12 @@
 //  Created by Connor Skennerton on 20/10/13.
 //  Copyright (c) 2013 Australian Centre for Ecogenomics. All rights reserved.
 //
+#include <cstdio>
 
+#include "StlExt.h"
 #include "Storage.h"
 #include "SeqUtils.h"
+#include "cdhit-est.h"
 
 using namespace crass;
 
@@ -224,6 +227,61 @@ void Storage::clusterRepeats(int minKmerCount)
     }
         
 }
+
+int Storage::clusterRepeats(std::string& outputDirectory, float identityThreshold, int threads)
+{
+    std::string rr = outputDirectory + "repeat_raw.fa";
+    std::string rc = outputDirectory + "repeat_clust";
+    
+    FILE * out = fopen(rr.c_str(), "w");
+    if(out == NULL){
+        logError("cannot create repeat file");
+        return 1;
+    }
+    
+    for (auto it = mRepeatsToReads.begin(); it != mRepeatsToReads.end(); ++it) {
+        fprintf(out, ">%d\n%s\n", it->first, mRepeatTokenizer.getString(it->first).c_str());
+    }
+    fclose(out);
+    
+    if(cdHitMain(rr, rc, identityThreshold, threads)) {
+        logError("problem encountered running CD-hit");
+        return 2;
+    }
+    std::string rcl = rc + ".clstr";
+    FILE * in = fopen("killme/repeat_clust.clstr", "r");
+    if(in == NULL) {
+        logError("cannot open cluster file");
+        return 3;
+    }
+    char buffer[1024];
+    std::list<StringToken> current_repeats;
+    int cluster_number = -1;
+    while(fgets(buffer, sizeof buffer, in) != NULL) {
+        std::string line = buffer;
+        if (line[0] =='>') {
+            if (cluster_number != -1) {
+                mRepeatCluster[++cluster_number].swap(current_repeats);
+                current_repeats.clear();
+            }
+            from_string(cluster_number, line.substr(9), std::dec);
+        } else {
+            size_t index = line.find_first_of('>');
+            size_t index2 = line.find_first_of('.', ++index);
+            std::string rid = line.substr(index, index2 - index);
+            StringToken repeat_id;
+            from_string(repeat_id, rid, std::dec);
+            current_repeats.push_back(repeat_id);
+        }
+    }
+    // add in the last cluster
+    mRepeatCluster[++cluster_number].swap(current_repeats);
+    current_repeats.clear();
+    fclose(in);
+    
+    return 0;
+}
+
 
 void Storage::removeRedundantRepeats(std::vector<std::string>& repeatVector)
 {

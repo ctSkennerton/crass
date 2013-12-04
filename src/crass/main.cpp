@@ -40,7 +40,6 @@
 #include <sys/stat.h>
 #include <getopt.h>
 #include <string>
-
 #define OUT_FILE_PERMISSION_MASK (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)
 
 void RecursiveMkdir(std::string dir)
@@ -242,7 +241,7 @@ int main(int argc, char * argv[]) {
     for (; opt_idx < argc; ++opt_idx) {
         searcher.searchFileSerial(argv[opt_idx]);
     }
-    read_store.clusterRepeats(6);
+    read_store.clusterRepeats(opts.outdir, 0.9, 1);
     
     read_store.inspect(std::cout);
     return 0;

@@ -42,6 +42,7 @@ namespace crass {
         void add(crass::RawRead& read);
         void add(crass::RawRead& read1, crass::RawRead& read2);
         void clusterRepeats(int minKmerCount);
+        int clusterRepeats(std::string& outputDirectory, float identityThreshold, int threads);
         void inspect(std::ostream& out);
     };
     
