@@ -242,6 +242,8 @@ int main(int argc, char * argv[]) {
     for (; opt_idx < argc; ++opt_idx) {
         searcher.searchFileSerial(argv[opt_idx]);
     }
+    read_store.clusterRepeats(6);
+    
     read_store.inspect(std::cout);
     return 0;
 }
