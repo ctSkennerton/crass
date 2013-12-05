@@ -243,6 +243,8 @@ int main(int argc, char * argv[]) {
     }
     read_store.clusterRepeats(opts.outdir, 0.9, 1);
     
+    searcher.searchFileForPatterns(argv[opt_idx]);
+    
     read_store.inspect(std::cout);
     return 0;
 }

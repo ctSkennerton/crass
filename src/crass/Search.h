@@ -36,6 +36,7 @@
 
 #include <cstdio>
 #include <set>
+#include <unordered_set>
 #include <string>
 #include <zlib.h>
 #include "RepeatArray.h"
@@ -43,6 +44,7 @@
 #include "kseq.h"
 #include "LoggerSimp.h"
 #include "Storage.h"
+#include "WuManber.h"
 // --------------------------------------------------------------------
 // SEARCH ALGORITHM PARAMETERS
 // --------------------------------------------------------------------
@@ -129,23 +131,17 @@ public:
     void minSeedCount(int i) {
         mMinSeedCount = i;
     }
-#if 0
-    // for single reads/files
+
+    bool searchFileForPatterns(const char *file, std::unordered_set<std::string>& skipReads, std::vector<std::string>& patterns);
     
-    bool searchFileParallel(FILE *file);
+    bool searchFileForPatterns(const char *file1, const char *file2, std::unordered_set<std::string>& skipReads, std::vector<std::string>& patterns);
     
-    bool searchFileForPatterns(FILE *file, crass::list& patters);
-    bool searchFileForPatterns(FILE *file, crass::list& patters, std::set<std::string>& skipReads);
-        
-    //for read pairs/file pairs
-    bool searchFileSerial(FILE *file1, FILE *file2);
+    bool searchFileForPatterns(const char *file);
     
-    bool searchFileParallel(FILE *file, FILE *file2);
+    bool searchFileForPatterns(const char *file1, const char *file2);
+
+    bool multiSearch(crass::RawRead& read, WuManber& searcher, std::vector<std::string>& patterns);
     
-    bool searchFileForPatterns(FILE *file1, FILE *file2, crass::list& patters);
-    bool searchFileForPatterns(FILE *file1, FILE *file2, crass::list& patters, std::set<std::string>& skipReads);
-    
-#endif
     int searchFileSerial(const char *fileName);
 
     bool readSearch(crass::RawRead& read);
@@ -153,6 +149,7 @@ public:
     bool readPairSearch(crass::RawRead& read1, crass::RawRead& read2);
     
 private:
+    void initMultiSearch(std::vector<std::string>& patterns, WuManber& searcher);
     
     bool readPairSearchCore(crass::RawRead& read1, crass::RawRead& read2);
     

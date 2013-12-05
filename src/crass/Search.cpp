@@ -42,6 +42,77 @@
 #include "Search.h"
 #include "PatternMatcher.h"
 
+
+bool crass::Search::searchFileForPatterns(const char *file, std::unordered_set<std::string>& skipReads, std::vector<std::string>& patterns)
+{
+    WuManber searcher = WuManber();
+    initMultiSearch(patterns, searcher);
+    
+    gzFile fp = getFileHandle(file);
+    kseq_t *seq;
+    seq = kseq_init(fp);
+    
+    int l;
+    
+    while ( (l = kseq_read(seq)) >= 0 )
+    {
+        
+        if (skipReads.find(seq->name.s) != skipReads.end()) {
+            continue;
+        }
+        
+        WuManber::DataFound data = searcher.Search(l, seq->seq.s, patterns);
+        if(!data.sDataFound.empty()){
+            int DR_end = static_cast<int>(data.iFoundPosition) + static_cast<int>(data.sDataFound.length());
+            crass::RepeatArray array;
+            array.add(data.iFoundPosition, DR_end);
+            crass::RawRead read(seq->name.s, "", seq->seq.s, "", array);
+            if (seq->comment.s != NULL) {
+                read.comment(seq->comment.s);
+            }
+            if(seq->qual.s != NULL) {
+                read.quality(seq->qual.s);
+            }
+            mReadStore->add(read);
+        }
+    }
+        
+    gzclose(fp);
+    kseq_destroy(seq); // destroy seq
+    
+    return true;
+}
+
+bool crass::Search::searchFileForPatterns(const char *file) {
+    
+}
+
+bool crass::Search::searchFileForPatterns(const char *file1, const char *file2) {
+    
+}
+
+bool crass::Search::searchFileForPatterns(const char *file1, const char *file2, std::unordered_set<std::string>& skipReads, std::vector<std::string>& patterns)
+{
+    WuManber searcher = WuManber();
+    initMultiSearch(patterns, searcher);
+    
+    return true;
+}
+
+void crass::Search::initMultiSearch(std::vector<std::string>& patterns, WuManber& searcher) {
+    searcher.Initialize(patterns);
+}
+
+bool crass::Search::multiSearch(crass::RawRead& read, WuManber& searcher, std::vector<std::string>& patterns) {
+    WuManber::DataFound data = searcher.Search(read.length(), read.seq().c_str(), patterns);
+    if(data.sDataFound.empty()){
+        return false;
+    }
+    int DR_end = data.iFoundPosition + static_cast<int>(data.sDataFound.length());
+    read.push_back(data.iFoundPosition, DR_end);
+    return true;
+}
+
 int crass::Search::searchFileSerial(const char *inputFastq)
 
 {
@@ -1150,7 +1221,9 @@ bool crass::Search::doesRepeatHaveHighlyAbundantKmers(std::string& directRepeat,
 }
 
 #if crass_Search_main
+#include "WuManber.h"
 int main(int argc, char *argv[]) {
+    intialiseGlobalLogger("stderr",1);
     crass::Search s = crass::Search();
     s.minSeedCount(2);
     //                                                                                                                                                       1                                                                                                   2                                                                                                   3
@@ -1162,12 +1235,12 @@ int main(int argc, char *argv[]) {
     //Read100                                            RRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSS
     
     //crass::RawRead read100_mate("Accumulibacter_read100_mate", "", "CGTCAGCGGGGATAGGCCTCAGCCCCTACGAGCGCACCGACGACCCGATTGGTTTCCCCCGCGTCAGCGGGGATAGGCCCTTTGGGCGCAAGGATGACGC", "", crass::RepeatArray());
+
     
     //s.longReadSearch(read350);
     //s.longReadSearch(read100);
     //s.longReadPairSearch(read100, read100_mate);
     //read350.inspect();
-    //read100.inspect();
     //read100_mate.inspect();
     
     //crass::RawRead read1_not("", "", "AGGTAGTGTCGTCGTTGTCTGGCGCGATCTGAATGAAACCGGGGGTGTTGGGATCAAGACGCTGGGTGAGCCGTCGAAGGAGCTTGTCGAGGTTGACGGCCTCTGGCTGGTGAAACGGATGGTATAAAGTGCTCTTTAACAAAATGAATCGATGTTGAGGTTTTCTCTTGTAGTTCATAGGGCTACCTACAAGAGTTTCCCCCGCGTCAGCGGGGATAGGCCCCACGCCGTGACGGAAGGGCTGATCACGAAATGGTTTCCCCCGCGTCAGCGGGGATAGGCCCGCGCGGCATGGCCTGG", "", crass::RepeatArray());
