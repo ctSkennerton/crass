@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include <string>
-#include <SeqUtils.h>
+#include "SeqUtils.h"
 #include "RepeatArray.h"
 namespace crass {
 
