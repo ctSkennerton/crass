@@ -35,7 +35,7 @@ namespace crass {
         StringToken tokenizeRepeat( std::string& repeat);
         bool orientateLowLexi(crass::RawRead& read);
         void removeRedundantRepeats(std::vector<std::string>& repeatVector);
-        void createNonRedundantSet(GroupKmerMap& groupKmerCountsMap);
+        void createNonRedundantSet();
     public:
         Storage(){mNextFreeGID = 0;}
         

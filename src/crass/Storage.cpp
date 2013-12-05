@@ -211,7 +211,7 @@ void Storage::clusterRepeats(int minKmerCount)
 
     }
     
-    createNonRedundantSet(groupKmerCountsMap);
+    createNonRedundantSet();
     
     GroupKmerMap::iterator group_count_iter;
     for(group_count_iter =  groupKmerCountsMap.begin();
@@ -278,6 +278,7 @@ int Storage::clusterRepeats(std::string& outputDirectory, float identityThreshol
     mRepeatCluster[++cluster_number].swap(current_repeats);
     current_repeats.clear();
     fclose(in);
+    createNonRedundantSet();
     
     return 0;
 }
@@ -319,7 +320,7 @@ void Storage::removeRedundantRepeats(std::vector<std::string>& repeatVector)
 }
 
 
-void Storage::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap)
+void Storage::createNonRedundantSet()
 {
 
     std::cout<<'['<<PACKAGE_NAME<<"_clusterCore]: "<<mRepeatsToReads.size()<<" variants mapped to "<<mRepeatCluster.size()<<" clusters"<<std::endl;
@@ -350,10 +351,13 @@ void Storage::inspect(std::ostream &out) {
     out <<"Number of reads: "<<mReads.size()<<std::endl;
     out << "Number of patterns: "<<mRepeatsToReads.size()<<std::endl;
     out << "Number of clusters: "<<mRepeatCluster.size()<<std::endl;
-
     if(!mRepeatCluster.empty()) {
         for (auto it = mRepeatCluster.begin(); it != mRepeatCluster.end(); ++it) {
             out<< it->first<<"\t"<<(it->second).size()<<std::endl;
         }
+    }
+    out << "Non-redundant set: "<<mNonRedundantRepeats.size()<<std::endl;
+    for(auto it = mNonRedundantRepeats.begin(); it != mNonRedundantRepeats.end(); ++it) {
+        out<<mRepeatTokenizer.getString(*it)<<std::endl;
     }
 }
