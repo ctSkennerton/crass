@@ -361,3 +361,10 @@ void Storage::inspect(std::ostream &out) {
         out<<mRepeatTokenizer.getString(*it)<<std::endl;
     }
 }
+
+void Storage::getNonRedundantRepeats(std::vector<std::string>& repeats)
+{
+    for (auto it = mNonRedundantRepeats.begin(); it != mNonRedundantRepeats.end(); ++it) {
+        repeats.push_back(mRepeatTokenizer.getString(*it));
+    }
+}

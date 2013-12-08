@@ -64,7 +64,7 @@ void versionInfo(void)
     std::cout<<"---------------------------------------------------------------"<<std::endl;
 }
 
-void usage() {
+void usage(CrassOpts& opts ) {
     std::cout<<std::endl;
     std::cout<<"Usage:  "<<std::endl;
     std::cout<<PACKAGE_NAME<<"  [options] <inputFile>..."<<std::endl;
@@ -86,8 +86,7 @@ void usage() {
     std::cout<< "-s --minSpacer       <INT>   Minimim length of the spacer to search for [Default: "<<CRASS_DEF_MIN_SPACER_SIZE<<"]"<<std::endl;
     std::cout<< "-S --maxSpacer       <INT>   Maximim length of the spacer to search for [Default: "<<CRASS_DEF_MAX_SPACER_SIZE<<"]"<<std::endl;
     std::cout<< "-f --covCutoff       <INT>   Remove groups with less than x spacers [Default: "<<CRASS_DEF_COVCUTOFF<<"]"<<std::endl;
-    std::cout<< "-k --kmerCount       <INT>   The number of the kmers that need to be"<<std::endl;
-    std::cout<< "                             shared for clustering [Default: "<<CRASS_DEF_K_CLUST_MIN<<"]"<<std::endl;
+    std::cout<< "-k --clusterCutoff   <REAL>  The sequence identity between two repeats for clustering [Default: "<<0.9<<"]"<<std::endl;
     std::cout<<std::endl;
 
 
@@ -101,7 +100,7 @@ int processOptions(int argc, char *argv[], CrassOpts& opts)
         {"maxDR", required_argument, NULL, 'D'},
         {"covCutoff",required_argument,NULL,'f'},
         {"help", no_argument, NULL, 'h'},
-        {"kmerCount", required_argument, NULL, 'k'},
+        {"clusterCutoff", required_argument, NULL, 'k'},
         {"logLevel", required_argument, NULL, 'l'},
         {"logFile", required_argument, NULL, 'L'},
         {"outDir", required_argument, NULL, 'o'},
@@ -139,11 +138,11 @@ int processOptions(int argc, char *argv[], CrassOpts& opts)
                 exit(1);
                 break;
             case 'k':
-                from_string<int>(opts.kmerClustSize, optarg, std::dec);
-                if (opts.kmerClustSize < 4)
+                from_string<float>(opts.clustID, optarg, std::dec);
+                if (opts.clustID > 1.0 || opts.clustID < 0.0)
                 {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Minimum value for kmer clustering size is: "<<4<<" changing to "<<6<<std::endl;
-                    opts.kmerClustSize = 6;
+                    std::cerr<<PACKAGE_NAME<<" [WARNING]: sequence similarity must be between 0 and 1 changing to 0.9"<<std::endl;
+                    opts.clustID = 0.9;
                 }
                 break;
             case 'l':
@@ -238,12 +237,15 @@ int main(int argc, char * argv[]) {
     
     crass::Storage read_store = crass::Storage();
     crass::Search searcher = crass::Search(&read_store);
-    for (; opt_idx < argc; ++opt_idx) {
-        searcher.searchFileSerial(argv[opt_idx]);
+    for (int file_begin = opt_idx; file_begin < argc; ++file_begin) {
+        searcher.searchFileSerial(argv[file_begin]);
     }
-    read_store.clusterRepeats(opts.outdir, 0.9, 1);
     
-    searcher.searchFileForPatterns(argv[opt_idx]);
+    read_store.clusterRepeats(opts.outdir, opts.clustID, 1);
+    
+    for (int file_begin = opt_idx; file_begin < argc; ++file_begin) {
+        searcher.searchFileForPatterns(argv[file_begin]);
+    }
     
     read_store.inspect(std::cout);
     return 0;

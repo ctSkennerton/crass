@@ -84,7 +84,51 @@ bool crass::Search::searchFileForPatterns(const char *file, std::unordered_set<s
 }
 
 bool crass::Search::searchFileForPatterns(const char *file) {
+    WuManber searcher = WuManber();
+    std::vector<std::string> patterns;
+    for (auto it = mReadStore->mNonRedundantRepeats.begin(); it != mReadStore->mNonRedundantRepeats.end(); ++it) {
+        patterns.push_back(mReadStore->mRepeatTokenizer.getString(*it));
+    }
     
+    initMultiSearch(patterns, searcher);
+    std::unordered_set<std::string> skipReads;
+    for (auto it = mReadStore->mReads.begin(); it != mReadStore->mReads.end(); ++it) {
+        skipReads.insert(it->identifier());
+    }
+    
+    gzFile fp = getFileHandle(file);
+    kseq_t *seq;
+    seq = kseq_init(fp);
+    
+    int l;
+    
+    while ( (l = kseq_read(seq)) >= 0 )
+    {
+        
+        if (skipReads.find(seq->name.s) != skipReads.end()) {
+            continue;
+        }
+        
+        WuManber::DataFound data = searcher.Search(l, seq->seq.s, patterns);
+        if(!data.sDataFound.empty()){
+            int DR_end = static_cast<int>(data.iFoundPosition) + static_cast<int>(data.sDataFound.length());
+            crass::RepeatArray array;
+            array.add(data.iFoundPosition, DR_end);
+            crass::RawRead read(seq->name.s, "", seq->seq.s, "", array);
+            if (seq->comment.s != NULL) {
+                read.comment(seq->comment.s);
+            }
+            if(seq->qual.s != NULL) {
+                read.quality(seq->qual.s);
+            }
+            mReadStore->add(read);
+        }
+    }
+    
+    gzclose(fp);
+    kseq_destroy(seq); // destroy seq
+    
+    return true;
 }
 
 bool crass::Search::searchFileForPatterns(const char *file1, const char *file2) {

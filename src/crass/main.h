@@ -44,7 +44,7 @@ struct CrassOpts {
     unsigned int        lowSpacerSize;                                      // the lower limit for a spacer
     unsigned int        highSpacerSize;                                     // the upper size limit for a spacer
     std::string         outdir;                                             // the output directory for the output files
-    int                 kmerClustSize;                                    // number of kmers needed to be shared to add to a cluser
+    float               clustID;                                            // sequence similarity for clustering repeats
     std::string         logFile;                                            // Log name default = log.txt, use 'stdout' for screen
     int                 covCutoff;                                          // The lower bounds of acceptable numbers of reads that a group can have
     
@@ -55,7 +55,7 @@ struct CrassOpts {
         lowSpacerSize(26),
         highSpacerSize(50),
         outdir("./"),
-        kmerClustSize(6),
+        clustID(0.9),
         logFile("log.txt"),
         covCutoff(3)
     {}

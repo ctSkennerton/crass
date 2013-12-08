@@ -18,11 +18,18 @@
 #include "Sequence.h"
 #include "StringCheck.h"
 #include "LoggerSimp.h"
+
+
 namespace crass {
+    
+    class Search;
+
     typedef std::map<int, std::map<std::string, int> * > GroupKmerMap;
 
     class Storage {
-    private:
+        friend class Search;
+        
+    protected:
         std::vector<crass::RawRead>                             mReads;
         std::unordered_map<StringToken, std::list<size_t> >     mRepeatsToReads;
         std::unordered_map<int, std::list<StringToken> >        mRepeatCluster;
@@ -44,6 +51,8 @@ namespace crass {
         void clusterRepeats(int minKmerCount);
         int clusterRepeats(std::string& outputDirectory, float identityThreshold, int threads);
         void inspect(std::ostream& out);
+    
+    void getNonRedundantRepeats(std::vector<std::string>& repeats);
     };
     
 }

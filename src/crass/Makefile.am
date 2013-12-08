@@ -18,4 +18,5 @@ LoggerSimp.cpp\
 StringCheck.cpp\
 SeqUtils.cpp\
 cdhit-common.cpp\
-cdhit-est.cpp
+cdhit-est.cpp\
+WuManber.cpp
