@@ -68,8 +68,8 @@ int cdHitMain(std::string& inputFile, std::string& outputFile, float identityThr
         options.threads = threads;
     }
     if( options.threads != threads ) printf( "Actual number of CPUs to be used: %i\n\n", threads );
-#else
-    printf( "threads is ignored: multi-threading with OpenMP is NOT enabled!\n" );
+//#else
+    //printf( "threads is ignored: multi-threading with OpenMP is NOT enabled!\n" );
 #endif
     // END MODIFICATIONS
     
@@ -86,7 +86,7 @@ int cdHitMain(std::string& inputFile, std::string& outputFile, float identityThr
 	}
 
 	seq_db.Read( inputFile.c_str(), options );
-	cout << "total seq: " << seq_db.sequences.size() << endl;
+	//cout << "total seq: " << seq_db.sequences.size() << endl;
 	seq_db.SortDivide( options );
 	seq_db.DoClustering( options );
 
