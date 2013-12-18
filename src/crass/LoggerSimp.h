@@ -116,7 +116,7 @@ static LoggerSimp* logger = LoggerSimp::Inst();                     // this make
 // for logging info
 #define logInfo(cOUTsTRING, ll) { \
 if(logger->getLogLevel() >= ll) { \
-(*(logger->mGlobalHandle)) << logger->timeToString(true) << "\tI   " << cOUTsTRING << std::endl; \
+(*(logger->mGlobalHandle)) << logger->timeToString(true) << "\tI   "<< __FILE__ << ":" << __LINE__ << ": " << cOUTsTRING << std::endl; \
 } \
 }
 
@@ -136,7 +136,7 @@ std::stringstream s; s<<cOUTsTRING;\
 // for warnings
 #define logWarn(cOUTsTRING, ll) { \
 if(logger->getLogLevel() >= ll) { \
-(*(logger->mGlobalHandle)) << logger->timeToString(true) << "\tW   " << cOUTsTRING << std::endl; \
+(*(logger->mGlobalHandle)) << logger->timeToString(true) << "\tW   "<< __FILE__ << " : " << __PRETTY_FUNCTION__ << " : " << __LINE__ << ": " << cOUTsTRING << std::endl; \
 } \
 }
 

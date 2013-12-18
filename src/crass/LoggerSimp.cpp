@@ -87,7 +87,6 @@ void LoggerSimp::init(std::string logFile, int logLevel)
 {
     mInstance->setLogLevel(logLevel);
     mInstance->setStartTime();
-    std::cout<<logFile<<std::endl;
     if(logFile == "stdout")
     {
         // set the logger to cout
