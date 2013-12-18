@@ -37,6 +37,7 @@
 #include "Storage.h"
 #include "Search.h"
 #include <iostream>
+#include <fstream>
 #include <sys/stat.h>
 #include <getopt.h>
 #include <string>
@@ -64,7 +65,7 @@ void versionInfo(void)
     std::cout<<"---------------------------------------------------------------"<<std::endl;
 }
 
-void usage(CrassOpts& opts ) {
+void usage( ) {
     std::cout<<std::endl;
     std::cout<<"Usage:  "<<std::endl;
     std::cout<<PACKAGE_NAME<<"  [options] <inputFile>..."<<std::endl;
@@ -241,12 +242,22 @@ int main(int argc, char * argv[]) {
         searcher.searchFileSerial(argv[file_begin]);
     }
     
-    read_store.clusterRepeats(opts.outdir, opts.clustID, 1);
+    if(read_store.numberOfReads()) {
     
-    for (int file_begin = opt_idx; file_begin < argc; ++file_begin) {
-        searcher.searchFileForPatterns(argv[file_begin]);
+        read_store.clusterRepeats(opts.outdir, opts.clustID, 1);
+        
+        for (int file_begin = opt_idx; file_begin < argc; ++file_begin) {
+            searcher.searchFileForPatterns(argv[file_begin]);
+        }
+        
+        read_store.inspect(std::cout);
+        std::ofstream reads_dump(opts.outdir + "/reads");
+        if (reads_dump.good()) {
+            read_store.dumpReads(reads_dump);
+        }
+        reads_dump.close();
+    } else {
+        logInfo("No reads found", 1);
     }
-    
-    read_store.inspect(std::cout);
     return 0;
 }
