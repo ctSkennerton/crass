@@ -184,6 +184,52 @@ RepeatArray::RepeatIterator crass::RawRead::getFirstNonPartialRepeatPositions() 
     }
 }
 
+void crass::RawRead::toFastx(std::string &output) {
+    if (mQual.empty()) {
+        output = ">" + mName;
+    } else {
+        output = "@" + mName;
+    }
+    if(!mComment.empty()) {
+        output += mComment + "\n";
+    } else {
+        output += "\n";
+    }
+    output += mSeq + "\n";
+    if (!mQual.empty()) {
+        output += "+\n" +mQual + "\n";
+    }
+}
+
+void crass::RawRead::toFasta(std::string &output) {
+    output = ">" + mName;
+    
+    if(!mComment.empty()) {
+        output += mComment + "\n";
+    } else {
+        output += "\n";
+    }
+    output += mSeq + "\n";
+
+}
+
+void crass::RawRead::toFastq(std::string &output) {
+
+    output = "@" + mName;
+    if(!mComment.empty()) {
+        output += mComment + "\n";
+    } else {
+        output += "\n";
+    }
+    output += mSeq + "\n";
+    if (!mQual.empty()) {
+        output += "+\n" +mQual + "\n";
+    } else {
+        std::string tmp(mSeq.length(), 'I');
+        output += "+\n" + tmp + "\n";
+    }
+}
+
 #ifdef crass_RawRead_main
 int main() {
     

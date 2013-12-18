@@ -80,6 +80,7 @@ void Storage::add(RawRead& read) {
     
     std::string s = *(read.getFirstNonPartialRepeat());
     StringToken t = tokenizeRepeat(s);
+    //printf("Adding token: %d\n", t);
     linkReadToRepeat(mReads.size() - 1, t);
 }
 
@@ -366,5 +367,13 @@ void Storage::getNonRedundantRepeats(std::vector<std::string>& repeats)
 {
     for (auto it = mNonRedundantRepeats.begin(); it != mNonRedundantRepeats.end(); ++it) {
         repeats.push_back(mRepeatTokenizer.getString(*it));
+    }
+}
+
+void Storage::dumpReads(std::ostream &out) {
+    std::string s;
+    for (auto it = mReads.begin(); it != mReads.end(); ++it) {
+        it->toFasta(s);
+        out << s;
     }
 }

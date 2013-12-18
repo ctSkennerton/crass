@@ -51,6 +51,9 @@ namespace crass {
         void clusterRepeats(int minKmerCount);
         int clusterRepeats(std::string& outputDirectory, float identityThreshold, int threads);
         void inspect(std::ostream& out);
+        void dumpReads(std::ostream& out);
+        
+        size_t numberOfReads(){return mReads.size();}
     
     void getNonRedundantRepeats(std::vector<std::string>& repeats);
     };

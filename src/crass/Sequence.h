@@ -229,6 +229,11 @@ namespace crass {
         RawRead::RepeatStringIterator getFirstNonPartialRepeat();
         RepeatArray::RepeatIterator getFirstNonPartialRepeatPositions();
             
+        void toFastx(std::string& output);
+        void toFasta(std::string& output);
+        void toFastq(std::string& output);
+
+            
 
 
 
