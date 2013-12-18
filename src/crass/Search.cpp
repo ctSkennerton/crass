@@ -87,6 +87,8 @@ bool crass::Search::searchFileForPatterns(const char *file) {
     WuManber searcher = WuManber();
     std::vector<std::string> patterns;
     for (auto it = mReadStore->mNonRedundantRepeats.begin(); it != mReadStore->mNonRedundantRepeats.end(); ++it) {
+        std::string tmp = crass::reverseComplement(mReadStore->mRepeatTokenizer.getString(*it));
+        patterns.push_back(tmp);
         patterns.push_back(mReadStore->mRepeatTokenizer.getString(*it));
     }
     
@@ -304,7 +306,7 @@ bool crass::Search::readSearch(crass::RawRead& read)
                 {
 #ifdef DEBUG
                     logInfo("Passed all tests!", 8);
-                    read.inspect();
+                    //read.inspect();
                     logInfo("-------------------", 8)
 #endif
                     mReadStore->add(read);
@@ -430,7 +432,7 @@ bool crass::Search::readPairSearchCore(crass::RawRead &read1, crass::RawRead &re
                     
 #ifdef DEBUG
                     logInfo("Passed all tests!", 8);
-                    read1.inspect();
+                    //read1.inspect();
                     logInfo("-------------------", 8)
 #endif
                     mReadStore->add(read1, read2);
@@ -583,7 +585,7 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
         cut_off = 2;
     }
 #ifdef DEBUG
-    read.inspect();
+    //read.inspect();
     logInfo("cutoff: "<<cut_off, 9);
 #endif
     RepeatArray::RepeatIterator it = read.repeatBegin();
@@ -675,7 +677,9 @@ int crass::Search::extendPreRepeat(crass::RawRead& read)
     while (left_extension_length <= max_left_extension_length)
     {
         if(first_repeat_start_index - left_extension_length < 0) {
-            logInfo("first repeat can't be extended anymore, dorpping", 10);
+#ifdef DEBUG
+            logInfo("first repeat can't be extended anymore, dropping", 10);
+#endif
             ++begin_iter;
         }
         for (RepeatArray::RepeatIterator it = begin_iter; it != read.repeatEnd(); ++it )
