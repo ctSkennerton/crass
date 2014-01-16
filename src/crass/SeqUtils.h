@@ -37,12 +37,14 @@
 #include <string>
 #include <vector>
 namespace crass {
-std::string reverseComplement(std::string str);
+    extern char comp_tab[128];
+    
+    std::string reverseComplement(std::string str);
 
-std::string laurenize(std::string seq);
+    std::string laurenize(std::string seq);
 
-char ** cutIntoKmers(std::string& s, int k, int& merCount);
+    char ** cutIntoKmers(const char * s, int k, int& merCount);
 
-void cutIntoKmers(std::string& s, int k, std::vector<std::string>& kmers);
+    void cutIntoKmers(std::string& s, int k, std::vector<std::string>& kmers);
 }
 #endif
