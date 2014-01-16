@@ -168,6 +168,7 @@ namespace crass {
         SpacerIterator spacerAt(int i);
             int repeatLengthAt(int i);
             int spacerLengthAt(int i);
+            std::ostream& toJSON(std::ostream& output);
             
 
     protected:

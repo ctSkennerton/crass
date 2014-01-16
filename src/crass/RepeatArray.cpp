@@ -55,18 +55,32 @@ int RepeatArray::spacerLengthAt(int i) {
     auto it = spacerAt(i);
     return (*it).second - (*it).first;
 }
+std::ostream& RepeatArray::toJSON(std::ostream &output) {
+    if (empty()) {
+        return output;
+    }
+    output << "[\n";
+    for(auto it = repeatBegin(); it != (repeatEnd() - 1); ++it ) {
+        output << "["<<(*it).first<<","<<(*it).second<<"],\n";
+    }
+    auto it = repeatEnd();
+    it--;
+    output << "["<<(*it).first<<','<<(*it).second<<"]\n]";
+    return output;
+}
 
 std::ostream& crass::operator<<(std::ostream &output, RepeatArray& data) {
     
     if (data.empty()) {
         return output;
     }
+    output << "[";
     for(auto it = data.repeatBegin(); it != (data.repeatEnd() - 1); ++it ) {
-        output << "("<<(*it).first<<","<<(*it).second<<"), ";
+        output << "["<<(*it).first<<","<<(*it).second<<"],";
     }
     auto it = data.repeatEnd();
     it--;
-    output << "("<<(*it).first<<','<<(*it).second<<')';
+    output << "["<<(*it).first<<','<<(*it).second<<"]]";
     return output;
 }
 
