@@ -41,7 +41,7 @@ int cdHitMain(std::string& inputFile, std::string& outputFile, float identityThr
 {
 
 	options.cluster_thd = 0.95;
-	options.NAA = 10;
+	options.NAA = 8;
 	options.NAAN = NAA8;
 	seq_db.NAAN = NAA8;
 	options.NAA_top_limit = 12;
