@@ -8,6 +8,7 @@
 
 #include "Sequence.h"
 #include "LoggerSimp.h"
+#include "SeqUtils.h"
 #include <algorithm>
 
 using namespace crass;
@@ -105,6 +106,27 @@ std::string RawRead::orientateRepeatLowLexi(void)
     }
 }
 
+bool RawRead::isLowLexi() {
+    
+    int l = static_cast<int>(mSeq.length());
+
+    int i, c0, c1;
+    for (i = 0; i < l>>1; ++i)
+    {
+        c0 = (int)mSeq[i];
+        c1 = comp_tab[(int)mSeq[l - 1 - i]];
+        if(c1 < c0) return false;
+        
+    }
+    //if (l&1)
+    //{
+    //    revcomp_str[l>>1] = comp_tab[(int)str[l>>1]];
+    //}
+
+    
+    return true;
+}
+
 int RawRead::getFirstNonPartialRepeatLength() {
     RepeatStringIterator it = getFirstNonPartialRepeat();
     return static_cast<int>((*it).length());
@@ -136,7 +158,6 @@ RawRead::RepeatStringIterator crass::RawRead::getFirstNonPartialRepeat() {
             break;
         }
         default: {
-            auto it = repeatBegin();
             if(startPartial()) {
                 return repeatStringAt(1);
             } else {
@@ -173,7 +194,6 @@ RepeatArray::RepeatIterator crass::RawRead::getFirstNonPartialRepeatPositions() 
             break;
         }
         default: {
-            auto it = repeatBegin();
             if(startPartial()) {
                 return repeatAt(1);
             } else {

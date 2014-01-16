@@ -166,7 +166,7 @@ namespace crass {
             std::cout<<"mSeq="<<mSeq<<"\n";
             std::cout<<"mQual="<<mQual<<"\n";
             std::cout<<"mRepeatLowLexi="<<mRepeatLowLexi<<"\n";
-            std::cout<<mRepeatPositions<<std::endl;
+            std::cout<<"mRepeatPositions="<<mRepeatPositions<<std::endl;
             
         }
     
@@ -223,6 +223,8 @@ namespace crass {
         void revComp();
             
         std::string orientateRepeatLowLexi();
+            
+            bool isLowLexi();
             
         int getFirstNonPartialRepeatLength();
             
