@@ -19,4 +19,5 @@ StringCheck.cpp\
 SeqUtils.cpp\
 cdhit-common.cpp\
 cdhit-est.cpp\
-WuManber.cpp
+WuManber.cpp\
+Graph.cpp
