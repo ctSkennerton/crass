@@ -36,6 +36,8 @@
 #include "StlExt.h"
 #include "Storage.h"
 #include "Search.h"
+#include "Graph.h"
+
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
@@ -114,7 +116,6 @@ int processOptions(int argc, char *argv[], CrassOpts& opts)
     
     int c;
     int index;
-    bool scalling = false;
     while( (c = getopt_long(argc, argv, "d:D:f:hk:l:L:o:s:S:V", long_options, &index)) != -1 )
     {
         switch(c)
@@ -256,6 +257,18 @@ int main(int argc, char * argv[]) {
             read_store.dumpReads(reads_dump);
         }
         reads_dump.close();
+        // repeat cluster is map of clust_id (int) to list of repeats (StringToken)
+        for(auto repeat_clust_it = read_store.repeatClusterBegin(); repeat_clust_it != read_store.repeatClusterEnd(); ++repeat_clust_it) {
+            crass::Graph crispr_grapher = crass::Graph(21);
+            // dr_list_it is std::list<StringToken>::iterator for repeats
+            for(auto dr_list_it = repeat_clust_it->second.begin(); dr_list_it != repeat_clust_it->second.end(); ++dr_list_it) {
+                for(auto read_it = read_store.readFromRepeatBegin(*dr_list_it); read_it != read_store.readFromRepeatEnd(*dr_list_it); ++read_it) {
+                    crispr_grapher.addReadToGraph(*read_it);
+                }
+            }
+            crispr_grapher.toGraphviz(std::cout);
+        }
+
     } else {
         logInfo("No reads found", 1);
     }
