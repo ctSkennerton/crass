@@ -54,6 +54,17 @@ StringToken StringCheck::addString(std::string& newStr)
     return mNextFreeToken;
 }
 
+StringToken StringCheck::addString(const char * newStr)
+{
+    //-----
+    // add the string and retuen it's token
+    //
+    mNextFreeToken++;
+    mT2S_map[mNextFreeToken] = newStr;
+    mS2T_map[newStr] = mNextFreeToken;
+    return mNextFreeToken;
+}
+
 std::string StringCheck::getString(const StringToken token)
 {
     //-----
@@ -68,6 +79,16 @@ std::string StringCheck::getString(const StringToken token)
 }
 
 StringToken StringCheck::getToken( std::string& queryStr)
+{
+    //-----
+    // return the token or 0
+    //
+    if(mS2T_map.end() == mS2T_map.find(queryStr))
+        return 0;
+    return mS2T_map[queryStr];
+}
+
+StringToken StringCheck::getToken( const char * queryStr)
 {
     //-----
     // return the token or 0

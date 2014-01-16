@@ -53,21 +53,32 @@ class StringCheck
 {
 public:
     StringCheck(std::string name) : mNextFreeToken(1), mName(name){}
-		StringCheck(void) : mNextFreeToken(1), mName("unset"){}
-        ~StringCheck(void) {}  
-        
-        StringToken addString(std::string& newStr);
-        std::string getString(const StringToken token);
-        StringToken getToken( std::string& queryStr);
-        
-        inline void setName(std::string name) { mName = name; }
+    StringCheck(void) : mNextFreeToken(1), mName("unset"){}
+    ~StringCheck(void) {}  
+    
+    StringToken addString(std::string& newStr);
+    StringToken addString(const char * newStr);
+    std::string getString(const StringToken token);
+    StringToken getToken( std::string& queryStr);
+    StringToken getToken( const char * queryStr);
+    
+    inline void setName(std::string name) { mName = name; }
+    
+    StringToken& operator [](std::string& queryStr) {
+        return mS2T_map[queryStr];
+    }
+    
+    std::string& operator [](StringToken& queryToken) {
+        return mT2S_map[queryToken];
+    }
+    
 private:
-        // members
-        StringToken mNextFreeToken;                            // der
-        std::unordered_map<StringToken, std::string> mT2S_map;           // token to string map
-        std::unordered_map<std::string, StringToken> mS2T_map;           // string to token map
-        
-        std::string mName;
+    // members
+    StringToken mNextFreeToken;                            // der
+    std::unordered_map<StringToken, std::string> mT2S_map;           // token to string map
+    std::unordered_map<std::string, StringToken> mS2T_map;           // string to token map
+    
+    std::string mName;
 };
 
 #endif //StringCheck_h
