@@ -112,7 +112,7 @@ void Storage::add(RawRead& read1, RawRead& read2) {
     
 }
 
-
+/*
 void Storage::clusterRepeats(int minKmerCount)
 {
     logInfo("Reducing list of potential DRs (1): Initial clustering", 1);
@@ -228,7 +228,7 @@ void Storage::clusterRepeats(int minKmerCount)
     }
         
 }
-
+*/
 int Storage::clusterRepeats(std::string& outputDirectory, float identityThreshold, int threads)
 {
     std::string rr = outputDirectory + "repeat_raw.fa";
