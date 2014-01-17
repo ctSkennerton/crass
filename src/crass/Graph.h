@@ -13,6 +13,8 @@
 #include <vector>
 #include <unordered_map>
 #include <deque>
+#include <string>
+#include <unordered_set>
 
 #include "StringCheck.h"
 #include "Sequence.h"
@@ -46,10 +48,10 @@ namespace crass {
                     path difficult.
      */
     struct Node {
-        std::vector<Node *> mFwdEdges;                  // a list of nodes that are in front of this one
-        std::vector<Node *> mRevEdges;                  // a list of nodes behind this one
-        std::vector<Node *> mFwdJmpEdges;               // a list of nodes that are jumping forward
-        std::vector<Node *> mRevJmpEdges;               // a list of nodes that are jumping in reverse
+        std::unordered_set<Node *> mFwdEdges;                  // a list of nodes that are in front of this one
+        std::unordered_set<Node *> mRevEdges;                  // a list of nodes behind this one
+        std::unordered_set<Node *> mFwdJmpEdges;               // a list of nodes that are jumping forward
+        std::unordered_set<Node *> mRevJmpEdges;               // a list of nodes that are jumping in reverse
         std::vector<RawRead *> mReadsContainingNode;    // a list of reads which contain this node
     public:
         StringToken mId;
@@ -63,16 +65,16 @@ namespace crass {
         int inJmpDegree() {return mRevJmpEdges.size();}
         int outJmpDegree() {return mFwdJmpEdges.size();}
         
-        void addFwdEdge(Node * n) {mFwdEdges.push_back(n);}
-        void addRevEdge(Node * n) {mRevEdges.push_back(n);}
-        void addFwdJmpEdge(Node * n) {mFwdJmpEdges.push_back(n);}
-        void addRevJmpEdge(Node * n) {mRevJmpEdges.push_back(n);}
+        void addFwdEdge(Node * n) {mFwdEdges.insert(n);}
+        void addRevEdge(Node * n) {mRevEdges.insert(n);}
+        void addFwdJmpEdge(Node * n) {mFwdJmpEdges.insert(n);}
+        void addRevJmpEdge(Node * n) {mRevJmpEdges.insert(n);}
         
-        Node * fwdEdge(int n) {return mFwdEdges.at(n);}
-        Node * revEdge(int n) {return mRevEdges.at(n);}
-        Node * fwdJmpEdge(int n) {return mFwdJmpEdges.at(n);}
-        Node * revJmpEdge(int n) {return mRevJmpEdges.at(n);}
-
+        Node * fwdEdge() {return *mFwdEdges.begin();}
+        Node * revEdge() {return *mRevEdges.begin();}
+        Node * fwdJmpEdge() {return *mFwdJmpEdges.begin();}
+        Node * revJmpEdge() {return *mRevJmpEdges.begin();}
+         
 
     };
 
