@@ -84,23 +84,24 @@ void Graph::identifyRepeatNodes(std::deque<Node *>& repeatPath) {
     repeatPath.push_back(repeat_seed);
     while (boundaryA->inDegree() == 1) {
         tmp = boundaryA;
-        boundaryA = tmp->revEdge(0);
+        boundaryA = tmp->revEdge();
         repeatPath.push_front(boundaryA);
     }
     
     while (boundaryB->outDegree() == 1) {
         tmp = boundaryB;
-        boundaryB = tmp->fwdEdge(0);
+        boundaryB = tmp->fwdEdge();
         repeatPath.push_back(boundaryB);
     }
 }
 
-void Graph::toGraphviz(std::ostream &out) {
-    out << "digraph A {"<<std::endl;
+
+void Graph::toGraphviz(FILE * out, const char * graphName) {
+    fprintf(out, "digraph %s {\n", graphName);
     for(auto it = mNodes.begin(); it != mNodes.end(); ++it) {
-        for (auto it2 = it->second->mFwdEdges.begin(); it2 != it->second->mFwdEdges.end(); ++it) {
-            out << it->second->mId << " -> "<< (*it2)->mId <<std::endl;
+        for (auto it2 = it->second->mFwdEdges.begin(); it2 != it->second->mFwdEdges.end(); ++it2) {
+            fprintf(out, "%d -> %d\n", it->second->mId,(*it2)->mId);
         }
     }
-    out << '}'<<std::endl;
+    fputs("}\n", out);
 }

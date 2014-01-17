@@ -89,7 +89,8 @@ namespace crass {
         void addReadToGraph(crass::RawRead& read);
         Node * getNode(StringToken T);
         void identifyRepeatNodes(std::deque<Node *>& rpath);
-        void toGraphviz(std::ostream& out);
+        void toGraphviz(FILE * out, const char * graphName);
+        std::string kmerStr(StringToken n){return mNodeLookup.getString(n);}
         
     };
 }
