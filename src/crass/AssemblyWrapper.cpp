@@ -248,10 +248,14 @@ void assemblyUsage(void)
     std::cout<< "-l --logLevel        <INT>   Output a log file and set a log level [1 - "<<CRASS_DEF_MAX_LOGGING<<"]"<<std::endl;
     std::cout<< "--logToScreen                Print the logging information to screen rather than a file"<<std::endl;
 #endif
-    std::cout<< "-g --group           <INT>   ID of the group that you want to assemble"<<std::endl;
+    std::cout<< "-g --group           <INT>   ID of the group that you want to assemble.  Give only the group number; For example"<<std::endl;
+    std::cout<< "                             if the group is G9, the argument to this option should just be the number 9"<<std::endl;
     std::cout<< "-s --segments        <LIST>  A comma separated list of numbered segments to assemble from the specified group"<<std::endl;
-    std::cout<< "-x --xml             <FILE>  xml output file created by crass"<<std::endl;
-    std::cout<< "-i --inDir           <DIR>   input directory for the assembly [default: .]"<<std::endl;    
+    std::cout<< "                             The segment identifier is the number listed after the 'C' in the name of the spacer"<<std::endl;
+    std::cout<< "                             in the graph image of the CRISPR.  For example if a spacer's name is sp_6_3_C1, then "<<std::endl;
+    std::cout<< "                             the segment is 1."<<std::endl;
+    std::cout<< "-x --xml             <FILE>  xml output file created by crass.  should be called crass.crispr in the crass output directory"<<std::endl;
+    std::cout<< "-i --inDir           <DIR>   input directory for the assembly. This will be the output directory from Crass [default: .]"<<std::endl;    
 #if 0
     std::cout<< "-p --pairedEnd               Set if you want paired end assembly.  The crass assembler will check for unmatched"<<std::endl;
     std::cout<<"                              pairs and add them into the input file."<<std::endl;
