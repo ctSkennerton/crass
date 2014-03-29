@@ -42,6 +42,7 @@
 #include <sys/stat.h>
 #include <getopt.h>
 #include <string>
+#include <cassert>
 #define OUT_FILE_PERMISSION_MASK (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)
 
 void RecursiveMkdir(std::string dir)
@@ -238,8 +239,13 @@ int main(int argc, char * argv[]) {
     
     crass::Storage read_store = crass::Storage();
     crass::Search searcher = crass::Search(&read_store);
+    int max_read_length = 0;
+
     for (int file_begin = opt_idx; file_begin < argc; ++file_begin) {
-        searcher.searchFileSerial(argv[file_begin]);
+        int current_max_read_length = searcher.searchFileSerial(argv[file_begin]);
+        if (current_max_read_length > max_read_length) {
+            max_read_length = current_max_read_length;
+        }
     }
     
     if(read_store.numberOfReads()) {
@@ -248,12 +254,13 @@ int main(int argc, char * argv[]) {
         
         for (int file_begin = opt_idx; file_begin < argc; ++file_begin) {
             searcher.searchFileForPatterns(argv[file_begin]);
+
         }
         
-        
+        const int KMER_SIZE = 37;
         // repeat cluster is map of clust_id (int) to list of repeats (StringToken)
         for(auto repeat_clust_it = read_store.repeatClusterBegin(); repeat_clust_it != read_store.repeatClusterEnd(); ++repeat_clust_it) {
-            crass::Graph crispr_grapher = crass::Graph(37);
+            crass::Graph crispr_grapher = crass::Graph(KMER_SIZE);
 
             // dr_list_it is std::list<StringToken>::iterator for repeats
             for(auto dr_list_it = repeat_clust_it->second.begin(); dr_list_it != repeat_clust_it->second.end(); ++dr_list_it) {
@@ -287,16 +294,24 @@ int main(int argc, char * argv[]) {
             
             
             std::deque<crass::Node *> rpath;
-            crispr_grapher.removeTipsInward(50);
-            crispr_grapher.identifyRepeatNodes(rpath);
+            // WARNING: This is an arbitrary value that says if a path is
+            // longer than 1/3 of the read length then it is OK.  This is a
+            // poor assumption to make
+            int max_depth_for_err_tip = (max_read_length - KMER_SIZE) * 0.3;
+            fprintf(stderr, "%s maxrl=%d, k=%d", graph_name, max_read_length, KMER_SIZE);
+            assert(max_depth_for_err_tip > 0);
+            
+            fprintf(stderr, "removing paths less than %d nodes in size\n", max_depth_for_err_tip);
+            crispr_grapher.snipTips(max_depth_for_err_tip);
+            //crispr_grapher.identifyRepeatNodes(rpath);
             
             graph_file = fopen(graph_file_name, "w");
             crispr_grapher.toGML(graph_file, graph_name);
             fclose(graph_file);
             
-            printf("%s Length=%ld\n", graph_name, rpath.size()+21);
+            //printf("%s Length=%ld\n", graph_name, rpath.size()+ KMER_SIZE);
             
-            auto dr_it = rpath.begin();
+            /*auto dr_it = rpath.begin();
             std::string kmer;
             kmer = crispr_grapher.kmerStr((*dr_it)->mId);
             printf("%s", kmer.c_str());
@@ -304,7 +319,7 @@ int main(int argc, char * argv[]) {
                 std::string kmer = crispr_grapher.kmerStr((*dr_it)->mId);
                 putc(kmer.back(), stdout);
             }
-            putc('\n', stdout);
+            putc('\n', stdout);*/
             
 
         }

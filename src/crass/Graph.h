@@ -62,11 +62,11 @@ namespace crass {
         
         Node(StringToken i) : mId(i), mCov(1), mType(UNDEF), mRepeatedReadCount(0) {}
         
-        int inDegree() {return mRevEdges.size();}
-        int outDegree() {return mFwdEdges.size();}
+        int inDegree() {return static_cast<int>(mRevEdges.size());}
+        int outDegree() {return static_cast<int>(mFwdEdges.size());}
         int degree(){return inDegree() + outDegree();}
-        int inJmpDegree() {return mRevJmpEdges.size();}
-        int outJmpDegree() {return mFwdJmpEdges.size();}
+        int inJmpDegree() {return static_cast<int>(mRevJmpEdges.size());}
+        int outJmpDegree() {return static_cast<int>(mFwdJmpEdges.size());}
         int jmpDegree() {return inJmpDegree() + outJmpDegree();}
         
         void addFwdEdge(Node * n) {mFwdEdges.insert(n);}
@@ -84,6 +84,8 @@ namespace crass {
             Does not delete the node from the graph
          */
         void detachNodeFromNeighbours();
+        
+        void deleteEdge(Node * other);
         
         char * toGML(const char * kmerSeq);
          
@@ -106,19 +108,8 @@ namespace crass {
         void toGML(FILE * out, const char * graphName);
         void computeCoverageHistogram(FILE * out);
        
-        /* Walk along a linear path using the forwad edges from the
-         * source node and add the walked nodes onto the path.
-         *
-         * source:    Node to begin walk from
-         * path:      Stack onto which all nodes walked will be put in
-         * seenNodes: a set of all nodes that have been encounters in any walk.
-         *            If any node is encountered that has been seen before
-         *            the walk will imeadiately terminate
-         * maxDist:   The maximum number of nodes to walk forward before termination
-         *
-         * returns:   The number of nodes walked
-         */
-        unsigned int walkForward(Node * source, std::stack<Node *>& path, std::unordered_set<Node *>& seenNodes, unsigned int maxDist);
+        
+        
         /* Walk along a linear path using the reverse edges from the
          * source node and add the walked nodes onto the path.
          *
@@ -128,18 +119,22 @@ namespace crass {
          *            If any node is encountered that has been seen before
          *            the walk will imeadiately terminate
          * maxDist:   The maximum number of nodes to walk forward before termination
+         * reverse:   Walk along the reverse edges - default is to walk the forward edges
          *
          * returns:   The number of nodes walked
          */
-        unsigned int walkReverse(Node * source, std::stack<Node *>& path, std::unordered_set<Node *>& seenNodes, unsigned int maxDist);
+        unsigned int walk(Node * source, std::stack<Node *>& path, std::unordered_set<Node *>& seenNodes, unsigned int maxDist, bool reverse);
+        
         /* Detach nodes from the stack starting at a tip as long as they have a degree < 2
          * 
          * return: number of nodes actually removed
          */
         unsigned int pruneBackToFork(std::stack<Node *>& path);
+        
         /* remove nodes from the current path without removing them from the graph
          */
         void backtrack(std::stack<Node *>& path);
+        
         /*  Given a source node remove any tips
             Implements Depth first search from the source node in the graph
             Identifies and removes all paths that are not cycles and are less
@@ -147,11 +142,21 @@ namespace crass {
             degree of 1
          */
         void removeTips(Node * source, unsigned int maxDepth);
+        
         /* Finds all tips (degree = 1) and prunes them to the nearest fork node
          * as long as the distance between the tip and the fork is less than
          * maxDepth nodes
          */
         void removeTipsInward(unsigned int maxDepth);
+        
+        /* Finds all tips (degree = 1) and cuts them at a fork node
+         */
+        void snipTips(unsigned int maxDepth);
+        /* Delete the edge between node1 and node2.  If no edge exists between these 
+         * two nodes, nothing happens
+         */
+        void deleteEdge(Node * node1, Node * node2);
+        
         void deleteNode(Node * node);
         
         std::string kmerStr(StringToken n){return mNodeLookup.getString(n);}

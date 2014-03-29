@@ -34,6 +34,28 @@ void Node::detachNodeFromNeighbours() {
     mRevEdges.clear();
 }
 
+void Node::deleteEdge(crass::Node *other) {
+    auto it = mFwdEdges.find(other);
+    if (it != mFwdEdges.end()) {
+        mFwdEdges.erase(it);
+    }
+    
+    it = mRevEdges.find(other);
+    if (it != mRevEdges.end()) {
+        mRevEdges.erase(it);
+    }
+    
+    it = mFwdJmpEdges.find(other);
+    if (it != mFwdJmpEdges.end()) {
+        mFwdJmpEdges.erase(it);
+    }
+    
+    it = mRevJmpEdges.find(other);
+    if (it != mRevJmpEdges.end()) {
+        mRevJmpEdges.erase(it);
+    }
+}
+
 char * Node::toGML(const char * kmerSeq) {
     char * out = (char *)calloc(256, sizeof(char));
     int written = snprintf(out, 256, "\tnode [\n\t\tid %d\n\t\tcoverage %d\n\t\tsequence %s\n\t\trepeatability %f\n\t]\n", mId, mCov, kmerSeq, (float)mRepeatedReadCount/(float)mCov);
@@ -175,8 +197,7 @@ void Graph::toGML(FILE * out, const char * graphName) {
     fprintf(out, "graph [\n\tdirected 1\n\tlabel \"%s\"\n", graphName);
     for(auto it = mNodes.begin(); it != mNodes.end(); ++it) {
         if(processed_nodes.find(it->second->mId) == processed_nodes.end()) {
-            //fprintf(stderr, "repeated: %f, total: %f, result: %f\n", it->second->mRepeatedReadCount, (float) mTotalReadCount, it->second->mRepeatedReadCount / (float) mTotalReadCount);
-            //fprintf(out, "\tnode [\n\t\tid %d\n\t\tcoverage %d\n\tsequence %s\n\t]\n", it->second->mId, it->second->mCov, mNodeLookup.getString(it->second->mId).c_str());
+
             char * formatted_node = it->second->toGML(mNodeLookup.getString(it->second->mId).c_str());
             fputs(formatted_node, out);
             free(formatted_node);
@@ -190,7 +211,7 @@ void Graph::toGML(FILE * out, const char * graphName) {
                 char * formatted_node = (*it2)->toGML(mNodeLookup.getString((*it2)->mId).c_str());
                 fputs(formatted_node, out);
                 free(formatted_node);
-                //fprintf(out, "\tnode [\n\t\tid %d\n\t\tcoverage %d\n\tsequence %s\n\t]\n", (*it2)->mId, (*it2)->mCov, mNodeLookup.getString((*it2)->mId).c_str());
+
                 processed_nodes.insert((*it2)->mId);
             }
             fprintf(out, "\tedge [\n\t\tsource %d\n\t\ttarget %d\n\t]\n", it->second->mId,(*it2)->mId);
@@ -213,7 +234,7 @@ void Graph::computeCoverageHistogram(FILE *out) {
 }
 
 
-unsigned int Graph::walkForward(Node * source, std::stack<Node *>& path, std::unordered_set<Node *>& seenNodes, unsigned int maxDist) {
+unsigned int Graph::walk(Node * source, std::stack<Node *>& path, std::unordered_set<Node *>& seenNodes, unsigned int maxDist, bool reverse) {
     // if we are already on a cross don't do anything
     unsigned int dist = 0;
     path.push(source);
@@ -223,19 +244,29 @@ unsigned int Graph::walkForward(Node * source, std::stack<Node *>& path, std::un
     }
     Node * s = source;
     Node * current_n = nullptr;
-    //printf("Walking out on fwdEdges to %d, degree = %d\n", source->mId, source->degree());
+    std::unordered_set<Node *>::iterator it;
+    std::unordered_set<Node *>::iterator endit;
+    //fprintf(stderr, "Walking out on %sEdges to %d, degree = %d\n", (reverse)?"rev":"fwd" ,source->mId, source->degree());
     while(s->degree() <= 2 && path.size() <= maxDist) {
-        auto it = s->mFwdEdges.begin();
-        if(it != s->mFwdEdges.end()) {
+
+        if (reverse) {
+            it = s->mRevEdges.begin();
+            endit = s->mRevEdges.end();
+        } else {
+            it = s->mFwdEdges.begin();
+            endit = s->mFwdEdges.end();
+        }
+        if(it != endit) {
             if(seenNodes.find(*it) == seenNodes.end()) {
                 current_n = *it;
-                //printf("Walking out on fwdEdges to %d, degree = %d\n", current_n->mId, current_n->degree());
+                //fprintf(stderr, "Walking out on fwdEdges to %d, degree = %d\n", current_n->mId, current_n->degree());
                 // push the node onto the stack
                 path.push(current_n);
                 ++dist;
                 s = current_n;
                 seenNodes.insert(s);
             } else {
+                //fprintf(stderr, "breaking due to seen tips\n");
                 break;
             }
         } else {
@@ -245,40 +276,6 @@ unsigned int Graph::walkForward(Node * source, std::stack<Node *>& path, std::un
     return dist;
 }
 
-unsigned int Graph::walkReverse(Node * source, std::stack<Node *>& path, std::unordered_set<Node *>& seenNodes, unsigned int maxDist) {
-    // if we are already on a cross don't do anything
-    unsigned int dist = 0;
-    if(source->outDegree() != 1 && source->inDegree() != 1) {
-        /*printf("Source %d is cross, degree = %d, inDegree = %d, outDegree = %d\n",
-                source->mId, 
-                source->degree(),
-                source->inDegree(),
-                source->outDegree());*/
-        return dist;
-    }
-    Node * s = source;
-    Node * current_n = nullptr;
-    //printf("Walking out on revEdges to %d, degree = %d\n", source->mId, source->degree());
-    while(s->degree() <= 2 && path.size() <= maxDist){
-        auto it = s->mRevEdges.begin();
-        if(it != s->mRevEdges.end()) {
-            if(seenNodes.find(*it) == seenNodes.end()) {
-                current_n = (*it);
-                //printf("Walking out on revEdges to %d, degree = %d\n", current_n->mId, current_n->degree());
-                // push the node onto the stack
-                path.push(current_n);
-                ++dist;
-                s = current_n;
-                seenNodes.insert(s);
-            } else {
-                break;
-            }
-        } else {
-            break;
-        }
-    } 
-    return dist;
-}
 
 unsigned int Graph::pruneBackToFork(std::stack<Node*>& path) {
     unsigned int del = 0;
@@ -354,7 +351,7 @@ void Graph::removeTips(Node * source, unsigned int maxDepth) {
             }
             // check to make sure that at least one of the edges has not been seen
             if(MAX_COV != lowest_cov) {
-                unsigned int current_walk_dist = walkForward(current_n, current_path, seen_nodes, maxDepth);
+                unsigned int current_walk_dist = walk(current_n, current_path, seen_nodes, maxDepth, false);
                 //printf("After forward walk: %d, %ld\n", current_walk_dist, current_path.size());
                 /*printf("Node: %d, degree: %d, inDegree: %d, outDegree: %d\n",
                         current_path.top()->mId, 
@@ -429,7 +426,7 @@ void Graph::removeTips(Node * source, unsigned int maxDepth) {
             // check to make sure that at least one of the edges has not been seen 
             if(MAX_COV != lowest_cov) {
                 //printf("max dist for this walk: %ld %d %ld\n", maxDepth - current_path.size(), maxDepth, current_path.size());
-                unsigned int current_walk_dist = walkReverse(current_n, current_path, seen_nodes, maxDepth);
+                unsigned int current_walk_dist = walk(current_n, current_path, seen_nodes, maxDepth, true);
                 //printf("After reverse walk: %d, %ld\n", current_walk_dist, current_path.size());
                 /*printf("Node: %d, degree: %d, inDegree: %d, outDegree: %d\n",
                         current_path.top()->mId, 
@@ -566,19 +563,21 @@ void Graph::removeTipsInward(unsigned int maxDepth) {
     unsigned int num_removed;
     do {
         num_removed = 0;
+        // get a list of all nodes that are tips: degree = 1
         std::vector<Node *> tips;
         for(auto it = mNodes.begin(); it != mNodes.end(); ++it) {
             if(it->second->degree() == 1) {
                 tips.push_back(it->second);
             }
         }
+        // go through each tip until we find a fork node
         std::unordered_set<Node *> seen_nodes;
         for(auto it = tips.begin(); it != tips.end(); ++it) {
             //printf("starting at Tip: %d\n", (*it)->mId);
             std::stack<Node *> current_path;
             if((*it)->inDegree() == 1) {
                 // we need to walk back on reverse edges
-                if(walkReverse(*it, current_path, seen_nodes, maxDepth) < maxDepth) {
+                if(walk(*it, current_path, seen_nodes, maxDepth, true) < maxDepth) {
                     // if the top node is a fork 
                     // pop it off before removing
                     if(!current_path.empty() && current_path.top()->degree() > 2) {
@@ -589,7 +588,7 @@ void Graph::removeTipsInward(unsigned int maxDepth) {
                 }
             } else {
                 // walk along the forward edges
-                if(walkForward(*it, current_path, seen_nodes, maxDepth) < maxDepth) {
+                if(walk(*it, current_path, seen_nodes, maxDepth, false) < maxDepth) {
                     // if the top node is a fork 
                     // pop it off before removing
                     if(!current_path.empty() && current_path.top()->degree() > 2) {
@@ -600,6 +599,64 @@ void Graph::removeTipsInward(unsigned int maxDepth) {
             }
         }
     } while(num_removed > 0);
+}
+
+void Graph::snipTips(unsigned int maxDepth) {
+    // collect all of the tips
+    unsigned int num_removed;
+    do {
+        num_removed = 0;
+        // get a list of all nodes that are tips: degree = 1
+        std::vector<Node *> tips;
+        for(auto it = mNodes.begin(); it != mNodes.end(); ++it) {
+            if(it->second->degree() == 1) {
+                tips.push_back(it->second);
+            }
+        }
+        // go through each tip until we find a fork node
+        for(auto it = tips.begin(); it != tips.end(); ++it) {
+            std::unordered_set<Node *> seen_nodes;
+            //fprintf(stderr, "starting at Tip: %d\n", (*it)->mId);
+            std::stack<Node *> current_path;
+            if((*it)->inDegree() == 1) {
+                // we need to walk back on reverse edges
+                if(walk(*it, current_path, seen_nodes, maxDepth, true) < maxDepth) {
+                    // if the top node is a fork
+                    // pop it off before removing
+                    if(current_path.size() >= 2 && current_path.top()->degree() > 2) {
+                        Node * tmp = current_path.top();
+                        current_path.pop();
+                        //fprintf(stderr, "R: removing edge between %d and %d\n", tmp->mId, current_path.top()->mId);
+                        deleteEdge(tmp, current_path.top());
+                        num_removed += 1; //pruneBackToFork(current_path);
+                    } else {
+                        //fprintf(stderr, "R: current path is %ld in length, top node id = %d with degree = %d\n", current_path.size(), current_path.top()->mId, current_path.top()->degree());
+                    }
+                    
+                }
+            } else {
+                // walk along the forward edges
+                if(walk(*it, current_path, seen_nodes, maxDepth, false) < maxDepth) {
+                    // if the top node is a fork
+                    // pop it off before removing
+                    if(current_path.size() >= 2 && current_path.top()->degree() > 2) {
+                        Node * tmp = current_path.top();
+                        current_path.pop();
+                        //fprintf(stderr, "F: removing edge between %d and %d\n", tmp->mId, current_path.top()->mId);
+                        deleteEdge(tmp, current_path.top());
+                        num_removed += 1;// pruneBackToFork(current_path);
+                    } else {
+                        //fprintf(stderr, "R: current path is %ld in length, top node id = %d with degree = %d\n", current_path.size(), current_path.top()->mId, current_path.top()->degree());
+                    }
+                }
+            }
+        }
+    } while(num_removed > 0);
+}
+
+void Graph::deleteEdge(crass::Node *node1, crass::Node *node2) {
+    node1->deleteEdge(node2);
+    node2->deleteEdge(node1);
 }
 
 void Graph::deleteNode(Node * node) {
