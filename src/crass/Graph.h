@@ -15,6 +15,7 @@
 #include <deque>
 #include <string>
 #include <unordered_set>
+#include <stack>
 
 #include "StringCheck.h"
 #include "Sequence.h"
@@ -55,15 +56,18 @@ namespace crass {
         std::vector<RawRead *> mReadsContainingNode;    // a list of reads which contain this node
     public:
         StringToken mId;
-        int mCov;
+        unsigned int mCov;
         graph_node_t mType;
+        int mRepeatedReadCount;
         
-        Node(StringToken i) : mId(i), mCov(1), mType(UNDEF) {}
+        Node(StringToken i) : mId(i), mCov(1), mType(UNDEF), mRepeatedReadCount(0) {}
         
         int inDegree() {return mRevEdges.size();}
         int outDegree() {return mFwdEdges.size();}
+        int degree(){return inDegree() + outDegree();}
         int inJmpDegree() {return mRevJmpEdges.size();}
         int outJmpDegree() {return mFwdJmpEdges.size();}
+        int jmpDegree() {return inJmpDegree() + outJmpDegree();}
         
         void addFwdEdge(Node * n) {mFwdEdges.insert(n);}
         void addRevEdge(Node * n) {mRevEdges.insert(n);}
@@ -74,6 +78,14 @@ namespace crass {
         Node * revEdge() {return *mRevEdges.begin();}
         Node * fwdJmpEdge() {return *mFwdJmpEdges.begin();}
         Node * revJmpEdge() {return *mRevJmpEdges.begin();}
+        
+        /*  Remove reference to this node from all of the edges
+            then remove all of the edges in the current node
+            Does not delete the node from the graph
+         */
+        void detachNodeFromNeighbours();
+        
+        char * toGML(const char * kmerSeq);
          
 
     };
@@ -82,6 +94,7 @@ namespace crass {
         std::unordered_map<StringToken, Node *> mNodes;
         StringCheck mNodeLookup; // hash of the node Ids to their string representations
         int mKmerLength;
+        int mTotalReadCount;
 
     public:
         Graph(int _k) : mKmerLength(_k){}
@@ -90,7 +103,59 @@ namespace crass {
         Node * getNode(StringToken T);
         void identifyRepeatNodes(std::deque<Node *>& rpath);
         void toGraphviz(FILE * out, const char * graphName);
+        void toGML(FILE * out, const char * graphName);
+        void computeCoverageHistogram(FILE * out);
+       
+        /* Walk along a linear path using the forwad edges from the
+         * source node and add the walked nodes onto the path.
+         *
+         * source:    Node to begin walk from
+         * path:      Stack onto which all nodes walked will be put in
+         * seenNodes: a set of all nodes that have been encounters in any walk.
+         *            If any node is encountered that has been seen before
+         *            the walk will imeadiately terminate
+         * maxDist:   The maximum number of nodes to walk forward before termination
+         *
+         * returns:   The number of nodes walked
+         */
+        unsigned int walkForward(Node * source, std::stack<Node *>& path, std::unordered_set<Node *>& seenNodes, unsigned int maxDist);
+        /* Walk along a linear path using the reverse edges from the
+         * source node and add the walked nodes onto the path.
+         *
+         * source:    Node to begin walk from
+         * path:      Stack onto which all nodes walked will be put in
+         * seenNodes: a set of all nodes that have been encounters in any walk.
+         *            If any node is encountered that has been seen before
+         *            the walk will imeadiately terminate
+         * maxDist:   The maximum number of nodes to walk forward before termination
+         *
+         * returns:   The number of nodes walked
+         */
+        unsigned int walkReverse(Node * source, std::stack<Node *>& path, std::unordered_set<Node *>& seenNodes, unsigned int maxDist);
+        /* Detach nodes from the stack starting at a tip as long as they have a degree < 2
+         * 
+         * return: number of nodes actually removed
+         */
+        unsigned int pruneBackToFork(std::stack<Node *>& path);
+        /* remove nodes from the current path without removing them from the graph
+         */
+        void backtrack(std::stack<Node *>& path);
+        /*  Given a source node remove any tips
+            Implements Depth first search from the source node in the graph
+            Identifies and removes all paths that are not cycles and are less
+            than maxDepth in length if they terminate at a node with a 
+            degree of 1
+         */
+        void removeTips(Node * source, unsigned int maxDepth);
+        /* Finds all tips (degree = 1) and prunes them to the nearest fork node
+         * as long as the distance between the tip and the fork is less than
+         * maxDepth nodes
+         */
+        void removeTipsInward(unsigned int maxDepth);
+        void deleteNode(Node * node);
+        
         std::string kmerStr(StringToken n){return mNodeLookup.getString(n);}
+        
         
     };
 }

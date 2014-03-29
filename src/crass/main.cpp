@@ -38,9 +38,7 @@
 #include "Search.h"
 #include "Graph.h"
 
-#include <iostream>
 #include <cstdio>
-#include <fstream>
 #include <sys/stat.h>
 #include <getopt.h>
 #include <string>
@@ -119,10 +117,11 @@ int processOptions(int argc, char *argv[], CrassOpts& opts)
         {
             case 'd':
                 from_string<unsigned int>(opts.lowDRsize, optarg, std::dec);
-                if (opts.lowDRsize < 8)
+                if (opts.lowDRsize < 18)
                 {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for direct repeat sizes cannot be "<<opts.lowDRsize<<" changing to "<<23<<std::endl;
-                    opts.lowDRsize = 23;
+                    fprintf(stderr,"%s [ERROR]: The lower bound for direct repeat sizes cannot be %d, the minimum is %d\n", PACKAGE_NAME, opts.lowDRsize, 18);
+                    usage();
+                    exit(1);
                 }
                 break;
             case 'D':
@@ -140,15 +139,16 @@ int processOptions(int argc, char *argv[], CrassOpts& opts)
                 from_string<float>(opts.clustID, optarg, std::dec);
                 if (opts.clustID > 1.0 || opts.clustID < 0.0)
                 {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: sequence similarity must be between 0 and 1 changing to 0.9"<<std::endl;
-                    opts.clustID = 0.9;
+                    fprintf(stderr, "%s [ERROR]: sequence similarity must be between 0 and 1; us supplied %s\n", PACKAGE_NAME, optarg);
+                    usage();
+                    exit(1);
                 }
                 break;
             case 'l':
                 from_string<int>(opts.logLevel, optarg, std::dec);
                 if(opts.logLevel > 10)
                 {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: Specified log level higher than max. Changing log level to "<<10<<" instead of "<<opts.logLevel<<std::endl;
+                    fprintf(stderr, "%s [WARNING]: Specified log level (%d) higher than max (10). Changing log level to 10 instead of %d\n", PACKAGE_NAME, opts.logLevel, opts.logLevel);
                     opts.logLevel = 10;
                 }
                 break;
@@ -167,16 +167,18 @@ int processOptions(int argc, char *argv[], CrassOpts& opts)
                 // check that the directory is writable
                 else if(access(optarg, W_OK))
                 {
-                    std::cerr<<PACKAGE_NAME<<" [ERROR]: You do not have permission to write to "<<optarg<<std::endl;
+                    fprintf(stderr, "%s [ERROR]: You do not have permission to write to %s\n", PACKAGE_NAME, optarg);
+                    usage();
                     exit(1);
                 }
                 break;
             case 's':
                 from_string<unsigned int>(opts.lowSpacerSize, optarg, std::dec);
-                if (opts.lowSpacerSize < 8)
+                if (opts.lowSpacerSize < 18)
                 {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The lower bound for spacer sizes cannot be "<<opts.lowSpacerSize<<" changing to "<<CRASS_DEF_MIN_SPACER_SIZE<<std::endl;
-                    opts.lowSpacerSize = CRASS_DEF_MIN_SPACER_SIZE;
+                    fprintf(stderr, "%s [ERROR]: The lower bound for spacer sizes cannot be %d minimum allowed value is %d\n", PACKAGE_NAME, opts.lowSpacerSize, 18);
+                    usage();
+                    exit(1);
                 }
                 break;
             case 'S':
@@ -196,14 +198,14 @@ int processOptions(int argc, char *argv[], CrassOpts& opts)
     // Sanity checks for the high and low dr size
     if (opts.lowDRsize >= opts.highDRsize)
     {
-        std::cerr<<PACKAGE_NAME<<" [ERROR]: The lower direct repeat bound is bigger than the higher bound ("<<opts.lowDRsize<<" >= "<<opts.highDRsize<<")"<<std::endl;
+        fprintf(stderr, "%s [ERROR]: The lower direct repeat bound is bigger than the higher bound ( %d >= %d )\n", PACKAGE_NAME, opts.lowDRsize, opts.highDRsize);
         usage();
         exit(1);
     }
     // Sanity checks for the high and low spacer size
     if (opts.lowSpacerSize >= opts.highSpacerSize)
     {
-        std::cerr<<PACKAGE_NAME<<" [ERROR]: The lower spacer bound is bigger than the higher bound ("<<opts.lowSpacerSize<<" >= "<<opts.highSpacerSize<<")"<<std::endl;
+        fprintf(stderr, "%s [ERROR]: The lower spacer bound is bigger than the higher bound ( %d >= %d )\n", PACKAGE_NAME, opts.lowSpacerSize, opts.highSpacerSize);
         usage();
         exit(1);
     }
@@ -229,7 +231,7 @@ int main(int argc, char * argv[]) {
     if (opt_idx >= argc)
     {
         logError("no sequence files to process");
-        std::cerr<<PACKAGE_NAME<<" [ERROR]: Specify sequence files to process!"<<std::endl;
+        fprintf(stderr, "%s [ERROR]: Specify sequence files to process!\n", PACKAGE_NAME);
         usage();
         return 1;
     }
@@ -248,16 +250,10 @@ int main(int argc, char * argv[]) {
             searcher.searchFileForPatterns(argv[file_begin]);
         }
         
-        //read_store.inspect(std::cout);
-        //std::ofstream reads_dump(opts.outdir + "/reads");
-        //if (reads_dump.good()) {
-        //    read_store.dumpReads(reads_dump);
-        //}
-        //reads_dump.close();
         
         // repeat cluster is map of clust_id (int) to list of repeats (StringToken)
         for(auto repeat_clust_it = read_store.repeatClusterBegin(); repeat_clust_it != read_store.repeatClusterEnd(); ++repeat_clust_it) {
-            crass::Graph crispr_grapher = crass::Graph(21);
+            crass::Graph crispr_grapher = crass::Graph(37);
 
             // dr_list_it is std::list<StringToken>::iterator for repeats
             for(auto dr_list_it = repeat_clust_it->second.begin(); dr_list_it != repeat_clust_it->second.end(); ++dr_list_it) {
@@ -267,10 +263,38 @@ int main(int argc, char * argv[]) {
             }
             char graph_name[20];
             snprintf(graph_name, 20, "cluster_%d", repeat_clust_it->first);
+            
+            char graph_file_name[1024];
+            char hist_name[1024];
+            
+            strcpy(graph_file_name, opts.outdir.c_str());
+            strcat(graph_file_name, "/");
+            strcat(graph_file_name, graph_name);
+            strcpy(hist_name, graph_file_name);
+            
+            strcat(graph_file_name, ".gml");
+            strcat(hist_name, "_hist.txt");
+            
+            FILE * graph_file = fopen(graph_file_name, "w");
+            crispr_grapher.toGML(graph_file, graph_name);
+            fclose(graph_file);
+            graph_file = fopen(hist_name, "w");
+            crispr_grapher.computeCoverageHistogram(graph_file);
+            fclose(graph_file);
+            
+            char * extension = strstr(graph_file_name, ".gml");
+            strcpy(extension, "_after_removal.gml");
+            
+            
             std::deque<crass::Node *> rpath;
+            crispr_grapher.removeTipsInward(50);
             crispr_grapher.identifyRepeatNodes(rpath);
+            
+            graph_file = fopen(graph_file_name, "w");
+            crispr_grapher.toGML(graph_file, graph_name);
+            fclose(graph_file);
+            
             printf("%s Length=%ld\n", graph_name, rpath.size()+21);
-
             
             auto dr_it = rpath.begin();
             std::string kmer;
@@ -281,14 +305,8 @@ int main(int argc, char * argv[]) {
                 putc(kmer.back(), stdout);
             }
             putc('\n', stdout);
-            char graph_file_name[1024];
-            strcpy(graph_file_name, opts.outdir.c_str());
-            strcat(graph_file_name, "/");
-            strcat(graph_file_name, graph_name);
-            strcat(graph_file_name, ".gv");
-            FILE * graph_file = fopen(graph_file_name, "w");
-            crispr_grapher.toGraphviz(graph_file, graph_name);
-            fclose(graph_file);
+            
+
         }
 
     } else {
