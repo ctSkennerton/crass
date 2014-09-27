@@ -2020,44 +2020,47 @@ void NodeManager::printSpacerKey(std::ostream &dataOut, int numSteps, std::strin
 void NodeManager::generateFlankers(bool showDetached)
 {
     // generate statistics about length of spacers
-    getSpacerCountAndStats();
-    
-    
-    // do some maths
-    double stdev = NM_SpacerLenStat.standardDeviation();
-    int mean = (int)NM_SpacerLenStat.mean();
-    int lower_bound = mean - (stdev*1.5);
-    int upper_bound = mean + (stdev*1.5);
-    
-    // if there is no variation then there is no flankers
-    if (stdev > 1 ) 
-    {
-        logInfo("Ave SP Length: "<<mean<<" Deviation: "<<stdev<<" UB: "<<upper_bound<<" LB: "<<lower_bound, 3);
-        // call a spacer a 'flanker' if it's length is more than 1 standard deviation from the mean length
-        // and it is a cap node
-
-        SpacerListIterator spacer_iter = NM_Spacers.begin();
-        //spacer_iter = NM_Spacers.begin();
-        while(spacer_iter != NM_Spacers.end())
+    int spacer_count = getSpacerCountAndStats();
+    logInfo("Number of spacers when testing for flankers: " << spacer_count, 3);
+    if (spacer_count >= 3) {
+        // do some maths
+        double stdev = NM_SpacerLenStat.standardDeviation();
+        int mean = (int)NM_SpacerLenStat.mean();
+        int lower_bound = mean - (stdev*1.5);
+        int upper_bound = mean + (stdev*1.5);
+        
+        // if there is no variation then there is no flankers
+        if (stdev > 1 )
         {
-            SpacerInstance * SI = spacer_iter->second;
- 
-            if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+            logInfo("Ave SP Length: "<<mean<<" Deviation: "<<stdev<<" UB: "<<upper_bound<<" LB: "<<lower_bound, 3);
+            // call a spacer a 'flanker' if it's length is more than 1 standard deviation from the mean length
+            // and it is a cap node
+            
+            SpacerListIterator spacer_iter = NM_Spacers.begin();
+            //spacer_iter = NM_Spacers.begin();
+            while(spacer_iter != NM_Spacers.end())
             {
-                /*if(SI->isCap()) {*/
+                SpacerInstance * SI = spacer_iter->second;
+                
+                if(showDetached || ((SI->getLeader())->isAttached() && (SI->getLast())->isAttached()))
+                {
+                    /*if(SI->isCap()) {*/
                     int spacer_length = (int)(NM_StringCheck.getString(SI->getID())).length();
                     if (spacer_length > upper_bound || spacer_length < lower_bound) {
                         SI->setFlanker(true);
                         NM_FlankerNodes.push_back(SI);
-                   }
-                /* }*/
+                    }
+                    /* }*/
+                }
+                spacer_iter++;
             }
-            spacer_iter++;
         }
-    }
-    else 
-    {
-        logInfo("not enough length variation to detect flankers", 3);
+        else 
+        {
+            logInfo("not enough length variation to detect flankers", 3);
+        }
+    } else {
+        logInfo("not enough spacers to determine flankers", 3);
     }
     
     // do this here so that any subsuquent calls don't include the flanking sequences
