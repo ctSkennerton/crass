@@ -540,7 +540,7 @@ int WorkHorse::removeLowConfidenceNodeManagers(void)
 		}
 		drg_iter++;
 	}
-    std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<counter<<" putative CRISPRs have passed all checks"<<std::endl;
+    //std::cout<<'['<<PACKAGE_NAME<<"_graphBuilder]: "<<counter<<" putative CRISPRs have passed all checks"<<std::endl;
 	return 0;
 }
 

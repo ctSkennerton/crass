@@ -1235,8 +1235,8 @@ void ReadHolder::logContents(int logLevel)
         ss << *ss_iter << ",";
         ss_iter++;
     }
+    ss << "\n" <<RH_Seq<<"\n";
     logInfo(ss.str().c_str(), logLevel);
-    logInfo(RH_Seq, logLevel);
 }
 
 

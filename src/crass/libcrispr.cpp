@@ -399,6 +399,11 @@ int longReadSearch(ReadHolder& tmpHolder,
                 
                 // drop partials
                 tmpHolder.dropPartials();
+                // After we remove the partial repeats we need to check again to make sure that
+                // we're still above the minimum needed
+                if (tmpHolder.numRepeats() < opts.minNumRepeats) {
+                    break;
+                }
                 if (qcFoundRepeats(tmpHolder, opts.lowSpacerSize, opts.highSpacerSize))
                 {
 #ifdef DEBUG
@@ -1024,6 +1029,7 @@ bool qcFoundRepeats(ReadHolder& tmp_holder, int minSpacerLength, int maxSpacerLe
 
     if (tmp_holder.numRepeats() < 2) 
     {
+        tmp_holder.logContents(1);
         throw crispr::exception(__FILE__,
                                 __LINE__,
                                 __PRETTY_FUNCTION__,
