@@ -185,9 +185,9 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 %%% The "real" document content comes below...
 
-\title{Crass:  The CRISPR assembler (v0.3.7)}
+\title{Crass:  The CRISPR assembler (v0.3.8)}
 \author{Connor Skennerton and Michael Imelfort}
-\date{17th July 2013} % Activate to display a given date or no date (if empty),
+\date{2nd October 2014} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
@@ -242,9 +242,9 @@ Crass can also be run as a wrapper for some common assembly algorithms to assemb
 On a GNU system with the prerequisites install, simply:
 \begin{lstlisting}[style=BashInputStyle]
 	$ ./autogen.sh
-	$  ./configure
-	$  make
-	$  [sudo] make install
+	$ ./configure
+	$ make
+	$ [sudo] make install
 \end{lstlisting}
 
 \subsubsection{Configure/Compiling Options}
@@ -253,8 +253,8 @@ If either Xerces or libcrispr were installed into non-default locations it is ne
 \begin{lstlisting}[style=BashInputStyle]
 $ ./autogen.sh
 $ ./configure --with-libcrispr=$HOME/local --with-xerces=$HOME/local --prefix=$HOME/local
-$ make install
 $ export LD_LIBRARY_PATH=$HOME/local
+$ make install
 [$ echo export LD_LIBRARY_PATH=$HOME/local >> ~/.bashrc] 
 \end{lstlisting}
 
