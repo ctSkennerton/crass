@@ -1,4 +1,4 @@
-crass -- CRisprASSembler -- version 0 subversion 3 revision 7 (0.3.7)
+crass -- CRisprASSembler -- version 0 subversion 3 revision 9 (0.3.9)
 =======================================================================
 
 CITATION
@@ -12,7 +12,7 @@ metagenomic data Nucl. Acids Res. (2013) 41(10): e105
 COPYRIGHT
 ---------
 
-Copyright 2011-2013 Connor Skennerton & Michael Imelfort. All rights reserved. 
+Copyright 2011-2015 Connor Skennerton & Michael Imelfort. All rights reserved. 
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

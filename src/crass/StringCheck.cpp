@@ -70,7 +70,7 @@ std::string StringCheck::getString(StringToken token)
 
 }
 
-StringToken StringCheck::getToken(std::string queryStr)
+StringToken StringCheck::getToken(const std::string& queryStr)
 {
     //-----
     // return the token or 0

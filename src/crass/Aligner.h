@@ -140,7 +140,7 @@ public:
     
     inline StringToken getMasterDrToken(){return AL_masterDRToken;}
     
-    void setMasterDR(std::string& master);
+    void setMasterDR(StringToken master);
     
     void alignSlave(StringToken& slaveDRToken);
 

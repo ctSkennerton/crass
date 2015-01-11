@@ -182,7 +182,7 @@ void versionInfo(void)
 {
     std::cout<<std::endl<<PACKAGE_FULL_NAME<<" ("<<PACKAGE_NAME<<")"<<std::endl<<"version "<<PACKAGE_MAJOR_VERSION<<" subversion "<<PACKAGE_MINOR_VERSION<<" revison "<<PACKAGE_REVISION<<" ("<<PACKAGE_VERSION<<")"<<std::endl<<std::endl;
     std::cout<<"---------------------------------------------------------------"<<std::endl;
-    std::cout<<"Copyright (C) 2011-2013 Connor Skennerton & Michael Imelfort"<<std::endl;
+    std::cout<<"Copyright (C) 2011-2015 Connor Skennerton & Michael Imelfort"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it"<<std::endl;
     std::cout<<"under certain conditions: See the source for more details"<<std::endl;

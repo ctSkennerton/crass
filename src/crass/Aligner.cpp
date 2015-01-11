@@ -70,10 +70,15 @@ const char Aligner::CHAR_TO_INDEX[128] = {
     };
 
 
-void Aligner::setMasterDR(std::string& master) {
-    AL_masterDRToken = mStringCheck->getToken(master);
+void Aligner::setMasterDR(StringToken master) {
+    AL_masterDRToken = master;
+    std::string master_string = mStringCheck->getString(AL_masterDRToken);
+    if (AL_masterDRToken == 0) {
+        // could not be found, through exception
+        logError("cannot find the token for DR string "<< master_string);
+    }
     AL_Offsets[AL_masterDRToken] = (int)(AL_length * CRASS_DEF_CONS_ARRAY_START);
-    prepareMasterForAlignment(master);
+    prepareMasterForAlignment(master_string);
     placeReadsInCoverageArray(AL_masterDRToken);
     calculateDRZone();
     

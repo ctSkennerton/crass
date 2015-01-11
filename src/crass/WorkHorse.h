@@ -122,8 +122,7 @@ class WorkHorse {
                 GroupKmerMap * groupKmerCountsMap);  // cut kmers and hash
         
         bool findMasterDR(int GID, 
-                StringToken * masterDRToken, 
-                std::string * masterDRSequence);
+                StringToken&  masterDRToken);
         
         bool populateCoverageArray( int GID, Aligner& drAligner );
         

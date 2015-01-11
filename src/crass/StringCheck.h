@@ -58,7 +58,7 @@ class StringCheck
         
         StringToken addString(std::string newStr);
         std::string getString(StringToken token);
-        StringToken getToken(std::string queryStr);
+        StringToken getToken(const std::string& queryStr);
         
         inline void setName(std::string name) { mName = name; }
 

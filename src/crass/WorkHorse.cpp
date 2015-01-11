@@ -678,7 +678,7 @@ Vecstr * WorkHorse::createNonRedundantSet(GroupKmerMap& groupKmerCountsMap, int&
     return non_redundant_repeats;
 }
 
-bool WorkHorse::findMasterDR(int GID, StringToken * masterDRToken, std::string * masterDRSequence)
+bool WorkHorse::findMasterDR(int GID, StringToken&  masterDRToken)
 {
 	//-----
 	// Identify a master DR
@@ -701,16 +701,16 @@ bool WorkHorse::findMasterDR(int GID, StringToken * masterDRToken, std::string *
 
         std::string tmp_dr_seq = mStringCheck.getString(*dr_iter);
         if (tmp_dr_seq.size() > current_longest_size) {
-            *masterDRToken = *dr_iter;
-            *masterDRSequence = tmp_dr_seq;
+            masterDRToken = *dr_iter;
+
             current_longest_size = tmp_dr_seq.size();
         }   
     }
-    if(*masterDRToken == -1)
+    if(masterDRToken == -1)
     {
         logError("Could not identify a master DR");
     }
-    logInfo("Identified: " << *masterDRSequence << " (" << *masterDRToken << ") as a master potential DR", 4);
+    logInfo("Identified: " << mStringCheck.getString(masterDRToken) << " (" << masterDRToken << ") as a master potential DR", 4);
 
 
     
@@ -917,15 +917,13 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Find a Master DR for this group of DRs
     StringToken master_DR_token = -1;
-    std::string master_DR_sequence = "**unset**";
-    if(!findMasterDR(GID, &master_DR_token, &master_DR_sequence)) { return false; }
+    if(!findMasterDR(GID, master_DR_token)) { return false; }
     
     
     // now we have the n most abundant kmers and one DR which contains them all
     // time to rock and rrrroll!
-    
     Aligner dr_aligner((CRASS_DEF_CONS_ARRAY_RL_MULTIPLIER*mMaxReadLength), &mReads, &mStringCheck);
-    dr_aligner.setMasterDR(master_DR_sequence);
+    dr_aligner.setMasterDR(master_DR_token);
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Set up the master DR's array and insert this guy into the main array
