@@ -1405,8 +1405,5 @@ void addReadHolder(ReadMap * mReads,
 #endif
 
     (*mReads)[st]->push_back(candidate);
-    if (st == 11824) {
-        std::cerr<< mReads->at(st)<<std::endl;
-    }
 }
 
