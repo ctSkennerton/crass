@@ -566,7 +566,9 @@ int WorkHorse::findConsensusDRs(GroupKmerMap& groupKmerCountsMap, int& nextFreeG
         {
             continue;
         }
-
+#ifdef DEBUG
+        logInfo(__FILE__ <<":"<<__LINE__<<" checking for null "<< mDR2GIDMap[group_count_iter->first], 6)
+#endif
         parseGroupedDRs(group_count_iter->first, &nextFreeGID);
         
         // delete the kmer count lists cause we're finsihed with them now
@@ -724,6 +726,9 @@ bool WorkHorse::populateCoverageArray(int GID, Aligner& drAligner)
 	// Load all the reads into the consensus array
 	//
 	logInfo("Populating consensus array", 1);
+#ifdef DEBUG
+    logInfo(__FILE__ <<":"<<__LINE__<<" checking for null "<< mDR2GIDMap[GID], 6)
+#endif
 
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // now go thru all the other DRs in this group and add them into
@@ -736,9 +741,6 @@ bool WorkHorse::populateCoverageArray(int GID, Aligner& drAligner)
         {
             continue;
         }
-
-        // get the string for this mofo
-        //std::string tmp_DR = mStringCheck.getString(*dr_iter);
         drAligner.alignSlave(*dr_iter);
     }
     // kill the unfounded ones
@@ -749,19 +751,20 @@ bool WorkHorse::populateCoverageArray(int GID, Aligner& drAligner)
     	{
 			if(drAligner.offset(*dr_iter) == -1)
 			{
-                clearReadList(mReads[*dr_iter]);
-				mReads[*dr_iter] = NULL;
-				dr_iter = (mDR2GIDMap[GID])->erase(dr_iter); 
+#ifdef DEBUG
+                logInfo("clearing unaligned slave "<<*dr_iter, 6)
+#endif
+                if (NULL != mReads[*dr_iter]) {
+                    clearReadList(mReads[*dr_iter]);
+                    mReads[*dr_iter] = NULL;
+                    dr_iter = mDR2GIDMap[GID]->erase(dr_iter);
+                    continue;
+                }
+
 			}
-	    	else
-	    	{
-	    		dr_iter++;
-	    	}
+
     	}
-    	else
-    	{
-    		dr_iter++;
-    	}
+        ++dr_iter;
     }
     return true;
 } 
@@ -913,6 +916,21 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
     // Cluster refinement and possible splitting for a Group ID
     //
     logInfo("Parsing group: " << GID, 4);
+    std::stringstream outfile;
+    outfile <<mOpts->output_fastq<<"debug_gid_"<<GID<<"_reads.fa";
+    std::ofstream outstream(outfile.str().c_str());
+    if(outstream.good())
+    {
+        DR_ClusterIterator drc_iter;
+        for (drc_iter = mDR2GIDMap[GID]->begin(); drc_iter != mDR2GIDMap[GID]->end(); drc_iter++) {
+        ReadListIterator read_iter;
+            for (read_iter = mReads[*drc_iter]->begin(); read_iter != mReads[*drc_iter]->end(); read_iter++) {
+                outstream << *(*read_iter)<<std::endl;
+            }
+        }
+    }
+    outstream.close();
+
     		
     //++++++++++++++++++++++++++++++++++++++++++++++++
     // Find a Master DR for this group of DRs

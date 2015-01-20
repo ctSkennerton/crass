@@ -88,10 +88,16 @@ void Aligner::alignSlave(StringToken& slaveDRToken) {
     
     AL_Offsets[slaveDRToken] = -1;
     std::string slaveDR = mStringCheck->getString(slaveDRToken);
+#ifdef DEBUG
+    logInfo("aligning slave" << slaveDR << " ("<<slaveDRToken<<")", 6)
+#endif
     AlignerFlag_t flags;
     int offset = getOffsetAgainstMaster(slaveDR, flags);
     
     if (flags[score_equal]) {
+#ifdef DEBUG
+        logInfo("score for forward and reverse slave DR equal, trying extension", 6)
+#endif
         std::string extended_slave_dr;
         extendSlaveDR(slaveDR, extended_slave_dr);
         flags.reset();
@@ -255,7 +261,9 @@ void Aligner::prepareSlaveForAlignment(std::string& slaveDR,
 }
 
 int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) {
-
+#ifdef DEBUG
+    logInfo("getting offset of this slave against master DR", 6)
+#endif
     int slave_dr_length = static_cast<int>(slaveDR.length());
     uint8_t* slave_dr_forward = new uint8_t[slave_dr_length+1];
     uint8_t* slave_dr_reverse = new uint8_t[slave_dr_length+1];
@@ -311,44 +319,46 @@ int Aligner::getOffsetAgainstMaster(std::string& slaveDR, AlignerFlag_t& flags) 
         best_alignment_info = forward_return;
     }
     int min_query_seq_coverage = static_cast<int>(slave_dr_length / 2);
-    // this is not the way you are supposed to use goto
-    // actually you're never supposed to use goto
-    // but you know what, I don't care!
-    // http://xkcd.com/292/
+
     if(min_query_seq_coverage > best_alignment_info.score) {
         logWarn("Alignment Warning: Slave Alignment Failure",4);
         logWarn("\tfailed query coverage test", 4);
         logWarn("\trequired: "<<min_query_seq_coverage, 4);
-        goto FAILED;
+        logWarn("\tmaster: "<<mStringCheck->getString(AL_masterDRToken) , 4);
+        logWarn("\ttb: "<< best_alignment_info.tb, 4);
+        logWarn("\tte: "<< best_alignment_info.te+1, 4);
+        logWarn("\tslave: "<< slaveDR, 4);
+        logWarn("\tqb: "<< best_alignment_info.qb, 4);
+        logWarn("\tqe: "<< best_alignment_info.qe+1, 4);
+        logWarn("\tscore: "<< best_alignment_info.score, 4);
+        logWarn("\t2nd-score: "<< best_alignment_info.score2, 4);
+        logWarn("\t2nd-te: "<< best_alignment_info.te2, 4);
+        logWarn("\toffset: "<<best_alignment_info.tb - best_alignment_info.qb,4);
+        logWarn("******", 4);
+        flags[failed] = true;
+        return 0;
     }
+    
     if(best_alignment_info.score < AL_minAlignmentScore) {
         logWarn("Alignment Warning: Slave Alignment Failure",4);
         logWarn("\tfailed minimum score test", 4);
-        goto FAILED;
+        logWarn("\tmaster: "<<mStringCheck->getString(AL_masterDRToken) , 4);
+        logWarn("\ttb: "<< best_alignment_info.tb, 4);
+        logWarn("\tte: "<< best_alignment_info.te+1, 4);
+        logWarn("\tslave: "<< slaveDR, 4);
+        logWarn("\tqb: "<< best_alignment_info.qb, 4);
+        logWarn("\tqe: "<< best_alignment_info.qe+1, 4);
+        logWarn("\tscore: "<< best_alignment_info.score, 4);
+        logWarn("\t2nd-score: "<< best_alignment_info.score2, 4);
+        logWarn("\t2nd-te: "<< best_alignment_info.te2, 4);
+        logWarn("\toffset: "<<best_alignment_info.tb - best_alignment_info.qb,4);
+        logWarn("******", 4);
+        flags[failed] = true;
+        return 0;
     }
-    //if (best_alignment_info.qb != 0 && best_alignment_info.qe != slave_dr_length - 1) {
-    //    logWarn("Alignment Warning: Slave Alignment Failure",4);
-    //    logWarn("\tfailed internal only test", 4);
-    //    goto FAILED;
-    //}
-    //std::cerr << best_alignment_info.tb - best_alignment_info.qb << " : ";
-    //this->printAlignment(best_alignment_info, slaveDR, std::cerr);
+
     return best_alignment_info.tb - best_alignment_info.qb;
 
-FAILED:
-    logWarn("\tmaster: "<<mStringCheck->getString(AL_masterDRToken) , 4);
-    logWarn("\ttb: "<< best_alignment_info.tb, 4);
-    logWarn("\tte: "<< best_alignment_info.te+1, 4);
-    logWarn("\tslave: "<< slaveDR, 4);
-    logWarn("\tqb: "<< best_alignment_info.qb, 4);
-    logWarn("\tqe: "<< best_alignment_info.qe+1, 4);
-    logWarn("\tscore: "<< best_alignment_info.score, 4);
-    logWarn("\t2nd-score: "<< best_alignment_info.score2, 4);
-    logWarn("\t2nd-te: "<< best_alignment_info.te2, 4);
-    logWarn("\toffset: "<<best_alignment_info.tb - best_alignment_info.qb,4);
-    logWarn("******", 4);
-    flags[failed] = true;
-    return 0;
 }
 
 void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
