@@ -99,7 +99,7 @@ void Aligner::alignSlave(StringToken& slaveDRToken) {
         logInfo("score for forward and reverse slave DR equal, trying extension", 6)
 #endif
         std::string extended_slave_dr;
-        extendSlaveDR(slaveDR, extended_slave_dr);
+        extendSlaveDR(slaveDRToken, slaveDR.length(), extended_slave_dr);
         flags.reset();
         offset = getOffsetAgainstMaster(extended_slave_dr, flags);
         if (flags[score_equal]) {
@@ -417,9 +417,9 @@ void Aligner::placeReadsInCoverageArray(StringToken& currentDrToken) {
 }
 
 
-void Aligner::extendSlaveDR(std::string &slaveDR, std::string &extendedSlaveDR){
+void Aligner::extendSlaveDR(StringToken& token, size_t slaveDRLength, std::string &extendedSlaveDR){
  
-    StringToken token = mStringCheck->getToken(slaveDR);
+    //StringToken token = mStringCheck->getToken(slaveDR);
     
     // go into the reads and get the sequence of the DR plus a few bases on either side
     ReadListIterator read_iter = mReads->at(token)->begin();
@@ -431,7 +431,7 @@ void Aligner::extendSlaveDR(std::string &slaveDR, std::string &extendedSlaveDR){
         
         // Find the DR which is the right DR length.
         // compensates for partial repeats
-        while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(slaveDR.length()) - 1))
+        while(((*read_iter)->startStopsAt(dr_end_index) - (*read_iter)->startStopsAt(dr_start_index)) != ((int)(slaveDRLength) - 1))
         {
             dr_start_index += 2;
             dr_end_index += 2;
@@ -443,7 +443,7 @@ void Aligner::extendSlaveDR(std::string &slaveDR, std::string &extendedSlaveDR){
             continue;
         } else {
             // substring the read to get the new length
-            extendedSlaveDR = (*read_iter)->getSeq().substr((*read_iter)->startStopsAt(dr_start_index) - 2, slaveDR.length() + 4);
+            extendedSlaveDR = (*read_iter)->getSeq().substr((*read_iter)->startStopsAt(dr_start_index) - 2, slaveDRLength + 4);
             break;
         }
     }

@@ -200,7 +200,7 @@ private:
 
     void placeReadsInCoverageArray(StringToken& currentDRToken);
     
-    void extendSlaveDR(std::string& slaveDR, std::string& extendedSlaveDR);
+    void extendSlaveDR(StringToken& slaveDRToken, size_t slaveDRLength, std::string& extendedSlaveDR);
 
     void calculateDRZone();
     
