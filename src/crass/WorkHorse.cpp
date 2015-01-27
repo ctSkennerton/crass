@@ -916,20 +916,20 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
     // Cluster refinement and possible splitting for a Group ID
     //
     logInfo("Parsing group: " << GID, 4);
-    std::stringstream outfile;
-    outfile <<mOpts->output_fastq<<"debug_gid_"<<GID<<"_reads.fa";
-    std::ofstream outstream(outfile.str().c_str());
-    if(outstream.good())
-    {
-        DR_ClusterIterator drc_iter;
-        for (drc_iter = mDR2GIDMap[GID]->begin(); drc_iter != mDR2GIDMap[GID]->end(); drc_iter++) {
-        ReadListIterator read_iter;
-            for (read_iter = mReads[*drc_iter]->begin(); read_iter != mReads[*drc_iter]->end(); read_iter++) {
-                outstream << *(*read_iter)<<std::endl;
-            }
-        }
-    }
-    outstream.close();
+//    std::stringstream outfile;
+//    outfile <<mOpts->output_fastq<<"debug_gid_"<<GID<<"_reads.fa";
+//    std::ofstream outstream(outfile.str().c_str());
+//    if(outstream.good())
+//    {
+//        DR_ClusterIterator drc_iter;
+//        for (drc_iter = mDR2GIDMap[GID]->begin(); drc_iter != mDR2GIDMap[GID]->end(); drc_iter++) {
+//        ReadListIterator read_iter;
+//            for (read_iter = mReads[*drc_iter]->begin(); read_iter != mReads[*drc_iter]->end(); read_iter++) {
+//                outstream << *(*read_iter)<<std::endl;
+//            }
+//        }
+//    }
+//    outstream.close();
 
     		
     //++++++++++++++++++++++++++++++++++++++++++++++++
