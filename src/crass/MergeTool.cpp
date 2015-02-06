@@ -16,9 +16,9 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "MergeTool.h"
-#include <libcrispr/Exception.h>
-#include <libcrispr/writer.h>
-#include <libcrispr/reader.h>
+#include "Exception.h"
+#include "writer.h"
+#include "reader.h"
 #include "config.h"
 #include <getopt.h>
 #include <sstream>

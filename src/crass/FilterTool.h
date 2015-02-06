@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libcrispr/reader.h>
+#include "reader.h"
 #include <bitset>
 #include <set>
 #include <vector>

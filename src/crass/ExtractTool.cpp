@@ -17,9 +17,9 @@
 #include "ExtractTool.h"
 #include "Utils.h"
 #include "config.h"
-#include <libcrispr/Exception.h>
-#include <libcrispr/StlExt.h>
-#include <libcrispr/reader.h>
+#include "Exception.h"
+#include "StlExt.h"
+#include "reader.h"
 #include <getopt.h>
 #include <string>
 #include <iostream>

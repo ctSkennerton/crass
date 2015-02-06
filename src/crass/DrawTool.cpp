@@ -16,11 +16,11 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "DrawTool.h"
-#include <libcrispr/Exception.h>
+#include "Exception.h"
 #include "CrisprGraph.h"
 #include "Utils.h"
 #include "config.h"
-#include <libcrispr/StlExt.h>
+#include "StlExt.h"
 #include <string.h>
 #include <sys/stat.h>
 #include <graphviz/gvc.h>

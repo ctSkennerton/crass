@@ -24,7 +24,7 @@
 #include <iostream>
 #include <fstream>
 #include <bitset>
-#include <libcrispr/base.h>
+#include "base.h"
 
 
 

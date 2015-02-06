@@ -16,11 +16,11 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "FilterTool.h"
-#include <libcrispr/Exception.h>
+#include "Exception.h"
 #include "config.h"
-#include <libcrispr/writer.h>
-#include <libcrispr/parser.h>
-#include <libcrispr/StlExt.h>
+#include "writer.h"
+#include "parser.h"
+#include "StlExt.h"
 #include <iostream>
 #include <getopt.h>
 #include "Utils.h"

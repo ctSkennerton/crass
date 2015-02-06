@@ -23,8 +23,8 @@
 #include <vector>
 #include <string>
 #include <set>
-#include <libcrispr/base.h>
-#include <libcrispr/StlExt.h>
+#include "base.h"
+#include "StlExt.h"
 
 
 #define SPACER_CHAR '+'

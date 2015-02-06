@@ -17,8 +17,8 @@
 
 #include "StatTool.h"
 #include "config.h"
-#include <libcrispr/Exception.h>
-#include <libcrispr/reader.h>
+#include "Exception.h"
+#include "reader.h"
 #include "Utils.h"
 #include <iostream>
 #include <fstream>

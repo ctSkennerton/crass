@@ -21,7 +21,7 @@
 #include <map>
 #include <sstream>
 
-#include <libcrispr/writer.h>
+#include "writer.h"
 
 typedef std::map<std::string, std::string> conversionMap;
 
