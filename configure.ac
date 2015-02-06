@@ -182,6 +182,42 @@ if test x$rendering = xtrue; then
         AC_DEFINE([HAVE_TWOPI],[1],[Defines to 1 if the program 'twopi' is found in PATH])
     fi 
 fi
+#check that graphviz is installed before defining RENDERING
+GV_LIBS=
+GV_BOOL=false
+if test x$rendering = xtrue; then
+    AC_CHECK_PROGS([GV_PROGS], [neato fdp sfdp dot circo twopi], [no])
+    #check that graphviz is installed before defining RENDERING
+    AC_CHECK_LIB([gvc],[gvContext],
+                 [GV_LIBS="-lgvc $GV_LIBS" 
+                  GV_BOOL=true
+                 AC_DEFINE([HAVE_LIBGVC],[1],[Defines to one if the gvc library (-lgvc) is found])],
+                 [GV_BOOL=false])
+    AC_CHECK_LIB([cdt],[dtopen],
+                 [GV_LIBS="-lcdt $GV_LIBS"
+                  GV_BOOL=true
+                  AC_DEFINE([HAVE_LIBCDT],[1],[Defines to one if the cdt library (-lcdt) is found])],
+                 [GV_BOOL=false])
+    AC_CHECK_LIB([graph],[agnode],
+                 [GV_LIBS="-lgraph $GV_LIBS"
+                  GV_BOOL=true
+                  AC_DEFINE([HAVE_LIBGRAPH],[1],[Defines to one if the graph library (-lgraph) is found])],
+                 [GV_BOOL=false])
+    if test x$GV_PROGS != xno; then
+        
+        AC_DEFINE([RENDERING],[1],[Defines to 1 if image rendering is to be performed])
+        AC_DEFINE_UNQUOTED([DEFAULT_RENDERING_ALGORITHM],["${GV_PROGS}"],[Sets the Default Graphviz algorithm])
+    else
+        echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
+        echo "None of the Graphviz executables could"
+        echo "be found in your PATH!"
+        echo "Your installation will not conatin"
+        echo "rendering options!"
+        echo "*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*"
+    fi
+fi
+AM_CONDITIONAL([FOUND_GRAPHVIZ_LIBRARIES],[test $GV_BOOL = true])
+AC_SUBST(GV_LIBS)
 
 
 if test $PERFORM_CRASS_ASSEMBLY = yes; then
