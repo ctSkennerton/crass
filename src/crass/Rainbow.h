@@ -74,6 +74,9 @@ class Rainbow
         void setLimits(double lb, double ub, int res);
         void setLimits(double lb, double ub) { setLimits(lb, ub, (int)(ub-lb)+1); }
         void setType(RB_TYPE type);
+    
+        void setUpperBound(double ub){setLimits(mLowerBound, ub, (int)(ub - mLowerBound)+1); }
+        void setLowerBound(double lb){setLimits(lb, mUpperBound, (int)(mUpperBound - lb)+1); }
         
         // get a colour!
         std::string getColour(double value);
