@@ -50,7 +50,7 @@
 #include "AssemblyWrapper.h"
 #include "config.h"
 #include "crassDefines.h"
-#include <libcrispr/StlExt.h>
+#include "StlExt.h"
 #include "kseq.h"
 #include "SeqUtils.h"
 

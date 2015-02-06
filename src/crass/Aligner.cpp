@@ -33,7 +33,7 @@
  */
 #include <cstdlib>
 #include <iostream>
-#include <libcrispr/Exception.h>
+#include "Exception.h"
 #include "Aligner.h"
 #include "LoggerSimp.h"
 #include "SeqUtils.h"

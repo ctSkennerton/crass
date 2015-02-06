@@ -40,7 +40,7 @@
 
 // local includes
 #include "StringCheck.h"
-#include <libcrispr/Exception.h>
+#include "Exception.h"
 
 
 StringToken StringCheck::addString(std::string newStr)

@@ -48,8 +48,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <ctime>
-#include <libcrispr/StlExt.h>
-#include <libcrispr/Exception.h>
+#include "StlExt.h"
+#include "Exception.h"
 
 // local includes
 #include "WorkHorse.h"

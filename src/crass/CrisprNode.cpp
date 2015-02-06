@@ -49,7 +49,7 @@
 #include "StringCheck.h"
 #include "libcrispr.h"
 #include "ReadHolder.h"
-#include <libcrispr/Exception.h>
+#include "Exception.h"
 
 //
 // Edge level functions

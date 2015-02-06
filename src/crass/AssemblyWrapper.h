@@ -41,7 +41,7 @@
 #include <set>
 #include "kseq.h"
 #include <fstream>
-#include <libcrispr/reader.h>
+#include "reader.h"
 
 enum ASSEMBLERS {
     unset,

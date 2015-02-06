@@ -35,7 +35,7 @@
 #include <iostream>
 #include <fstream>
 #include "SearchChecker.h"
-#include <libcrispr/Exception.h>
+#include "Exception.h"
 
 SearchChecker * SearchChecker::SC_instance = NULL;
 

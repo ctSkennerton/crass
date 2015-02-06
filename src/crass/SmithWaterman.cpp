@@ -64,7 +64,7 @@
 #include "SeqUtils.h"
 #include "LoggerSimp.h"
 #include "PatternMatcher.h"
-#include <libcrispr/Exception.h>
+#include "Exception.h"
 double findMax(double a, double b, double c, double d, int * index)
 {
     //-----

@@ -4,8 +4,8 @@ if ASSEMBLY_WRAPPER
 bin_PROGRAMS += crass-assembler
 endif
 
-AM_CXXFLAGS = @XERCES_CPPFLAGS@ @LIBCRISPR_CPPFLAGS@ -pedantic -Wall
-AM_LDFLAGS = @XERCES_LDFLAGS@ @LIBCRISPR_LDFLAGS@ @LIBCRISPR_LIBS@ @zlib_flags@
+AM_CXXFLAGS = @XERCES_CPPFLAGS@ -pedantic -Wall
+AM_LDFLAGS = @XERCES_LDFLAGS@ @zlib_flags@ @XERCES_LIBS@ 
 
 
 
@@ -31,7 +31,11 @@ StatsManager.h\
 SearchChecker.cpp SearchChecker.h\
 ksw.c ksw.h\
 Types.h\
-Aligner.cpp Aligner.h
+Aligner.cpp Aligner.h\
+base.cpp\
+parser.cpp\
+reader.cpp\
+writer.cpp
 
 
 crass_assembler_SOURCES =\
@@ -39,5 +43,10 @@ AssemblyWrapper.cpp AssemblyWrapper.h\
 config.h\
 crassDefines.h\
 kseq.cpp kseq.h\
-SeqUtils.cpp SeqUtils.h
+SeqUtils.cpp SeqUtils.h\
+base.cpp\
+parser.cpp\
+reader.cpp\
+writer.cpp
+
 

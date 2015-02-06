@@ -1,2 +1,1 @@
-SUBDIRS = crass 
-
+SUBDIRS = crass

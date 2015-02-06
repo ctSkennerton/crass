@@ -47,8 +47,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <exception>
-#include <libcrispr/StlExt.h>
-#include <libcrispr/Exception.h>
+#include "StlExt.h"
+#include "Exception.h"
 
 // local includes
 #include "libcrispr.h"
