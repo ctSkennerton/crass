@@ -7,7 +7,7 @@ endif
 AM_CXXFLAGS = @XERCES_CPPFLAGS@ -pedantic -Wall
 AM_LDFLAGS = @XERCES_LDFLAGS@ @zlib_flags@ @XERCES_LIBS@
 
-crisprtools_LDFLAGS = @GV_LIBS@
+crisprtools_LDADD = @GV_LIBS@
 
 
 crass_SOURCES =\
@@ -69,7 +69,11 @@ crisprtools_SOURCES = \
 	Rainbow.cpp \
 	Rainbow.h \
 	RemoveTool.h \
-	RemoveTool.cpp
+	RemoveTool.cpp \
+base.cpp\
+parser.cpp\
+reader.cpp\
+writer.cpp
 
 if FOUND_GRAPHVIZ_LIBRARIES
 crisprtools_SOURCES += DrawTool.cpp DrawTool.h CrisprGraph.cpp CrisprGraph.h
