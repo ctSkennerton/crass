@@ -185,9 +185,9 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 %%% The "real" document content comes below...
 
-\title{Crass:  The CRISPR assembler (v0.3.10)}
+\title{Crass:  The CRISPR assembler (v0.3.11)}
 \author{Connor Skennerton and Michael Imelfort}
-\date{27th January 2015} % Activate to display a given date or no date (if empty),
+\date{7th February 2015} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
@@ -215,7 +215,6 @@ Crass has been developed with the GNU build system for ease of configuration on 
 \item \href{http://www.gnu.org/software/autoconf/}{autoconf}  \textgreater= 2.61
 \item \href{http://www.gnu.org/software/automake/}{automake} \textgreater= 1.10
 \item \href{http://www.gnu.org/software/libtool/}{libtool} \textgreater= 2.2
-\item \href{http://ctskennerton.github.com/libcrispr}{libcrispr} \textgreater= 1.0.0
 \item \href{http://xerces.apache.org/}{Xerces-c++} \textgreater= 3.1.1
 \item \href{http://zlib.net/}{zlib}
 \end{itemize}
@@ -224,15 +223,14 @@ Crass has been developed with the GNU build system for ease of configuration on 
  Before installation please check the version of gcc, autoconf, libtool, automake. Some linux distributions contain very old versions as default, and this will mess up the install in obscure ways. 
 \end{warning}
 
-Crass requires that \href{http://ctskennerton.github.com/libcrispr}{libcrispr 1.0.0} and \href{www.zlib.net}{zlib} be installed for compilation.
-In turn, libcrispr requires that  \href{http://xerces.apache.org/}{Xerces-c 3.1.1} is also present on the system.  Therefore make sure that zlib and Xerces-c are installed, then install libcrispr and finally Crass on the system. 
+Crass requires that \href{http://xerces.apache.org/}{Xerces-c 3.1.1} and \href{www.zlib.net}{zlib} be installed for compilation.
 \subsubsection{Installing Xerces}
 If possible, try and install Xerces-c through your system's package manager making sure that you install the `dev' version of the package.  On debian based linux systems this will be a package called `libxerces-c3-dev' or similar; for systems that use RPM, the package will be called `libxerces-c-devel' or similar.  However, if you do not have root access you must install the xerces source code to a directory that you have write access to and specify the correct configuration options (see ~\nameref{sec:configure}).
 \begin{warning}
 The binary distributions available on the Xerces-c website are broken and you should not assume that they will work on your system.  
 \end{warning}
-\subsubsection{Installing libcrispr}
-Libcrispr needs to be able to find and link to the Xerces installation.  If you installed Xerces with your systems package manager then this should be fine.  However, if you installed Xerces from source you will need to add in the \texttt{-{}-with-xerces} parameter to the \texttt{configure} script of libcrispr
+
+If you installed Xerces with your systems package manager then this should be fine.  However, if you installed Xerces from source and placed it in a non-standard location, you will need to add in the \texttt{-{}-with-xerces} parameter to the \texttt{configure} script with the location of your xerces package.
 \subsubsection{Optional Packages and Programs}
 There are a number of optional features of Crass that require additional software.  These programs are not required for compilation but add extra features that you might find useful.  It is possible to create image files of the graphs that are produced by Crass if the \href{www.graphviz.org}{Graphviz} package is installed.  By default Crass outputs a .gv file containing Graphviz source code, so even if your running Crass on a server that doesn't have it installed you can download the .gv file to another computer for visualization.  Testing for the Graphviz package occurs during configuration.  Even if you have Graphviz installed you still need to opt-in to graph rendering (see  ~\nameref{sec:configure} for the correct options) as rendering images for a large number of graphs can take alot of time.  If you enable rendering during the configuration process you can still set user options during run-time to prevent image rendering. (see~\nameref{sec:userflags}).
 
@@ -249,16 +247,16 @@ On a GNU system with the prerequisites install, simply:
 
 \subsubsection{Configure/Compiling Options}
 \label{sec:configure}
-If either Xerces or libcrispr were installed into non-default locations it is necessary to define those locations when performing \lstinline$configure$.  It may also be necessary to add the installation directories into your \lstinline$LD_LIBRARY_PATH$ environmental variable.  For example if you do not have root access you could install librispr and Xerces-c in \texttt{\~/local/} then specify that location to configure: 
+If  Xerces was installed into non-default location it is necessary to define those locations when performing \lstinline$configure$.  It may also be necessary to add the installation directories into your \lstinline$LD_LIBRARY_PATH$ environmental variable.  For example if you do not have root access you could install Xerces-c in \texttt{\~/local/} then specify that location to configure: 
 \begin{lstlisting}[style=BashInputStyle]
 $ ./autogen.sh
-$ ./configure --with-libcrispr=$HOME/local --with-xerces=$HOME/local --prefix=$HOME/local
+$ ./configure --with-xerces=$HOME/local --prefix=$HOME/local
 $ export LD_LIBRARY_PATH=$HOME/local
 $ make install
 [$ echo export LD_LIBRARY_PATH=$HOME/local >> ~/.bashrc] 
 \end{lstlisting}
 
-In this example the \texttt{--with-libcrispr} and \texttt{--with-xerces} get passed the installation prefix for those libraries, in this case \texttt{\~/local}.  It is expected that within this directory there are directories called `include' and `lib' that contain the headers and shared objects for the libraries.
+In this example the  \texttt{--with-xerces} get passed the installation prefix for those libraries, in this case \texttt{\~/local}.  It is expected that within this directory there are directories called `include' and `lib' that contain the headers and shared objects for the libraries.
 
 
     \begin{longtable}{  l    p{10cm} }
@@ -268,7 +266,7 @@ In this example the \texttt{--with-libcrispr} and \texttt{--with-xerces} get pas
 \longoptionflag{enable-rendering} &  Set this option will allow Crass to output rendered images of the final spacer graphs.  Setting this option does not garentee that Crass will produce images, it will also need to detect at least one of the executables of the Graphviz package in your PATH environmental variable. \\  \\
    \longoptionflag{disable-assembly} & Disables the assembly wrapper even if the Xerces library and suitable genome assemblers can be found.  Disabling the assembly wrapper willl change which souce files are compiled and as a result reduce the size of the executable. \\ \\
 \longoptionflag{with-xerces} & Set the path where the Xerces header and library objcets can be found.  For example if the libraries are installed in \lstinline$/opt/local/lib$ and the headers are installed in \lstinline$/opt/local/include$, specify \lstinline$--with-xerces=/opt/local$\\ \\
-\longoptionflag{with-libcrispr} & Set the path where libcrispr header and library objects can be found. For example if the libraries are installed in \lstinline$/opt/local/lib$ and the headers are installed in \lstinline$/opt/local/include$, specify \lstinline$--with-libcrispr=/opt/local$\\
+
 
     \hline
     \end{longtable}
@@ -360,7 +358,7 @@ This will extract all of the reads that contain spacers from those contigs and u
 \hline
 Error & Solution \\ \hline \hline 
 \texttt{LT\_INIT: command not found} & Seen during configure, and will cause configure to fail.  Caused by the version of libtool being less than 2.2.  You will need to install a newer version of both libtool (get newer versions of autoconf and automake while your at it) and try again.  You may also need to delete the crass directory and download a fresh copy of the source code as old versions of libtool/autoconf pollute the code with outdated install helper scripts that prevent future installations \\
-\texttt{crass: error while loading shared libraries} & Occurs when you have installed a dependancy for crass (libcrispr or Xerces-c) in a location that is non-standard.  See the example in ~\nameref{sec:configure} for how to solve this problem. \\
+\texttt{crass: error while loading shared libraries} & Occurs when you have installed a dependancy for crass (Xerces-c) in a location that is non-standard.  See the example in ~\nameref{sec:configure} for how to solve this problem. \\
 \texttt{floating point exception} & This error occurs when running crass and is due to divide by zero errors.  In my experience this is a compiler specific issue, usually with older versions of gcc.  If you are using a version of gcc \textgreater= 4.4 get in contact with me, otherwise please install a newer version of gcc.\\
 \hline
 \end{longtabu}
