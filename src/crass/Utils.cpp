@@ -39,8 +39,8 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include "Utils.h"
-#include <libcrispr/StlExt.h>
-#include <libcrispr/Exception.h>
+#include "StlExt.h"
+#include "Exception.h"
 
 
 void recursiveMkdir(std::string dir) 
