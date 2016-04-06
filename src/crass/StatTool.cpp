@@ -45,6 +45,7 @@ int StatTool::processOptions (int argc, char ** argv)
 {
 	int c, index;
     struct option long_opts [] = { 
+        {"help", no_argument, NULL, 'h'},
         {"header", no_argument, NULL, 'H'},
         {"coverage", no_argument, NULL, 0}
     };
@@ -70,7 +71,7 @@ int StatTool::processOptions (int argc, char ** argv)
             case 'h':
 			{
 				statUsage();
-				exit(1);
+				exit(0);
 				break;
 			}
             case 'o':
