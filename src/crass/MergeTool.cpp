@@ -41,7 +41,7 @@ int MergeTool::processOptions (int argc, char ** argv)
 			case 'h':
 			{
 				mergeUsage ();
-				exit(1);
+				exit(0);
 				break;
 			}
 			case 's':

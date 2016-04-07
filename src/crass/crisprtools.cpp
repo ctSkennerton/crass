@@ -41,6 +41,7 @@ void usage (void)
 	std::cout<<"Type "<<PACKAGE_NAME<<" <subcommand> -h for help on each utility"<<std::endl;
 	std::cout<<"Usage:\t"<<PACKAGE_NAME<<" <subcommand> [options]"<<std::endl<<std::endl;
     std::cout<<"subcommand:  merge       combine multiple files"<<std::endl;
+	std::cout<<"             help        display this message and exit"<<std::endl;
 	std::cout<<"             extract     extract sequences in fasta"<<std::endl;
 	std::cout<<"             filter      make new files based on parameters"<<std::endl;
 	std::cout<<"             sanitise    change the IDs of elements"<<std::endl;
@@ -58,6 +59,7 @@ int main(int argc, char ** argv)
 		usage();
 		return 1;
 	}
+	else if(!strcmp(argv[1], "help"))  {usage() ; return 0;}
 	else if(!strcmp(argv[1], "merge")) return mergeMain(argc -1 , argv + 1);
     else if(!strcmp(argv[1], "split")) return splitMain(argc - 1, argv + 1);
 	else if(!strcmp(argv[1], "extract")) return extractMain(argc - 1 , argv + 1);

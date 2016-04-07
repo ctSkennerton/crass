@@ -180,7 +180,7 @@ int processRemoveOptions(int argc, char ** argv, std::set<std::string>& groups, 
                 case 'h':
                 {
                     removeUsage ();
-                    exit(1);
+                    exit(0);
                     break;
                 }
                 case 'g':

@@ -301,7 +301,7 @@ int processOptions(int argc, char *argv[], options *opts)
             case 'h': 
                 versionInfo(); 
                 usage();
-                exit(1); 
+                exit(0); 
                 break;
             case 'H':
                 opts->removeHomopolymers = true;

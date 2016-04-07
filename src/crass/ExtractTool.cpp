@@ -103,7 +103,7 @@ int ExtractTool::processOptions (int argc, char ** argv)
             case 'h':
 			{
 				extractUsage ();
-				exit(1);
+				exit(0);
 				break;
 			}
             case 'H':

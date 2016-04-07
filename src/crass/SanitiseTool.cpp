@@ -50,7 +50,7 @@ int SanitiseTool::processOptions (int argc, char ** argv)
             case 'h':
 			{
 				sanitiseUsage();
-				exit(1);
+				exit(0);
 				break;
 			}
 			case 's':

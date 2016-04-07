@@ -48,7 +48,7 @@ int FilterTool::processOptions (int argc, char ** argv)
             case 'h':
 			{
 				filterUsage();
-				exit(1);
+				exit(0);
 				break;
 			}
 			case 's':

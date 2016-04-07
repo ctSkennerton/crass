@@ -303,7 +303,7 @@ int processAssemblyOptions(int argc, char * argv[], assemblyOptions& opts)
                 case 'h':
                 {
                     assemblyUsage();
-                    exit(1);
+                    exit(0);
                     break;
                 }
                 case 'i':
