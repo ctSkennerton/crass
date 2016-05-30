@@ -99,6 +99,14 @@ int shortReadSearch(ReadHolder&  seq,
                     lookupTable &patterns_hash, 
                     lookupTable &readsFound);
 
+void findSingletons2(const char *inputFastq, 
+                    const options &opts, 
+                    std::vector<std::string> * nonRedundantPatterns, 
+                    lookupTable &readsFound, 
+                    ReadMap * mReads, 
+                    StringCheck * mStringCheck,
+                    time_t& startTime);
+
 void findSingletons(const char *inputFastq, 
                     const options &opts, 
                     std::vector<std::string> * nonRedundantPatterns, 

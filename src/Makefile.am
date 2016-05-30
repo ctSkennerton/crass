@@ -1,1 +1,1 @@
-SUBDIRS = crass
+SUBDIRS = aho-corasick crass 

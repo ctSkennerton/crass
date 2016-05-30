@@ -60,6 +60,11 @@
 #include "kseq.h"
 #include "config.h"
 
+extern "C" {
+#include "../aho-corasick/msutil.h"
+#include "../aho-corasick/acism.h"
+}
+
 #define longReadCut(d,s) ((4 * d) + (3 * s))
 #define shortReadCut(d,s) ((2 * d) + s)
 
@@ -655,6 +660,127 @@ void findSingletons(const char *inputFastq,
         }
         vv_iter++;
     }
+    
+}
+
+typedef struct _multisearch_payload {
+    ReadMap * mReads;
+    StringCheck * mStringCheck;
+    kseq_t * read;
+    lookupTable *readsFound;
+    MEMREF * pattv;
+} MultisearchPayload;
+
+
+static int on_match(int strnum, int textpos, MultisearchPayload *payload)
+{
+    //if (matchfp) fprintf(matchfp, "%9d %7d '%.*s'\n", textpos, strnum, (int)pattv[strnum].len, pattv[strnum].ptr);
+    if (payload->readsFound->find(payload->read->name.s) == payload->readsFound->end())
+    {
+
+#ifdef DEBUG
+        logInfo("new read recruited: "<<payload->read->name.s, 9);
+        logInfo(payload->read->seq.s, 10);
+#endif
+        // The index is one past the end of the match but crass stores 
+        // it's position at the end of the match
+        unsigned int DR_end = static_cast<unsigned int>(textpos - 1); //static_cast<unsigned int>(search_data.iFoundPosition) + static_cast<unsigned int>(search_data.sDataFound.length()) - 1;
+        if(DR_end >= static_cast<unsigned int>(payload->read->seq.l))
+        {
+            DR_end = static_cast<unsigned int>(payload->read->seq.l) - 1;
+        }
+        ReadHolder tmp_holder;
+        tmp_holder.setSequence(payload->read->seq.s);
+        tmp_holder.setHeader( payload->read->name.s);
+        if (payload->read->comment.s) 
+        {
+            tmp_holder.setComment(payload->read->comment.s);
+        }
+        if (payload->read->qual.s) 
+        {
+            tmp_holder.setQual(payload->read->qual.s);
+        }
+        //logInfo("textpos: "<<textpos<<" DR_end: "<<DR_end<<" start: "<<DR_end << " len: "<< payload->pattv[strnum].len, 1)
+        tmp_holder.startStopsAdd(DR_end - (payload->pattv[strnum].len - 1), DR_end);
+        addReadHolder(payload->mReads, payload->mStringCheck, tmp_holder);
+    }
+
+    return 1;
+}
+
+void findSingletons2(const char *inputFastq, 
+                    const options &opts, 
+                    std::vector<std::string> * nonRedundantPatterns, 
+                    lookupTable &readsFound, 
+                    ReadMap * mReads, 
+                    StringCheck * mStringCheck,
+                    time_t& startTime)
+{
+    std::string conc;
+    std::vector<std::string>::iterator iter;
+    for( iter = nonRedundantPatterns->begin(); iter != nonRedundantPatterns->end(); ++iter) {
+        conc += *iter + "\n";
+    }
+
+    // this is a hack as refsplit creates an extra blank record, which stuffs
+    // up the search if the string ends with a new line character. Basically
+    // here I'm replacing the last newline with null to prevent this
+    char * concstr = new char[conc.size() + 1];
+    std::copy(conc.begin(), conc.end(), concstr);
+    concstr[conc.size()] = '\0';
+    concstr[conc.size()-1] = '\0';
+    int npatts;
+
+    MEMREF *pattv = refsplit(concstr, '\n', &npatts);
+
+    ACISM *psp = acism_create(pattv, npatts);
+
+    gzFile fp = getFileHandle(inputFastq);
+    kseq_t *seq;
+    seq = kseq_init(fp);
+
+    int l;
+    int log_counter = 0;
+    static int read_counter = 0;
+
+    time_t time_current;
+
+    MultisearchPayload payload;
+    payload.mReads = mReads;
+    payload.mStringCheck = mStringCheck;
+    payload.pattv = pattv;
+    payload.readsFound = &readsFound;
+    
+    while ( (l = kseq_read(seq)) >= 0 ) 
+    {
+        // seq is a read what we love
+        // search it for the patterns until found
+        if (log_counter == CRASS_DEF_READ_COUNTER_LOGGER) 
+        {
+            time(&time_current);
+            double diff = difftime(time_current, startTime);
+            std::cout<<"\r["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
+            std::cout<<diff<<" sec"<<std::flush;
+            log_counter = 0;
+        }
+
+        payload.read = seq;
+        MEMREF tmp = {seq->seq.s, seq->seq.l};
+
+        (void)acism_scan(psp, tmp, (ACISM_ACTION*)on_match, &payload);
+    
+        log_counter++;
+        read_counter++;
+    }
+
+    gzclose(fp);
+    kseq_destroy(seq); // destroy seq
+    delete[] concstr;
+
+    time(&time_current);
+    double diff = difftime(time_current, startTime);
+    std::cout<<"\r["<<PACKAGE_NAME<<"_singletonFinder]: "<<"Processed "<<read_counter<<" ...";
+    std::cout<<diff<<" sec"<<std::flush;
     
 }
 

@@ -7,7 +7,9 @@ endif
 AM_CXXFLAGS = @XERCES_CPPFLAGS@ -pedantic -Wall
 AM_LDFLAGS = @XERCES_LDFLAGS@ @zlib_flags@ @XERCES_LIBS@
 
-crisprtools_LDADD = @GV_LIBS@
+crass_LDADD = $(top_builddir)/src/aho-corasick/libacism.a
+
+crisprtools_LDADD = @GV_LIBS@ 
 
 
 crass_SOURCES =\
