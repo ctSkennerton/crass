@@ -9,6 +9,7 @@
 //
 // --------------------------------------------------------------------
 //  Copyright  2011, 2012 Michael Imelfort and Connor Skennerton
+//  Copyright  2016       Connor Skennerton
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
@@ -95,7 +96,7 @@ int decideWhichSearch(const char *inputFastq,
     static int read_counter = 0;
     time_t time_current;
     
-    int long_read_cutoff = longReadCut(opts.lowDRsize, opts.lowSpacerSize);
+    int long_read_cutoff =  shortReadCut(opts.lowDRsize, opts.lowSpacerSize);
     int short_read_cutoff = shortReadCut(opts.lowDRsize, opts.lowSpacerSize);
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
@@ -312,11 +313,12 @@ int longReadSearch(ReadHolder& tmpHolder,
         skips = 1;
     }
 
-    int searchEnd = seq_length - opts.highDRsize - opts.highSpacerSize - opts.searchWindowLength - 1;
+    int searchEnd = seq_length - opts.lowDRsize - opts.lowSpacerSize - opts.searchWindowLength - 1;
     
     if (searchEnd < 0) 
     {
-        logError("Read: "<<tmpHolder.getHeader()<<" length is less than "<<opts.highDRsize + opts.highSpacerSize + opts.searchWindowLength + 1<<"bp");
+        logError("Read: "<<tmpHolder.getHeader()<<" length is less than "<<opts.lowDRsize + opts.lowSpacerSize + opts.searchWindowLength + 1<<"bp"<<
+                " lDR: "<< opts.lowDRsize << " lS: "<< opts.lowSpacerSize << " SW: "<< opts.searchWindowLength << " SL: "<< seq_length);
         //delete tmpHolder;
         return 1;
     }
@@ -403,12 +405,12 @@ int longReadSearch(ReadHolder& tmpHolder,
 			}
                 
                 // drop partials
-                tmpHolder.dropPartials();
+                //tmpHolder.dropPartials();
                 // After we remove the partial repeats we need to check again to make sure that
                 // we're still above the minimum needed
-                if (tmpHolder.numRepeats() < opts.minNumRepeats) {
-                    break;
-                }
+                //if (tmpHolder.numRepeats() < opts.minNumRepeats) {
+                //    break;
+                //}
                 if (qcFoundRepeats(tmpHolder, opts.lowSpacerSize, opts.highSpacerSize))
                 {
 #ifdef DEBUG
@@ -981,9 +983,10 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
 #ifdef DEBUG
     logInfo("max right extension length: "<<max_right_extension_length, 9);
 #endif
-    // Sometimes we shouldn't use the far right DR. (it may lie too close to the end)
     unsigned int DR_index_end = end_index;
-    unsigned int dist_to_end = tmp_holder.getSeqLength() - last_repeat_start_index - 1;
+    
+    // Sometimes we shouldn't use the far right DR. (it may lie too close to the end)
+    /*unsigned int dist_to_end = tmp_holder.getSeqLength() - last_repeat_start_index - 1;
     if(dist_to_end < max_right_extension_length)
     {
 #ifdef DEBUG
@@ -998,7 +1001,8 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
 #ifdef DEBUG
         logInfo("minimum number of repeats needed with same nucleotide for extension: "<<cut_off, 9);
 #endif
-    }
+    }*/
+
     std::string curr_repeat;
     int char_count_A, char_count_C, char_count_T, char_count_G;
     char_count_A = char_count_C = char_count_T = char_count_G = 0;
@@ -1008,6 +1012,9 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
 #endif
     while (max_right_extension_length > 0)
     {
+        if((last_repeat_start_index + searchWindowLength + right_extension_length) >= static_cast<int>(tmp_holder.getSeqLength())) {
+            DR_index_end -= 2;
+        }
         for (unsigned int k = 0; k < DR_index_end; k+=2 )
         {
 #ifdef DEBUG
@@ -1043,8 +1050,11 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
 #ifdef DEBUG
         logInfo("R: " << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << tmp_holder.getRepeatLength() << " : " << max_right_extension_length, 9);
 #endif
-        if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
+        if ( (char_count_A >= cut_off) || (char_count_C >= cut_off) || (char_count_G >= cut_off) || (char_count_T >= cut_off) )
         {
+#ifdef DEBUG
+            logInfo("R: SUCCESS! count above "<< cut_off, 9);
+#endif
             tmp_holder.incrementRepeatLength();
             max_right_extension_length--;
             right_extension_length++;
@@ -1052,6 +1062,9 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
         }
         else
         {
+#ifdef DEBUG
+            logInfo("R: FAILURE! count below "<< cut_off, 9);
+#endif
             break;
         }
     }
@@ -1068,7 +1081,7 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
 #endif
     // and again, we may not wat to use the first DR
     unsigned int DR_index_start = 0;
-    if(max_left_extension_length > first_repeat_start_index)
+    /*if(max_left_extension_length > first_repeat_start_index)
     {
 #ifdef DEBUG
         logInfo("removing start partial: "<<max_left_extension_length<<" > "<<first_repeat_start_index, 9);
@@ -1082,10 +1095,14 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
 #ifdef DEBUG
         logInfo("new cutoff: "<<cut_off, 9);
 #endif
-    }
+    }*/
     //(from the left side) extends the length of the repeat to the left as long as the first base of all repeats is at least threshold
     while (left_extension_length < max_left_extension_length)
     {
+        if(first_repeat_start_index - left_extension_length < 0) {
+            logInfo("first repeat can't be extended anymore, dorpping", 10);
+            DR_index_start += 2;
+        }
         for (unsigned int k = DR_index_start; k < end_index; k+=2 )
         {
 #ifdef DEBUG
@@ -1111,7 +1128,7 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
         logInfo("L:" << char_count_A << " : " << char_count_C << " : " << char_count_G << " : " << char_count_T << " : " << tmp_holder.getRepeatLength() << " : " << left_extension_length, 9);
 #endif
         
-        if ( (char_count_A > cut_off) || (char_count_C > cut_off) || (char_count_G > cut_off) || (char_count_T > cut_off) )
+        if ( (char_count_A >= cut_off) || (char_count_C >= cut_off) || (char_count_G >= cut_off) || (char_count_T >= cut_off) )
         {
             tmp_holder.incrementRepeatLength();
             left_extension_length++;
@@ -1131,12 +1148,12 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
         if(*repeat_iter < static_cast<unsigned int>(left_extension_length))
         {
             *repeat_iter = 0;
-            *(repeat_iter + 1) += right_extension_length;
+            *(repeat_iter + 1) += right_extension_length - 1;
         }
         else
         {
             *repeat_iter -= left_extension_length;
-            *(repeat_iter+1) += right_extension_length;
+            *(repeat_iter+1) += right_extension_length - 1;
         }
 #ifdef DEBUG    
         logInfo("\t"<<*repeat_iter<<","<<*(repeat_iter+1), 9);
