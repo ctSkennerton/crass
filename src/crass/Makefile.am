@@ -16,7 +16,6 @@ crass_SOURCES =\
 PatternMatcher.cpp PatternMatcher.h\
 Rainbow.cpp Rainbow.h\
 crass.cpp crass.h\
-WuManber.cpp WuManber.h\
 LoggerSimp.cpp LoggerSimp.h\
 SeqUtils.cpp SeqUtils.h\
 CrisprNode.cpp CrisprNode.h\
