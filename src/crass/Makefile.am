@@ -1,5 +1,6 @@
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
 bin_PROGRAMS = crass crisprtools
+noinst_LIBRARIES = libcrass.a
 if ASSEMBLY_WRAPPER
 bin_PROGRAMS += crass-assembler
 endif
@@ -7,15 +8,13 @@ endif
 AM_CXXFLAGS = @XERCES_CPPFLAGS@ -pedantic -Wall
 AM_LDFLAGS = @XERCES_LDFLAGS@ @zlib_flags@ @XERCES_LIBS@
 
-crass_LDADD = $(top_builddir)/src/aho-corasick/libacism.a
+crass_LDADD = libcrass.a $(top_builddir)/src/aho-corasick/libacism.a
 
 crisprtools_LDADD = @GV_LIBS@ 
 
-
-crass_SOURCES =\
+libcrass_a_SOURCES =\
 PatternMatcher.cpp PatternMatcher.h\
 Rainbow.cpp Rainbow.h\
-crass.cpp crass.h\
 LoggerSimp.cpp LoggerSimp.h\
 SeqUtils.cpp SeqUtils.h\
 CrisprNode.cpp CrisprNode.h\
@@ -39,6 +38,8 @@ parser.cpp\
 reader.cpp\
 writer.cpp
 
+crass_SOURCES =\
+crass.cpp crass.h
 
 crass_assembler_SOURCES =\
 AssemblyWrapper.cpp AssemblyWrapper.h\

@@ -48,7 +48,6 @@
 
 // local includes
 #include "crassDefines.h"
-#include "WuManber.h"
 #include "PatternMatcher.h"
 #include "kseq.h"
 #include "ReadHolder.h"
@@ -60,11 +59,6 @@
 #endif
 
 
-
-
-
-typedef std::vector<WuManber*> MultiSearchVector;
-typedef WuManber::DataFound multiSearchData;
 
 enum READ_TYPE {
     LONG_READ,

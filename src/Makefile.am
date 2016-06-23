@@ -1,1 +1,1 @@
-SUBDIRS = aho-corasick crass 
+SUBDIRS = aho-corasick crass test

@@ -238,4 +238,4 @@ if test $PERFORM_CRASS_ASSEMBLY = yes; then
     fi 
 fi
 
-AC_OUTPUT(Makefile src/Makefile src/crass/Makefile src/aho-corasick/Makefile man/Makefile doc/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/crass/Makefile src/aho-corasick/Makefile src/test/Makefile man/Makefile doc/Makefile)

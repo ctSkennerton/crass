@@ -577,7 +577,7 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
     //!!!!!!!!!!!!!!
     unsigned int num_repeats = tmp_holder.numRepeats();
     tmp_holder.setRepeatLength(searchWindowLength);
-    int cut_off = (int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * num_repeats);
+    int cut_off = num_repeats - 1; //(int)(CRASS_DEF_TRIM_EXTEND_CONFIDENCE * num_repeats);
     
     // make sure that we don't go below 2
     if (2 > cut_off) 
