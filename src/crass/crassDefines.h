@@ -1,4 +1,3 @@
-
 // File: crass_defines.h
 // Original Author: Connor Skennerton on 7/05/11
 // --------------------------------------------------------------------
@@ -132,9 +131,6 @@
 
 #define CRASS_DEF_DEFAULT_LOGGING               (1)
 #define CRASS_DEF_LOGTOSCREEN                   false               // should we log to screen or to file
-#define CRASS_DEF_REMOVE_HOMOPOLYMERS           false               // should we remove homopolymers
-#define CRASS_DEF_NO_SCALLING                   false               // perform scalling by default
-#define CRASS_DEF_HOMOPOLYMER_SCALLING          (0.70)              // the scalling for the spacers and direct repeats when remove homopolymers is set
 #define CRASS_DEF_NUM_OF_BINS                   (-1)                  // the number of bins to create
 #define CRASS_DEF_GRAPH_COLOUR                  BLUE_RED            // default colour scale for the graphs
 #define CRASS_DEF_SPACER_LONG_DESC              false               // use a long desc of the spacer in the output graph
@@ -153,12 +149,8 @@ typedef struct {
     unsigned int        searchWindowLength;                                 // option 'w'used in long read search only
     unsigned int        minNumRepeats;                                      // option 'n'used in long read search only
     bool                logToScreen;                                        // log to std::cout rather than to the log file
-    bool                removeHomopolymers;                                 // correct for homopolymer errors
     int                 coverageBins;                                       // The number of bins of colours
     RB_TYPE             graphColourType;                                    // the colour type of the graph
-    double              averageSpacerScalling;                              // decimal for reduction in the spacer size
-    double              averageDrScalling;                                  // decimal for the reduction in the direct repeat size
-    bool                dontPerformScalling;                                // turn all scalling off for the user to define variables
     std::string         layoutAlgorithm;                                    // the graphviz layout algorithm to use 
     bool                longDescription;                                    // print a long description for the final spacer graph
     bool                 showSingles;                                       // print singletons when making the spacer graph

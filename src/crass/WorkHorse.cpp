@@ -399,16 +399,6 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
     logInfo("Searching complete. " << mReads.size()<<" direct repeat variants have been found", 1);
     logInfo("Number of reads found so far: "<<this->numOfReads(), 2);
 
-    if(mOpts->removeHomopolymers) {
-        // change back the sizes of the direct repeats to 
-        // counter the changes made by mOpts.removeHomopolymers
-        // this way the final DRs and spacer should fall 
-        // inside the correct lengths
-        mOpts->lowDRsize /= mOpts->averageDrScalling;
-        mOpts->highDRsize /= mOpts->averageDrScalling;
-        mOpts->lowSpacerSize /= mOpts->averageSpacerScalling;
-        mOpts->highSpacerSize /= mOpts->averageSpacerScalling;
-    }
     try {
         if (findConsensusDRs(group_kmer_counts_map, next_free_GID))
         {

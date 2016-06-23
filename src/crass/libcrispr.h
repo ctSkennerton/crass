@@ -80,18 +80,8 @@ int decideWhichSearch(const char *inputFile,
                       time_t& startTime);
 
 int longReadSearch(ReadHolder& seq, 
-                   const options &opts, 
-                   ReadMap * mReads, 
-                   StringCheck * mStringCheck, 
-                   lookupTable &patterns_hash, 
-                   lookupTable &readsFound);
-
-int shortReadSearch(ReadHolder&  seq, 
-                    const options &opts, 
-                    ReadMap * mReads, 
-                    StringCheck * mStringCheck, 
-                    lookupTable &patterns_hash, 
-                    lookupTable &readsFound);
+                   const options &opts
+                   );
 
 void findSingletons2(const char *inputFastq, 
                     const options &opts, 
@@ -100,22 +90,6 @@ void findSingletons2(const char *inputFastq,
                     ReadMap * mReads, 
                     StringCheck * mStringCheck,
                     time_t& startTime);
-
-void findSingletons(const char *inputFastq, 
-                    const options &opts, 
-                    std::vector<std::string> * nonRedundantPatterns, 
-                    lookupTable &readsFound, 
-                    ReadMap * mReads, 
-                    StringCheck * mStringCheck,
-                    time_t& startTime);
-
-void findSingletonsMultiVector(const char *inputFastq, 
-                               const options &opts, 
-                               std::vector<std::vector<std::string> *> &patterns, 
-                               lookupTable &readsFound, 
-                               ReadMap * mReads, 
-                               StringCheck * mStringCheck,
-                               time_t& startTime);
 
 int scanRight(ReadHolder& tmp_holder, 
               std::string& pattern, 

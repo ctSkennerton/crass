@@ -68,7 +68,7 @@ static struct option long_options [] = {
     {"logToScreen", no_argument, NULL, 'g'},
     {"showSingltons",no_argument,NULL,'G'},
     {"help", no_argument, NULL, 'h'},
-    {"removeHomopolymers",no_argument,NULL,'H'},
+    //{"removeHomopolymers",no_argument,NULL,'H'},
     {"kmerCount", required_argument, NULL, 'k'},
     {"graphNodeLen",required_argument,NULL,'K'},
     {"logLevel", required_argument, NULL, 'l'},

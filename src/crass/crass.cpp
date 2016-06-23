@@ -123,14 +123,14 @@ void usage(void)
     std::cout<< "-S --maxSpacer       <INT>   Maximim length of the spacer to search for [Default: "<<CRASS_DEF_MAX_SPACER_SIZE<<"]"<<std::endl;
     std::cout<< "-w --windowLength    <INT>   The length of the search window. Can only be"<<std::endl; 
     std::cout<< "                             a number between "<<CRASS_DEF_MIN_SEARCH_WINDOW_LENGTH<<" - "<<CRASS_DEF_MAX_SEARCH_WINDOW_LENGTH<<" [Default: "<<CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH<<"]"<<std::endl;
-    std::cout<< "-x --spacerScalling  <REAL>  A decimal number that represents the reduction in size of the spacer"<<std::endl;
+    /*std::cout<< "-x --spacerScalling  <REAL>  A decimal number that represents the reduction in size of the spacer"<<std::endl;
     std::cout<< "                             when the --removeHomopolymers option is set [Default: "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<"]"<<std::endl;
     std::cout<< "-y --repeatScalling  <REAL>  A decimal number that represents the reduction in size of the direct repeat"<<std::endl;
     std::cout<< "                             when the --removeHomopolymers option is set [Default: "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<"]"<<std::endl;
     std::cout<< "-z --noScalling              Use the given spacer and direct repeat ranges when --removeHomopolymers is set. "<<std::endl;
     std::cout<< "                             The default is to scale the numbers by "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" or by values set using -x or -y"<<std::endl;
     std::cout<< "-H --removeHomopolymers      Correct for homopolymer errors [default: no correction]"<<std::endl;
-    std::cout<<std::endl;
+    std::cout<<std::endl;*/
     std::cout<<"CRISPR Assembly Options:"<<std::endl;
     std::cout<< "-f --covCutoff       <INT>   Remove groups with less than x spacers [Default: "<<CRASS_DEF_COVCUTOFF<<"]"<<std::endl;
     std::cout<< "-k --kmerCount       <INT>   The number of the kmers that need to be"<<std::endl; 
@@ -183,31 +183,19 @@ void versionInfo(void)
     std::cout<<std::endl<<PACKAGE_FULL_NAME<<" ("<<PACKAGE_NAME<<")"<<std::endl<<"version "<<PACKAGE_MAJOR_VERSION<<" subversion "<<PACKAGE_MINOR_VERSION<<" revison "<<PACKAGE_REVISION<<" ("<<PACKAGE_VERSION<<")"<<std::endl<<std::endl;
     std::cout<<"---------------------------------------------------------------"<<std::endl;
     std::cout<<"Copyright (C) 2011-2015 Connor Skennerton & Michael Imelfort"<<std::endl;
+    std::cout<<"Copyright (C) 2016      Connor Skennerton"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY"<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it"<<std::endl;
     std::cout<<"under certain conditions: See the source for more details"<<std::endl;
     std::cout<<"---------------------------------------------------------------"<<std::endl;
 }
 
-//make a new directory
-// Stoled from SaSSY
-//void recursiveMkdir(std::string dir) 
-//{
-//    std::string tmp;
-//    size_t pos = 0;
-//    while ( std::string::npos != (pos = dir.find('/',pos+1)) ) {
-//        tmp = dir.substr(0,pos);
-//        mkdir(tmp.c_str(), S_IRWXU);
-//    }
-//    mkdir(dir.c_str(), S_IRWXU);
-//}
 
 int processOptions(int argc, char *argv[], options *opts) 
 {
     int c;
     int index;
-    bool scalling = false;
-    while( (c = getopt_long(argc, argv, "a:b:c:d:D:ef:gGhHk:K:l:Ln:o:rs:S:Vw:x:y:z", long_options, &index)) != -1 ) 
+    while( (c = getopt_long(argc, argv, "a:b:c:d:D:ef:gGhk:K:l:Ln:o:rs:S:Vw:", long_options, &index)) != -1 ) 
     {
         switch(c) 
         {
@@ -303,9 +291,6 @@ int processOptions(int argc, char *argv[], options *opts)
                 usage();
                 exit(0); 
                 break;
-            case 'H':
-                opts->removeHomopolymers = true;
-                break;
             case 'k': 
                 from_string<int>(opts->kmer_clust_size, optarg, std::dec);
                 if (opts->kmer_clust_size < 4) 
@@ -387,27 +372,6 @@ int processOptions(int argc, char *argv[], options *opts)
                     opts->searchWindowLength = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH;
                 }
                 break;        
-            case 'x':
-                from_string<double>(opts->averageSpacerScalling, optarg, std::dec);
-                if (isNotDecimal(opts->averageSpacerScalling)) 
-                {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The average spacer scalling must be a decimal number. Changing to "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" instead of "<<opts->averageSpacerScalling<<std::endl;
-                    opts->averageSpacerScalling = CRASS_DEF_HOMOPOLYMER_SCALLING;
-                }
-                scalling = true;
-                break;
-            case 'y':
-                from_string<double>(opts->averageDrScalling, optarg, std::dec);
-                if (isNotDecimal(opts->averageDrScalling)) 
-                {
-                    std::cerr<<PACKAGE_NAME<<" [WARNING]: The average spacer scalling must be a decimal number. Changing to "<<CRASS_DEF_HOMOPOLYMER_SCALLING<<" instead of "<<opts->averageDrScalling<<std::endl;
-                    opts->averageDrScalling = CRASS_DEF_HOMOPOLYMER_SCALLING;
-                }
-                scalling = true;
-                break;
-            case 'z':
-                opts->dontPerformScalling = true;
-                break;
             case 0:
 #ifdef SEARCH_SINGLETON
                 if (strcmp("searchChecker", long_options[index].name) == 0) opts->searchChecker = optarg;
@@ -435,29 +399,7 @@ int processOptions(int argc, char *argv[], options *opts)
         exit(1);
     }
     
-    // sanity check so that the user doesn't specify scalling and no scalling simultaneously
-    if (scalling & opts->dontPerformScalling) {
-        std::cerr<<PACKAGE_NAME<<" [ERROR]: Cannot use scalling (-x -y) in conjunction with --noScalling"<<std::endl;
-        usage();
-        exit(1);
-    }
     
-    // warn them if they try to scale without specifying to remove homopolymers
-    if (scalling && !opts->removeHomopolymers) 
-    {
-        std::cerr<<PACKAGE_NAME<<" [ERROR]: scalling (-x -y) can only be used in conjunction with --removeHomopolymers"<<std::endl;
-        usage();
-        exit(1);
-    }
-    
-    // scale the direct repeat and spacer lengths if we should
-    if (opts->removeHomopolymers && !opts->dontPerformScalling) 
-    {
-        opts->lowDRsize *= opts->averageDrScalling;
-        opts->highDRsize *= opts->averageDrScalling;
-        opts->lowSpacerSize *= opts->averageSpacerScalling;
-        opts->highSpacerSize *= opts->averageSpacerScalling;
-    }
     
     return optind;
 }
@@ -498,12 +440,8 @@ int main(int argc, char *argv[])
     opts.searchWindowLength    = CRASS_DEF_OPTIMAL_SEARCH_WINDOW_LENGTH; // option 'w'used in long read search only
     opts.minNumRepeats         = CRASS_DEF_DEFAULT_MIN_NUM_REPEATS;      // option 'n'used in long read search only
     opts.logToScreen           = CRASS_DEF_LOGTOSCREEN;                  // log to std::cout rather than to the log file
-    opts.removeHomopolymers    = CRASS_DEF_REMOVE_HOMOPOLYMERS;          // correct for homopolymer errors
     opts.coverageBins          = CRASS_DEF_NUM_OF_BINS;                  // The number of bins of colours
     opts.graphColourType       = CRASS_DEF_GRAPH_COLOUR;                 // the colour type of the graph
-    opts.averageSpacerScalling = CRASS_DEF_HOMOPOLYMER_SCALLING;         // decimal for reduction in the spacer size
-    opts.averageDrScalling     = CRASS_DEF_HOMOPOLYMER_SCALLING;         // decimal for the reduction in the direct repeat size
-    opts.dontPerformScalling   = CRASS_DEF_NO_SCALLING;                  // turn all scalling off for the user to define variables
     opts.longDescription       = CRASS_DEF_SPACER_LONG_DESC;             // print a long description for the final spacer graph
     opts.showSingles           = CRASS_DEF_SPACER_SHOW_SINGLES;          // print singletons when making the spacer graph
     opts.cNodeKmerLength       = CRASS_DEF_NODE_KMER_SIZE;               // length of the kmers making up a crisprnode

@@ -65,9 +65,6 @@ extern "C" {
 #include "../aho-corasick/acism.h"
 }
 
-#define longReadCut(d,s) ((4 * d) + (3 * s))
-#define shortReadCut(d,s) ((2 * d) + s)
-
 int decideWhichSearch(const char *inputFastq, 
                       const options& opts, 
                       ReadMap * mReads, 
@@ -95,8 +92,6 @@ int decideWhichSearch(const char *inputFastq,
     static int read_counter = 0;
     time_t time_current;
     
-    int long_read_cutoff =  shortReadCut(opts.lowDRsize, opts.lowSpacerSize);
-    int short_read_cutoff = shortReadCut(opts.lowDRsize, opts.lowSpacerSize);
     // read sequence  
     while ( (l = kseq_read(seq)) >= 0 ) 
     {
@@ -135,20 +130,13 @@ int decideWhichSearch(const char *inputFastq,
                 tmp_holder.setQual(seq->qual.s);
             }
             
-            if (opts.removeHomopolymers)
-            {
-                // RLE is necessary...
-                tmp_holder.encode();
-                // update the value of l based on if we arre removing homopolymers
-                l = static_cast<int>(tmp_holder.getSeq().length());
-            }
 
-            longReadSearch(tmp_holder, 
-                           opts, 
-                           mReads, 
-                           mStringCheck, 
-                           patternsHash, 
-                           readsFound);
+            bool crispr_read = longReadSearch(tmp_holder, opts );
+            if(crispr_read) {
+                addReadHolder(mReads, mStringCheck, tmp_holder);
+                patternsHash[tmp_holder.repeatStringAt(0)] = true;
+                readsFound[tmp_holder.getHeader()] = true;
+            }
 
         } catch (crispr::exception& e) {
             std::cerr<<e.what()<<std::endl;
@@ -275,18 +263,12 @@ int scanRight(ReadHolder&  tmp_holder,
 }
 
 int longReadSearch(ReadHolder& tmpHolder, 
-                   const options& opts, 
-                   ReadMap * mReads, 
-                   StringCheck * mStringCheck, 
-                   lookupTable& patternsHash, 
-                   lookupTable& readsFound)
+                   const options& opts)
 {
     //-----
     // Code lifted from CRT, ported by Connor and hacked by Mike.
-    // Should do well at finding crisprs in long reads
     //
     
-    //bool match_found = false;
 
     std::string read = tmpHolder.getSeq();
     
@@ -382,16 +364,6 @@ int longReadSearch(ReadHolder& tmpHolder,
 
                 logInfo("\tPassed test 2. The repeat length is "<<opts.lowDRsize<<" >= "<< actual_repeat_length <<" <= "<<opts.highDRsize, 8);
 #endif
-			// Declare a tmp string here to hold the encoded DR if 
-			// removeHolopolymers is in affect.  Later if the read passes all
-			// the tests then add in this encoded string since that is the 
-			// version that the singleton finder should be looking for
-			std::string encoded_repeat;
-			if(opts.removeHomopolymers) {
-				encoded_repeat = tmpHolder.repeatStringAt(0);
-				tmpHolder.decode();
-
-			}
                 
                 // drop partials
                 //tmpHolder.dropPartials();
@@ -408,19 +380,7 @@ int longReadSearch(ReadHolder& tmpHolder,
                     logInfo(tmpHolder.getSeq(), 9);
                     logInfo("-------------------", 7)
 #endif                            
-
-                    //ReadHolder * candidate_read = new ReadHolder();
-                    //*candidate_read = *tmp_holder;
-                    //addReadHolder(mReads, mStringCheck, candidate_read);
-                    addReadHolder(mReads, mStringCheck, tmpHolder);
-                    //match_found = true;
-					if(opts.removeHomopolymers) {
-							patternsHash[encoded_repeat] = true;
-						} else {
-							patternsHash[tmpHolder.repeatStringAt(0)] = true;
-						}
-                    readsFound[tmpHolder.getHeader()] = true;
-                    break;
+                    return true;
                 }
             }
 #ifdef DEBUG                
@@ -433,7 +393,7 @@ int longReadSearch(ReadHolder& tmpHolder,
         }
         tmpHolder.clearStartStops();
     }
-    return 0;
+    return false;
 }
 
 
