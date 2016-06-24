@@ -288,10 +288,8 @@ int longReadSearch(ReadHolder& tmpHolder,
     
     if (searchEnd < 0) 
     {
-        logError("Read: "<<tmpHolder.getHeader()<<" length is less than "<<opts.lowDRsize + opts.lowSpacerSize + opts.searchWindowLength + 1<<"bp"<<
-                " lDR: "<< opts.lowDRsize << " lS: "<< opts.lowSpacerSize << " SW: "<< opts.searchWindowLength << " SL: "<< seq_length);
-        //delete tmpHolder;
-        return 1;
+        logWarn("Read "<<tmpHolder.getHeader()<<" is too short. With current parameters, the minimum length must be "<<opts.lowDRsize + opts.lowSpacerSize + opts.searchWindowLength + 1<<"bp (read is "<< seq_length << "bp)", 3);
+        return false;
     }
     
     for (unsigned int j = 0; j <= static_cast<unsigned int>(searchEnd); j = j + skips)
