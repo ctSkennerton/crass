@@ -8,6 +8,7 @@
 // 
 // --------------------------------------------------------------------
 //  Copyright  2011 Michael Imelfort and Connor Skennerton
+//  Copyright  2016 Connor Skennerton
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
@@ -87,7 +88,7 @@
 #define CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY  (0.82)
 #define CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF     (12)
 #define CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF     (30)
-#define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          (3)
+#define CRASS_DEF_DEFAULT_MIN_NUM_REPEATS          (2)
 #define CRASS_DEF_KMER_MAX_ABUNDANCE_CUTOFF	       (0.23)			// DRs should NOT have kmers more abundant than this percentage!
 // --------------------------------------------------------------------
   // FILE IO
