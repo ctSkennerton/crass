@@ -134,7 +134,9 @@ class WorkHorse {
                                          std::map<int, bool>& refinedDREnds
                                          );
         
+        void splitGroupedDR( std::map<char, int>& collaped_options, Aligner& dr_aligner, int collapsed_pos, int GID, int * nextFreeGID);
         bool parseGroupedDRs( int GID, int * nextFreeGID);
+        void combineGroupsWithIdenticalDRs();
         
         int numberOfReadsInGroup(DR_Cluster * currentGroup);
         

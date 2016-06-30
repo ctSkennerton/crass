@@ -413,6 +413,44 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
     return 0;
 }
 
+void WorkHorse::combineGroupsWithIdenticalDRs()
+{
+    //----
+    // After parseGroupedDRs there will be occasions where the final true DR
+    // is identical between different groups. Here we explicently check for
+    // this and combine the groups as necessary
+    std::map<std::string, int> truedr_to_group;
+
+    std::map<int, std::string>::iterator iter = mTrueDRs.begin();
+    while(iter != mTrueDRs.end())
+    {
+        std::map<std::string, int>::iterator prev_iter = truedr_to_group.find(iter->second);
+        if(prev_iter != truedr_to_group.end())
+        {
+            // this true DR has already been identified
+            logInfo("Combining groups "<<iter->first<<" ("<<iter->second<<") and "<<prev_iter->second << " ("<<prev_iter->first<<") as they are identical",4);
+            // combine the DR2GID_map
+            DR_ClusterIterator drc_iter;
+            for(drc_iter = mDR2GIDMap[iter->first]->begin(); drc_iter != mDR2GIDMap[iter->first]->end(); ++drc_iter)
+            {
+                logInfo(*drc_iter, 1);
+                mDR2GIDMap[prev_iter->second]->push_back(*drc_iter);
+            }
+            
+            // delete the references to this group in DR2GID_map
+            delete mDR2GIDMap[iter->first];
+            mDR2GIDMap.erase(iter->first);
+            // remove the reference in the true DRs
+            mTrueDRs.erase(iter++);
+        }
+        else
+        {
+            truedr_to_group[iter->second] = iter->first;
+            ++iter;
+        }
+    }
+}
+
 int WorkHorse::buildGraph(void)
 {
 	//-----
@@ -560,7 +598,7 @@ int WorkHorse::findConsensusDRs(GroupKmerMap& groupKmerCountsMap, int& nextFreeG
         logInfo(__FILE__ <<":"<<__LINE__<<" checking for null "<< mDR2GIDMap[group_count_iter->first], 6)
 #endif
         parseGroupedDRs(group_count_iter->first, &nextFreeGID);
-        
+        combineGroupsWithIdenticalDRs();
         // delete the kmer count lists cause we're finsihed with them now
         if(NULL != group_count_iter->second)
         {
@@ -899,6 +937,201 @@ std::string WorkHorse::calculateDRConsensus(int GID,
 	return true_dr;
 }
 
+void WorkHorse::splitGroupedDR(std::map<char, int>& collapsed_options, Aligner& dr_aligner, int collapsed_pos, int GID, int * nextFreeGID) 
+{
+    // We need to build a bit of new infrastructure.
+    // assume we have K different DR alleles and N putative DRs
+    // we need to build K new DR clusters
+    logInfo("Attempting to split the collapsed DR", 5);
+    std::map<char, int> coll_char_to_GID_map;
+    std::map<char, int>::iterator co_iter = collapsed_options.begin();
+    while(co_iter != collapsed_options.end())
+    {
+        int group = (*nextFreeGID)++;
+        mDR2GIDMap[group] = new DR_Cluster;
+        coll_char_to_GID_map[co_iter->first] = group;
+        logInfo("Mapping \""<< co_iter->first << " : "  << co_iter->second << "\" to group: " << group << " "<< &mDR2GIDMap[group], 1);
+        co_iter++;
+    }
+
+    DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
+    while (dr_iter != (mDR2GIDMap[GID])->end()) 
+    {
+        std::string tmp_DR = mStringCheck.getString(*dr_iter);
+        if(-1 != dr_aligner.offset(*dr_iter))
+        {
+            // check if the deciding character is within range of this DR
+            if(dr_aligner.offset(*dr_iter) <= collapsed_pos && collapsed_pos < (dr_aligner.offset(*dr_iter) + (int)(tmp_DR.length())))
+            {
+                logInfo("\tdeciding character within DR "<< *dr_iter,5);
+                // this is easy, we can compare based on this char only
+                char decision_char = tmp_DR[collapsed_pos - dr_aligner.offset(*dr_iter)];
+                (mDR2GIDMap[ coll_char_to_GID_map[ decision_char ] ])->push_back(*dr_iter);
+            }
+            else
+            {
+                logInfo("\tRebuilding cluster from the ground up for DR " << *dr_iter,5);
+                // this is tricky, we need to completely break the group and re-cluster
+                // from the ground up based on reads
+                // get the offset from the start of the DR to the deciding char
+                // if it is negative, the dec char lies before the DR
+                // otherwise it lies after
+                int dec_diff = collapsed_pos - dr_aligner.offset(*dr_iter);
+                logInfo("\t\tBuilding form map",5);
+                // we're not guaranteed to see all forms. So we need to be careful here...
+                // First we go through just to count the forms
+                std::map<char, ReadList *> forms_map;
+
+                ReadListIterator read_iter = mReads[*dr_iter]->begin();
+                while (read_iter != mReads[*dr_iter]->end()) 
+                {
+                    StartStopListIterator ss_iter = (*read_iter)->begin();
+                    while(ss_iter != (*read_iter)->end())
+                    {
+                        int within_read_dec_pos = *ss_iter + dec_diff;
+                        if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(*read_iter)->getSeqLength())
+                        {
+                            char decision_char = (*read_iter)->getSeqCharAt(within_read_dec_pos);
+
+                            // it must be one of the collapsed options!
+                            if(collapsed_options.find(decision_char) != collapsed_options.end())
+                            {
+                                forms_map[decision_char] = NULL;
+                                break;
+                            }
+                        }
+                        ss_iter+=2;
+                    }
+                    read_iter++;
+                }
+
+                // the size of forms_map tells us how many different types we actually saw.
+                switch(forms_map.size())
+                {
+                    case 1:
+                        {
+                            logInfo("\t\tOne form found", 5);
+                            // we can just reuse the existing ReadList!
+                            // find out which group this bozo is in
+                            read_iter = mReads[*dr_iter]->begin();
+                            bool break_out = false;
+                            while (read_iter != mReads[*dr_iter]->end()) 
+                            {
+                                StartStopListIterator ss_iter = (*read_iter)->begin();
+                                while(ss_iter != (*read_iter)->end())
+                                {
+                                    int within_read_dec_pos = *ss_iter + dec_diff;
+                                    if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(*read_iter)->getSeqLength())
+                                    {
+                                        char decision_char = (*read_iter)->getSeqCharAt(within_read_dec_pos);
+                                        // it must be one of the collapsed options!
+                                        if(forms_map.find(decision_char) != forms_map.end())
+                                        {
+                                            (mDR2GIDMap[ coll_char_to_GID_map[ decision_char ] ])->push_back(*dr_iter);
+                                            break_out = true;
+                                            break;
+                                        }
+                                    }
+                                    ss_iter+=2;
+                                }
+                                read_iter++;             
+                                if(break_out)     
+                                    break;                  
+                            }
+                            break;
+                        }
+                    case 0:
+                        {
+                            // Something is wrong!
+                            logWarn("\t\tNo reads fit the form: " << tmp_DR, 1);
+                            if(NULL != mReads[*dr_iter])
+                            {
+                                clearReadList(mReads[*dr_iter]);
+                                delete mReads[*dr_iter];
+                                mReads[*dr_iter] = NULL;
+                            }
+                            break;
+                        }
+                    default:
+                        {
+                            // we need to make a couple of new readlists and nuke the old one.
+                            // first make the new readlists
+                            logInfo("\t\tMultiple forms, splitting reads", 5);
+                            std::map<char, ReadList *>::iterator fm_iter = forms_map.begin();
+                            while(fm_iter != forms_map.end())
+                            {
+                                StringToken st = mStringCheck.addString(tmp_DR);
+                                mReads[st] = new ReadList();
+                                // make sure we know which readlist is which
+                                forms_map[fm_iter->first] = mReads[st];
+                                // put the new dr_token into the right cluster
+                                (mDR2GIDMap[ coll_char_to_GID_map[ fm_iter->first ] ])->push_back(st);
+
+                                // next!
+                                fm_iter++;
+                            }
+
+                            // put the correct reads on the correct readlist
+                            read_iter = mReads[*dr_iter]->begin();
+                            while (read_iter != mReads[*dr_iter]->end()) 
+                            {
+                                StartStopListIterator ss_iter = (*read_iter)->begin();
+                                while(ss_iter != (*read_iter)->end())
+                                {
+                                    int within_read_dec_pos = *ss_iter + dec_diff;
+                                    if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(*read_iter)->getSeqLength())
+                                    {
+                                        char decision_char = (*read_iter)->getSeqCharAt(within_read_dec_pos);
+
+                                        // needs to be a form we've seen before!
+                                        if(forms_map.find(decision_char) != forms_map.end())
+                                        {
+                                            // push this readholder onto the correct list
+                                            (forms_map[decision_char])->push_back(*read_iter);
+
+                                            // make the original pointer point to NULL so we don't delete twice
+                                            *read_iter = NULL;
+
+                                            break;
+                                        }
+                                    }
+                                    ss_iter+=2;
+                                }
+                                read_iter++;                                    
+                            }
+
+                            // nuke the old readlist
+                            if(NULL != mReads[*dr_iter])
+                            {
+                                clearReadList(mReads[*dr_iter]);
+                                delete mReads[*dr_iter];
+                                mReads[*dr_iter] = NULL;
+                            }                                
+
+                            break;
+                        }
+                }
+            }
+        }
+        dr_iter++;
+    }
+
+    // time to delete the old clustered DRs and the group from the DR2GID_map
+    logInfo("\tRemoving original group "<< GID, 5);
+    cleanGroup(GID);
+
+    logInfo("\tCalling the parser recursively", 4);
+
+    // call this baby recursively with the new clusters
+    std::map<char, int>::iterator cc_iter = coll_char_to_GID_map.begin();
+    while(cc_iter != coll_char_to_GID_map.end())
+    {
+        parseGroupedDRs(cc_iter->second, nextFreeGID);
+        cc_iter++;
+    }
+}
+
+
 bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID) 
 {
 	
@@ -1057,197 +1290,7 @@ bool WorkHorse::parseGroupedDRs(int GID, int * nextFreeGID)
     
     if(collapsed_options.size() > 0)
     {
-        // We need to build a bit of new infrastructure.
-        // assume we have K different DR alleles and N putative DRs
-        // we need to build K new DR clusters
-        logInfo("Attempting to split the collapsed DR", 5);
-        std::map<char, int> coll_char_to_GID_map;
-        std::map<char, int>::iterator co_iter = collapsed_options.begin();
-        while(co_iter != collapsed_options.end())
-        {
-            int group = (*nextFreeGID)++;
-            mDR2GIDMap[group] = new DR_Cluster;
-            coll_char_to_GID_map[co_iter->first] = group;
-            logInfo("Mapping \""<< co_iter->first << " : "  << co_iter->second << "\" to group: " << group << " "<< &mDR2GIDMap[group], 1);
-            co_iter++;
-        }
-        
-        DR_ClusterIterator dr_iter = (mDR2GIDMap[GID])->begin();
-        while (dr_iter != (mDR2GIDMap[GID])->end()) 
-        {
-            std::string tmp_DR = mStringCheck.getString(*dr_iter);
-            if(-1 != dr_aligner.offset(*dr_iter))
-            {
-                // check if the deciding character is within range of this DR
-                if(dr_aligner.offset(*dr_iter) <= collapsed_pos && collapsed_pos < (dr_aligner.offset(*dr_iter) + (int)(tmp_DR.length())))
-                {
-                    logInfo("\tdeciding character within DR "<< *dr_iter,5);
-                    // this is easy, we can compare based on this char only
-                    char decision_char = tmp_DR[collapsed_pos - dr_aligner.offset(*dr_iter)];
-                    (mDR2GIDMap[ coll_char_to_GID_map[ decision_char ] ])->push_back(*dr_iter);
-                }
-                else
-                {
-                    logInfo("\tRebuilding cluster from the ground up for DR " << *dr_iter,5);
-                    // this is tricky, we need to completely break the group and re-cluster
-                    // from the ground up based on reads
-                    // get the offset from the start of the DR to the deciding char
-                    // if it is negative, the dec char lies before the DR
-                    // otherwise it lies after
-                    int dec_diff = collapsed_pos - dr_aligner.offset(*dr_iter);
-                    logInfo("\t\tBuilding form map",5);
-                    // we're not guaranteed to see all forms. So we need to be careful here...
-                    // First we go through just to count the forms
-                    std::map<char, ReadList *> forms_map;
-                    
-                    ReadListIterator read_iter = mReads[*dr_iter]->begin();
-                    while (read_iter != mReads[*dr_iter]->end()) 
-                    {
-                        StartStopListIterator ss_iter = (*read_iter)->begin();
-                        while(ss_iter != (*read_iter)->end())
-                        {
-                            int within_read_dec_pos = *ss_iter + dec_diff;
-                            if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(*read_iter)->getSeqLength())
-                            {
-                                char decision_char = (*read_iter)->getSeqCharAt(within_read_dec_pos);
-                                
-                                // it must be one of the collapsed options!
-                                if(collapsed_options.find(decision_char) != collapsed_options.end())
-                                {
-                                	forms_map[decision_char] = NULL;
-                                	break;
-                                }
-                            }
-                            ss_iter+=2;
-                        }
-                        read_iter++;
-                    }
-                    
-                    // the size of forms_map tells us how many different types we actually saw.
-                    switch(forms_map.size())
-                    {
-                        case 1:
-                        {
-                            logInfo("\t\tOne form found", 5);
-                            // we can just reuse the existing ReadList!
-                            // find out which group this bozo is in
-                            read_iter = mReads[*dr_iter]->begin();
-                            bool break_out = false;
-                            while (read_iter != mReads[*dr_iter]->end()) 
-                            {
-                                StartStopListIterator ss_iter = (*read_iter)->begin();
-                                while(ss_iter != (*read_iter)->end())
-                                {
-                                    int within_read_dec_pos = *ss_iter + dec_diff;
-                                    if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(*read_iter)->getSeqLength())
-                                    {
-                                        char decision_char = (*read_iter)->getSeqCharAt(within_read_dec_pos);
-                                        // it must be one of the collapsed options!
-                                        if(forms_map.find(decision_char) != forms_map.end())
-                                        {
-                                        	(mDR2GIDMap[ coll_char_to_GID_map[ decision_char ] ])->push_back(*dr_iter);
-                                            break_out = true;
-                                            break;
-                                        }
-                                    }
-                                    ss_iter+=2;
-                                }
-                                read_iter++;             
-                                if(break_out)     
-                                    break;                  
-                            }
-                            break;
-                        }
-                        case 0:
-                        {
-                            // Something is wrong!
-                            logWarn("\t\tNo reads fit the form: " << tmp_DR, 1);
-                            if(NULL != mReads[*dr_iter])
-                            {
-                                clearReadList(mReads[*dr_iter]);
-                                delete mReads[*dr_iter];
-                                mReads[*dr_iter] = NULL;
-                            }
-                            break;
-                        }
-                        default:
-                        {
-                            // we need to make a couple of new readlists and nuke the old one.
-                            // first make the new readlists
-                            logInfo("\t\tMultiple forms, splitting reads", 5);
-                            std::map<char, ReadList *>::iterator fm_iter = forms_map.begin();
-                            while(fm_iter != forms_map.end())
-                            {
-                                // make the readlist
-                                StringToken st = mStringCheck.addString(tmp_DR);
-                                mReads[st] = new ReadList();
-                                // make sure we know which readlist is which
-                                forms_map[fm_iter->first] = mReads[st];
-                                // put the new dr_token into the right cluster
-                                (mDR2GIDMap[ coll_char_to_GID_map[ fm_iter->first ] ])->push_back(st);
-                                
-                                // next!
-                                fm_iter++;
-                            }
-                            
-                            // put the correct reads on the correct readlist
-                            read_iter = mReads[*dr_iter]->begin();
-                            while (read_iter != mReads[*dr_iter]->end()) 
-                            {
-                                StartStopListIterator ss_iter = (*read_iter)->begin();
-                                while(ss_iter != (*read_iter)->end())
-                                {
-                                    int within_read_dec_pos = *ss_iter + dec_diff;
-                                    if(within_read_dec_pos > 0 && within_read_dec_pos < (int)(*read_iter)->getSeqLength())
-                                    {
-                                        char decision_char = (*read_iter)->getSeqCharAt(within_read_dec_pos);
-                                        
-                                        // needs to be a form we've seen before!
-                                        if(forms_map.find(decision_char) != forms_map.end())
-                                        {
-											// push this readholder onto the correct list
-											(forms_map[decision_char])->push_back(*read_iter);
-											
-											// make the original pointer point to NULL so we don't delete twice
-											*read_iter = NULL;
-											
-											break;
-                                        }
-                                    }
-                                    ss_iter+=2;
-                                }
-                                read_iter++;                                    
-                            }
-                            
-                            // nuke the old readlist
-                            if(NULL != mReads[*dr_iter])
-                            {
-                                clearReadList(mReads[*dr_iter]);
-                                delete mReads[*dr_iter];
-                                mReads[*dr_iter] = NULL;
-                            }                                
-                            
-                            break;
-                        }
-                    }
-                }
-            }
-            dr_iter++;
-        }
-        
-        // time to delete the old clustered DRs and the group from the DR2GID_map
-        logInfo("\tRemoving original group "<< GID, 5);
-        cleanGroup(GID);
-        
-        logInfo("\tCalling the parser recursively", 4);
-        
-        // call this baby recursively with the new clusters
-        std::map<char, int>::iterator cc_iter = coll_char_to_GID_map.begin();
-        while(cc_iter != coll_char_to_GID_map.end())
-        {
-            parseGroupedDRs(cc_iter->second, nextFreeGID);
-            cc_iter++;
-        }
+        splitGroupedDR(collapsed_options, dr_aligner, collapsed_pos, GID, nextFreeGID);
     }
     else
     {
@@ -1868,15 +1911,14 @@ bool WorkHorse::outputResults(std::string namePrefix)
     }
 #endif
     // make a single file with all of the keys for the groups
-    std::ofstream key_file;
     
     std::stringstream key_file_name;
     key_file_name << mOpts->output_fastq<<PACKAGE_NAME << "."<<mTimeStamp<<".keys.gv";
-    key_file.open(key_file_name.str().c_str());
+    std::ofstream key_file(key_file_name.str().c_str());
     
     if (!key_file) 
     {
-        logError("Cannot open the key file");
+        logError("Cannot open the key file: "<< key_file_name.str());
         return 1;
     }
     
