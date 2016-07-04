@@ -244,7 +244,7 @@ int scanRight(ReadHolder&  tmp_holder,
         
         if (position >= 0)
         {
-            tmp_holder.startStopsAdd(begin_search + position, begin_search + position + pattern_length);
+            tmp_holder.startStopsAdd(begin_search + position, begin_search + position + pattern_length - 1);
             second_last_repeat_index = last_repeat_index;
             last_repeat_index = begin_search + position;
             repeat_spacing = last_repeat_index - second_last_repeat_index;
@@ -340,10 +340,10 @@ int longReadSearch(ReadHolder& tmpHolder,
 
         if (pattern_in_text_index >= 0)
         {
-            tmpHolder.startStopsAdd(j,  j + opts.searchWindowLength);
+            tmpHolder.startStopsAdd(j,  j + opts.searchWindowLength - 1);
             unsigned int found_pattern_start_index = beginSearch + static_cast<unsigned int>(pattern_in_text_index);
             
-            tmpHolder.startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength);
+            tmpHolder.startStopsAdd(found_pattern_start_index, found_pattern_start_index + opts.searchWindowLength - 1);
             scanRight(tmpHolder, pattern, opts.lowSpacerSize, 24);
         }
 
@@ -617,7 +617,6 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
         for (unsigned int k = 0; k < DR_index_end; k+=2 )
         {
 #ifdef DEBUG
-            logInfo("Iteration "<<iteration_counter++, 10);
             logInfo(k<<" : "<<tmp_holder.getRepeatAt(k) + tmp_holder.getRepeatLength(), 10);
 #endif
             // look at the character just past the end of the last repeat
@@ -698,8 +697,9 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
     //(from the left side) extends the length of the repeat to the left as long as the first base of all repeats is at least threshold
     while (left_extension_length < max_left_extension_length)
     {
-        if(first_repeat_start_index - left_extension_length < 0) {
-            logInfo("first repeat can't be extended anymore, dorpping", 10);
+        if((int)first_repeat_start_index - (int)left_extension_length <= 0) {
+            logInfo("first repeat can't be extended anymore, dropping", 10);
+            logInfo("first_repeat_start_index: "<< first_repeat_start_index << " left_extension_length: "<<left_extension_length, 10);
             DR_index_start += 2;
         }
         for (unsigned int k = DR_index_start; k < end_index; k+=2 )
@@ -747,12 +747,12 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
         if(*repeat_iter < static_cast<unsigned int>(left_extension_length))
         {
             *repeat_iter = 0;
-            *(repeat_iter + 1) += right_extension_length - 1;
+            *(repeat_iter + 1) += right_extension_length;
         }
         else
         {
             *repeat_iter -= left_extension_length;
-            *(repeat_iter+1) += right_extension_length - 1;
+            *(repeat_iter+1) += right_extension_length;
         }
 #ifdef DEBUG    
         logInfo("\t"<<*repeat_iter<<","<<*(repeat_iter+1), 9);
