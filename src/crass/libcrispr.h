@@ -71,7 +71,7 @@ enum side{rightSide, leftSide};
 //**************************************
 // search functions
 //**************************************
-int decideWhichSearch(const char *inputFile, 
+int searchFile(const char *inputFile, 
                       const options &opts, 
                       ReadMap * mReads, 
                       StringCheck * mStringCheck, 
@@ -79,11 +79,11 @@ int decideWhichSearch(const char *inputFile,
                       lookupTable& readsFound,
                       time_t& startTime);
 
-int longReadSearch(ReadHolder& seq, 
+int searchCore(ReadHolder& seq, 
                    const options &opts
                    );
 
-void findSingletons2(const char *inputFastq, 
+void findSingletons(const char *inputFastq, 
                     const options &opts, 
                     std::vector<std::string> * nonRedundantPatterns, 
                     lookupTable &readsFound, 

@@ -337,7 +337,7 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
     {
         logInfo("Parsing file: " << *seq_iter, 1);
         try {
-            int max_len = decideWhichSearch(seq_iter->c_str(), 
+            int max_len = searchFile(seq_iter->c_str(), 
                                             *mOpts, 
                                             &mReads, 
                                             &mStringCheck, 
@@ -383,7 +383,7 @@ int WorkHorse::parseSeqFiles(Vecstr seqFiles)
             logInfo("Parsing file: " << *seq_iter, 1);
             
             try {
-                findSingletons2(seq_iter->c_str(), *mOpts, non_redundant_set, reads_found, &mReads, &mStringCheck, start_time);
+                findSingletons(seq_iter->c_str(), *mOpts, non_redundant_set, reads_found, &mReads, &mStringCheck, start_time);
             } catch (crispr::exception& e) {
                 std::cerr<<e.what()<<std::endl;
                 delete non_redundant_set;

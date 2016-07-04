@@ -65,7 +65,7 @@ extern "C" {
 #include "../aho-corasick/acism.h"
 }
 
-int decideWhichSearch(const char *inputFastq, 
+int searchFile(const char *inputFastq, 
                       const options& opts, 
                       ReadMap * mReads, 
                       StringCheck * mStringCheck, 
@@ -131,7 +131,7 @@ int decideWhichSearch(const char *inputFastq,
             }
             
 
-            bool crispr_read = longReadSearch(tmp_holder, opts );
+            bool crispr_read = searchCore(tmp_holder, opts );
             if(crispr_read) {
                 addReadHolder(mReads, mStringCheck, tmp_holder);
                 patternsHash[tmp_holder.repeatStringAt(0)] = true;
@@ -262,7 +262,7 @@ int scanRight(ReadHolder&  tmp_holder,
     return begin_search + position;
 }
 
-int longReadSearch(ReadHolder& tmpHolder, 
+int searchCore(ReadHolder& tmpHolder, 
                    const options& opts)
 {
     //-----
@@ -441,7 +441,7 @@ static int on_match(int strnum, int textpos, MultisearchPayload *payload)
     return 1;
 }
 
-void findSingletons2(const char *inputFastq, 
+void findSingletons(const char *inputFastq, 
                     const options &opts, 
                     std::vector<std::string> * nonRedundantPatterns, 
                     lookupTable &readsFound, 
