@@ -1,4 +1,5 @@
-bin_PROGRAMS = crass-test
+TESTS = crass-test
+check_PROGRAMS = crass-test
 AM_CXXFLAGS = -I$(top_builddir)/src/crass/
 AM_LDFLAGS = @zlib_flags@
 crass_test_SOURCES = \
