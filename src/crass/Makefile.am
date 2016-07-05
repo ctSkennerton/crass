@@ -36,14 +36,15 @@ Aligner.cpp Aligner.h\
 base.cpp\
 parser.cpp\
 reader.cpp\
-writer.cpp
+writer.cpp\
+ $(top_builddir)/config.h
 
 crass_SOURCES =\
 crass.cpp crass.h
 
 crass_assembler_SOURCES =\
 AssemblyWrapper.cpp AssemblyWrapper.h\
-config.h\
+$(top_builddir)/config.h\
 crassDefines.h\
 kseq.cpp kseq.h\
 SeqUtils.cpp SeqUtils.h\
