@@ -1,4 +1,4 @@
-crass -- CRisprASSembler -- version 0 subversion 3 revision 12 (0.3.12)
+crass -- CRisprASSembler -- version 1 subversion 0 revision 0 (1.0.0)
 =======================================================================
 
 CITATION
@@ -13,6 +13,7 @@ COPYRIGHT
 ---------
 
 Copyright 2011-2015 Connor Skennerton & Michael Imelfort. All rights reserved. 
+Copyright 2016      Connor Skennerton. All rights reserved. 
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,7 +37,7 @@ at the following locations:
 
 [Boyer-Moore Search Algorithm](http://dev-faqs.blogspot.com/2010/05/boyer-moore-algorithm.html)
 
-[Wu-Manber Search Algorithm](http://www.oneunified.net/blog/2008/03/23/)
+[Aho-Corasick Search Algorithm](https://github.com/mischasan/aho-corasick)
 
 [Levensthein String Comparison Algorithm](http://www.merriampark.com/ldcpp.htm)
 
@@ -95,18 +96,4 @@ Don't forget to use `-L` a the begining
 example:
 
     $ ./configure --enable-rendering LDFLAGS="-L/usr/home/user_name/local/lib/" CPPFLAGS="-I/usr/home/user_name/local/include/" 
-
-RUNNING CRASS
--------------
-
-crass has two executables:
-
-    $ crass [-bcdhklnoswxyDSV] [--removeHomopolymers] [--logToScreen] <sequence_files>
-
-which finds CRISPR containing reads
-
-    $ crass-assemble [--velvet | --cap3] -x <file.crispr> -s <segments> -g <group> -i <input directory> [-o]
-
-which is a wrapper for genome assemblers to assemble particular branches in a spacer graph 
-
 
