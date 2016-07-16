@@ -763,8 +763,101 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
     return static_cast<unsigned int>(tmp_holder.getRepeatLength());
     
 }
+bool testSpacerLength(int minSpacerLength, int maxSpacerLength, int minAllowedSpacerLength, int maxAllowedSpacerLength)
+{
+    /*
+     * MAX AND MIN SPACER LENGTHS
+     */
+    if (minSpacerLength < minAllowedSpacerLength) 
+    {
+#ifdef DEBUG
+        logInfo("\tFailed test 4a. Min spacer length out of range: "<<minSpacerLength<<" < "<<minAllowedSpacerLength, 8);
+#endif
+        return false;
+    }
+#ifdef DEBUG
+    logInfo("\tPassed test 4a. Min spacer length within range: "<<minSpacerLength<<" > "<<minAllowedSpacerLength, 8);
+#endif
+    if (maxSpacerLength > maxAllowedSpacerLength) 
+    {
+#ifdef DEBUG
+        logInfo("\tFailed test 4b. Max spacer length out of range: "<<maxSpacerLength<<" > "<<maxAllowedSpacerLength, 8);
+#endif
+        return false;
+    }
+#ifdef DEBUG
+    logInfo("\tPassed test 4b. Max spacer length within range: "<<maxSpacerLength<<" < "<<maxAllowedSpacerLength, 8);
+#endif
 
+    return true;
+}
 
+bool testSpacerRepeatSimilarity(float similarity)
+{
+    if (similarity > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY)
+    {
+#ifdef DEBUG
+        logInfo("\tFailed test 5b. Spacers are too similar to the repeat: "<<similarity<<" > "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
+#endif
+        return false;
+    }
+#ifdef DEBUG
+    logInfo("\tPassed test 5b. Spacers are not too similar to the repeat: "<<similarity<<" < "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
+#endif    
+    return true;
+}
+
+bool testSpacerSpacerSimilarity(float similarity) 
+{
+    /*
+     * REPEAT AND SPACER CONTENT SIMILARITIES
+     */
+    if (similarity > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY) 
+    {
+#ifdef DEBUG
+        logInfo("\tFailed test 5a. Spacers are too similar: "<<similarity<<" > "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
+#endif
+        return false;
+    }
+#ifdef DEBUG
+    logInfo("\tPassed test 5a. Spacers are not too similar: "<<similarity<<" < "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
+#endif    
+
+    return true;
+}
+
+bool testSpacerSpacerLengthDiff(int difference)
+{
+    /*
+     * REPEAT AND SPACER LENGTH SIMILARITIES
+     */
+    if (difference > CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF) 
+    {
+#ifdef DEBUG 
+        logInfo("\tFailed test 6a. Spacer lengths differ too much: "<<difference<<" > "<<CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF, 8);
+#endif
+        return false;
+    }
+#ifdef DEBUG 
+    logInfo("\tPassed test 6a. Spacer lengths do not differ too much: "<<difference<<" < "<<CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF, 8);
+#endif    
+    return true;
+}
+bool testRepeatSpacerLengthDiff(int difference)
+{
+
+    if (difference > CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF) 
+    {
+#ifdef DEBUG
+        logInfo("\tFailed test 6b. Repeat to spacer lengths differ too much: "<<difference<<" > "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
+#endif
+        return false;
+    }
+#ifdef DEBUG
+    logInfo("\tPassed test 6b. Repeat to spacer lengths do not differ too much: "<<difference<<" < "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
+#endif
+    return true;
+}
 //need at least two elements
 bool qcFoundRepeats(ReadHolder& tmp_holder, int minSpacerLength, int maxSpacerLength)
 {
@@ -881,78 +974,26 @@ bool qcFoundRepeats(ReadHolder& tmp_holder, int minSpacerLength, int maxSpacerLe
             ave_spacer_to_spacer_len_difference = abs(ave_spacer_to_spacer_len_difference /= static_cast<float>(num_compared));
             ave_repeat_to_spacer_len_difference = abs(ave_repeat_to_spacer_len_difference /= static_cast<float>(num_compared));
             
-            /*
-             * MAX AND MIN SPACER LENGTHS
-             */
-            if (min_spacer_length < minSpacerLength) 
-            {
-#ifdef DEBUG
-                logInfo("\tFailed test 4a. Min spacer length out of range: "<<min_spacer_length<<" < "<<minSpacerLength, 8);
-#endif
+
+            if(! testSpacerLength(min_spacer_length, max_spacer_length, minSpacerLength, maxSpacerLength)) {
                 return false;
             }
-#ifdef DEBUG
-            logInfo("\tPassed test 4a. Min spacer length within range: "<<min_spacer_length<<" > "<<minSpacerLength, 8);
-#endif
-            if (max_spacer_length > maxSpacerLength) 
+            if(! testSpacerSpacerSimilarity(ave_spacer_to_spacer_difference))
             {
-#ifdef DEBUG
-                logInfo("\tFailed test 4b. Max spacer length out of range: "<<max_spacer_length<<" > "<<maxSpacerLength, 8);
-#endif
                 return false;
             }
-#ifdef DEBUG
-            logInfo("\tPassed test 4b. Max spacer length within range: "<<max_spacer_length<<" < "<<maxSpacerLength, 8);
-#endif
-            
-            /*
-             * REPEAT AND SPACER CONTENT SIMILARITIES
-             */
-            if (ave_spacer_to_spacer_difference > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY) 
+            if(! testSpacerRepeatSimilarity(ave_repeat_to_spacer_difference))
             {
-#ifdef DEBUG
-                logInfo("\tFailed test 5a. Spacers are too similar: "<<ave_spacer_to_spacer_difference<<" > "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
-#endif
                 return false;
             }
-#ifdef DEBUG
-            logInfo("\tPassed test 5a. Spacers are not too similar: "<<ave_spacer_to_spacer_difference<<" < "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
-#endif    
-            if (ave_repeat_to_spacer_difference > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY)
+            if(! testSpacerSpacerLengthDiff(ave_spacer_to_spacer_len_difference))
             {
-#ifdef DEBUG
-                logInfo("\tFailed test 5b. Spacers are too similar to the repeat: "<<ave_repeat_to_spacer_difference<<" > "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
-#endif
                 return false;
             }
-#ifdef DEBUG
-            logInfo("\tPassed test 5b. Spacers are not too similar to the repeat: "<<ave_repeat_to_spacer_difference<<" < "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
-#endif    
-            
-            /*
-             * REPEAT AND SPACER LENGTH SIMILARITIES
-             */
-            if (ave_spacer_to_spacer_len_difference > CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF) 
+            if(! testRepeatSpacerLengthDiff(ave_repeat_to_spacer_len_difference))
             {
-#ifdef DEBUG 
-                logInfo("\tFailed test 6a. Spacer lengths differ too much: "<<ave_spacer_to_spacer_len_difference<<" > "<<CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF, 8);
-#endif
                 return false;
             }
-#ifdef DEBUG 
-            logInfo("\tPassed test 6a. Spacer lengths do not differ too much: "<<ave_spacer_to_spacer_len_difference<<" < "<<CRASS_DEF_SPACER_TO_SPACER_LENGTH_DIFF, 8);
-#endif    
-            if (ave_repeat_to_spacer_len_difference > CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF) 
-            {
-#ifdef DEBUG
-                logInfo("\tFailed test 6b. Repeat to spacer lengths differ too much: "<<ave_repeat_to_spacer_len_difference<<" > "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
-#endif
-                return false;
-            }
-#ifdef DEBUG
-            logInfo("\tPassed test 6b. Repeat to spacer lengths do not differ too much: "<<ave_repeat_to_spacer_len_difference<<" < "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
-#endif
-            
         }
     }
     
@@ -960,57 +1001,21 @@ bool qcFoundRepeats(ReadHolder& tmp_holder, int minSpacerLength, int maxSpacerLe
     if(is_short)
     {
         std::string spacer = tmp_holder.spacerStringAt(single_compare_index);
+        if(! testSpacerLength(spacer.length(), spacer.length(), minSpacerLength, maxSpacerLength))
+        {
+            return false;
+        }
         float similarity = PatternMatcher::getStringSimilarity(repeat, spacer);
-        if (similarity > CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY) 
+        if(! testSpacerRepeatSimilarity(similarity))
         {
-            /*
-             * MAX AND MIN SPACER LENGTHS
-             */
-            if (static_cast<int>(spacer.length()) < minSpacerLength) 
-            {
-#ifdef DEBUG
-                logInfo("\tFailed test 4a. Min spacer length out of range: "<<spacer.length()<<" < "<<minSpacerLength, 8);
-#endif
-                return false;
-            }
-#ifdef DEBUG
-            logInfo("\tPassed test 4a. Min spacer length within range: "<<spacer.length()<<" > "<<minSpacerLength, 8);
-#endif
-            if (static_cast<int>(spacer.length()) > maxSpacerLength) 
-            {
-#ifdef DEBUG
-                logInfo("\tFailed test 4b. Max spacer length out of range: "<<spacer.length()<<" > "<<maxSpacerLength, 8);
-#endif
-                return false;
-            }
-#ifdef DEBUG
-             logInfo("\tPassed test 4b. Max spacer length within range: "<<spacer.length()<<" < "<<maxSpacerLength, 8);
-#endif
-            /*
-             * REPEAT AND SPACER CONTENT SIMILARITIES
-             */ 
-#ifdef DEBUG
-            logInfo("\tFailed test 5. Spacer is too similar to the repeat: "<<similarity<<" > "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
-#endif
             return false;
         }
-#ifdef DEBUG
-        logInfo("\tPassed test 5. Spacer is not too similar to the repeat: "<<similarity<<" < "<<CRASS_DEF_SPACER_OR_REPEAT_MAX_SIMILARITY, 8);
-#endif        
         
-        /*
-         * REPEAT AND SPACER LENGTH SIMILARITIES
-         */
-        if (abs(static_cast<int>(spacer.length()) - static_cast<int>(repeat.length())) > CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF) 
+        int repeat_spacer_len_diff = abs(static_cast<int>(spacer.length()) - static_cast<int>(repeat.length()));
+        if(! testRepeatSpacerLengthDiff(repeat_spacer_len_diff))
         {
-#ifdef DEBUG
-            logInfo("\tFailed test 6. Repeat to spacer length differ too much: "<<abs((int)spacer.length() - (int)repeat.length())<<" > "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
-#endif
             return false;
         }
-#ifdef DEBUG
-        logInfo("\tPassed test 6. Repeat to spacer length do not differ too much: "<<abs((int)spacer.length() - (int)repeat.length())<<" < "<<CRASS_DEF_SPACER_TO_REPEAT_LENGTH_DIFF, 8);
-#endif
     }
     
     return true;

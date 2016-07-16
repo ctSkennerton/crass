@@ -100,6 +100,16 @@ unsigned int extendPreRepeat(ReadHolder& tmp_holder,
                              int searchWindowLength,
                              int minSpacerLength);
 
+bool testSpacerLength(int minSpacerLength, int maxSpacerLength, int minAllowedSpacerLength, int maxAllowedSpacerLength);
+
+bool testSpacerRepeatSimilarity(float similarity);
+
+bool testSpacerSpacerSimilarity(float similarity);
+
+bool testSpacerSpacerLengthDiff(int difference);
+
+bool testRepeatSpacerLengthDiff(int differnce);
+
 bool qcFoundRepeats(ReadHolder& tmp_holder, 
                     int minSpacerLength, 
                     int maxSpacerLength);
