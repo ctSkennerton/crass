@@ -185,9 +185,9 @@ morekeywords={ELEMENT, ATTLIST, DOCTYPE,  EMPTY}% list your attributes here
 
 %%% The "real" document content comes below...
 
-\title{Crass:  The CRISPR assembler (v0.3.12)}
+\title{Crass:  The CRISPR assembler (v1.0.1)}
 \author{Connor Skennerton and Michael Imelfort}
-\date{10th February 2015} % Activate to display a given date or no date (if empty),
+\date{5th September 2016} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
@@ -301,7 +301,6 @@ Crass has a large munber of user options which may seem overwhelming to a new us
 \combinedoptionflag{g}{logToScreen} & Does not produce a log file but instead prints the contents to screen.\\ \\
 \combinedoptionflag{G}{showSingletons} & Set this flag if you would like to see unconnected singleton spacers in the final graph.\\ \\
 \combinedoptionflag{h}{help} & Print the basic usage and version information. \\ \\
-\combinedoptionflag{H}{removeHomopolymers} & This is an experimental feature of Crass where the search algorithms attempt to correct for homopolymer errors in reads.\\ \\
 \combinedoptionflagarg{k}{kmerCount}{INT} & Sets the number of kmers that need to be shared between putative direct repeats for them to be clustered together after the find stage.  Clustered direct repeats are eventually concatenated to form a 'true' direct repeat for a CRISPR; putative repeats that cannot be clustered are removed from consideration.  Change this variable if you feel that the clustering is too stringent and is breaking appart one CRISPR into multiple types.  The default number of kmers is 6, however the value should not be set below 6 as this would not be stringent enough; a higher value would split closely related direct repeats apart\\ \\
 \combinedoptionflagarg{K}{graphNodeLen}{INT} & Crass makes a graph by cutting kmers on either side of the direct repeat and then joining these together.  The length of the kmer will dictate how connected the graph will be.  A smaller number will increase the chances of new conections being formed, however it also increases the chances of false positives.  The default value is 9.\\ \\ 
 \combinedoptionflagarg{l}{logLevel}{INT} & Sets the verbosity of the log file.  Under most circumstances the log level cannot go higher than 4, unless the enable-debug option is set during configuration, which will increase the maximum value to 10.  Note that above a level of 4 alot of the information will not be understandable to the user as most of these messages are specifically for us, the developers to track down bugs.  \\ \\
@@ -313,9 +312,6 @@ Crass has a large munber of user options which may seem overwhelming to a new us
 \combinedoptionflagarg{S}{maxSpacer}{INT} & The upper bound considered acceptable for the size of a spacer sequence. Default is 50bp.\\ \\
 \combinedoptionflag{V}{version} & Preints out program version information. \\ \\
 \combinedoptionflagarg{w}{windowLength}{INT} & When using the long read search algorithm, changes the window length for finding seed sequences; can be set between 6 - 9bp.  The default value is 8bp.\\ \\ 
-\combinedoptionflagarg{x}{spacerScalling}{DECIMAL} & Overide the default scalling of the spacer bounds (\optionflag{sS}) set by \longoptionflag{removeHomopolymers}.  The default is 0.7, i.e. the size of the spacer bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.   \\ \\
-\combinedoptionflagarg{y}{repeatScalling}{DECIMAL} & Overide the default scalling of the direct repeat bounds (\optionflag{dD}) set by \longoptionflag{removeHomopolymers}.  The default is 0.7, i.e. the size of the direct repeat bounds is reduced by 30\% when removing homopolymers in sequences.  The value must be a decimal.\\ 
-\combinedoptionflag{z}{noScalling} & This turns off the effects of (\optionflag{x} or \optionflag{y}) so that the bounds of the direct repeat and spacer (\optionflag{dDsS}) given on the command line are interpreted literally when the \longoptionflag{removeHomopolymers} option is set. \\ \\
 \hline
     \end{longtable}
 \subsubsection{Output From Crass}

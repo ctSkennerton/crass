@@ -747,12 +747,19 @@ unsigned int extendPreRepeat(ReadHolder&  tmp_holder, int searchWindowLength, in
         if(*repeat_iter < static_cast<unsigned int>(left_extension_length))
         {
             *repeat_iter = 0;
-            *(repeat_iter + 1) += right_extension_length;
         }
         else
         {
             *repeat_iter -= left_extension_length;
-            *(repeat_iter+1) += right_extension_length;
+        }
+
+        if(*(repeat_iter+1) + right_extension_length >= tmp_holder.getSeqLength())
+        {
+            *(repeat_iter + 1) = tmp_holder.getSeqLength() - 1;
+        }
+        else
+        {
+            *(repeat_iter + 1) += right_extension_length;
         }
 #ifdef DEBUG    
         logInfo("\t"<<*repeat_iter<<","<<*(repeat_iter+1), 9);

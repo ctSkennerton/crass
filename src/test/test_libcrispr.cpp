@@ -4,6 +4,50 @@
 #include "libcrispr.h"
 #include "ReadHolder.h"
 
+// 0                                                                                                   1                         
+// 0         1         2         3         4         5         6         7         8         9         0         1         2     
+// 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345
+// CACCATGGAAGACCTTCCTAACACCATGGTAGACATTCCTTACACCATGGTAGACCTTCCTAACACCATGGTAGACCTTCCTAACACCATGGTAGACCTTCCTAACACCATGGTAGACCTTTCTAA
+// rrrrrrrr                                                       rrrrrrrr                                  rrrrrrrr
+
+TEST_CASE("searching for additional repeated kmer in a 126bp read", "[libcrispr]") {
+    ReadHolder read("CACCATGGAAGACCTTCCTAACACCATGGTAGACATTCCTTACACCATGGTAGACCTTCCTAACACCATGGTAGACCTTCCTAACACCATGGTAGACCTTCCTAACACCATGGTAGACCTTTCTAA","HWI-D00456:77:C70WLANXX:1:1101:10963:2182");
+    SECTION("where there should be one additional match with a minimum spacer length of 26"){
+        read.startStopsAdd(0, 7);
+        read.startStopsAdd(63,70);
+        std::string pattern = "CACCATGG";
+        scanRight(read, pattern, 26, 24);
+        StartStopList reppos = read.getStartStopList();
+        REQUIRE(reppos.size() == 6);
+        REQUIRE(reppos[0] == 0);
+        REQUIRE(reppos[1] == 7);
+        REQUIRE(reppos[2] == 63);
+        REQUIRE(reppos[3] == 70);
+        REQUIRE(reppos[4] == 105);
+        REQUIRE(reppos[5] == 112);
+    }
+}
+
+TEST_CASE("check extending repeat with 126bp read", "[libcrispr]") {
+    ReadHolder read("CACCATGGAAGACCTTCCTAACACCATGGTAGACATTCCTTACACCATGGTAGACCTTCCTAACACCATGGTAGACCTTCCTAACACCATGGTAGACCTTCCTAACACCATGGTAGACCTTTCTAA","HWI-D00456:77:C70WLANXX:1:1101:10963:2182");
+
+    SECTION("The search window length is 8 and the min spacer length is 26") {
+        read.startStopsAdd(0, 7);
+        read.startStopsAdd(63,70);
+        read.startStopsAdd(105,112);
+        int repeat_length = extendPreRepeat(read, 8, 26);
+        REQUIRE(repeat_length == 23);
+        StartStopList reppos = read.getStartStopList();
+        REQUIRE(reppos.size() == 6);
+        REQUIRE(reppos[0] == 0);
+        REQUIRE(reppos[1] == 21);
+        REQUIRE(reppos[2] == 62);
+        REQUIRE(reppos[3] == 84);
+        REQUIRE(reppos[4] == 104);
+        REQUIRE(reppos[5] == 125);
+    }
+}
+
 TEST_CASE("searching for additional repeated kmers in 100bp read", "[libcrispr]"){
 // read
 // 0                                                                                                   1

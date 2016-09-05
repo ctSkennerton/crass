@@ -3,7 +3,7 @@
 .\"man mdoc.samples for a complete listing of options
 .\"man mdoc for the short list of editing options
 .\"/usr/share/misc/mdoc.template
-.Dd 17/04/13                
+.Dd 5/09/16                
 .Dt crass 1       
 .Os Darwin
 .Sh NAME                 
@@ -11,7 +11,7 @@
 .Nd the CRISPR Assembler.
 .Sh SYNOPSIS             
 .Nm
-.Op Fl abcdDefgGhHkKlLnorsSVwxyz
+.Op Fl abcdDefgGhkKlLnorsSVw
 .Ar
 
 .Sh DESCRIPTION         
@@ -35,7 +35,7 @@ then reads containing direct repeats are then outputed for further analysis.
 .Bl -tag -width -indent
 .It  
 .Nm
-.Op Fl eghrzGHL
+.Op Fl eghrGL
 .Op Fl a Ar LAYOUT_TYPE
 .Op Fl b Ar INT
 .Op Fl c Ar COLOUR_TYPE
@@ -48,8 +48,6 @@ then reads containing direct repeats are then outputed for further analysis.
 .Op Fl o Ar DIR
 .Op Fl s Ar INT
 .Op Fl w Ar INT
-.Op Fl x Ar REAL
-.Op Fl y Ar REAL
 .Op Fl D Ar INT
 .Op Fl K Ar INT
 .Op Fl S Ar INT
@@ -78,15 +76,13 @@ The Maximum length of the direct repeat to search for [Default: 47]
 .It Fl e Ar "" Fl "\^\-noDebugGraph"
 Option available only when DEBUG preoprocessor symbol is set. Will turn off generating debugging graphs
 .It Fl f Ar INT  Fl "\^\-covCutoff" Ar INT           
-Defines the minimim number of reads that a putative CRISPR must contain to be considered real. [Default: 10]
+Defines the minimim number of spacers that a putative CRISPR must contain to be considered real. [Default: 3]
 .It Fl g Ar "" Fl "\^\-logToScreen"
 Print the logging info to stdout rather than to a file
 .It Fl G Ar ""  Fl "\^\-showSingletons" Ar ""
 Set to show unattached spacers in the graph output  
 .It Fl h Ar ""  Fl "\^\-help" Ar ""           
 Output basic usage informtion to screen
-.It Fl H Ar "" Fl "\^\-removeHomopolymers"
-Correct for homopolymer errors [default: no correction]
 .It Fl l Ar INT Fl "\^\-logLevel" Ar INT
 The level of verbosity to ouput in the
 .Nm 
@@ -96,7 +92,7 @@ The number of kmers at two direct repeats must share to be considered part of th
 .It Fl K Ar INT Fl "\^\-graphNodeLen" Ar INT            
 The length of the kmer used to define a node in the graph.  The lower the number the more connected the graph will be but also increases the chance of false positive edges [Default: 7]
 .It Fl n Ar INT Fl "\^\-minNumRepeats" Ar INT            
-The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real' [Default: 3]
+The minimim number of repeats that a candidate CRISPR locus must contain to be considered 'real' [Default: 2]
 .It Fl o Ar LOCATION  Fl "\^\-outDir" Ar LOCATION          
 The name of the ouput directory for the output files [Default: ./]
 .It Fl r Ar "" Fl "\^\-noRendering" Ar ""
@@ -109,12 +105,6 @@ The maximim length of the spacer to search for [Default: 50]
 Print version and copy right information
 .It Fl w Ar INT Fl "\^\-windowLength" Ar INT            
 The length of the window size for searching a genome.  Must be between 6 - 9 [Default: 8]
-.It Fl x Ar REAL Fl "\^\-spacerScalling" Ar REAL
-A decimal number that represents the reduction in size of the spacer when the --removeHomopolymers option is set [Default: 0.7]
-.It Fl y Ar REAL Fl "\^\-repeatScalling" Ar REAL
-A decimal number that represents the reduction in size of the direct repeat when the --removeHomopolymers option is set [Default: 0.7]
-.It Fl z Ar "" Fl "\^\-noScalling" Ar ""
-Use the given spacer and direct repeat ranges when --removeHomopolymers is set.  The default is to use the scale these values based on the values of -x and -y. 
 .El
 
 .\" .Sh ENVIRONMENT      \" May not be needed
