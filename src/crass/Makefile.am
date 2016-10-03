@@ -6,9 +6,10 @@ bin_PROGRAMS += crass-assembler
 endif
 
 AM_CXXFLAGS = @XERCES_CPPFLAGS@ -pedantic -Wall
-AM_LDFLAGS = @XERCES_LDFLAGS@ @zlib_flags@ @XERCES_LIBS@
 
-crass_LDADD = libcrass.a $(top_builddir)/src/aho-corasick/libacism.a
+crass_LDFLAGS = libcrass.a $(top_builddir)/src/aho-corasick/libacism.a @XERCES_LDFLAGS@ @zlib_flags@ @XERCES_LIBS@
+crass_assembler_LDFLAGS = @XERCES_LDFLAGS@ @zlib_flags@ @XERCES_LIBS@
+crisprtools_LDFLAGS = @XERCES_LDFLAGS@ @zlib_flags@ @XERCES_LIBS@
 
 crisprtools_LDADD = @GV_LIBS@ 
 
