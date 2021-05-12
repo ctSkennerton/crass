@@ -11,6 +11,5 @@ RUN ./autogen.sh && ./configure && make && make install
 FROM ubuntu:18.04
 
 COPY --from=crass_build /usr/local/lib/libxerces-c-3.1.so /usr/lib/
-COPY --from=crass_build /usr/local/lib/libxerces-c.so /usr/lib/
 COPY --from=crass_build /usr/local/bin/crass /usr/bin/
 COPY --from=crass_build /usr/local/bin/crisprtools /usr/bin/
