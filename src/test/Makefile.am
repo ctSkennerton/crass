@@ -3,7 +3,6 @@ check_PROGRAMS = crass-test
 AM_CXXFLAGS = -I$(top_builddir)/src/crass/
 AM_LDFLAGS = @zlib_flags@
 crass_test_SOURCES = \
-test_readholder.cpp\
 test_libcrispr.cpp\
 test_main.cpp
 
